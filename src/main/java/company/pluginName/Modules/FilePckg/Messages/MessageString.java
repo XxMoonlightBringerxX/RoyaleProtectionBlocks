@@ -162,6 +162,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&cThere's already a protection using this name!"),
 	ERROR_EXCEPTION_PROTECTION_SAVE_OVERLAPS("Error.Exception.protection.save.Overlaps",
 			"&cYou can't put protections inside other existing ones!"),
+	ERROR_EXCEPTION_PROTECTION_SAVE_ALREADYOCCUPIED("Error.Exception.protection.save.AlreadyOccupied",
+			"&cThere's already a protection placed on this location!"),
 	ERROR_EXCEPTION_PROTECTION_SAVE_RENAMEDENIED("Error.Exception.protection.save.RenamePermissionDenied",
 			"&cYou aren't allowed to rename this protection!"),
 	ERROR_EXCEPTION_PROTECTION_SAVE_SQL("Error.Exception.protection.save.SQL",

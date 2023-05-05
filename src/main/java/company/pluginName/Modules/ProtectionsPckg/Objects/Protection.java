@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.flags.Flags;
@@ -30,6 +31,7 @@ import lombok.Data;
 import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextInput;
 import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextReplacement;
+import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 
 @Data
 @AllArgsConstructor
@@ -196,7 +198,7 @@ public class Protection {
 						getProtectedRegion().getMaximumPoint());
 
 				this.protectionBlockLocation = new Location(Bukkit.getWorld(worldName), vector.getBlockX(),
-						vector.getBlockY(), vector.getBlockZ());
+						vector.getBlockY(), vector.getBlockZ()).getBlock().getLocation();
 			}
 		}
 
@@ -231,6 +233,20 @@ public class Protection {
 			this.displayName = oldDisplayName;
 			throw e;
 		}
+	}
+
+	public boolean isProtectionBlock(Block block) {
+		boolean isSameLocation = block.getLocation().equals(getProtectionBlockLocation());
+		if (isSameLocation) {
+			ProtectionBlock protectionBlock = this.protectionBlock.getObject();
+			boolean itemIsSame = protectionBlock != null
+					&& (protectionBlock.getItem().getType() == Material.PAPER.getMaterial()
+							|| block.getType() == protectionBlock.getItem().getType());
+			if (itemIsSame) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private RegionManager getRegionManager() {

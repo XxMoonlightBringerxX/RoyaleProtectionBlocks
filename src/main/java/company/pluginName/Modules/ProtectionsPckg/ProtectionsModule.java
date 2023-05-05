@@ -20,6 +20,7 @@ import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
 import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteDeniedException;
 import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteException;
+import company.pluginName.Exceptions.Protection.Save.ProtectionSaveAlreadyOccupiedException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveMaxReachedException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveNameInUseException;
@@ -142,6 +143,12 @@ public class ProtectionsModule implements PluginModule {
 						.getOrDefault(pl.getUniqueId(), new ArrayList<>()).size()) {
 					throw new ProtectionSaveMaxReachedException();
 				}
+			}
+		}
+
+		for (Protection prot : protectionByRegion.values()) {
+			if (prot.getProtectionBlockLocation().equals(location.getBlock().getLocation())) {
+				throw new ProtectionSaveAlreadyOccupiedException();
 			}
 		}
 
@@ -339,8 +346,7 @@ public class ProtectionsModule implements PluginModule {
 	public Protection getProtectionByBlock(Location location) {
 		Protection protection = getProtectionByLocation(location);
 
-		return protection != null && location.getBlock().getLocation()
-				.equals(protection.getProtectionBlockLocation().getBlock().getLocation()) ? protection : null;
+		return protection != null && protection.isProtectionBlock(location.getBlock()) ? protection : null;
 	}
 
 	public Protection getProtectionByLocation(Location location) {

@@ -55,14 +55,21 @@ public class AddSubCommand extends SubCommand {
 				ItemStack i = ItemStacksUtils.getItemInMainHand(pl);
 				if (i != null) {
 					if (i.getType().isBlock() || i.getType() == Material.PAPER) {
-						i = i.clone();
-						i.setAmount(1);
+						ItemStack protectionBlockItemstack = i.clone();
+						protectionBlockItemstack.setAmount(1);
 						try {
 							try {
 								String permission = args.length > 5 ? args[5] : null;
+								ProtectionBlock protectionBlock = new ProtectionBlock(args[1].toLowerCase(),
+										protectionBlockItemstack, Integer.parseInt(args[2]), Integer.parseInt(args[3]),
+										Integer.parseInt(args[4]), permission);
 								MainPluginClass.getPlugin().getProtectionsModule().createProtectionBlock(pl,
-										new ProtectionBlock(args[1].toLowerCase(), i, Integer.parseInt(args[2]),
-												Integer.parseInt(args[3]), Integer.parseInt(args[4]), permission));
+										protectionBlock);
+
+								protectionBlockItemstack = protectionBlock.generateItem();
+								protectionBlockItemstack.setAmount(i.getAmount());
+
+								ItemStacksUtils.setItemInMainHand(pl, protectionBlockItemstack);
 								MessageBuilder.createMessage(
 										MessageString.MESSAGE_PROTECTIONS_BLOCKS_CREATEDSUCCESSFULLY.applyPrefix())
 										.sendMessage(pl);

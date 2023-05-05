@@ -34,8 +34,7 @@ public class HideSubCommand extends SubCommand {
 				if (protection.isMainOwner(pl.getUniqueId())) {
 					ProtectionBlock block = protection.getProtectionBlock().getObject();
 					if (block.getItem().getType() != Material.PAPER.getMaterial()) {
-						if (protection.getProtectionBlockLocation().getBlock().getType() != Material.AIR
-								.getMaterial()) {
+						if (protection.isProtectionBlock(protection.getProtectionBlockLocation().getBlock())) {
 							protection.getProtectionBlockLocation().getBlock().setType(Material.AIR.getMaterial());
 							MessageBuilder
 									.createMessage(MessageString.MESSAGE_PROTECTIONS_HIDDENSUCCESSFULLY.applyPrefix())

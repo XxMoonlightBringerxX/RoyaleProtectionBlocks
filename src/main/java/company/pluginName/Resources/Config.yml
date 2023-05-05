@@ -1,0 +1,144 @@
+#--------------------------------------------------------------------------#
+#                                                                          #
+#              _____ _____         _   _____ _         _                   #
+#             | __  |  _  |___ ___| |_| __  | |___ ___| |_ ___             #
+#             |    -|   __|  _| . |  _| __ -| | . |  _| '_|_ -|            #
+#             |__|__|__|  |_| |___|_| |_____|_|___|___|_,_|___|            #
+#                                                                          #
+#        _          ____          _   _____           _     ___ ___        #
+#       | |_ _ _   |    \ ___ ___| |_|  _  |___ ___ _| |___|_  |_  |       #
+#       | . | | |  |  |  | .'|  _| '_|   __| .'|   | . | .'| | |_  |       #
+#       |___|_  |  |____/|__,|_| |_,_|__|  |__,|_|_|___|__,| |_|___|       #
+#           |___|                                                          #
+#                                                                          #
+#--------------------------------------------------------------------------#
+
+#---{File version}
+#
+# DON'T TOUCH THIS SECTION! You can move it, but you can't remove this sections
+# or change its values. This values are used to manage the different versions of
+# this file. New files with newer versions uses this part to check if the file is
+# new or old, and change the format to the new one.
+#
+#---
+
+Version: 2
+
+Settings: 
+  
+  Protection: 
+    Enter-default-message: '&7Entering protection owned by &a{player}'
+    Exit-default-message: '&7Leaving protection owned by &a{player}'
+  
+  #---
+  # Add here all the worlds you don't wish people to be able to use protection blocks
+  #---
+  
+  Banned-worlds: 
+  - 'World1'
+  - 'World2'
+  - 'World3'
+  
+  #---
+  # Add here all the flags you wish to allow people to be editable on their protection
+  # blocks. To get a list of the available flags, use /rg flags inside a region. The
+  # structure of the configuration is the following one:
+  #   - '[ID of the flag]|[Title of the flag in the inventory]|[Base64 of the head skin]'
+  #---
+  
+  Editable-flags: 
+  - 'tnt|Can TnT explode?|eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWU0MzUyNjgwZDBiYjI5YjkxMzhhZjc4MzMwMWEzOTFiMzQwOTBjYjQ5NDFkNTJjMDg3Y2E3M2M4MDM2Y2I1MSJ9fX0='
+  - 'chest-access|Can chests be opened by others?|eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWRjMzZjOWNiNTBhNTI3YWE1NTYwN2EwZGY3MTg1YWQyMGFhYmFhOTAzZThkOWFiZmM3ODI2MDcwNTU0MGRlZiJ9fX0='
+  - 'pvp|Is PvP allowed?|eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTc2NTM0MTM1M2MwMjllOWI2NTVmNGY1NzkzMWFlNmFkYzJjN2E3M2M2NTc5NDVkOTQ1YTMwNzY0MWQzNzc4In19fQ=='
+
+Commands: 
+  Protection-blocks: 
+    Name: 'protectionblocks'
+    Description: 'Open the GUI or execute commands'
+    Usage: '[help|subcommand]'
+    Permission: ''
+    Aliases: 
+    - 'pb'
+    List: 
+      Name: 'list'
+      Description: 'Open a list with all your protections'
+      Usage: ''
+      Permission: ''
+      Aliases: 
+      - 'l'
+    Add-member: 
+      Name: 'addmember'
+      Description: 'Add a member on your current protection'
+      Usage: '<username>'
+      Aliases: 
+      - 'am'
+    Remove-member: 
+      Name: 'removemember'
+      Description: 'Remove a member on your current protection'
+      Usage: '<username>'
+      Permission: ''
+      Aliases: 
+      - 'rm'
+    Add-owner: 
+      Name: 'addowner'
+      Description: 'Add an owner on your current protection'
+      Usage: '<username>'
+      Permission: ''
+      Aliases: 
+      - 'l'
+    Remove-owner: 
+      Name: 'removeowner'
+      Description: 'Remove an owner on your current protection'
+      Usage: '<username>'
+      Permission: ''
+      Aliases: 
+      - 'l'
+    Reload: 
+      Name: 'reload'
+      Description: 'Reload the plugin'
+      Usage: ''
+      Permission: 'ProtectionBlocks.Reload'
+      Aliases: 
+      - 'rd'
+    Rename: 
+      Name: 'rename'
+      Description: 'Rename your current protection name'
+      Usage: '<new name>'
+      Permission: ''
+      Aliases: 
+      - 'rn'
+    Set-home: 
+      Name: 'sethome'
+      Description: 'Set the home on your current protection'
+      Usage: ''
+      Permission: ''
+      Aliases: 
+      - 'sh'
+    Blocks: 
+      Name: 'blocks'
+      Description: 'Open a list with all the blocks'
+      Usage: '[help|subcommand]'
+      Permission: 'ProtectionBlocks.Blocks'
+      Aliases: 
+      - 'b'
+      Add: 
+        Name: 'add'
+        Description: 'Create a new block'
+        Usage: '<id> <x> <y> <z> [permission]'
+        Permission: 'ProtectionBlocks.Blocks.Create'
+        Aliases: 
+        - 'a'
+      Remove: 
+        Name: 'remove'
+        Description: 'Remove an existing block'
+        Usage: '<id>'
+        Permission: 'ProtectionBlocks.Blocks.Delete'
+        Aliases: 
+        - 'r'
+      Give: 
+        Name: 'give'
+        Description: 'Give an existing block to yourself or a player'
+        Usage: '<id> [player]'
+        Permission: 'ProtectionBlocks.Blocks.Give'
+        Aliases: 
+        - 'g'

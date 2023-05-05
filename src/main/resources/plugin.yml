@@ -1,0 +1,7 @@
+main: ${project.package}.${project.groupId}.MainPluginClass
+name: ${project.name}
+author: ${project.author}
+version: ${project.version}
+description: ${project.description}
+api-version: 1.13
+depend: [ WorldGuard ]

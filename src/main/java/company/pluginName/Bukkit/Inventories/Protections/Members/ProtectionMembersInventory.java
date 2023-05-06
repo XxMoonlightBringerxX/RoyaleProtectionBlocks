@@ -37,15 +37,15 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 @Setter(lombok.AccessLevel.NONE)
 public class ProtectionMembersInventory extends PluginChestInventory {
 
-	static {
+	public static ItemStack SEARCH_PLAYER_BUTTON;
+
+	public static void initItems() {
 		SEARCH_PLAYER_BUTTON = ItemStacksUtils
 				.createItemStack(ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
 						MessageBuilder
 								.createMessage(MessageString.INVENTORY_PROTECTION_MEMBERS_SEARCHMEMBERNAME.toString())
 								.toString());
 	}
-
-	public static final ItemStack SEARCH_PLAYER_BUTTON;
 
 	private Protection protection;
 	private ProtectedRegion protectedRegion;

@@ -23,7 +23,6 @@ import company.pluginName.Modules.FilePckg.Settings.SettingList;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
 public class BukkitEvents implements Listener {
@@ -72,20 +71,17 @@ public class BukkitEvents implements Listener {
 		Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
 				.getProtectionByBlock(e.getBlock().getLocation());
 		if (protection != null) {
-			ProtectionBlock block = protection.getProtectionBlock().getObject();
-			if (block != null && (block.getItem().getType() == Material.PAPER.getMaterial()
-					|| e.getBlock().getType() == block.getItem().getType())) {
-				try {
-					MainPluginClass.getPlugin().getProtectionsModule().removeProtection(e.getPlayer(), protection);
-					e.setDropItems(false);
-					e.setExpToDrop(0);
-					e.getBlock().getWorld().dropItem(e.getBlock().getLocation(), block.generateItem());
-					MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
-							.sendMessage(e.getPlayer());
-				} catch (ProtectionDeleteException e1) {
-					e.setCancelled(true);
-					e1.sendError(e.getPlayer());
-				}
+			try {
+				MainPluginClass.getPlugin().getProtectionsModule().removeProtection(e.getPlayer(), protection);
+				e.setDropItems(false);
+				e.setExpToDrop(0);
+				e.getBlock().getWorld().dropItem(e.getBlock().getLocation(),
+						protection.getProtectionBlock().getObject().generateItem());
+				MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
+						.sendMessage(e.getPlayer());
+			} catch (ProtectionDeleteException e1) {
+				e.setCancelled(true);
+				e1.sendError(e.getPlayer());
 			}
 		}
 	}

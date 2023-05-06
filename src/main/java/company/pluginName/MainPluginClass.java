@@ -91,6 +91,7 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 			Bukkit.getPluginManager().registerEvents(new BukkitEvents(), this);
 		}
 		Flag.initFlags();
+		PluginChestInventory.initItems();
 		MessageBuilder
 				.createMessage(getPrefix() + "",
 						getPrefix() + "                                     __                    ",

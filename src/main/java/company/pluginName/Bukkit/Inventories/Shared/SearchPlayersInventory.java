@@ -30,14 +30,14 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.Messages.Exceptions.PlayerAlr
 @Setter(lombok.AccessLevel.NONE)
 public class SearchPlayersInventory extends PluginChestInventory {
 
-	static {
+	private static ItemStack SEARCH_SPECIFIC_PLAYER_ITEM;
+
+	public static void initItems() {
 		SEARCH_SPECIFIC_PLAYER_ITEM = ItemStacksUtils.createItemStack(
 				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
 				MessageBuilder.createMessage(MessageString.INVENTORY_SEARCHPLAYERS_SEARCHSPECIFICPLAYERNAME.toString())
 						.toString());
 	}
-
-	private static final ItemStack SEARCH_SPECIFIC_PLAYER_ITEM;
 
 	private Action action;
 	private List<Player> players;
@@ -113,7 +113,8 @@ public class SearchPlayersInventory extends PluginChestInventory {
 								return true;
 							});
 					closeInventory();
-					MessageBuilder.createMessage(MessageString.INVENTORY_SEARCHPLAYERS_SEARCHSPECIFICPLAYERINFO.applyPrefix())
+					MessageBuilder
+							.createMessage(MessageString.INVENTORY_SEARCHPLAYERS_SEARCHSPECIFICPLAYERINFO.applyPrefix())
 							.sendMessage(e.getWhoClicked());
 				} catch (PlayerAlreadyListeningException ex) {
 					MessageBuilder.createMessage(MessageString.ERROR_CHATSEARCH_ALREADYSEARCHING.toString())

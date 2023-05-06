@@ -6,6 +6,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
+import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
+import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
+import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
+import company.pluginName.Bukkit.Inventories.Shared.SearchPlayersInventory;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
@@ -23,20 +27,29 @@ public abstract class PluginChestInventory extends ChestInventory {
 	public static final String SEARCH_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmMzNWU4Njg0YzdmNzc2YmVmZWRjNDMxOWQwODE0OGM1NGJlYTM5MzIxZTFiZDVkZWY3YTU1Yjg5ZmRhYTA5OSJ9fX0=";
 	public static final String UNKNOWN_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=";
 
-	public static final ItemStack LEFT_ARROW_ITEM = ItemStacksUtils.createItemStack(
-			ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), LEFT_ARROW_SKIN),
-			MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_PREVIOUSPAGENAME.toString()).toString());
+	protected static ItemStack LEFT_ARROW_ITEM;
+	protected static ItemStack RIGHT_ARROW_ITEM;
+	protected static ItemStack CLOSE_ITEM;
+	protected static Item GRAY_STAINED_GLASS_PANE;
 
-	public static final ItemStack RIGHT_ARROW_ITEM = ItemStacksUtils.createItemStack(
-			ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), RIGHT_ARROW_SKIN),
-			MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_NEXTPAGENAME.toString()).toString());
+	public static void initItems() {
+		LEFT_ARROW_ITEM = ItemStacksUtils.createItemStack(
+				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), LEFT_ARROW_SKIN),
+				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_PREVIOUSPAGENAME.toString()).toString());
+		RIGHT_ARROW_ITEM = ItemStacksUtils.createItemStack(
+				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), RIGHT_ARROW_SKIN),
+				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_NEXTPAGENAME.toString()).toString());
+		CLOSE_ITEM = ItemStacksUtils.createItemStack(
+				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), CLOSE_SKIN),
+				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_CLOSENAME.toString()).toString());
+		GRAY_STAINED_GLASS_PANE = new Item(ItemStacksUtils.createItemStack(Material.GRAY_STAINED_GLASS_PANE,
+				MessageBuilder.createMessage("&0").toString()));
 
-	public static final ItemStack CLOSE_ITEM = ItemStacksUtils.createItemStack(
-			ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), CLOSE_SKIN),
-			MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_CLOSENAME.toString()).toString());
-
-	public static final Item GRAY_STAINED_GLASS_PANE = new Item(ItemStacksUtils.createItemStack(
-			Material.GRAY_STAINED_GLASS_PANE.getItemStack(), MessageBuilder.createMessage("&0").toString()));
+		ProtectionMembersInventory.initItems();
+		ProtectionOwnersInventory.initItems();
+		ConfirmationInventory.initItems();
+		SearchPlayersInventory.initItems();
+	}
 
 	public PluginChestInventory(Player player) {
 		super(player);

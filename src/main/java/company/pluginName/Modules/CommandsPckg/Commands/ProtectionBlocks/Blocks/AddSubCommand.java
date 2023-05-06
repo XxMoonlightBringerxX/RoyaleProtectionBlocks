@@ -53,7 +53,7 @@ public class AddSubCommand extends SubCommand {
 		if (pl != null) {
 			if (args.length > 4) {
 				ItemStack i = ItemStacksUtils.getItemInMainHand(pl);
-				if (i != null) {
+				if (i != null && i.getType() != Material.AIR) {
 					if (i.getType().isBlock() || i.getType() == Material.PAPER) {
 						ItemStack protectionBlockItemstack = i.clone();
 						protectionBlockItemstack.setAmount(1);

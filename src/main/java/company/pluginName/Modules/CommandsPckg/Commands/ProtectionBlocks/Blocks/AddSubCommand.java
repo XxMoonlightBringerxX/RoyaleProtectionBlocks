@@ -8,7 +8,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.FilePckg.Settings.SettingList;
@@ -59,12 +58,20 @@ public class AddSubCommand extends SubCommand {
 						protectionBlockItemstack.setAmount(1);
 						try {
 							try {
+								int x = Integer.parseInt(args[2]);
+								int y = Integer.parseInt(args[3]);
+								int z = Integer.parseInt(args[4]);
+
+								if (x < 0 || y < 0 || z < 0) {
+									MessageBuilder.createMessage(MessageString.ERROR_NUMBERBELOWZERO.applyPrefix())
+											.sendMessage(pl);
+									return true;
+								}
+
 								String permission = args.length > 5 ? args[5] : null;
 								ProtectionBlock protectionBlock = new ProtectionBlock(args[1].toLowerCase(),
-										protectionBlockItemstack, Integer.parseInt(args[2]), Integer.parseInt(args[3]),
-										Integer.parseInt(args[4]), permission);
-								MainPluginClass.getPlugin().getProtectionsModule().createProtectionBlock(pl,
-										protectionBlock);
+										protectionBlockItemstack, x / 2, y / 2, z / 2, permission);
+								protectionBlock.save(pl);
 
 								protectionBlockItemstack = protectionBlock.generateItem();
 								protectionBlockItemstack.setAmount(i.getAmount());

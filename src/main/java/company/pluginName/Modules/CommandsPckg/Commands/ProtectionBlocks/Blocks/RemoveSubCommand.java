@@ -46,7 +46,7 @@ public class RemoveSubCommand extends SubCommand {
 						.getProtectionBlockById(args[1]);
 				if (block != null) {
 					try {
-						MainPluginClass.getPlugin().getProtectionsModule().removeProtectionBlock(pl, block);
+						block.delete(pl);
 						MessageBuilder
 								.createMessage(
 										MessageString.MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY.applyPrefix())

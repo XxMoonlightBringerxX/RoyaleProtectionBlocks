@@ -38,6 +38,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 
 	MESSAGE_PROTECTIONS_BLOCKS_CREATEDSUCCESSFULLY("Message.Protections.Blocks.Created-successfully",
 			"&aThe protection block has been created successfully!"),
+	MESSAGE_PROTECTIONS_BLOCKS_SAVEDSUCCESSFULLY("Message.Protections.Blocks.Saved-successfully",
+			"&aThe protection block changes has been saved successfully!"),
 	MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY("Message.Protections.Blocks.Removed-successfully",
 			"&aThe protection block has been removed successfully!"),
 
@@ -48,6 +50,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 
 	// Inventory general items
 	INVENTORY_GENERAL_CLOSENAME("Inventory.General.Close-name", "&cClose"),
+	INVENTORY_GENERAL_CONFIRMNAME("Inventory.General.Confirm-name", "&aConfirm"),
+	INVENTORY_GENERAL_CANCELNAME("Inventory.General.Cancel-name", "&cCancel"),
 	INVENTORY_GENERAL_PREVIOUSPAGENAME("Inventory.General.Previous-name", "&ePrevious"),
 	INVENTORY_GENERAL_NEXTPAGENAME("Inventory.General.Next-name", "&eNext"),
 
@@ -111,10 +115,42 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 
 	// Inventory protection list items
 	INVENTORY_PROTECTIONBLOCKS_LIST_TITLE("Inventory.Protection-blocks.List.Title", "Protection Blocks"),
+	INVENTORY_PROTECTIONBLOCKS_LIST_CREATEBLOCKITEM("Inventory.Protection-blocks.List.Create-block-item",
+			"&eCreate a new protection block"),
 	INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKCOPYLORELINE("Inventory.Protection-blocks.List.Block-copy-lore-line",
 			" &8&o- &aLeft click: &eGet a copy"),
+	INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKEDITLORELINE("Inventory.Protection-blocks.List.Block-edit-lore-line",
+			" &8&o- &aLeft click + Shift: &eEdit the block"),
 	INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKREMOVELORELINE("Inventory.Protection-blocks.List.Block-remove-lore-line",
 			" &8&o- &aRight click: &eRemove the block"),
+
+	// Inventory protection list items
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_TITLE("Inventory.Protection-blocks.Manage.Title", "Protection Blocks > {block}"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_ITEMNOTSETNAME("Inventory.Protection-blocks.Manage.Item-not-set-name",
+			"&7&oNot set yet"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSXNAME("Inventory.Protection-blocks.Manage.Blocks-x-name",
+			"&aCurrent blocks on X: &e{blocks_x}"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSYNAME("Inventory.Protection-blocks.Manage.Blocks-y-name",
+			"&aCurrent blocks on Y: &e{blocks_y}"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSZNAME("Inventory.Protection-blocks.Manage.Blocks-z-name",
+			"&aCurrent blocks on Z: &e{blocks_z}"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNAME("Inventory.Protection-blocks.Manage.Id-name",
+			"&aCurrent ID: &e{block_id}"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTSETNAME("Inventory.Protection-blocks.Manage.Id-not-set-name",
+			"&aCurrent ID: &7&oNot set yet"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTMODIFIABLENAME("Inventory.Protection-blocks.Manage.Id-not-modifiable-name",
+			"&aCurrent ID: &e{block_id} &7&o[Not modifiable]"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNAME("Inventory.Protection-blocks.Manage.Permission-name",
+			"&aCurrent permission: &e{block_permission}"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNOTSETNAME("Inventory.Protection-blocks.Manage.Permission-not-set-name",
+			"&aCurrent permission: &7&oNot set yet"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDSPECIFYINFO("Inventory.Protection-blocks.Manage.Id-specify-info",
+			"&7Type the ID you wish to set on your protection block. Type 'cancel' to cancel this action."),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONSPECIFYINFO(
+			"Inventory.Protection-blocks.Manage.Permission-specify-info",
+			"&7Type the permission you wish to set on your protection block. Type 'cancel' to cancel this action."),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSSPECIFYINFO("Inventory.Protection-blocks.Manage.Blocks-specify-info",
+			"&7Type the amount of blocks you wish to set on your protection block. Type 'cancel' to cancel this action."),
 
 	// Errors
 	ERROR_ERROR("Error.Error", "&cError!"),
@@ -122,7 +158,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_PLAYERNOTFOUND("Error.Player-not-found", "&cThe specified player couldn't be found!"),
 	ERROR_NOITEMINHAND("Error.No-item-in-hand", "&cYou must have an item in your hand!"),
 	ERROR_NOTABLOCK("Error.Not-a-block", "&cThe item must be a block!"),
-	ERROR_INVALIDNUMBER("Error.Invalid-number", "&cYou specify a valid number!"),
+	ERROR_INVALIDNUMBER("Error.Invalid-number", "&cYou must specify a valid number!"),
+	ERROR_NUMBERBELOWZERO("Error.Number-below-zero", "&cYou must specify a number higher than or equal to zero!"),
 
 	ERROR_CHATSEARCH_ALREADYSEARCHING("Error.Chat-prompt.Already-prompted",
 			"&cYou've already a pending type operation!"),
@@ -145,6 +182,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 
 	ERROR_PROTECTIONS_BLOCKS_NOTFOUND("Error.Protections.Blocks.Not-found",
 			"&cThere's no protection block with this ID!"),
+	ERROR_PROTECTIONS_BLOCKS_ITEMTYPESWAPNOTALLOWED("Error.Protections.Blocks.Item-type-swap-not-allowed",
+			"&cYou can't switch the item type of a registered protection block!"),
 
 	// Exceptions
 	ERROR_EXCEPTION_PROTECTION_DELETE_PERMISSIONDENIED("Error.Exception.protection.delete.PermissionDenied",
@@ -217,8 +256,14 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 
 	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_DENIED("Error.Exception.protection.blocks.save.PermissionDenied",
 			"&cYou aren't allowed to save this protection block!"),
-	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_NAMEINUSE("Error.Exception.protection.blocks.save.NameInUse",
-			"&cThere's already a protection block using this name!"),
+	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_IDINUSE("Error.Exception.protection.blocks.save.IdInUse",
+			"&cThere's already a protection block using this ID!"),
+	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_IDNULL("Error.Exception.protection.blocks.save.IdNull",
+			"&cThere's no ID specified for this protection block!"),
+	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_ITEMNULL("Error.Exception.protection.blocks.save.ItemNull",
+			"&cThere's no item specified for this protection block!"),
+	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_ITEMNOTALLOWED("Error.Exception.protection.blocks.save.ItemNotAllowed",
+			"&cYou can't use this kind of items as a protection block!"),
 	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_SQL("Error.Exception.protection.blocks.save.SQL",
 			"&cThere was an error trying to save this protection block in the database. Please contact with an administrator!"),
 	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_UNKNOWN("Error.Exception.protection.blocks.save.Unknown",

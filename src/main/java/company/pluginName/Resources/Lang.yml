@@ -42,6 +42,9 @@ Message:
     Blocks: 
       Created-successfully: '&aThe protection block has been created successfully!'
       Removed-successfully: '&aThe protection block has been removed successfully!'
+      Saved-successfully: '&aThe protection block changes has been saved successfully!'
+    Hidden-successfully: '&aThe protection block has been hidden successfully!'
+    Shown-successfully: '&aThe protection block has been shown successfully!'
   Helper: 
     Available-left-arrow: '&e«'
     Unavailable-left-arrow: '&r«'
@@ -64,6 +67,8 @@ Inventory:
     Close-name: '&cClose'
     Previous-name: '&ePrevious'
     Next-name: '&eNext'
+    Confirm-name: '&aConfirm'
+    Cancel-name: '&cCancel'
   Confirm: 
     Title: 'Are you sure?'
     Yes-name: '&aYes'
@@ -85,6 +90,10 @@ Inventory:
     List: 
       Title: 'Protections'
       Protection-name: '&e{protection}'
+      Protection-lore: 
+      - '&0'
+      - '&a&oWorld: &e{world}'
+      - '&a&oLocation: &ex={location_x},y={location_y},z={location_z}'
       Protection-teleport-no-home-lore-line: ' &8- &a&mLeft click&r&a: &7No home set yet'
       Protection-teleport-lore-line: ' &8- &aLeft click: &eTeleport to protection home'
       Protection-edit-lore-line: ' &8- &aRight click: &eManage protection'
@@ -115,6 +124,47 @@ Inventory:
       - '&a&oBlock size: &e{blocks_x}x{blocks_y}x{blocks_z}'
       Block-copy-lore-line: ' &8&o- &aLeft click: &eGet a copy'
       Block-remove-lore-line: ' &8&o- &aRight click: &eRemove the block'
+      Create-block-item: '&eCreate a new protection block'
+      Block-edit-lore-line: ' &8&o- &aLeft click + Shift: &eEdit the block'
+    Manage: 
+      Title: 'Protection Blocks > {block}'
+      Item-not-set-name: '&7&oNot set yet'
+      Item-lore: 
+      - '&0'
+      - '&8 - &aLeft click with item: &eReplace current item'
+      - '&8 - &aLeft click without item: &eTake current item'
+      Item-not-set-lore: 
+      - '&0'
+      - '&8 - &aLeft click with item: &eSet as current item'
+      Blocks-x-name: '&aCurrent blocks on X: &e{blocks_x}'
+      Blocks-x-lore: 
+      - '&0'
+      - '&8 - &aLeft click: &eIncrease two blocks'
+      - '&8 - &aRight click: &eDecrease two blocks'
+      - '&8 - &aLeft click + Shift: &eSpecify current blocks'
+      Blocks-y-name: '&aCurrent blocks on Y: &e{blocks_y}'
+      Blocks-y-lore: 
+      - '&0'
+      - '&8 - &aLeft click: &eIncrease two blocks'
+      - '&8 - &aRight click: &eDecrease two blocks'
+      - '&8 - &aLeft click + Shift: &eSpecify current blocks'
+      Blocks-z-name: '&aCurrent blocks on Z: &e{blocks_z}'
+      Blocks-z-lore: 
+      - '&0'
+      - '&8 - &aLeft click: &eIncrease two blocks'
+      - '&8 - &aRight click: &eDecrease two blocks'
+      - '&8 - &aLeft click + Shift: &eSpecify current blocks'
+      Blocks-specify-info: '&7Type the amount of blocks you wish to set on your protection block.
+        Type \'cancel\' to cancel this action.'
+      Id-name: '&aCurrent ID: &e{block_id}'
+      Id-not-set-name: '&aCurrent ID: &7&oNot set yet'
+      Id-not-modifiable-name: '&aCurrent ID: &e{block_id} &7&o[Not modifiable]'
+      Id-specify-info: '&7Type the ID you wish to set on your protection block. Type \'cancel\'
+        to cancel this action.'
+      Permission-name: '&aCurrent permission: &e{block_permission}'
+      Permission-not-set-name: '&aCurrent permission: &7&oNot set yet'
+      Permission-specify-info: '&7Type the permission you wish to set on your protection block. Type
+        \'cancel\' to cancel this action.'
 
 Error: 
   Error: '&cError!'
@@ -123,6 +173,7 @@ Error:
   No-item-in-hand: '&cYou must have an item in your hand!'
   Not-a-block: '&cThe item must be a block!'
   Invalid-number: '&cYou specify a valid number!'
+  Number-below-zero: '&cYou must specify a number higher than or equal to zero!'
   Chat-prompt: 
     Already-prompted: '&cYou\'ve already a pending type operation!'
   Protections: 
@@ -131,6 +182,12 @@ Error:
     Not-main-owner: '&cYou\'re not the main owner of this protection!'
     Blocks: 
       Not-found: '&cThere\'s no protection block with this ID!'
+      Item-type-swap-not-allowed: '&cYou can\'t switch the item type of a registered protection block!'
+    Permission-denied: '&cYou don\'t have permissions to use this protection block!'
+    Block-already-hidden: '&cThe protection block is already hidden!'
+    Block-already-shown: '&cThe protection block is already shown!'
+    Blocked-by-block: '&cThere\'s another block where the protection block should be placed!'
+    Oraxen-incompatibility: '&cYou can\'t do this with this kind of protection blocks!'
   Exception: 
     protection: 
       delete: 
@@ -149,6 +206,8 @@ Error:
           Please contact with an administrator!'
         Unknown: '&cAn unknown error happened while trying to save this protection.
           Please contact with an administrator!'
+        AlreadyOccupied: '&cThere\'s already a protection placed on this location!'
+        NoVisibleText: '&cThe text you\'re typing must be visible!'
       members: 
         delete: 
           PermissionDenied: '&cYou aren\'t allowed to remove this member!'
@@ -186,3 +245,7 @@ Error:
             database. Please contact with an administrator!'
           Unknown: '&cAn unknown error happened while trying to save this protection
             block. Please contact with an administrator!'
+          IdInUse: '&cThere\'s already a protection block using this ID!'
+          IdNull: '&cThere\'s no ID specified for this protection block!'
+          ItemNull: '&cThere\'s no item specified for this protection block!'
+          ItemNotAllowed: '&cYou can\'t use this kind of items as a protection block!'

@@ -6,6 +6,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
+import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlockManagerInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
@@ -25,11 +26,17 @@ public abstract class PluginChestInventory extends ChestInventory {
 	public static final String CANCEL_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmViNTg4YjIxYTZmOThhZDFmZjRlMDg1YzU1MmRjYjA1MGVmYzljYWI0MjdmNDYwNDhmMThmYzgwMzQ3NWY3In19fQ==";
 	public static final String CLOSE_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTljZGI5YWYzOGNmNDFkYWE1M2JjOGNkYTc2NjVjNTA5NjMyZDE0ZTY3OGYwZjE5ZjI2M2Y0NmU1NDFkOGEzMCJ9fX0=";
 	public static final String SEARCH_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmMzNWU4Njg0YzdmNzc2YmVmZWRjNDMxOWQwODE0OGM1NGJlYTM5MzIxZTFiZDVkZWY3YTU1Yjg5ZmRhYTA5OSJ9fX0=";
+	public static final String PLUS_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDdhMGZjNmRjZjczOWMxMWZlY2U0M2NkZDE4NGRlYTc5MWNmNzU3YmY3YmQ5MTUzNmZkYmM5NmZhNDdhY2ZiIn19fQ==";
+	public static final String X_LETTER_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzkxZDZlZGE4M2VkMmMyNGRjZGNjYjFlMzNkZjM2OTRlZWUzOTdhNTcwMTIyNTViZmM1NmEzYzI0NGJjYzQ3NCJ9fX0=";
+	public static final String Y_LETTER_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODlmZjhjNzQ0OTUwNzI5ZjU4Y2I0ZTY2ZGM2OGVhZjYyZDAxMDZmOGE1MzE1MjkxMzNiZWQxZDU1ZTMifX19";
+	public static final String Z_LETTER_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzA1ZjE4ZDQxNmY2OGU5YmQxOWQ1NWRmOWZhNzQyZWRmYmYxYTUyNWM4ZTI5ZjY1OWFlODMzYWYyMTdkNTM1In19fQ==";
 	public static final String UNKNOWN_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=";
 
 	protected static ItemStack LEFT_ARROW_ITEM;
 	protected static ItemStack RIGHT_ARROW_ITEM;
 	protected static ItemStack CLOSE_ITEM;
+	protected static ItemStack CONFIRM_ITEM;
+	protected static ItemStack CANCEL_ITEM;
 	protected static Item GRAY_STAINED_GLASS_PANE;
 
 	public static void initItems() {
@@ -42,6 +49,10 @@ public abstract class PluginChestInventory extends ChestInventory {
 		CLOSE_ITEM = ItemStacksUtils.createItemStack(
 				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), CLOSE_SKIN),
 				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_CLOSENAME.toString()).toString());
+		CONFIRM_ITEM = ItemStacksUtils.createItemStack(Material.LIME_STAINED_GLASS_PANE,
+				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_CONFIRMNAME.toString()).toString());
+		CANCEL_ITEM = ItemStacksUtils.createItemStack(Material.RED_STAINED_GLASS_PANE,
+				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_CANCELNAME.toString()).toString());
 		GRAY_STAINED_GLASS_PANE = new Item(ItemStacksUtils.createItemStack(Material.GRAY_STAINED_GLASS_PANE,
 				MessageBuilder.createMessage("&0").toString()));
 
@@ -49,6 +60,7 @@ public abstract class PluginChestInventory extends ChestInventory {
 		ProtectionOwnersInventory.initItems();
 		ConfirmationInventory.initItems();
 		SearchPlayersInventory.initItems();
+		ProtectionBlockManagerInventory.initItems();
 	}
 
 	public PluginChestInventory(Player player) {

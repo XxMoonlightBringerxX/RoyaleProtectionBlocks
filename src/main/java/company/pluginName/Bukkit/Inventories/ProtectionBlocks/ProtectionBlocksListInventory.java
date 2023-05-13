@@ -25,6 +25,7 @@ import lombok.Setter;
 import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextInput;
 import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextReplacement;
+import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
@@ -46,6 +47,11 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 
 	@Override
 	public void updateContent() {
+		boolean canGet = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_GIVE);
+		boolean canEdit = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_EDIT);
+		boolean canCreate = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_CREATE);
+		boolean canDelete = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_DELETE);
+
 		clearSlots();
 
 		Collection<ProtectionBlock> blocks = getList();
@@ -82,6 +88,23 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 			});
 		}
 
+		if (canCreate) {
+			setSlot(getSize() - 5,
+					new Button(
+							ItemStacksUtils.setSkin(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
+									MessageBuilder.createMessage(
+											MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_CREATEBLOCKITEM.toString())
+											.toString()),
+									PLUS_SKIN)) {
+
+						@Override
+						public void onClick(InventoryClickEvent e) {
+							new ProtectionBlockManagerInventory(getPlayer()).setPreviousHolder(getHolder())
+									.openInventory(MainPluginClass.getPlugin());
+						}
+					});
+		}
+
 		if (blocks.size() != 0) {
 			int slot = 0;
 			for (ProtectionBlock block : Arrays.copyOfRange(blocks.toArray(new ProtectionBlock[blocks.size()]),
@@ -99,14 +122,15 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 				}
 				lore.addAll(MessageList.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKLORE.getContent());
 
-				boolean canGet = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_GIVE);
-				boolean canDelete = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_DELETE);
-
 				if (canGet || canDelete) {
 					lore.add("&0");
 
 					if (canGet) {
 						lore.add(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKCOPYLORELINE.toString());
+					}
+
+					if (canEdit) {
+						lore.add(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKEDITLORELINE.toString());
 					}
 
 					if (canDelete) {
@@ -125,8 +149,6 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 														.createMessage(TextInput.inst()
 																.text(lore.toArray(new String[lore.size()]))
 																.replacements(
-																		new TextReplacement("{block_id}",
-																				() -> block.getId()),
 																		new TextReplacement("{blocks_x}",
 																				() -> String.valueOf(
 																						(block.getBlocksX() * 2) + 1)),
@@ -134,19 +156,30 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 																				"{blocks_y}",
 																				() -> String.valueOf(
 																						(block.getBlocksY() * 2) + 1)),
-																		new TextReplacement("{blocks_z}",
+																		new TextReplacement(
+																				"{blocks_z}",
 																				() -> String.valueOf(
-																						(block.getBlocksZ() * 2) + 1))))
+																						(block.getBlocksZ() * 2) + 1)),
+																		new TextReplacement("{block_id}",
+																				() -> block.getId()),
+																		new TextReplacement("{block_permission}",
+																				() -> block.getPermission())))
 														.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {
-								if (e.getClick() == ClickType.LEFT && canGet) {
+								if (e.getClick() == ClickType.LEFT && !e.isShiftClick() && canGet) {
 									e.getWhoClicked().getOpenInventory().setCursor(block.generateItem());
+								} else if (e.getClick() == ClickType.SHIFT_LEFT && canEdit) {
+									new ProtectionBlockManagerInventory(getPlayer(), block)
+											.setPreviousHolder(getHolder()).openInventory(MainPluginClass.getPlugin());
 								} else if (e.getClick() == ClickType.RIGHT && canDelete) {
 									new ConfirmationInventory(getPlayer(), () -> {
 										try {
-											MainPluginClass.getPlugin().getProtectionsModule()
-													.removeProtectionBlock(getPlayer(), block);
+											block.delete(getPlayer());
+											MessageBuilder.createMessage(
+													MessageString.MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY
+															.applyPrefix())
+													.sendMessage(getPlayer());
 										} catch (ProtectionBlocksDeleteException e1) {
 											e1.sendError(getPlayer());
 										}

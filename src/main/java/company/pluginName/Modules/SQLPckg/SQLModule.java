@@ -19,15 +19,15 @@ import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveS
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
-import relampagorojo93.LibsCollection.SQLib.Enums.ConditionType;
-import relampagorojo93.LibsCollection.SQLib.Objects.Data;
-import relampagorojo93.LibsCollection.SQLib.Objects.Conditions.Condition;
-import relampagorojo93.LibsCollection.SQLib.Objects.ConnectionData.SQLiteConnectionData;
-import relampagorojo93.LibsCollection.SQLib.Objects.DataModel.Column;
-import relampagorojo93.LibsCollection.SQLib.Objects.DataModel.Table;
+import darkpanda73.LibsCollection.PandaSQL.Enums.ConditionType;
+import darkpanda73.LibsCollection.PandaSQL.Objects.Data;
+import darkpanda73.LibsCollection.PandaSQL.Objects.Conditions.Condition;
+import darkpanda73.LibsCollection.PandaSQL.Objects.ConnectionData.SQLiteConnectionData;
+import darkpanda73.LibsCollection.PandaSQL.Objects.DataModel.Column;
+import darkpanda73.LibsCollection.PandaSQL.Objects.DataModel.Table;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
-public class SQLModule extends relampagorojo93.LibsCollection.SpigotPlugin.Defaults.SQLModule {
+public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLModule {
 
 	@Override
 	protected void generateTables() {

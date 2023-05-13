@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
@@ -26,11 +27,8 @@ import company.pluginName.Exceptions.Protection.Save.ProtectionSaveMaxReachedExc
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveNameInUseException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveNoVisibleTextException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveRenameDeniedException;
-import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteDeniedException;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
-import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveDeniedException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
-import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveNameInUseException;
 import company.pluginName.Exceptions.ProtectionMembers.Delete.ProtectionMembersDeleteDeniedException;
 import company.pluginName.Exceptions.ProtectionMembers.Delete.ProtectionMembersDeleteException;
 import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveCannotAddProtectionOwnerException;
@@ -79,7 +77,8 @@ public class ProtectionsModule implements PluginModule {
 
 	@Override
 	public boolean load() {
-		MainPluginClass.getPlugin().getSqlModule().getProtectionBlocks()
+		MainPluginClass.getPlugin().getSqlModule().getProtectionBlocks().stream()
+				.filter(block -> block.getItem() != null && block.getItem().getType() != Material.AIR)
 				.forEach(block -> protectionBlockById.put(block.getId().toLowerCase(), block));
 
 		MainPluginClass.getPlugin().getSqlModule().getProtections().stream().filter(protection -> {
@@ -163,26 +162,6 @@ public class ProtectionsModule implements PluginModule {
 		protectionsByWorld.get(location.getWorld().getName()).add(protection);
 
 		return protection;
-	}
-
-	public void createProtectionBlock(ProtectionBlock protectionBlock) throws ProtectionBlocksSaveException {
-		createProtectionBlock(null, protectionBlock);
-	}
-
-	public void createProtectionBlock(Player pl, ProtectionBlock protectionBlock) throws ProtectionBlocksSaveException {
-		if (pl != null) {
-			if (!pl.hasPermission(Permissions.PROTECTION_BLOCKS_CREATE)) {
-				throw new ProtectionBlocksSaveDeniedException();
-			}
-		}
-
-		if (protectionBlockById.containsKey(protectionBlock.getId().toLowerCase())) {
-			throw new ProtectionBlocksSaveNameInUseException();
-		}
-
-		protectionBlock.save();
-
-		protectionBlockById.put(protectionBlock.getId().toLowerCase(), protectionBlock);
 	}
 
 	/*
@@ -288,23 +267,6 @@ public class ProtectionsModule implements PluginModule {
 		}
 	}
 
-	public void removeProtectionBlock(ProtectionBlock protectionBlock) throws ProtectionBlocksDeleteException {
-		removeProtectionBlock(null, protectionBlock);
-	}
-
-	public void removeProtectionBlock(Player pl, ProtectionBlock protectionBlock)
-			throws ProtectionBlocksDeleteException {
-		if (pl != null) {
-			if (!pl.hasPermission(Permissions.PROTECTION_BLOCKS_DELETE)) {
-				throw new ProtectionBlocksDeleteDeniedException();
-			}
-		}
-
-		protectionBlock.delete();
-
-		protectionBlockById.remove(protectionBlock.getId());
-	}
-
 	public void removeMember(Protection protection, UUID member) throws ProtectionMembersDeleteException {
 		removeMember(null, protection, member);
 	}
@@ -337,6 +299,18 @@ public class ProtectionsModule implements PluginModule {
 		}
 
 		protection.getProtectedRegion().getOwners().removePlayer(member);
+	}
+
+	/*
+	 * Protection blocks methods
+	 */
+
+	public void registerProtectionBlock(ProtectionBlock protectionBlock) throws ProtectionBlocksSaveException {
+		protectionBlockById.put(protectionBlock.getId().toLowerCase(), protectionBlock);
+	}
+
+	public void unregisterProtectionBlock(ProtectionBlock protectionBlock) throws ProtectionBlocksDeleteException {
+		protectionBlockById.remove(protectionBlock.getId());
 	}
 
 	/*

@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>0.0.10 Alpha</version>
+	<version>0.0.11 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -56,6 +56,11 @@
 		<dependency>
 			<groupId>SpigotPlugin</groupId>
 			<artifactId>SpigotPlugin</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>SQLib</groupId>
+			<artifactId>SQLib</artifactId>
 			<version>1.0</version>
 		</dependency>
 	</dependencies>

@@ -22,8 +22,24 @@ public enum MessageList implements FileObjFieldsEnum<List<String>> {
 	INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKLORE("Inventory.Protection-blocks.List.Block-lore",
 			Arrays.asList("&0", "&a&oBlock ID: &e{block_id}", "&a&oBlock size: &e{blocks_x}x{blocks_y}x{blocks_z}")),
 
-	INVENTORY_PROTECTION_LIST_PROTECTIONLORE("Inventory.Protection.List.Protection-lore", Arrays.asList("&0",
-			"&a&oWorld: &e{world}", "&a&oLocation: &ex={location_x},y={location_y},z={location_z}"));
+	INVENTORY_PROTECTION_LIST_PROTECTIONLORE("Inventory.Protection.List.Protection-lore",
+			Arrays.asList("&0", "&a&oWorld: &e{world}",
+					"&a&oLocation: &ex={location_x},y={location_y},z={location_z}")),
+
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_ITEMLORE("Inventory.Protection-blocks.Manage.Item-lore",
+			Arrays.asList("&0", "&8 - &aLeft click with item: &eReplace current item",
+					"&8 - &aLeft click without item: &eTake current item")),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_ITEMNOTSETLORE("Inventory.Protection-blocks.Manage.Item-not-set-lore",
+			Arrays.asList("&0", "&8 - &aLeft click with item: &eSet as current item")),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSXLORE("Inventory.Protection-blocks.Manage.Blocks-x-lore",
+			Arrays.asList("&0", "&8 - &aLeft click: &eIncrease two blocks", "&8 - &aRight click: &eDecrease two blocks",
+					"&8 - &aLeft click + Shift: &eSpecify current blocks")),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSYLORE("Inventory.Protection-blocks.Manage.Blocks-y-lore",
+			Arrays.asList("&0", "&8 - &aLeft click: &eIncrease two blocks", "&8 - &aRight click: &eDecrease two blocks",
+					"&8 - &aLeft click + Shift: &eSpecify current blocks")),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSZLORE("Inventory.Protection-blocks.Manage.Blocks-z-lore",
+			Arrays.asList("&0", "&8 - &aLeft click: &eIncrease two blocks", "&8 - &aRight click: &eDecrease two blocks",
+					"&8 - &aLeft click + Shift: &eSpecify current blocks"));
 
 	// Methods
 	private @NonNull String oldPath, path;

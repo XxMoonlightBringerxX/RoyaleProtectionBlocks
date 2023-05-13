@@ -22,6 +22,7 @@ public class Permissions {
 
 	public static final String PROTECTION_BLOCKS = "protectionblocks.blocks";
 	public static final String PROTECTION_BLOCKS_CREATE = "protectionblocks.blocks.create";
+	public static final String PROTECTION_BLOCKS_EDIT = "protectionblocks.blocks.edit";
 	public static final String PROTECTION_BLOCKS_DELETE = "protectionblocks.blocks.delete";
 	public static final String PROTECTION_BLOCKS_GIVE = "protectionblocks.blocks.give";
 

@@ -250,7 +250,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 										.sendMessage(e.getWhoClicked());
 							} catch (PlayerAlreadyListeningException e1) {
 								MessageBuilder
-										.createMessage(MessageString.ERROR_CHATSEARCH_ALREADYSEARCHING.applyPrefix())
+										.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix())
 										.sendMessage(e.getWhoClicked());
 							}
 						}
@@ -283,7 +283,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 								MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONSPECIFYINFO.applyPrefix())
 								.sendMessage(e.getWhoClicked());
 					} catch (PlayerAlreadyListeningException e1) {
-						MessageBuilder.createMessage(MessageString.ERROR_CHATSEARCH_ALREADYSEARCHING.applyPrefix())
+						MessageBuilder.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix())
 								.sendMessage(e.getWhoClicked());
 					}
 				} else if (e.getClick() == ClickType.RIGHT && newProtectionBlock.getPermission() != null) {
@@ -324,7 +324,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 						.createMessage(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSSPECIFYINFO.applyPrefix())
 						.sendMessage(e.getWhoClicked());
 			} catch (PlayerAlreadyListeningException e1) {
-				MessageBuilder.createMessage(MessageString.ERROR_CHATSEARCH_ALREADYSEARCHING.applyPrefix())
+				MessageBuilder.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix())
 						.sendMessage(e.getWhoClicked());
 			}
 		} else if (e.getClick() == ClickType.LEFT) {

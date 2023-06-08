@@ -306,7 +306,7 @@ public class ProtectionsModule implements PluginModule {
 	 */
 
 	public void registerProtectionBlock(ProtectionBlock protectionBlock) throws ProtectionBlocksSaveException {
-		protectionBlockById.put(protectionBlock.getId().toLowerCase(), protectionBlock);
+		protectionBlockById.putIfAbsent(protectionBlock.getId().toLowerCase(), protectionBlock);
 	}
 
 	public void unregisterProtectionBlock(ProtectionBlock protectionBlock) throws ProtectionBlocksDeleteException {

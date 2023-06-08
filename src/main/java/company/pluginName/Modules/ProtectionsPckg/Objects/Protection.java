@@ -128,12 +128,12 @@ public class Protection {
 			String playerName = OfflinePlayerUtils.getOfflinePlayer(ownerUuid).getName();
 			protectedRegion.setFlag(GREETING_FLAG,
 					MessageBuilder.createMessage(
-							TextInput.inst().text(SettingString.SETTING_PROTECTION_ENTER_DEFAULT_MESSAGE.toString())
+							TextInput.inst().text(SettingString.SETTING_PROTECTION_ENTERDEFAULTMESSAGE.toString())
 									.replacements(new TextReplacement("{player}", () -> playerName)))
 							.toString());
 			protectedRegion.setFlag(FAREWELL_FLAG,
 					MessageBuilder.createMessage(
-							TextInput.inst().text(SettingString.SETTING_PROTECTION_EXIT_DEFAULT_MESSAGE.toString())
+							TextInput.inst().text(SettingString.SETTING_PROTECTION_EXITDEFAULTMESSAGE.toString())
 									.replacements(new TextReplacement("{player}", () -> playerName)))
 							.toString());
 			regionManager.addRegion(protectedRegion);

@@ -153,7 +153,7 @@ public class ProtectionFlagsInventory extends PluginChestInventory {
 												MessageString.INVENTORY_PROTECTION_FLAGS_STRINGSPECIFYINFO.toString()))
 										.sendMessage(e.getWhoClicked());
 							} catch (PlayerAlreadyListeningException ex) {
-								MessageBuilder.createMessage(MessageString.ERROR_CHATSEARCH_ALREADYSEARCHING.toString())
+								MessageBuilder.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.toString())
 										.sendMessage(e.getWhoClicked());
 								return;
 							}

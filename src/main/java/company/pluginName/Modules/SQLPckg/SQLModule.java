@@ -22,9 +22,9 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.Refe
 import darkpanda73.LibsCollection.PandaSQL.Enums.ConditionType;
 import darkpanda73.LibsCollection.PandaSQL.Objects.Data;
 import darkpanda73.LibsCollection.PandaSQL.Objects.Conditions.Condition;
-import darkpanda73.LibsCollection.PandaSQL.Objects.ConnectionData.SQLiteConnectionData;
 import darkpanda73.LibsCollection.PandaSQL.Objects.DataModel.Column;
 import darkpanda73.LibsCollection.PandaSQL.Objects.DataModel.Table;
+import relampagorojo93.LibsCollection.SpigotPlugin.MainClass;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
 public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLModule {
@@ -47,20 +47,6 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 						new Column(t, "BlocksY", "INTEGER", Types.INTEGER).setNotNull(true),
 						new Column(t, "BlocksZ", "INTEGER", Types.INTEGER).setNotNull(true),
 						new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR)));
-	}
-
-	@Override
-	public boolean connect() {
-		try {
-			return super.connect(MainPluginClass.getPlugin(),
-					new SQLiteConnectionData(String
-							.valueOf(MainPluginClass.getPlugin().getFileModule().PLUGIN_FOLDER.getFolder().getPath())
-							+ "/DB.sqlite"),
-					MainPluginClass.getSQLVersion(), "");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
 	}
 
 	public List<Protection> getProtections() {
@@ -143,6 +129,67 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 				new Data(Types.VARCHAR, protectionBlock.getId()), ConditionType.EQUAL)))) {
 			throw new ProtectionBlocksDeleteSQLException();
 		}
+	}
+
+	@Override
+	protected MainClass getPlugin() {
+		return MainPluginClass.getPlugin();
+	}
+
+	@Override
+	protected boolean isMySQLEnabled() {
+		return false;
+	}
+
+	@Override
+	protected String getMySQLProtocol() {
+		return null;
+	}
+
+	@Override
+	protected String getMySQLHost() {
+		return null;
+	}
+
+	@Override
+	protected int getMySQLPort() {
+		return 0;
+	}
+
+	@Override
+	protected String getMySQLDatabase() {
+		return null;
+	}
+
+	@Override
+	protected String getMySQLUsername() {
+		return null;
+	}
+
+	@Override
+	protected String getMySQLPassword() {
+		return null;
+	}
+
+	@Override
+	protected String[] getMySQLParameters() {
+		return null;
+	}
+
+	@Override
+	protected String getSQLiteFile() {
+		return String.valueOf(MainPluginClass.getPlugin().getFileModule().PLUGIN_FOLDER.getFolder().getPath())
+				+ "/DB.sqlite";
+	}
+
+	@Override
+	protected int getVersion() {
+		return 1;
+	}
+
+	@Override
+	protected String getTablePrefix() {
+		return "";
 	}
 
 }

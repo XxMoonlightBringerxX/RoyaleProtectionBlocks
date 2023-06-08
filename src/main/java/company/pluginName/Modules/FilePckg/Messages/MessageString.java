@@ -161,7 +161,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_INVALIDNUMBER("Error.Invalid-number", "&cYou must specify a valid number!"),
 	ERROR_NUMBERBELOWZERO("Error.Number-below-zero", "&cYou must specify a number higher than or equal to zero!"),
 
-	ERROR_CHATSEARCH_ALREADYSEARCHING("Error.Chat-prompt.Already-prompted",
+	ERROR_CHATPROMPT_ALREADYPROMPTED("Error.Chat-prompt.Already-prompted",
 			"&cYou've already a pending type operation!"),
 
 	ERROR_PROTECTIONS_NOTINSIDEPROTECTION("Error.Protections.Not-inside-protection",

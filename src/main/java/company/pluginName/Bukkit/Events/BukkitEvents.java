@@ -12,6 +12,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 
 import company.pluginName.MainPluginClass;
@@ -20,12 +21,24 @@ import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteException
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.FilePckg.Settings.SettingList;
+import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
 public class BukkitEvents implements Listener {
+
+	@EventHandler
+	public void onPlayerJoin(PlayerJoinEvent e) {
+		if (!e.getPlayer().hasPlayedBefore() && !SettingString.SETTING_PROTECTION_STARTERBLOCK.toString().isEmpty()) {
+			ProtectionBlock block = MainPluginClass.getPlugin().getProtectionsModule()
+					.getProtectionBlockById(SettingString.SETTING_PROTECTION_STARTERBLOCK.toString());
+			if (block != null) {
+				e.getPlayer().getInventory().addItem(block.generateItem());
+			}
+		}
+	}
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlaceBlock(BlockPlaceEvent e) {

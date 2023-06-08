@@ -37,11 +37,7 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 
 	@Override
 	public boolean canLoad() {
-		if ((getSqlModule().getDatabase() != null && getSqlModule().getDatabase().isConnected())
-				|| getSqlModule().connect()) {
-			return true;
-		}
-		return false;
+		return true;
 	}
 
 	@Override

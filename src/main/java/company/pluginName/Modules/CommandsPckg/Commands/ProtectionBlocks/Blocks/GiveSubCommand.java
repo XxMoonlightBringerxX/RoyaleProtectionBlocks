@@ -42,32 +42,31 @@ public class GiveSubCommand extends SubCommand {
 	@Override
 	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
-		if (pl != null) {
-			if (args.length > 1) {
-				ProtectionBlock block = MainPluginClass.getPlugin().getProtectionsModule()
-						.getProtectionBlockById(args[1]);
-				if (block != null) {
-					Player toGive = pl;
+		if (args.length > 1) {
+			ProtectionBlock block = MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlockById(args[1]);
+			if (block != null) {
+				Player toGive = pl;
 
-					if (args.length > 2) {
-						toGive = Bukkit.getPlayer(args[2]);
-						if (toGive == null) {
-							MessageBuilder.createMessage(MessageString.ERROR_PLAYERNOTFOUND.applyPrefix())
-									.sendMessage(pl);
-							return true;
-						}
-					}
-
-					toGive.getInventory().addItem(block.generateItem());
-				} else {
-					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKS_NOTFOUND.applyPrefix())
-							.sendMessage(pl);
+				if (args.length > 2) {
+					toGive = Bukkit.getPlayer(args[2]);
 				}
+
+				if (toGive == null) {
+					if (pl == null) {
+						MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix()).sendMessage(pl);
+					} else {
+						MessageBuilder.createMessage(MessageString.ERROR_PLAYERNOTFOUND.applyPrefix()).sendMessage(pl);
+					}
+					return true;
+				}
+
+				toGive.getInventory().addItem(block.generateItem());
 			} else {
-				MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(pl);
+				MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKS_NOTFOUND.applyPrefix())
+						.sendMessage(pl);
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix()).sendMessage(sender);
+			MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(pl);
 		}
 		return true;
 	}

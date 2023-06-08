@@ -117,7 +117,7 @@ public class SearchPlayersInventory extends PluginChestInventory {
 							.createMessage(MessageString.INVENTORY_SEARCHPLAYERS_SEARCHSPECIFICPLAYERINFO.applyPrefix())
 							.sendMessage(e.getWhoClicked());
 				} catch (PlayerAlreadyListeningException ex) {
-					MessageBuilder.createMessage(MessageString.ERROR_CHATSEARCH_ALREADYSEARCHING.toString())
+					MessageBuilder.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.toString())
 							.sendMessage(e.getWhoClicked());
 				}
 			}

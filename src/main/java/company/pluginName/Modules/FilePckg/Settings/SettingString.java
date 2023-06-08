@@ -9,10 +9,11 @@ import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.Fi
 
 @RequiredArgsConstructor
 public enum SettingString implements FileObjFieldsEnum<String> {
-	SETTING_PROTECTION_ENTER_DEFAULT_MESSAGE("Settings.Protection.Enter-default-message",
+	SETTING_PROTECTION_ENTERDEFAULTMESSAGE("Settings.Protection.Enter-default-message",
 			"&7Entering protection owned by &a{player}"),
-	SETTING_PROTECTION_EXIT_DEFAULT_MESSAGE("Settings.Protection.Exit-default-message",
+	SETTING_PROTECTION_EXITDEFAULTMESSAGE("Settings.Protection.Exit-default-message",
 			"&7Leaving protection owned by &a{player}"),
+	SETTING_PROTECTION_STARTERBLOCK("Settings.Protection.Stater-block", ""),
 
 	COMMANDS_PROTECTIONBLOCKS_NAME("Commands.Protection-blocks.Name", "protectionblocks"),
 	COMMANDS_PROTECTIONBLOCKS_DESCRIPTION("Commands.Protection-blocks.Description", "Open the GUI or execute commands"),

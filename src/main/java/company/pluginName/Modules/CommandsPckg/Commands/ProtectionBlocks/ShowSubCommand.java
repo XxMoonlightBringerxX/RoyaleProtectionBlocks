@@ -3,20 +3,16 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.FilePckg.Settings.SettingList;
 import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
 import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.Utils.Bukkit.BlockUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
-import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
 public class ShowSubCommand extends SubCommand {
 
@@ -36,29 +32,25 @@ public class ShowSubCommand extends SubCommand {
 					.getProtectionByLocation(pl.getLocation());
 			if (protection != null) {
 				if (protection.isMainOwner(pl.getUniqueId())) {
-					ProtectionBlock block = protection.getProtectionBlock().getObject();
-					if (block.getItem().getType() != Material.PAPER.getMaterial()) {
-						Block bBlock = protection.getProtectionBlockLocation().getBlock();
-						if (bBlock.getType() == Material.AIR.getMaterial()) {
-							ItemStack item = block.getItem();
-							bBlock.setType(item.getType());
-							if (item.getType() == Material.PLAYER_HEAD.getMaterial()) {
-								BlockUtils.setSkin(bBlock, ItemStacksUtils.getSkin(item));
-							}
-							MessageBuilder
-									.createMessage(MessageString.MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY.applyPrefix())
-									.sendMessage(sender);
-						} else {
-							if (protection.getProtectionBlockLocation().getBlock().getType() == block.getItem()
-									.getType()) {
+					Boolean isProtectionBlock = protection.isProtectionBlock();
+					if (isProtectionBlock != null) {
+						if (!isProtectionBlock) {
+							Block block = protection.getProtectionBlockLocation().getBlock();
+							if (block.getType() == Material.AIR.getMaterial()) {
+								protection.showProtectionBlock();
 								MessageBuilder
-										.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKALREADYSHOWN.applyPrefix())
+										.createMessage(
+												MessageString.MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY.applyPrefix())
 										.sendMessage(sender);
 							} else {
 								MessageBuilder
 										.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKEDBYBLOCK.applyPrefix())
 										.sendMessage(sender);
 							}
+						} else {
+							MessageBuilder
+									.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKALREADYSHOWN.applyPrefix())
+									.sendMessage(sender);
 						}
 					} else {
 						MessageBuilder

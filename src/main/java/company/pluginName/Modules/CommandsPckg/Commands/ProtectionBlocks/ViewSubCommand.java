@@ -12,14 +12,14 @@ import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
 import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
 
-public class HideSubCommand extends SubCommand {
+public class ViewSubCommand extends SubCommand {
 
-	public HideSubCommand(Command command) {
-		super(command, "hide", SettingString.COMMANDS_PROTECTIONBLOCKS_HIDE_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_HIDE_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_HIDE_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_HIDE_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_HIDE_ALIASES.getContent());
+	public ViewSubCommand(Command command) {
+		super(command, "view", SettingString.COMMANDS_PROTECTIONBLOCKS_VIEW_NAME.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_VIEW_PERMISSION.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_VIEW_DESCRIPTION.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_VIEW_USAGE.toString(),
+				SettingList.COMMANDS_PROTECTIONBLOCKS_VIEW_ALIASES.getContent());
 	}
 
 	@Override
@@ -30,23 +30,7 @@ public class HideSubCommand extends SubCommand {
 					.getProtectionByLocation(pl.getLocation());
 			if (protection != null) {
 				if (protection.isMainOwner(pl.getUniqueId())) {
-					Boolean isProtectionBlock = protection.isProtectionBlock();
-					if (isProtectionBlock != null) {
-						if (isProtectionBlock) {
-							protection.hideProtectionBlock();
-							MessageBuilder
-									.createMessage(MessageString.MESSAGE_PROTECTIONS_HIDDENSUCCESSFULLY.applyPrefix())
-									.sendMessage(sender);
-						} else {
-							MessageBuilder
-									.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKALREADYHIDDEN.applyPrefix())
-									.sendMessage(sender);
-						}
-					} else {
-						MessageBuilder
-								.createMessage(MessageString.ERROR_PROTECTIONS_ORAXENINCOMPATIBILITY.applyPrefix())
-								.sendMessage(sender);
-					}
+					protection.toggleProtectionView();
 				} else {
 					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTMAINOWNER.applyPrefix())
 							.sendMessage(sender);

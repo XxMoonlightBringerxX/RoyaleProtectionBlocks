@@ -109,6 +109,11 @@ public class ProtectionsModule implements PluginModule {
 
 	@Override
 	public boolean unload() {
+		protectionsByWorld.values().forEach(list -> list.forEach(protection -> {
+			if (protection.isProtectionViewActive()) {
+				protection.toggleProtectionView();
+			}
+		}));
 		protectionBlockById.clear();
 		protectionsByOwner.clear();
 		protectionsByWorld.clear();

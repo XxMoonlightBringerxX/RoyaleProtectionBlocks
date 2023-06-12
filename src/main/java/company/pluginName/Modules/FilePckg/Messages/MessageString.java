@@ -70,10 +70,17 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 
 	// Inventory protection items
 	INVENTORY_PROTECTION_TITLE("Inventory.Protection.Title", "{protection}"),
+	INVENTORY_PROTECTION_PROTECTIONINFONAME("Inventory.Protection.Protection-info-name", "&e{owner}"),
 	INVENTORY_PROTECTION_OWNERSNAME("Inventory.Protection.Owners-name", "&eOwners"),
 	INVENTORY_PROTECTION_MEMBERSNAME("Inventory.Protection.Members-name", "&eMembers"),
 	INVENTORY_PROTECTION_FLAGSNAME("Inventory.Protection.Flags-name", "&eFlags"),
 	INVENTORY_PROTECTION_RENAMENAME("Inventory.Protection.Rename-name", "&eRename protection"),
+	INVENTORY_PROTECTION_SHOWBLOCKNAME("Inventory.Protection.Show-block-name", "&eShow the protection block"),
+	INVENTORY_PROTECTION_HIDEBLOCKNAME("Inventory.Protection.Hide-block-name", "&eHide the protection block"),
+	INVENTORY_PROTECTION_SHOWBOUNDARIESNAME("Inventory.Protection.Show-boundaries-name",
+			"&eShow the protection boundaries"),
+	INVENTORY_PROTECTION_HIDEBOUNDARIESNAME("Inventory.Protection.Hide-boundaries-name",
+			"&eHide the protection boundaries"),
 	INVENTORY_PROTECTION_TYPENEWNAMEINFO("Inventory.Protection.Type-new-name-Info",
 			"&7Type the new name for the protection. Type 'cancel' to cancel this action."),
 

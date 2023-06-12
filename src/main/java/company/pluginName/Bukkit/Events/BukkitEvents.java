@@ -31,9 +31,9 @@ public class BukkitEvents implements Listener {
 
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent e) {
-		if (!e.getPlayer().hasPlayedBefore() && !SettingString.SETTING_PROTECTION_STARTERBLOCK.toString().isEmpty()) {
+		if (!e.getPlayer().hasPlayedBefore() && !SettingString.SETTINGS_PROTECTION_STARTERBLOCK.toString().isEmpty()) {
 			ProtectionBlock block = MainPluginClass.getPlugin().getProtectionsModule()
-					.getProtectionBlockById(SettingString.SETTING_PROTECTION_STARTERBLOCK.toString());
+					.getProtectionBlockById(SettingString.SETTINGS_PROTECTION_STARTERBLOCK.toString());
 			if (block != null) {
 				e.getPlayer().getInventory().addItem(block.generateItem());
 			}

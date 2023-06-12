@@ -19,12 +19,16 @@ public enum MessageList implements FileObjFieldsEnum<List<String>> {
 	MESSAGE_HELPER_BODY("Message.Helper.Body", Arrays.asList("&6%command_usage%", "  &8%command_description%")),
 	MESSAGE_HELPER_FOOTER("Message.Helper.Footer", Arrays.asList(" ", "&c・。・。・。・。・。・。・。・。・。・。・。・。・。・。・。・。・", " ")),
 
-	INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKLORE("Inventory.Protection-blocks.List.Block-lore",
-			Arrays.asList("&0", "&a&oBlock ID: &e{block_id}", "&a&oBlock size: &e{blocks_x}x{blocks_y}x{blocks_z}")),
+	INVENTORY_PROTECTION_PROTECTIONINFOLORE("Inventory.Protection.Protection-info-lore",
+			Arrays.asList("&0", "&a&oWorld: &e{world}", "&a&oLocation: &ex={location_x},y={location_y},z={location_z}",
+					"&a&oSize: &e{size_x}x{size_y}x{size_z}")),
 
 	INVENTORY_PROTECTION_LIST_PROTECTIONLORE("Inventory.Protection.List.Protection-lore",
 			Arrays.asList("&0", "&a&oWorld: &e{world}",
 					"&a&oLocation: &ex={location_x},y={location_y},z={location_z}")),
+
+	INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKLORE("Inventory.Protection-blocks.List.Block-lore",
+			Arrays.asList("&0", "&a&oBlock ID: &e{block_id}", "&a&oBlock size: &e{blocks_x}x{blocks_y}x{blocks_z}")),
 
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_ITEMLORE("Inventory.Protection-blocks.Manage.Item-lore",
 			Arrays.asList("&0", "&8 - &aLeft click with item: &eReplace current item",

@@ -3,7 +3,7 @@ package company.pluginName.Modules.FilePckg.Settings;
 import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
 
 public enum SettingInt implements FileObjFieldsEnum<Integer> {
-	;
+	SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS("Settings.Protection.Boundaries-view-duration-in-seconds", 30);
 
 	// Methods
 	String oldpath, path;

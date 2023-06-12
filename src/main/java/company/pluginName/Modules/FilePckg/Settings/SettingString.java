@@ -9,11 +9,11 @@ import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.Fi
 
 @RequiredArgsConstructor
 public enum SettingString implements FileObjFieldsEnum<String> {
-	SETTING_PROTECTION_ENTERDEFAULTMESSAGE("Settings.Protection.Enter-default-message",
+	SETTINGS_PROTECTION_ENTERDEFAULTMESSAGE("Settings.Protection.Enter-default-message",
 			"&7Entering protection owned by &a{player}"),
-	SETTING_PROTECTION_EXITDEFAULTMESSAGE("Settings.Protection.Exit-default-message",
+	SETTINGS_PROTECTION_EXITDEFAULTMESSAGE("Settings.Protection.Exit-default-message",
 			"&7Leaving protection owned by &a{player}"),
-	SETTING_PROTECTION_STARTERBLOCK("Settings.Protection.Stater-block", ""),
+	SETTINGS_PROTECTION_STARTERBLOCK("Settings.Protection.Stater-block", ""),
 
 	COMMANDS_PROTECTIONBLOCKS_NAME("Commands.Protection-blocks.Name", "protectionblocks"),
 	COMMANDS_PROTECTIONBLOCKS_DESCRIPTION("Commands.Protection-blocks.Description", "Open the GUI or execute commands"),
@@ -79,6 +79,12 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 			"Show the protection block on your current protection"),
 	COMMANDS_PROTECTIONBLOCKS_SHOW_USAGE("Commands.Protection-blocks.Show.Usage", ""),
 	COMMANDS_PROTECTIONBLOCKS_SHOW_PERMISSION("Commands.Protection-blocks.Show.Permission", ""),
+
+	COMMANDS_PROTECTIONBLOCKS_VIEW_NAME("Commands.Protection-blocks.View.Name", "view"),
+	COMMANDS_PROTECTIONBLOCKS_VIEW_DESCRIPTION("Commands.Protection-blocks.View.Description",
+			"Show the boundaries of your current protection for a certain time"),
+	COMMANDS_PROTECTIONBLOCKS_VIEW_USAGE("Commands.Protection-blocks.View.Usage", ""),
+	COMMANDS_PROTECTIONBLOCKS_VIEW_PERMISSION("Commands.Protection-blocks.View.Permission", ""),
 
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_NAME("Commands.Protection-blocks.Blocks.Name", "blocks"),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_DESCRIPTION("Commands.Protection-blocks.Blocks.Description",

@@ -1,7 +1,10 @@
 package company.pluginName.Bukkit.Inventories.Protections;
 
+import java.util.HashMap;
+
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -12,6 +15,8 @@ import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
+import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
+import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
 import company.pluginName.Modules.FilePckg.Messages.MessageList;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
@@ -51,7 +56,6 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 
 	@Override
 	public void updateContent() {
-
 		Location loc = protection.getProtectionBlockLocation();
 		ProtectionBlock block = protection.getProtectionBlock().getObject();
 		OfflinePlayer owner = OfflinePlayerUtils.getOfflinePlayer(protection.getOwnerUuid());
@@ -160,27 +164,36 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 			}
 		});
 
-		Boolean isProtectionBlock = protection.isProtectionBlock();
+		if (protection.isMainOwner(getPlayer().getUniqueId())) {
+			Boolean isProtectionBlock = protection.isProtectionBlock();
 
-		if (isProtectionBlock != null) {
-			ItemStack hideShowBlock = isProtectionBlock
-					? ItemStacksUtils.createItemStack(Material.GRASS_BLOCK,
-							MessageBuilder.createMessage(MessageString.INVENTORY_PROTECTION_HIDEBLOCKNAME.toString())
-									.toString())
-					: ItemStacksUtils.createItemStack(Material.GLASS, MessageBuilder
-							.createMessage(MessageString.INVENTORY_PROTECTION_SHOWBLOCKNAME.toString()).toString());
+			if (isProtectionBlock != null) {
+				ItemStack hideShowBlock = isProtectionBlock
+						? ItemStacksUtils.createItemStack(Material.GRASS_BLOCK, MessageBuilder
+								.createMessage(MessageString.INVENTORY_PROTECTION_HIDEBLOCKNAME.toString()).toString())
+						: ItemStacksUtils.createItemStack(Material.GLASS, MessageBuilder
+								.createMessage(MessageString.INVENTORY_PROTECTION_SHOWBLOCKNAME.toString()).toString());
 
-			setSlot(23, new Button(hideShowBlock) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					if (protection.isProtectionBlockShown()) {
-						protection.hideProtectionBlock();
-					} else {
-						protection.showProtectionBlock();
+				setSlot(23, new Button(hideShowBlock) {
+					@Override
+					public void onClick(InventoryClickEvent e) {
+						if (protection.isProtectionBlockShown()) {
+							protection.hideProtectionBlock();
+						} else {
+							Block block = protection.getProtectionBlockLocation().getBlock();
+							if (block.getType() == Material.AIR.getMaterial()) {
+								protection.showProtectionBlock();
+							} else {
+								MessageBuilder
+										.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKEDBYBLOCK.applyPrefix())
+										.sendMessage(getPlayer());
+								return;
+							}
+						}
+						updateInventory();
 					}
-					updateInventory();
-				}
-			});
+				});
+			}
 		}
 
 		ItemStack viewActive = protection.isProtectionViewActive()
@@ -198,6 +211,44 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 				updateInventory();
 			}
 		});
+
+		if (protection.isMainOwner(getPlayer().getUniqueId())) {
+			setSlot(getSize() - 1,
+					new Button(ItemStacksUtils.createItemStack(
+							ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), TRASH_SKIN),
+							MessageBuilder
+									.createMessage(MessageString.INVENTORY_PROTECTION_DELETEPROTECTIONNAME.toString())
+									.toString())) {
+						@Override
+						public void onClick(InventoryClickEvent e) {
+							new ConfirmationInventory(getPlayer(), () -> {
+								try {
+									if (protection.isProtectionBlockShown()) {
+										protection.hideProtectionBlock();
+									}
+
+									MainPluginClass.getPlugin().getProtectionsModule().removeProtection(protection);
+
+									HashMap<Integer, ItemStack> items = getPlayer().getInventory()
+											.addItem(protection.getProtectionBlock().getObject().generateItem());
+
+									if (items != null && !items.isEmpty()) {
+										items.values().forEach(item -> getPlayer().getLocation().getWorld()
+												.dropItem(getPlayer().getLocation(), item));
+									}
+
+									MessageBuilder
+											.createMessage(
+													MessageString.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
+											.sendMessage(getPlayer());
+								} catch (ProtectionDeleteException e1) {
+									e1.sendError(getPlayer());
+									openInventory();
+								}
+							}).setPreviousHolder(getPreviousHolder()).openInventory(MainPluginClass.getPlugin());
+						}
+					});
+		}
 	}
 
 }

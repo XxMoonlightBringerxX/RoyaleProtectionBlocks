@@ -23,7 +23,7 @@ public class ReloadSubCommand extends SubCommand {
 	@Override
 	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
 		MainPluginClass.getPlugin().reloadPlugin();
-		MessageBuilder.createMessage(MessageString.applyPrefix(MessageString.MESSAGE_RELOAD)).sendMessage(sender);
+		MessageBuilder.createMessage(MessageString.MESSAGE_RELOAD.applyPrefix()).sendMessage(sender);
 		return true;
 	}
 

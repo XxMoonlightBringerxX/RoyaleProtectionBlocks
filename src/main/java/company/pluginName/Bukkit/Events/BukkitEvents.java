@@ -1,6 +1,8 @@
 package company.pluginName.Bukkit.Events;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -10,13 +12,17 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManagerInventory;
+import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
@@ -74,7 +80,19 @@ public class BukkitEvents implements Listener {
 						MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_PERMISSIONDENIED.applyPrefix())
 								.sendMessage(e.getPlayer());
 					}
+					return;
 				}
+			}
+		}
+
+		Protection prot = MainPluginClass.getPlugin().getProtectionsModule()
+				.getProtectionByBlock(e.getBlock().getLocation());
+		if (prot != null) {
+			ProtectionBlock block = prot.getProtectionBlock().getObject();
+			if (block != null && block.getItem().getType() == e.getItemInHand().getType()) {
+				e.setCancelled(true);
+				MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_SAMEITEMASPROTECTION.applyPrefix())
+						.sendMessage(e.getPlayer());
 			}
 		}
 	}
@@ -113,12 +131,39 @@ public class BukkitEvents implements Listener {
 
 	@EventHandler
 	public void onClickBlock(PlayerInteractEvent e) {
-		if (e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK && !e.getPlayer().isSneaking()) {
+		if (e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK && e.getHand() == EquipmentSlot.HAND) {
 			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
 					.getProtectionByBlock(e.getClickedBlock().getLocation());
 			if (protection != null && protection.isOwner(e.getPlayer().getUniqueId())) {
-				e.setCancelled(true);
-				new ProtectionsManagerInventory(e.getPlayer(), protection).openInventory();
+				if (!e.getPlayer().isSneaking() || !protection.canDelete(e.getPlayer())) {
+					e.setCancelled(true);
+					new ProtectionsManagerInventory(e.getPlayer(), protection).openInventory();
+				} else {
+					e.setCancelled(true);
+					new ConfirmationInventory(e.getPlayer(), () -> {
+						try {
+							if (protection.isProtectionBlockShown()) {
+								protection.hideProtectionBlock();
+							}
+
+							MainPluginClass.getPlugin().getProtectionsModule().removeProtection(protection);
+
+							HashMap<Integer, ItemStack> items = e.getPlayer().getInventory()
+									.addItem(protection.getProtectionBlock().getObject().generateItem());
+
+							if (items != null && !items.isEmpty()) {
+								items.values().forEach(item -> e.getPlayer().getLocation().getWorld()
+										.dropItem(e.getPlayer().getLocation(), item));
+							}
+
+							MessageBuilder
+									.createMessage(MessageString.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
+									.sendMessage(e.getPlayer());
+						} catch (ProtectionDeleteException e1) {
+							e1.sendError(e.getPlayer());
+						}
+					}).openInventory();
+				}
 			}
 		}
 	}
@@ -148,6 +193,18 @@ public class BukkitEvents implements Listener {
 						}
 					}
 				});
+	}
+
+	@EventHandler
+	public void onDamageEntity(EntityDamageEvent e) {
+		List<Protection> protections = MainPluginClass.getPlugin().getProtectionsModule().getProtectionsByWorld()
+				.getOrDefault(e.getEntity().getWorld().getName(), new ArrayList<>());
+		for (Protection protection : protections) {
+			if (protection.isProtectionViewEntity(e.getEntity())) {
+				e.setCancelled(true);
+				break;
+			}
+		}
 	}
 
 }

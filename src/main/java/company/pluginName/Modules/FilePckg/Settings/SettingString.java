@@ -13,7 +13,7 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 			"&7Entering protection owned by &a{player}"),
 	SETTINGS_PROTECTION_EXITDEFAULTMESSAGE("Settings.Protection.Exit-default-message",
 			"&7Leaving protection owned by &a{player}"),
-	SETTINGS_PROTECTION_STARTERBLOCK("Settings.Protection.Stater-block", ""),
+	SETTINGS_PROTECTION_STARTERBLOCK("Settings.Protection.Starter-block", "Settings.Protection.Stater-block", ""),
 
 	COMMANDS_PROTECTIONBLOCKS_NAME("Commands.Protection-blocks.Name", "protectionblocks"),
 	COMMANDS_PROTECTIONBLOCKS_DESCRIPTION("Commands.Protection-blocks.Description", "Open the GUI or execute commands"),

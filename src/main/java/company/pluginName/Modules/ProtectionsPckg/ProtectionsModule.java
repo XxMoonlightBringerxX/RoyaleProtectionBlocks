@@ -15,7 +15,6 @@ import org.bukkit.entity.Player;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
@@ -255,8 +254,7 @@ public class ProtectionsModule implements PluginModule {
 
 	public void removeProtection(Player pl, Protection protection) throws ProtectionDeleteException {
 		if (pl != null) {
-			if (!protection.getOwnerUuid().equals(pl.getUniqueId())
-					&& !pl.hasPermission(Permissions.PROTECTION_DELETE_OTHERS)) {
+			if (!protection.canDelete(pl)) {
 				throw new ProtectionDeleteDeniedException();
 			}
 		}
@@ -322,19 +320,33 @@ public class ProtectionsModule implements PluginModule {
 	 * Search methods
 	 */
 
-	public Protection getProtectionByBlock(Location location) {
-		Protection protection = getProtectionByLocation(location);
-
-		return protection != null && protection.isProtectionBlock(location.getBlock()) ? protection : null;
-	}
-
 	public Protection getProtectionByLocation(Location location) {
-		ProtectedRegion region = getRegionByLocation(location.getWorld(), BlockVectorUtils.locationToVector(location));
+		ApplicableRegionSet regions = getApplicableRegions(location.getWorld(),
+				BlockVectorUtils.locationToVector(location));
 
-		return region != null ? protectionByRegion.get(region.getId()) : null;
+		if (regions == null) {
+			return null;
+		}
+
+		return regions.getRegions().stream().map(region -> protectionByRegion.get(region.getId()))
+				.filter(prot -> prot != null).sorted((r1, r2) -> Integer.compare(r1.getProtectedRegion().getPriority(),
+						r2.getProtectedRegion().getPriority()))
+				.findFirst().orElse(null);
 	}
 
-	private ProtectedRegion getRegionByLocation(World world, BlockVector3 vector) {
+	public Protection getProtectionByBlock(Location location) {
+		ApplicableRegionSet regions = getApplicableRegions(location.getWorld(),
+				BlockVectorUtils.locationToVector(location));
+
+		if (regions == null) {
+			return null;
+		}
+
+		return regions.getRegions().stream().map(region -> protectionByRegion.get(region.getId()))
+				.filter(prot -> prot != null && prot.isProtectionBlock(location.getBlock())).findFirst().orElse(null);
+	}
+
+	private ApplicableRegionSet getApplicableRegions(World world, BlockVector3 vector) {
 		if (!protectionsByWorld.containsKey(world.getName())) {
 			return null;
 		}
@@ -347,10 +359,7 @@ public class ProtectionsModule implements PluginModule {
 			return null;
 		}
 
-		ApplicableRegionSet regions = regionManager.getApplicableRegions(vector);
-
-		return regions.getRegions().stream().filter(region -> protectionByRegion.containsKey(region.getId()))
-				.findFirst().orElse(null);
+		return regionManager.getApplicableRegions(vector);
 	}
 
 }

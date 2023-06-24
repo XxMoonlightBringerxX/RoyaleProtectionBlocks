@@ -83,6 +83,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&eHide the protection boundaries"),
 	INVENTORY_PROTECTION_TYPENEWNAMEINFO("Inventory.Protection.Type-new-name-Info",
 			"&7Type the new name for the protection. Type 'cancel' to cancel this action."),
+	INVENTORY_PROTECTION_DELETEPROTECTIONNAME("Inventory.Protection.Delete-protection-name", "&cDelete protection"),
 
 	// Inventory protection list items
 	INVENTORY_PROTECTION_LIST_TITLE("Inventory.Protection.List.Title", "Protections"),
@@ -186,6 +187,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&cThere's another block where the protection block should be placed!"),
 	ERROR_PROTECTIONS_ORAXENINCOMPATIBILITY("Error.Protections.Oraxen-incompatibility",
 			"&cYou can't do this with this kind of protection blocks!"),
+	ERROR_PROTECTIONS_SAMEITEMASPROTECTION("Error.Protections.Same-item-as-protection",
+			"&cYou can't place items of the same type as the protection block where the protection block is originally placed!"),
 
 	ERROR_PROTECTIONS_BLOCKS_NOTFOUND("Error.Protections.Blocks.Not-found",
 			"&cThere's no protection block with this ID!"),

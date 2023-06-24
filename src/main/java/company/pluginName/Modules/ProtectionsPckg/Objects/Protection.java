@@ -13,6 +13,8 @@ import org.bukkit.Particle.DustOptions;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -25,6 +27,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.MainPluginClass;
+import company.pluginName.Permissions;
 import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteException;
 import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteUnknownException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
@@ -36,6 +39,8 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.Refe
 import company.pluginName.Utils.BlockVectorUtils;
 import company.pluginName.Utils.OfflinePlayerUtils;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextInput;
 import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextReplacement;
@@ -92,7 +97,7 @@ public class Protection {
 	private ProtectedRegion protectedRegion;
 	private Location protectionBlockLocation;
 	private BukkitTask protectionViewTask;
-	private Entity protectionViewEntity;
+	private @Setter(lombok.AccessLevel.NONE) @Getter(lombok.AccessLevel.NONE) Entity protectionViewEntity;
 
 	public Protection(UUID ownerUuid) {
 		this(null, ownerUuid, null, null, null, null, null);
@@ -163,6 +168,12 @@ public class Protection {
 
 	public boolean isProtectionViewActive() {
 		return protectionViewTask != null && !protectionViewTask.isCancelled();
+	}
+
+	public boolean isProtectionViewEntity(Entity ent) {
+		return this.isProtectionViewActive() && this.protectionViewEntity != null
+				&& ent.getType() == EntityType.MAGMA_CUBE
+				&& this.protectionViewEntity.getUniqueId().equals(ent.getUniqueId());
 	}
 
 	public void create(Location location, ProtectionBlock protectionBlock) throws ProtectionSaveException {
@@ -333,11 +344,20 @@ public class Protection {
 		if (isSameLocation) {
 			ProtectionBlock protectionBlock = this.protectionBlock.getObject();
 
+			if (protectionBlock == null) {
+				return true;
+			}
+
 			if (protectionBlock.getItem().getType() == Material.PAPER.getMaterial()) {
 				return null;
 			}
 
-			if (protectionBlock != null && block.getType() == protectionBlock.getItem().getType()) {
+			if (block.getType() == protectionBlock.getItem().getType()) {
+				return true;
+			}
+
+			if (block.getType() == Material.PLAYER_WALL_HEAD.getMaterial()
+					&& protectionBlock.getItem().getType() == Material.PLAYER_HEAD.getMaterial()) {
 				return true;
 			}
 		}
@@ -423,6 +443,14 @@ public class Protection {
 		}
 
 		return locations;
+	}
+
+	/*
+	 * Authority methods
+	 */
+
+	public boolean canDelete(Player pl) {
+		return this.isMainOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_DELETE_OTHERS);
 	}
 
 }

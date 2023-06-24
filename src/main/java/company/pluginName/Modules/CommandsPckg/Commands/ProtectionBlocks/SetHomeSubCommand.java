@@ -46,25 +46,19 @@ public class SetHomeSubCommand extends SubCommand {
 								.createMessage(MessageString.MESSAGE_PROTECTIONS_HOMESETSUCCESSFULLY.applyPrefix())
 								.sendMessage(sender);
 					} catch (Exception e) {
-						MessageBuilder.createMessage(MessageString.applyPrefix(MessageString.ERROR_ERROR.applyPrefix()))
-								.sendMessage(sender);
+						MessageBuilder.createMessage(MessageString.ERROR_ERROR.applyPrefix()).sendMessage(sender);
 						e.printStackTrace();
 					}
 				} else {
-					MessageBuilder
-							.createMessage(MessageString
-									.applyPrefix(MessageString.ERROR_PROTECTIONS_NOTMAINOWNER.applyPrefix()))
+					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTMAINOWNER.applyPrefix())
 							.sendMessage(sender);
 				}
 			} else {
-				MessageBuilder
-						.createMessage(MessageString
-								.applyPrefix(MessageString.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()))
+				MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix())
 						.sendMessage(sender);
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.applyPrefix(MessageString.ERROR_CONSOLEDENIED))
-					.sendMessage(sender);
+			MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix()).sendMessage(sender);
 		}
 		return true;
 	}

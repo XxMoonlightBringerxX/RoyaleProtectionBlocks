@@ -53,9 +53,11 @@ public class GiveSubCommand extends SubCommand {
 
 				if (toGive == null) {
 					if (pl == null) {
-						MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix()).sendMessage(pl);
+						MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix())
+								.sendMessage(sender);
 					} else {
-						MessageBuilder.createMessage(MessageString.ERROR_PLAYERNOTFOUND.applyPrefix()).sendMessage(pl);
+						MessageBuilder.createMessage(MessageString.ERROR_PLAYERNOTFOUND.applyPrefix())
+								.sendMessage(sender);
 					}
 					return true;
 				}
@@ -66,7 +68,7 @@ public class GiveSubCommand extends SubCommand {
 						.sendMessage(pl);
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(pl);
+			MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(sender);
 		}
 		return true;
 	}

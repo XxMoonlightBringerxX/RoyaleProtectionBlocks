@@ -47,7 +47,7 @@ public class ProtectionBlocksCommand extends Command {
 		if (pl != null && args.length == 0) {
 			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
 					.getProtectionByLocation(pl.getLocation());
-			if (protection != null && protection.isOwner(pl.getUniqueId())) {
+			if (protection != null && protection.canManage(pl)) {
 				new ProtectionsManagerInventory(pl, protection).openInventory();
 			} else {
 				new ProtectionsListInventory(pl).openInventory();

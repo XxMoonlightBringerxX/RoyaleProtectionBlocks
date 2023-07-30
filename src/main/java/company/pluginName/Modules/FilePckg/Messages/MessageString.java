@@ -148,6 +148,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&aCurrent ID: &7&oNot set yet"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTMODIFIABLENAME("Inventory.Protection-blocks.Manage.Id-not-modifiable-name",
 			"&aCurrent ID: &e{block_id} &7&o[Not modifiable]"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPENAME("Inventory.Protection-blocks.Manage.Recipe-name", "&aRecipe"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNAME("Inventory.Protection-blocks.Manage.Permission-name",
 			"&aCurrent permission: &e{block_permission}"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNOTSETNAME("Inventory.Protection-blocks.Manage.Permission-not-set-name",
@@ -159,6 +160,18 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&7Type the permission you wish to set on your protection block. Type 'cancel' to cancel this action."),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSSPECIFYINFO("Inventory.Protection-blocks.Manage.Blocks-specify-info",
 			"&7Type the amount of blocks you wish to set on your protection block. Type 'cancel' to cancel this action."),
+
+	// Inventory protection list items
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_TITLE("Inventory.Protection-blocks.Manage.Recipe.Title",
+			"{block} > Recipe"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONNAME("Inventory.Protection-blocks.Manage.Recipe.Permission-name",
+			"&aCurrent permission: &e{block_permission}"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONNOTSETNAME(
+			"Inventory.Protection-blocks.Manage.Recipe.Permission-not-set-name",
+			"&aCurrent permission: &7&oNot set yet"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONSPECIFYINFO(
+			"Inventory.Protection-blocks.Manage.Recipe.Permission-specify-info",
+			"&7Type the permission you wish to set on your recipe. Type 'cancel' to cancel this action."),
 
 	// Errors
 	ERROR_ERROR("Error.Error", "&cError!"),
@@ -177,6 +190,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_PROTECTIONS_BANNEDWORLD("Error.Protections.Banned-world", "&cYou can't use protection blocks in this world!"),
 	ERROR_PROTECTIONS_NOTMAINOWNER("Error.Protections.Not-main-owner",
 			"&cYou're not the main owner of this protection!"),
+	ERROR_PROTECTIONS_NOTOWNER("Error.Protections.Not-owner", "&cYou're not an owner of this protection!"),
 	ERROR_PROTECTIONS_PERMISSIONDENIED("Error.Protections.Permission-denied",
 			"&cYou don't have permissions to use this protection block!"),
 	ERROR_PROTECTIONS_BLOCKALREADYHIDDEN("Error.Protections.Block-already-hidden",
@@ -185,8 +199,6 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&cThe protection block is already shown!"),
 	ERROR_PROTECTIONS_BLOCKEDBYBLOCK("Error.Protections.Blocked-by-block",
 			"&cThere's another block where the protection block should be placed!"),
-	ERROR_PROTECTIONS_ORAXENINCOMPATIBILITY("Error.Protections.Oraxen-incompatibility",
-			"&cYou can't do this with this kind of protection blocks!"),
 	ERROR_PROTECTIONS_SAMEITEMASPROTECTION("Error.Protections.Same-item-as-protection",
 			"&cYou can't place items of the same type as the protection block where the protection block is originally placed!"),
 

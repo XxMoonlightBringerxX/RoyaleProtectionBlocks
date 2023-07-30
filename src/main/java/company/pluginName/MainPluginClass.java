@@ -2,16 +2,25 @@ package company.pluginName;
 
 import org.bukkit.Bukkit;
 
+import company.pluginName.APIs.ItemsAdderAPI;
+import company.pluginName.APIs.OraxenAPI;
+import company.pluginName.APIs.PlaceholderAPI;
 import company.pluginName.APIs.WorldGuardAPI;
 import company.pluginName.Bukkit.Events.BukkitEvents;
+import company.pluginName.Bukkit.Events.RecipeEvents;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.Objects.Flag;
 import company.pluginName.Modules.CommandsPckg.CommandsModule;
 import company.pluginName.Modules.FilePckg.FileModule;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
+import company.pluginName.Modules.FilePckg.Settings.SettingBoolean;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionSettingsModule;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsModule;
+import company.pluginName.Modules.RecipesPckg.RecipesModule;
 import company.pluginName.Modules.SQLPckg.SQLModule;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import relampagorojo93.LibsCollection.SpigotPlugin.MainClass;
 import relampagorojo93.LibsCollection.SpigotPlugin.annotations.EventHandlers;
 import relampagorojo93.LibsCollection.SpigotPlugin.interfaces.CanDisable;
@@ -26,7 +35,8 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	// ---------------------------------------------------------------//
 
 	public MainPluginClass() {
-		super(new FileModule(), new CommandsModule(), new SQLModule(), new ProtectionsModule());
+		super(new FileModule(), new CommandsModule(), new SQLModule(), new ProtectionSettingsModule(),
+				new ProtectionsModule(), new RecipesModule());
 		plugin = this;
 	}
 
@@ -62,11 +72,15 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	@Override
 	public boolean load() {
 		if (isFirstTime()) {
-			wgAPI = new WorldGuardAPI();
+			worldGuardAPI = new WorldGuardAPI();
 
-			if (!wgAPI.isHooked()) {
+			if (!worldGuardAPI.isHooked()) {
 				return false;
 			}
+
+			placeholderAPI = new PlaceholderAPI();
+			itemsAdderAPI = new ItemsAdderAPI();
+			oraxenAPI = new OraxenAPI();
 		}
 		return true;
 	}
@@ -85,6 +99,7 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	public boolean enable() {
 		if (isFirstTime()) {
 			Bukkit.getPluginManager().registerEvents(new BukkitEvents(), this);
+			Bukkit.getPluginManager().registerEvents(new RecipeEvents(), this);
 		}
 		Flag.initFlags();
 		PluginChestInventory.initItems();
@@ -121,8 +136,11 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	// Modules
 	// ---------------------------------------------------------------//
 
-	private static MainPluginClass plugin;
-	private static WorldGuardAPI wgAPI;
+	private @Getter static MainPluginClass plugin;
+	private @Getter static WorldGuardAPI worldGuardAPI;
+	private @Getter static PlaceholderAPI placeholderAPI;
+	private @Getter static ItemsAdderAPI itemsAdderAPI;
+	private @Getter static OraxenAPI oraxenAPI;
 
 	public FileModule getFileModule() {
 		return (FileModule) getModule(FileModule.class);
@@ -136,20 +154,46 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 		return (ProtectionsModule) getModule(ProtectionsModule.class);
 	}
 
+	public ProtectionSettingsModule getProtectionSettingsModule() {
+		return (ProtectionSettingsModule) getModule(ProtectionSettingsModule.class);
+	}
+
+	public RecipesModule getRecipesModule() {
+		return (RecipesModule) getModule(RecipesModule.class);
+	}
+
 	public SQLModule getSqlModule() {
 		return (SQLModule) getModule(SQLModule.class);
 	}
 
-	public static MainPluginClass getPlugin() {
-		return plugin;
-	}
+	public static class Debugger {
 
-	public static WorldGuardAPI getWorldGuardAPI() {
-		return wgAPI;
-	}
+		public static void log(MessageType messageType, String message, String... args) {
+			if (SettingBoolean.SETTINGS_DEBUG_ENABLED.getContent() && messageType.isAvailable()) {
+				MessageBuilder.createMessage(MessageString.applyPrefix(message.formatted((Object[]) args)))
+						.sendMessage(Bukkit.getConsoleSender());
+			}
+		}
 
-	public static int getSQLVersion() {
-		return 1;
+		@AllArgsConstructor
+		public static enum MessageType {
+			BLOCK_PLACE(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACE),
+			BLOCK_PLACE_CANCELLED(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACECANCELLED),
+			BLOCK_BREAK(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKBREAK),
+			BLOCK_BREAK_CANCELLED(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKBREAKCANCELLED),
+			PROTECTION_CREATION_ATTEMPT(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATIONATTEMPT),
+			PROTECTION_CREATION(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATION),
+			PROTECTION_REMOVAL_ATTEMPT(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVALATTEMPT),
+			PROTECTION_REMOVAL(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVAL);
+
+			private SettingBoolean settingBoolean;
+
+			public boolean isAvailable() {
+				return settingBoolean.getContent();
+			}
+
+		}
+
 	}
 
 }

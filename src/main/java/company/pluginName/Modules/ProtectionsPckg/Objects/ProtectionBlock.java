@@ -6,6 +6,8 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
+import company.pluginName.APIs.ItemsAdderAPI;
+import company.pluginName.APIs.OraxenAPI;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteDeniedException;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveDeniedException;
@@ -42,7 +44,11 @@ public class ProtectionBlock {
 
 	public void setItem(ItemStack item) throws ProtectionBlocksSaveException {
 		if (item != null) {
-			if (item.getType() == Material.AIR || (!item.getType().isBlock() && item.getType() != Material.PAPER)) {
+			if (item.getType() == Material.AIR || (!item.getType().isBlock()
+					&& MainPluginClass.getItemsAdderAPI()
+							.isCustomBlock(item) != ItemsAdderAPI.BlockCheckingResult.IS_CUSTOM_ITEM
+					&& MainPluginClass.getOraxenAPI()
+							.isCustomBlock(item) != OraxenAPI.BlockCheckingResult.IS_CUSTOM_ITEM)) {
 				throw new ProtectionBlocksSaveItemNotAllowedException();
 			}
 

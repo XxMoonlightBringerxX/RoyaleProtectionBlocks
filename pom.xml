@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>0.0.14 Alpha</version>
+	<version>0.0.17 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -14,6 +14,10 @@
 		    <id>spigot-repo</id>
         	<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
 		</repository>
+		<repository>
+		    <id>jitpack-repo</id>
+		    <url>https://jitpack.io</url>
+		</repository>
     </repositories>
 	<dependencies>
 		<dependency>
@@ -22,6 +26,12 @@
            <version>1.13-R0.1-SNAPSHOT</version>
            <scope>provided</scope>
     	</dependency>
+    	<dependency>
+		    <groupId>com.github.LoneDev6</groupId>
+		    <artifactId>api-itemsadder</artifactId>
+		    <version>3.5.0b</version>
+		    <scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -49,8 +59,8 @@
 			<version>1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>SpigotMessages</groupId>
-			<artifactId>SpigotMessages</artifactId>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaColors</artifactId>
 			<version>1.0</version>
 		</dependency>
 		<dependency>
@@ -62,6 +72,39 @@
 			<groupId>PandaSQL</groupId>
 			<artifactId>PandaSQL</artifactId>
 			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaRecipes</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.github.oraxen</groupId>
+		    <artifactId>oraxen</artifactId>
+		    <version>1.159.0</version>
+		    <scope>provided</scope>
+		    <exclusions>
+		        <exclusion>
+		            <groupId>gs.mclo</groupId>
+		            <artifactId>mclogs</artifactId>
+		        </exclusion>
+		        <exclusion>
+		            <groupId>com.ticxo</groupId>
+		            <artifactId>PlayerAnimator</artifactId>
+		        </exclusion>
+		        <exclusion>
+		            <groupId>me.gabytm.util</groupId>
+		            <artifactId>actions-spigot</artifactId>
+		        </exclusion>
+		        <exclusion>
+		            <groupId>net.kyori</groupId>
+		            <artifactId>*</artifactId>
+		        </exclusion>
+		        <exclusion>
+		            <groupId>com.jeff_media</groupId>
+		            <artifactId>*</artifactId>
+		        </exclusion>
+		    </exclusions>
 		</dependency>
 	</dependencies>
 	<build>

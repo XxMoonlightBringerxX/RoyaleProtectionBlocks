@@ -8,7 +8,7 @@ import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 @Data
 @Setter(lombok.AccessLevel.NONE)

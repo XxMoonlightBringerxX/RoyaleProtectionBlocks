@@ -8,9 +8,9 @@ import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.FilePckg.Settings.SettingList;
 import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
 
 public class HideSubCommand extends SubCommand {
 
@@ -29,26 +29,17 @@ public class HideSubCommand extends SubCommand {
 			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
 					.getProtectionByLocation(pl.getLocation());
 			if (protection != null) {
-				if (protection.isMainOwner(pl.getUniqueId())) {
-					Boolean isProtectionBlock = protection.isProtectionBlock();
-					if (isProtectionBlock != null) {
-						if (isProtectionBlock) {
-							protection.hideProtectionBlock();
-							MessageBuilder
-									.createMessage(MessageString.MESSAGE_PROTECTIONS_HIDDENSUCCESSFULLY.applyPrefix())
-									.sendMessage(sender);
-						} else {
-							MessageBuilder
-									.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKALREADYHIDDEN.applyPrefix())
-									.sendMessage(sender);
-						}
+				if (protection.canToggleBlock(pl)) {
+					if (protection.isProtectionBlock()) {
+						protection.hideProtectionBlock();
+						MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_HIDDENSUCCESSFULLY.applyPrefix())
+								.sendMessage(sender);
 					} else {
-						MessageBuilder
-								.createMessage(MessageString.ERROR_PROTECTIONS_ORAXENINCOMPATIBILITY.applyPrefix())
+						MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKALREADYHIDDEN.applyPrefix())
 								.sendMessage(sender);
 					}
 				} else {
-					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTMAINOWNER.applyPrefix())
+					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTOWNER.applyPrefix())
 							.sendMessage(sender);
 				}
 			} else {

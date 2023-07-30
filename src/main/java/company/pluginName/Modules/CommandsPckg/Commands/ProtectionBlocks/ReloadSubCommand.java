@@ -8,7 +8,7 @@ import company.pluginName.Modules.FilePckg.Settings.SettingList;
 import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 public class ReloadSubCommand extends SubCommand {
 

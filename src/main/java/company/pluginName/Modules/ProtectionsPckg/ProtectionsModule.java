@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
@@ -45,16 +46,15 @@ import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.Utils.BlockVectorUtils;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import lombok.Getter;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextInput;
 import relampagorojo93.LibsCollection.SpigotPlugin.LoadOn;
 import relampagorojo93.LibsCollection.SpigotPlugin.PluginModule;
 
 public class ProtectionsModule implements PluginModule {
 
 	private @Getter HashMap<String, ProtectionBlock> protectionBlockById = new HashMap<>();
-
 	private @Getter HashMap<UUID, List<Protection>> protectionsByOwner = new HashMap<>();
 	private @Getter HashMap<String, List<Protection>> protectionsByWorld = new HashMap<>();
 	private @Getter HashMap<String, Protection> protectionByRegion = new HashMap<>();
@@ -108,15 +108,15 @@ public class ProtectionsModule implements PluginModule {
 
 	@Override
 	public boolean unload() {
-		protectionsByWorld.values().forEach(list -> list.forEach(protection -> {
+		this.protectionsByWorld.values().forEach(list -> list.forEach(protection -> {
 			if (protection.isProtectionViewActive()) {
 				protection.toggleProtectionView();
 			}
 		}));
-		protectionBlockById.clear();
-		protectionsByOwner.clear();
-		protectionsByWorld.clear();
-		protectionByRegion.clear();
+		this.protectionBlockById.clear();
+		this.protectionsByOwner.clear();
+		this.protectionsByWorld.clear();
+		this.protectionByRegion.clear();
 		return true;
 	}
 
@@ -124,7 +124,7 @@ public class ProtectionsModule implements PluginModule {
 		return protectionBlockById.get(id.toLowerCase());
 	}
 
-	public List<Protection> getAllowedProtections(Player pl) {
+	public List<Protection> getAllowedProtections(OfflinePlayer pl) {
 		return protectionByRegion.values().stream().filter(prot -> prot.isOwner(pl.getUniqueId()))
 				.collect(Collectors.toList());
 	}
@@ -205,12 +205,14 @@ public class ProtectionsModule implements PluginModule {
 
 	public void addMember(Player pl, Protection protection, UUID member) throws ProtectionMembersSaveException {
 		if (pl != null) {
-			if (!protection.isOwner(pl.getUniqueId()) && !pl.hasPermission(Permissions.PROTECTION_MEMBERS_ADD_OTHERS)) {
-				throw new ProtectionMembersSaveDeniedException();
-			}
+			if (!pl.hasPermission(Permissions.PROTECTION_MEMBERS_ADD_OTHERS)) {
+				if (!protection.isOwner(pl.getUniqueId())) {
+					throw new ProtectionMembersSaveDeniedException();
+				}
 
-			if (member.equals(pl.getUniqueId())) {
-				throw new ProtectionMembersSaveCannotAddYourselfException();
+				if (member.equals(pl.getUniqueId())) {
+					throw new ProtectionMembersSaveCannotAddYourselfException();
+				}
 			}
 		}
 
@@ -227,13 +229,14 @@ public class ProtectionsModule implements PluginModule {
 
 	public void addOwner(Player pl, Protection protection, UUID owner) throws ProtectionOwnersSaveException {
 		if (pl != null) {
-			if (!protection.isMainOwner(pl.getUniqueId())
-					&& !pl.hasPermission(Permissions.PROTECTION_OWNERS_ADD_OTHERS)) {
-				throw new ProtectionOwnersSaveDeniedException();
-			}
+			if (!pl.hasPermission(Permissions.PROTECTION_OWNERS_ADD_OTHERS)) {
+				if (!protection.isMainOwner(pl.getUniqueId())) {
+					throw new ProtectionOwnersSaveDeniedException();
+				}
 
-			if (owner.equals(pl.getUniqueId())) {
-				throw new ProtectionOwnersSaveCannotAddYourselfException();
+				if (owner.equals(pl.getUniqueId())) {
+					throw new ProtectionOwnersSaveCannotAddYourselfException();
+				}
 			}
 		}
 

@@ -1,13 +1,17 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Particle;
 import org.bukkit.Particle.DustOptions;
 import org.bukkit.World;
@@ -19,8 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldguard.protection.flags.Flags;
-import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
@@ -28,22 +30,20 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
+import company.pluginName.APIs.ItemsAdderAPI;
+import company.pluginName.APIs.OraxenAPI;
 import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteException;
 import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteUnknownException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveOverlapsException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveUnknownException;
 import company.pluginName.Modules.FilePckg.Settings.SettingInt;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
 import company.pluginName.Utils.BlockVectorUtils;
 import company.pluginName.Utils.OfflinePlayerUtils;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextInput;
-import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextReplacement;
 import relampagorojo93.LibsCollection.Utils.Bukkit.BlockUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
@@ -51,42 +51,9 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 @Data
 public class Protection {
 
-	private static final StringFlag GREETING_FLAG;
-	private static final StringFlag FAREWELL_FLAG;
-
 	private static String generateDefaultName(Location location) {
 		return location.getWorld().getName() + "_" + location.getBlockX() + "_" + location.getBlockY() + "_"
 				+ location.getBlockZ();
-	}
-
-	static {
-		StringFlag flag = null;
-
-		try {
-			flag = (StringFlag) Flags.class.getField("GREET_TITLE").get(null);
-		} catch (Exception e) {
-			try {
-				flag = (StringFlag) Flags.class.getField("GREET_MESSAGE").get(null);
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-		}
-
-		GREETING_FLAG = flag;
-
-		flag = null;
-
-		try {
-			flag = (StringFlag) Flags.class.getField("FAREWELL_TITLE").get(null);
-		} catch (Exception e) {
-			try {
-				flag = (StringFlag) Flags.class.getField("FAREWELL_MESSAGE").get(null);
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-		}
-
-		FAREWELL_FLAG = flag;
 	}
 
 	private String regionId;
@@ -176,6 +143,7 @@ public class Protection {
 				&& this.protectionViewEntity.getUniqueId().equals(ent.getUniqueId());
 	}
 
+	@SuppressWarnings("unchecked")
 	public void create(Location location, ProtectionBlock protectionBlock) throws ProtectionSaveException {
 		this.protectionBlock = new ReferencedProtectionBlock(protectionBlock.getId());
 		this.worldName = location.getWorld().getName();
@@ -209,17 +177,27 @@ public class Protection {
 		}
 
 		try {
-			String playerName = OfflinePlayerUtils.getOfflinePlayer(ownerUuid).getName();
-			protectedRegion.setFlag(GREETING_FLAG,
-					MessageBuilder.createMessage(
-							TextInput.inst().text(SettingString.SETTINGS_PROTECTION_ENTERDEFAULTMESSAGE.toString())
-									.replacements(new TextReplacement("{player}", () -> playerName)))
-							.toString());
-			protectedRegion.setFlag(FAREWELL_FLAG,
-					MessageBuilder.createMessage(
-							TextInput.inst().text(SettingString.SETTINGS_PROTECTION_EXITDEFAULTMESSAGE.toString())
-									.replacements(new TextReplacement("{player}", () -> playerName)))
-							.toString());
+			OfflinePlayer player = OfflinePlayerUtils.getOfflinePlayer(this.ownerUuid);
+
+			HashMap<com.sk89q.worldguard.protection.flags.Flag<?>, Object> flags = new HashMap<>();
+			MainPluginClass.getPlugin().getProtectionSettingsModule().getDefaultFlags().forEach((key, value) -> {
+				if (MainPluginClass.getPlaceholderAPI().isHooked()) {
+					if (value instanceof String) {
+						flags.put(key, MainPluginClass.getPlaceholderAPI().applyPlaceholders((String) value, player));
+					} else if (value instanceof Set) {
+						Set<String> set = new HashSet<>();
+						((Set<String>) value).forEach(string -> set
+								.add(MainPluginClass.getPlaceholderAPI().applyPlaceholders(string, player)));
+						flags.put(key, set);
+					} else {
+						flags.put(key, value);
+					}
+				} else {
+					flags.put(key, value);
+				}
+			});
+
+			protectedRegion.setFlags(flags);
 			regionManager.addRegion(protectedRegion);
 			regionManager.save();
 
@@ -254,7 +232,6 @@ public class Protection {
 				regionManager.save();
 
 				this.protectedRegion = null;
-				this.protectionBlockLocation = null;
 			} catch (StorageException e) {
 				throw new ProtectionDeleteUnknownException(e);
 			}
@@ -326,7 +303,7 @@ public class Protection {
 	 * 
 	 * @return If the block is a protection block or not.
 	 */
-	public Boolean isProtectionBlock() {
+	public boolean isProtectionBlock() {
 		return isProtectionBlock(getProtectionBlockLocation().getBlock());
 	}
 
@@ -339,7 +316,7 @@ public class Protection {
 	 * 
 	 * @return If the block is a protection block or not.
 	 */
-	public Boolean isProtectionBlock(Block block) {
+	public boolean isProtectionBlock(Block block) {
 		boolean isSameLocation = block.getLocation().equals(getProtectionBlockLocation());
 		if (isSameLocation) {
 			ProtectionBlock protectionBlock = this.protectionBlock.getObject();
@@ -348,17 +325,29 @@ public class Protection {
 				return true;
 			}
 
-			if (protectionBlock.getItem().getType() == Material.PAPER.getMaterial()) {
-				return null;
-			}
+			ItemsAdderAPI.BlockComparativeResult isCustomItemsAdder = MainPluginClass.getItemsAdderAPI().isSame(block,
+					protectionBlock.getItem());
 
-			if (block.getType() == protectionBlock.getItem().getType()) {
-				return true;
-			}
+			if (isCustomItemsAdder != ItemsAdderAPI.BlockComparativeResult.NOT_HOOKED
+					&& isCustomItemsAdder != ItemsAdderAPI.BlockComparativeResult.NOT_CUSTOM_ITEM) {
+				return isCustomItemsAdder == ItemsAdderAPI.BlockComparativeResult.SAME;
+			} else {
+				OraxenAPI.BlockComparativeResult isCustomOraxen = MainPluginClass.getOraxenAPI().isSame(block,
+						protectionBlock.getItem());
 
-			if (block.getType() == Material.PLAYER_WALL_HEAD.getMaterial()
-					&& protectionBlock.getItem().getType() == Material.PLAYER_HEAD.getMaterial()) {
-				return true;
+				if (isCustomOraxen != OraxenAPI.BlockComparativeResult.NOT_HOOKED
+						&& isCustomOraxen != OraxenAPI.BlockComparativeResult.NOT_CUSTOM_ITEM) {
+					return isCustomOraxen == OraxenAPI.BlockComparativeResult.SAME;
+				} else {
+					if (block.getType() == protectionBlock.getItem().getType()) {
+						return true;
+					}
+
+					if (block.getType() == Material.PLAYER_WALL_HEAD.getMaterial()
+							&& protectionBlock.getItem().getType() == Material.PLAYER_HEAD.getMaterial()) {
+						return true;
+					}
+				}
 			}
 		}
 		return false;
@@ -376,12 +365,48 @@ public class Protection {
 	}
 
 	public void hideProtectionBlock() {
+		ItemsAdderAPI.PlaceBlockResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(null,
+				getProtectionBlockLocation());
+
+		if (itemsAdderResult != ItemsAdderAPI.PlaceBlockResult.NOT_HOOKED) {
+			if (itemsAdderResult == ItemsAdderAPI.PlaceBlockResult.PLACED) {
+				return;
+			}
+		}
+
+		OraxenAPI.PlaceBlockResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(null,
+				getProtectionBlockLocation());
+
+		if (oraxenResult != OraxenAPI.PlaceBlockResult.NOT_HOOKED) {
+			if (oraxenResult == OraxenAPI.PlaceBlockResult.PLACED) {
+				return;
+			}
+		}
+
 		getProtectionBlockLocation().getBlock().setType(Material.AIR.getMaterial());
 	}
 
 	public void showProtectionBlock() {
 		Block bBlock = getProtectionBlockLocation().getBlock();
 		ItemStack item = getProtectionBlock().getObject().getItem();
+
+		ItemsAdderAPI.PlaceBlockResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(item,
+				bBlock.getLocation());
+
+		if (itemsAdderResult != ItemsAdderAPI.PlaceBlockResult.NOT_HOOKED) {
+			if (itemsAdderResult == ItemsAdderAPI.PlaceBlockResult.PLACED) {
+				return;
+			}
+		}
+
+		OraxenAPI.PlaceBlockResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(item, bBlock.getLocation());
+
+		if (oraxenResult != OraxenAPI.PlaceBlockResult.NOT_HOOKED) {
+			if (oraxenResult == OraxenAPI.PlaceBlockResult.PLACED) {
+				return;
+			}
+		}
+
 		bBlock.setType(item.getType());
 		if (item.getType() == Material.PLAYER_HEAD.getMaterial()) {
 			BlockUtils.setSkin(bBlock, ItemStacksUtils.getSkin(item));
@@ -451,6 +476,18 @@ public class Protection {
 
 	public boolean canDelete(Player pl) {
 		return this.isMainOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_DELETE_OTHERS);
+	}
+
+	public boolean canManage(Player pl) {
+		return this.isOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_MANAGE_OTHERS);
+	}
+
+	public boolean canToggleBlock(Player pl) {
+		return this.isOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_TOGGLEBLOCK_OTHERS);
+	}
+
+	public boolean canViewBoundaries(Player pl) {
+		return this.isOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_VIEW_OTHERS);
 	}
 
 }

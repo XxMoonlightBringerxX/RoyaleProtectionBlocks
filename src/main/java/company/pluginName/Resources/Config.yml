@@ -22,13 +22,51 @@
 #
 #---
 
-Version: 2
+Version: 3
 
 Settings: 
   
+  Debug: 
+    
+    #---
+    # If enabled, the plugin will start showing the enabled debug messages. On the
+    # section below, you can allow the log of some specific messages in console.
+    #---
+    Enabled: 'false'
+    
+    Messages: 
+      Protection-creation-attempt: 'true'
+      Protection-creation: 'true'
+      Protection-removal-attempt: 'true'
+      Protection-removal: 'true'
+  
+  #---
+  # Specify settings for your protections for every protection related setting on your server.
+  #---
   Protection: 
-    Enter-default-message: '&7Entering protection owned by &a{player}'
-    Exit-default-message: '&7Leaving protection owned by &a{player}'
+    
+    #---
+    # Specify the ID of the block you wish to give people the first time they join the server.
+    #---
+    Starter-block: ''
+    
+    #---
+    # Specify amount of time in seconds which will last the /pb view command. This command can be
+    # cancelled by executing /pb view again, the timer is only made to remove the boundaries
+    # after a while.
+    #---
+    Boundaries-view-duration-in-seconds: 30
+    
+    #---
+    # Specify the default flags that will be set on every protection when they are created.
+    # Remember to specify values that are valid for this flags. Currently, StateFlags, StringFlags
+    # and CommandStringFlags are the only flags available to be specified.
+    #---
+    Default-flags: 
+      greeting: '&7Entering protection from &a%player_name%"'
+      farewell: '&7Entering protection from &a%player_name%"'
+      command-on-entry: '/title %username% actionbar {"text":"&7Entering protection from &a%player_name%"}'
+      command-on-exit: '/title %username% actionbar {"text":"&7Leaving protection from &a%player_name%"}'
   
   #---
   # Add here all the worlds you don't wish people to be able to use protection blocks
@@ -142,3 +180,32 @@ Commands:
         Permission: 'ProtectionBlocks.Blocks.Give'
         Aliases: 
         - 'g'
+    Hide: 
+      Name: 'hide'
+      Description: 'Hide the protection block on your current protection'
+      Usage: ''
+      Permission: ''
+      Aliases: 
+      - 'h'
+    Show: 
+      Name: 'show'
+      Description: 'Show the protection block on your current protection'
+      Usage: ''
+      Permission: ''
+      Aliases: 
+      - 'sw'
+    View: 
+      Name: 'view'
+      Description: 'Show the boundaries of your current protection for a certain time'
+      Usage: ''
+      Permission: ''
+      Aliases: 
+      - 'v'
+  Generic: 
+    Help: 
+      Name: 'help'
+      Description: 'Get all the commands'
+      Usage: '[page]'
+      Permission: ''
+      Aliases: 
+      - 'h'

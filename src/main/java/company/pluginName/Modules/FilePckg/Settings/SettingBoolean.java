@@ -3,7 +3,15 @@ package company.pluginName.Modules.FilePckg.Settings;
 import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
 
 public enum SettingBoolean implements FileObjFieldsEnum<Boolean> {
-	;
+	SETTINGS_DEBUG_ENABLED("Settings.Debug.Enabled", false),
+	SETTINGS_DEBUG_MESSAGES_BLOCKPLACE("Settings.Debug.Messages.Block-place", true),
+	SETTINGS_DEBUG_MESSAGES_BLOCKPLACECANCELLED("Settings.Debug.Messages.Block-place-cancelled", true),
+	SETTINGS_DEBUG_MESSAGES_BLOCKBREAK("Settings.Debug.Messages.Block-break", true),
+	SETTINGS_DEBUG_MESSAGES_BLOCKBREAKCANCELLED("Settings.Debug.Messages.Block-break-cancelled", true),
+	SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATIONATTEMPT("Settings.Debug.Messages.Protection-creation-attempt", true),
+	SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATION("Settings.Debug.Messages.Protection-creation", true),
+	SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVALATTEMPT("Settings.Debug.Messages.Protection-removal-attempt", true),
+	SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVAL("Settings.Debug.Messages.Protection-removal", true);
 
 	// Methods
 	String oldpath, path;

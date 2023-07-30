@@ -23,9 +23,9 @@ import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.Utils.OfflinePlayerUtils;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextInput;
-import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
+import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Item;
@@ -164,7 +164,7 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 			}
 		});
 
-		if (protection.isMainOwner(getPlayer().getUniqueId())) {
+		if (protection.canToggleBlock(getPlayer())) {
 			Boolean isProtectionBlock = protection.isProtectionBlock();
 
 			if (isProtectionBlock != null) {
@@ -196,23 +196,26 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 			}
 		}
 
-		ItemStack viewActive = protection.isProtectionViewActive()
-				? ItemStacksUtils.createItemStack(Material.ENDER_EYE,
-						MessageBuilder.createMessage(MessageString.INVENTORY_PROTECTION_HIDEBOUNDARIESNAME.toString())
-								.toString())
-				: ItemStacksUtils.createItemStack(Material.ENDER_PEARL, MessageBuilder
-						.createMessage(MessageString.INVENTORY_PROTECTION_SHOWBOUNDARIESNAME.toString()).toString());
+		if (protection.canViewBoundaries(getPlayer())) {
+			ItemStack viewActive = protection.isProtectionViewActive()
+					? ItemStacksUtils.createItemStack(Material.ENDER_EYE, MessageBuilder
+							.createMessage(MessageString.INVENTORY_PROTECTION_HIDEBOUNDARIESNAME.toString()).toString())
+					: ItemStacksUtils.createItemStack(Material.ENDER_PEARL,
+							MessageBuilder
+									.createMessage(MessageString.INVENTORY_PROTECTION_SHOWBOUNDARIESNAME.toString())
+									.toString());
 
-		setSlot(24, new Button(viewActive) {
+			setSlot(24, new Button(viewActive) {
 
-			@Override
-			public void onClick(InventoryClickEvent e) {
-				protection.toggleProtectionView();
-				updateInventory();
-			}
-		});
+				@Override
+				public void onClick(InventoryClickEvent e) {
+					protection.toggleProtectionView();
+					updateInventory();
+				}
+			});
+		}
 
-		if (protection.isMainOwner(getPlayer().getUniqueId())) {
+		if (protection.canDelete(getPlayer())) {
 			setSlot(getSize() - 1,
 					new Button(ItemStacksUtils.createItemStack(
 							ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), TRASH_SKIN),

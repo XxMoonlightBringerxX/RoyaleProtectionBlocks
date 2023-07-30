@@ -14,7 +14,7 @@ import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 public class RenameSubCommand extends SubCommand {
 

@@ -12,7 +12,7 @@ import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwners
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchPlayersInventory;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.ChestInventory;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Item;

@@ -39,6 +39,7 @@ public class FileModule extends relampagorojo93.LibsCollection.SpigotPlugin.Defa
 				return false;
 			}
 		}
+
 		return super.load();
 	}
 

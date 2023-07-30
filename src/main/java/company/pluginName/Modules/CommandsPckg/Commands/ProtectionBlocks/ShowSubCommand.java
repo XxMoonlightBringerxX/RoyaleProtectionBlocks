@@ -9,9 +9,9 @@ import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.FilePckg.Settings.SettingList;
 import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 
 public class ShowSubCommand extends SubCommand {
@@ -31,34 +31,24 @@ public class ShowSubCommand extends SubCommand {
 			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
 					.getProtectionByLocation(pl.getLocation());
 			if (protection != null) {
-				if (protection.isMainOwner(pl.getUniqueId())) {
-					Boolean isProtectionBlock = protection.isProtectionBlock();
-					if (isProtectionBlock != null) {
-						if (!isProtectionBlock) {
-							Block block = protection.getProtectionBlockLocation().getBlock();
-							if (block.getType() == Material.AIR.getMaterial()) {
-								protection.showProtectionBlock();
-								MessageBuilder
-										.createMessage(
-												MessageString.MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY.applyPrefix())
-										.sendMessage(sender);
-							} else {
-								MessageBuilder
-										.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKEDBYBLOCK.applyPrefix())
-										.sendMessage(sender);
-							}
-						} else {
+				if (protection.canToggleBlock(pl)) {
+					if (!protection.isProtectionBlock()) {
+						Block block = protection.getProtectionBlockLocation().getBlock();
+						if (block.getType() == Material.AIR.getMaterial()) {
+							protection.showProtectionBlock();
 							MessageBuilder
-									.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKALREADYSHOWN.applyPrefix())
+									.createMessage(MessageString.MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY.applyPrefix())
+									.sendMessage(sender);
+						} else {
+							MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKEDBYBLOCK.applyPrefix())
 									.sendMessage(sender);
 						}
 					} else {
-						MessageBuilder
-								.createMessage(MessageString.ERROR_PROTECTIONS_ORAXENINCOMPATIBILITY.applyPrefix())
+						MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKALREADYSHOWN.applyPrefix())
 								.sendMessage(sender);
 					}
 				} else {
-					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTMAINOWNER.applyPrefix())
+					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTOWNER.applyPrefix())
 							.sendMessage(sender);
 				}
 			} else {

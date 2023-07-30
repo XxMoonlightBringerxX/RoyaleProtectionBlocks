@@ -5,13 +5,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 public class Permissions {
 
+	public static final String PROTECTION_LIST_OTHERS = "protectionblocks.list.others";
 	public static final String PROTECTION_DELETE_OTHERS = "protectionblocks.delete.others";
 	public static final String PROTECTION_MANAGE_OTHERS = "protectionblocks.manage.others";
 	public static final String PROTECTION_RENAME_OTHERS = "protectionblocks.rename.others";
+	public static final String PROTECTION_VIEW_OTHERS = "protectionblocks.view.others";
+	public static final String PROTECTION_TOGGLEBLOCK_OTHERS = "protectionblocks.toggleblock.others";
 	public static final String PROTECTION_MEMBERS_ADD_OTHERS = "protectionblocks.members.add.others";
 	public static final String PROTECTION_MEMBERS_REMOVE_OTHERS = "protectionblocks.members.remove.others";
 	public static final String PROTECTION_OWNERS_ADD_OTHERS = "protectionblocks.owners.add.others";

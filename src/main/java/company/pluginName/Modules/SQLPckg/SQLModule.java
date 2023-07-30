@@ -19,11 +19,13 @@ import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveS
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
+import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
 import darkpanda73.LibsCollection.PandaSQL.Enums.ConditionType;
 import darkpanda73.LibsCollection.PandaSQL.Objects.Data;
 import darkpanda73.LibsCollection.PandaSQL.Objects.Conditions.Condition;
 import darkpanda73.LibsCollection.PandaSQL.Objects.DataModel.Column;
 import darkpanda73.LibsCollection.PandaSQL.Objects.DataModel.Table;
+import darkpanda73.LibsCollection.PandaSQL.Objects.DataModel.Constraints.ForeignConstraint;
 import relampagorojo93.LibsCollection.SpigotPlugin.MainClass;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
@@ -39,14 +41,25 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 						new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
 						new Column(t, "WorldName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
 						new Column(t, "DisplayName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true)))
-				.addTable((t = new Table(getDatabase(), "ProtectionBlocks")).addColumns(
-						new Column(t, "Id", "VARCHAR(32)", Types.VARCHAR).setPrimary(true).setUnique(true)
-								.setNotNull(true),
-						new Column(t, "Item", "BLOB", Types.BLOB).setNotNull(true),
-						new Column(t, "BlocksX", "INTEGER", Types.INTEGER).setNotNull(true),
-						new Column(t, "BlocksY", "INTEGER", Types.INTEGER).setNotNull(true),
-						new Column(t, "BlocksZ", "INTEGER", Types.INTEGER).setNotNull(true),
-						new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR)));
+				.addTable(
+						(t = new Table(getDatabase(), "ProtectionBlocks")).addColumns(
+								new Column(t, "Id", "VARCHAR(32)", Types.VARCHAR).setPrimary(true).setUnique(true)
+										.setNotNull(true),
+								new Column(t, "Item", "BLOB", Types.BLOB).setNotNull(true),
+								new Column(t, "BlocksX", "INTEGER", Types.INTEGER).setNotNull(true),
+								new Column(t, "BlocksY", "INTEGER", Types.INTEGER).setNotNull(true),
+								new Column(t, "BlocksZ", "INTEGER", Types.INTEGER).setNotNull(true),
+								new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR),
+								new Column(t, "Recipe", "BLOB", Types.BLOB), new Column(t, "RecipePermission",
+										"VARCHAR(64)", Types.VARCHAR)))
+				.addTable((t = new Table(getDatabase(), "Recipes"))
+						.addColumns(
+								new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setPrimary(true)
+										.setUnique(true).setNotNull(true),
+								new Column(t, "Recipe", "BLOB", Types.BLOB).setNotNull(true),
+								new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR))
+						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
+								Arrays.asList(getDatabase().getTable("ProtectionBlocks").getColumn("Id")))));
 	}
 
 	public List<Protection> getProtections() {
@@ -81,6 +94,29 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 			e.printStackTrace();
 		}
 		return protectionBlocks;
+	}
+
+	public List<Recipe> getRecipes() {
+		List<Recipe> recipes = new ArrayList<>();
+		try (ResultSet set = this.getDatabase().select(Arrays.asList(this.getDatabase().getTable("Recipes")))) {
+			while (set.next()) {
+				Recipe recipe = new Recipe(new ReferencedProtectionBlock(set.getString("ProtectionBlockId")));
+
+				ItemStack[] recipeItems = ItemStacksUtils.itemsParse(set.getBytes("Recipe"));
+				for (int i = 0; i < recipeItems.length; i++) {
+					recipe.getRecipe()[i] = recipeItems[i];
+				}
+
+				recipe.setPermission(set.getString("Permission"));
+
+				recipes.add(recipe);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return recipes;
 	}
 
 	public void saveProtection(Protection protection) throws ProtectionSaveSQLException {
@@ -127,6 +163,28 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 		Table t = this.getDatabase().getTable("ProtectionBlocks");
 		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("Id"),
 				new Data(Types.VARCHAR, protectionBlock.getId()), ConditionType.EQUAL)))) {
+			throw new ProtectionBlocksDeleteSQLException();
+		}
+	}
+
+	public void saveRecipe(Recipe recipe) throws ProtectionBlocksSaveSQLException {
+		Table t = this.getDatabase().getTable("Recipes");
+		HashMap<Column, Data> values = new HashMap<>();
+		values.put(t.getColumn("ProtectionBlockId"),
+				new Data(Types.VARCHAR, recipe.getProtectionBlock().getObject().getId()));
+		values.put(t.getColumn("Recipe"), new Data(Types.BLOB, ItemStacksUtils.itemsParse(recipe.getRecipe())));
+		values.put(t.getColumn("Permission"),
+				new Data(recipe.getPermission() != null ? Types.INTEGER : Types.NULL, recipe.getPermission()));
+		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("ProtectionBlockId"),
+				new Data(Types.CHAR, recipe.getProtectionBlock().getObject().getId()), ConditionType.EQUAL))) {
+			throw new ProtectionBlocksSaveSQLException();
+		}
+	}
+
+	public void deleteRecipe(Recipe recipe) throws ProtectionBlocksDeleteSQLException {
+		Table t = this.getDatabase().getTable("Recipes");
+		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("ProtectionBlockId"),
+				new Data(Types.VARCHAR, recipe.getProtectionBlock().getObject().getId()), ConditionType.EQUAL)))) {
 			throw new ProtectionBlocksDeleteSQLException();
 		}
 	}
@@ -184,7 +242,7 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 
 	@Override
 	protected int getVersion() {
-		return 1;
+		return 2;
 	}
 
 	@Override

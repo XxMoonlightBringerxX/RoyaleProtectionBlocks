@@ -17,7 +17,7 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Utils.OfflinePlayerUtils;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 public class AddOwnerSubCommand extends SubCommand {
 

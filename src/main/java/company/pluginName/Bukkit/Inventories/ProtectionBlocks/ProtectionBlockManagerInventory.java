@@ -14,13 +14,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
+import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
 import company.pluginName.Modules.FilePckg.Messages.MessageList;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import relampagorojo93.LibsCollection.SpigotMessages.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextInput;
-import relampagorojo93.LibsCollection.SpigotMessages.Objects.TextReplacement;
+import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
+import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
@@ -38,6 +40,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 	private ProtectionBlock originalProtectionBlock;
 	private ProtectionBlock copyOriginalProtectionBlock;
 	private ProtectionBlock newProtectionBlock;
+	private Recipe newRecipe;
 
 	public ProtectionBlockManagerInventory(Player player) {
 		this(player, null);
@@ -71,18 +74,26 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 					if (originalProtectionBlock != null) {
 						originalProtectionBlock.copy(newProtectionBlock);
 						originalProtectionBlock.save(getPlayer());
+					} else {
+						newProtectionBlock.save(getPlayer());
+					}
+
+					if (newRecipe != null) {
+						newRecipe.save();
+					}
+
+					if (originalProtectionBlock != null) {
 						MessageBuilder
 								.createMessage(MessageString.MESSAGE_PROTECTIONS_BLOCKS_SAVEDSUCCESSFULLY.applyPrefix())
 								.sendMessage(getPlayer());
 					} else {
-						newProtectionBlock.save(getPlayer());
 						MessageBuilder
 								.createMessage(
 										MessageString.MESSAGE_PROTECTIONS_BLOCKS_CREATEDSUCCESSFULLY.applyPrefix())
 								.sendMessage(getPlayer());
 					}
 					goToPreviousHolder();
-				} catch (ProtectionBlocksSaveException ex) {
+				} catch (ProtectionBlocksSaveException | ProtectionBlocksDeleteException ex) {
 					if (originalProtectionBlock != null) {
 						originalProtectionBlock.copy(copyOriginalProtectionBlock);
 					}
@@ -256,6 +267,15 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 						}
 					}
 				});
+
+		setSlot(32, new Button(ItemStacksUtils.createItemStack(Material.CRAFTING_TABLE, MessageBuilder
+				.createMessage(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPENAME.toString()).toString())) {
+			@Override
+			public void onClick(InventoryClickEvent e) {
+				new ProtectionBlockRecipeInventory(getPlayer(), newProtectionBlock, (recipe) -> newRecipe = recipe)
+						.openInventory();
+			}
+		});
 
 		MessageString permissionName = this.newProtectionBlock.getPermission() != null
 				? MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNAME

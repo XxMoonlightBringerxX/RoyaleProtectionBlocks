@@ -82,6 +82,13 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 	COMMANDS_PROTECTIONBLOCKS_VIEW_USAGE("Commands.Protection-blocks.View.Usage", ""),
 	COMMANDS_PROTECTIONBLOCKS_VIEW_PERMISSION("Commands.Protection-blocks.View.Permission", ""),
 
+	COMMANDS_PROTECTIONBLOCKS_TRANSFER_NAME("Commands.Protection-blocks.Transfer.Name", "transfer"),
+	COMMANDS_PROTECTIONBLOCKS_TRANSFER_DESCRIPTION("Commands.Protection-blocks.Transfer.Description",
+			"Transfer data from a plugin to RoyaleProtectionBlocks"),
+	COMMANDS_PROTECTIONBLOCKS_TRANSFER_USAGE("Commands.Protection-blocks.Transfer.Usage", ""),
+	COMMANDS_PROTECTIONBLOCKS_TRANSFER_PERMISSION("Commands.Protection-blocks.Transfer.Permission",
+			Permissions.PROTECTION_TRANSFER),
+
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_NAME("Commands.Protection-blocks.Blocks.Name", "blocks"),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_DESCRIPTION("Commands.Protection-blocks.Blocks.Description",
 			"Open a list with all the blocks"),

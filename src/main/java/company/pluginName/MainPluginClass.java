@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import company.pluginName.APIs.ItemsAdderAPI;
 import company.pluginName.APIs.OraxenAPI;
 import company.pluginName.APIs.PlaceholderAPI;
+import company.pluginName.APIs.ProtectionStonesAPI;
 import company.pluginName.APIs.WorldGuardAPI;
 import company.pluginName.Bukkit.Events.BukkitEvents;
 import company.pluginName.Bukkit.Events.RecipeEvents;
@@ -100,6 +101,8 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 		if (isFirstTime()) {
 			Bukkit.getPluginManager().registerEvents(new BukkitEvents(), this);
 			Bukkit.getPluginManager().registerEvents(new RecipeEvents(), this);
+
+			protectionStonesAPI = new ProtectionStonesAPI();
 		}
 		Flag.initFlags();
 		PluginChestInventory.initItems();
@@ -141,6 +144,7 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	private @Getter static PlaceholderAPI placeholderAPI;
 	private @Getter static ItemsAdderAPI itemsAdderAPI;
 	private @Getter static OraxenAPI oraxenAPI;
+	private @Getter static ProtectionStonesAPI protectionStonesAPI;
 
 	public FileModule getFileModule() {
 		return (FileModule) getModule(FileModule.class);

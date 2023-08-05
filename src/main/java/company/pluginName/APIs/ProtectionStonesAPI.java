@@ -48,7 +48,7 @@ public class ProtectionStonesAPI extends AbstractAPI {
 		if (isHooked()) {
 			ProtectionStones.getInstance().getConfiguredBlocks().forEach(pb -> {
 				blocks.add(new ProtectionBlock(pb.alias, pb.createItem(), pb.xRadius, pb.yRadius, pb.zRadius,
-						pb.permission));
+						pb.permission != null && !pb.permission.isEmpty() ? pb.permission : null));
 			});
 		}
 		return blocks;

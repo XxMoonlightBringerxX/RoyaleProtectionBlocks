@@ -26,6 +26,7 @@ public enum SettingList implements FileObjFieldsEnum<List<String>> {
 	COMMANDS_PROTECTIONBLOCKS_HIDE_ALIASES("Commands.Protection-blocks.Hide.Aliases", Arrays.asList("h")),
 	COMMANDS_PROTECTIONBLOCKS_SHOW_ALIASES("Commands.Protection-blocks.Show.Aliases", Arrays.asList("sw")),
 	COMMANDS_PROTECTIONBLOCKS_VIEW_ALIASES("Commands.Protection-blocks.View.Aliases", Arrays.asList("v")),
+	COMMANDS_PROTECTIONBLOCKS_TRANSFER_ALIASES("Commands.Protection-blocks.Transfer.Aliases", Arrays.asList("t")),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_ALIASES("Commands.Protection-blocks.Blocks.Aliases", Arrays.asList("b")),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_ADD_ALIASES("Commands.Protection-blocks.Blocks.Add.Aliases", Arrays.asList("a")),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_REMOVE_ALIASES("Commands.Protection-blocks.Blocks.Remove.Aliases",

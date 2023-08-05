@@ -22,6 +22,7 @@ public class Permissions {
 	public static final String PROTECTION_MAX_BYPASS = "protectionblocks.max.bypass";
 
 	public static final String PROTECTION_RELOAD = "protectionblocks.reload";
+	public static final String PROTECTION_TRANSFER = "protectionblocks.transfer";
 
 	public static final String PROTECTION_BLOCKS = "protectionblocks.blocks";
 	public static final String PROTECTION_BLOCKS_CREATE = "protectionblocks.blocks.create";

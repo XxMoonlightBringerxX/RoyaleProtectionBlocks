@@ -33,6 +33,7 @@ public class ProtectionBlocksCommand extends Command {
 		addCommand(new HideSubCommand(this));
 		addCommand(new ShowSubCommand(this));
 		addCommand(new ViewSubCommand(this));
+		addCommand(new TransferSubCommand(this));
 		sortCommands();
 		addCommand(new HelpSubCommand(this), 0);
 	}

@@ -43,6 +43,11 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY("Message.Protections.Blocks.Removed-successfully",
 			"&aThe protection block has been removed successfully!"),
 
+	MESSAGE_TRANSFER_AVAILABLELIST("Message.Transfer.Available-list",
+			"&7Available protection plugins to transfer from: &f{list}"),
+	MESSAGE_TRANSFER_WARNING("Message.Transfer.Warning",
+			"&7You're about to transfer all the data from another plugin to RoyaleProtectionBlocks. Once it starts, it'll block the server and start incorporating all the data. At the end, the server will be closed and the plugin will attempt to remove the one you decided to take the data from. Make sure this plugin is removed after this process, as in some systems, it can be very common that it doesn't allow to remove the file automatically. Please, type &e{command} &7to confirm your choice."),
+
 	MESSAGE_HELPER_AVAILABLELEFTARROW("Message.Helper.Available-left-arrow", "&e«"),
 	MESSAGE_HELPER_UNAVAILABLELEFTARROW("Message.Helper.Unavailable-left-arrow", "&r«"),
 	MESSAGE_HELPER_AVAILABLERIGHTARROW("Message.Helper.Available-right-arrow", "&e»"),

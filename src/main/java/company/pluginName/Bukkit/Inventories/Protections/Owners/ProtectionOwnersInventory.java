@@ -11,8 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
@@ -23,12 +21,12 @@ import company.pluginName.Exceptions.ProtectionOwners.Save.ProtectionOwnersSaveE
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Utils.OfflinePlayerUtils;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
@@ -49,7 +47,6 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 	}
 
 	private Protection protection;
-	private ProtectedRegion protectedRegion;
 	private List<UUID> owners;
 	private int page = 1;
 
@@ -63,7 +60,6 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 				.toString());
 
 		this.protection = protection;
-		this.protectedRegion = this.protection.getProtectedRegion();
 	}
 
 	@Override
@@ -92,8 +88,7 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 					new SearchPlayersInventory(getPlayer(), player -> {
 						if (player != null) {
 							try {
-								MainPluginClass.getPlugin().getProtectionsModule().addOwner(getPlayer(), protection,
-										player.getUniqueId());
+								protection.getOwners().add(getPlayer(), player.getUniqueId());
 							} catch (ProtectionOwnersSaveException e1) {
 								e1.sendError(getPlayer());
 							}
@@ -168,8 +163,7 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 										|| getPlayer().hasPermission(Permissions.PROTECTION_OWNERS_REMOVE_OTHERS)) {
 									new ConfirmationInventory(getPlayer(), () -> {
 										try {
-											MainPluginClass.getPlugin().getProtectionsModule().removeOwner(getPlayer(),
-													protection, owner);
+											protection.getOwners().remove(getPlayer(), owner);
 										} catch (ProtectionOwnersDeleteException e1) {
 											e1.sendError(getPlayer());
 										}
@@ -187,8 +181,8 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 	}
 
 	private List<UUID> getList() {
-		return this.protectedRegion.getOwners().getUniqueIds().stream()
-				.filter(uuid -> !this.protection.isMainOwner(uuid)).collect(Collectors.toList());
+		return protection.getOwners().list().stream().filter(uuid -> !this.protection.isMainOwner(uuid))
+				.collect(Collectors.toList());
 	}
 
 }

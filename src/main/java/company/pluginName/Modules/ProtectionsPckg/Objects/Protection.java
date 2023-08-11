@@ -38,6 +38,10 @@ import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveOverlapsException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveUnknownException;
 import company.pluginName.Modules.FilePckg.Settings.SettingInt;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBanneds;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionMembers;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionOwners;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
 import company.pluginName.Utils.BlockVectorUtils;
 import company.pluginName.Utils.OfflinePlayerUtils;
@@ -45,6 +49,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.BlockUtils;
+import relampagorojo93.LibsCollection.Utils.Bukkit.WorldUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
@@ -65,6 +70,10 @@ public class Protection {
 	private Location protectionBlockLocation;
 	private BukkitTask protectionViewTask;
 	private @Setter(lombok.AccessLevel.NONE) @Getter(lombok.AccessLevel.NONE) Entity protectionViewEntity;
+	private ProtectionMembers members = new ProtectionMembers(this);
+	private ProtectionOwners owners = new ProtectionOwners(this);
+	private ProtectionBanneds banneds = new ProtectionBanneds(this);
+	private ProtectionActions actions = new ProtectionActions(this);
 
 	public Protection(UUID ownerUuid) {
 		this(null, ownerUuid, null, null, null, null, null);
@@ -150,13 +159,17 @@ public class Protection {
 		this.regionId = generateDefaultName(location).toLowerCase();
 		this.displayName = generateDefaultName(location);
 
+		int minBlockX = location.getBlockX() - protectionBlock.getBlocksX();
+		int minBlockY = protectionBlock.getBlocksY() == -1 ? WorldUtils.getMinHeight(location.getWorld())
+				: location.getBlockY() - protectionBlock.getBlocksY();
+		int minBlockZ = location.getBlockZ() - protectionBlock.getBlocksZ();
+		int maxBlockX = location.getBlockX() + protectionBlock.getBlocksX();
+		int maxBlockY = protectionBlock.getBlocksY() == -1 ? WorldUtils.getMaxHeight(location.getWorld())
+				: location.getBlockY() + protectionBlock.getBlocksY();
+		int maxBlockZ = location.getBlockZ() + protectionBlock.getBlocksZ();
+
 		ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
-				BlockVector3.at(location.getBlockX() - protectionBlock.getBlocksX(),
-						location.getBlockY() - protectionBlock.getBlocksY(),
-						location.getBlockZ() - protectionBlock.getBlocksZ()),
-				BlockVector3.at(location.getBlockX() + protectionBlock.getBlocksX(),
-						location.getBlockY() + protectionBlock.getBlocksY(),
-						location.getBlockZ() + protectionBlock.getBlocksZ()));
+				BlockVector3.at(minBlockX, minBlockY, minBlockZ), BlockVector3.at(maxBlockX, maxBlockY, maxBlockZ));
 
 		protectedRegion.getOwners().addPlayer(ownerUuid);
 
@@ -196,6 +209,8 @@ public class Protection {
 					flags.put(key, value);
 				}
 			});
+			flags.put(MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().getWorldGuardFlag(),
+					MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(location));
 
 			protectedRegion.setFlags(flags);
 			regionManager.addRegion(protectedRegion);
@@ -235,6 +250,8 @@ public class Protection {
 			} catch (StorageException e) {
 				throw new ProtectionDeleteUnknownException(e);
 			}
+		} else {
+			throw new ProtectionDeleteUnknownException();
 		}
 
 		MainPluginClass.getPlugin().getSqlModule().deleteProtection(this);
@@ -255,11 +272,23 @@ public class Protection {
 	public Location getProtectionBlockLocation() {
 		if (this.protectionBlockLocation == null) {
 			if (getProtectedRegion() != null) {
-				BlockVector3 vector = BlockVectorUtils.getIntersectingVector(getProtectedRegion().getMinimumPoint(),
-						getProtectedRegion().getMaximumPoint());
+				World world = Bukkit.getWorld(worldName);
+				ProtectedRegion region = getProtectedRegion();
 
-				this.protectionBlockLocation = new Location(Bukkit.getWorld(worldName), vector.getBlockX(),
-						vector.getBlockY(), vector.getBlockZ()).getBlock().getLocation();
+				if (region != null) {
+					Location loc = MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().flagState(world,
+							region);
+
+					if (loc != null) {
+						this.protectionBlockLocation = loc;
+					} else {
+						BlockVector3 vector = BlockVectorUtils.getIntersectingVector(region.getMinimumPoint(),
+								getProtectedRegion().getMaximumPoint());
+
+						this.protectionBlockLocation = new Location(Bukkit.getWorld(worldName), vector.getBlockX(),
+								vector.getBlockY(), vector.getBlockZ()).getBlock().getLocation();
+					}
+				}
 			}
 		}
 

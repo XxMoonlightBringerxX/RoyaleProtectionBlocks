@@ -5,7 +5,7 @@ import org.bukkit.Bukkit;
 import company.pluginName.APIs.ItemsAdderAPI;
 import company.pluginName.APIs.OraxenAPI;
 import company.pluginName.APIs.PlaceholderAPI;
-import company.pluginName.APIs.WorldGuardAPI;
+import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Bukkit.Events.BukkitEvents;
 import company.pluginName.Bukkit.Events.RecipeEvents;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
@@ -100,6 +100,10 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 		if (isFirstTime()) {
 			Bukkit.getPluginManager().registerEvents(new BukkitEvents(), this);
 			Bukkit.getPluginManager().registerEvents(new RecipeEvents(), this);
+
+			if (worldGuardAPI != null) {
+				worldGuardAPI.registerHandlers();
+			}
 		}
 		Flag.initFlags();
 		PluginChestInventory.initItems();

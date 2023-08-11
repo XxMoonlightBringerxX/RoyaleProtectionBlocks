@@ -7,6 +7,7 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlockManagerInventory;
+import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBannedsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
@@ -59,6 +60,7 @@ public abstract class PluginChestInventory extends ChestInventory {
 
 		ProtectionMembersInventory.initItems();
 		ProtectionOwnersInventory.initItems();
+		ProtectionBannedsInventory.initItems();
 		ConfirmationInventory.initItems();
 		SearchPlayersInventory.initItems();
 		ProtectionBlockManagerInventory.initItems();

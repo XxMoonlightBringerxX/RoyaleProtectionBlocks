@@ -15,6 +15,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -157,6 +158,11 @@ public class BukkitEvents implements Listener {
 							protection.getProtectionBlock().getObject().generateItem());
 					MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
 							.sendMessage(e.getPlayer());
+
+					if (e.getPlayer().getOpenInventory().getType() != InventoryType.CRAFTING) {
+						e.getPlayer().closeInventory();
+					}
+
 					if (MessageType.PROTECTION_REMOVAL.isAvailable()) {
 						MainPluginClass.Debugger.log(MessageType.PROTECTION_REMOVAL,
 								"Player %s removed protection '%s' from location x(%s) y(%s) z(%s)",

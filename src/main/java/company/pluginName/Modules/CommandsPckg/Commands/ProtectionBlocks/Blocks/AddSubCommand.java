@@ -69,7 +69,7 @@ public class AddSubCommand extends SubCommand {
 								int y = Integer.parseInt(args[3]);
 								int z = Integer.parseInt(args[4]);
 
-								if (x < 0 || y < 0 || z < 0) {
+								if (x < 0 || y < -1 || z < 0) {
 									MessageBuilder.createMessage(MessageString.ERROR_NUMBERBELOWZERO.applyPrefix())
 											.sendMessage(pl);
 									return true;
@@ -77,7 +77,7 @@ public class AddSubCommand extends SubCommand {
 
 								String permission = args.length > 5 ? args[5] : null;
 								ProtectionBlock protectionBlock = new ProtectionBlock(args[1].toLowerCase(),
-										protectionBlockItemstack, x / 2, y / 2, z / 2, permission);
+										protectionBlockItemstack, x / 2, (y == -1 ? y : y / 2), z / 2, permission);
 								protectionBlock.save(pl);
 
 								protectionBlockItemstack = protectionBlock.generateItem();

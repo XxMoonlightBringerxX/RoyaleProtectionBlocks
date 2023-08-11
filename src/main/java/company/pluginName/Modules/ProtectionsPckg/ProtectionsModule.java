@@ -29,19 +29,6 @@ import company.pluginName.Exceptions.Protection.Save.ProtectionSaveNoVisibleText
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveRenameDeniedException;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
-import company.pluginName.Exceptions.ProtectionMembers.Delete.ProtectionMembersDeleteDeniedException;
-import company.pluginName.Exceptions.ProtectionMembers.Delete.ProtectionMembersDeleteException;
-import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveCannotAddProtectionOwnerException;
-import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveCannotAddYourselfException;
-import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveDeniedException;
-import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveException;
-import company.pluginName.Exceptions.ProtectionOwners.Delete.ProtectionOwnersDeleteCannotDeleteProtectionOwnerException;
-import company.pluginName.Exceptions.ProtectionOwners.Delete.ProtectionOwnersDeleteDeniedException;
-import company.pluginName.Exceptions.ProtectionOwners.Delete.ProtectionOwnersDeleteException;
-import company.pluginName.Exceptions.ProtectionOwners.Save.ProtectionOwnersSaveCannotAddProtectionOwnerException;
-import company.pluginName.Exceptions.ProtectionOwners.Save.ProtectionOwnersSaveCannotAddYourselfException;
-import company.pluginName.Exceptions.ProtectionOwners.Save.ProtectionOwnersSaveDeniedException;
-import company.pluginName.Exceptions.ProtectionOwners.Save.ProtectionOwnersSaveException;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
@@ -196,58 +183,6 @@ public class ProtectionsModule implements PluginModule {
 	}
 
 	/*
-	 * Add methods
-	 */
-
-	public void addMember(Protection protection, UUID member) throws ProtectionMembersSaveException {
-		addMember(null, protection, member);
-	}
-
-	public void addMember(Player pl, Protection protection, UUID member) throws ProtectionMembersSaveException {
-		if (pl != null) {
-			if (!pl.hasPermission(Permissions.PROTECTION_MEMBERS_ADD_OTHERS)) {
-				if (!protection.isOwner(pl.getUniqueId())) {
-					throw new ProtectionMembersSaveDeniedException();
-				}
-
-				if (member.equals(pl.getUniqueId())) {
-					throw new ProtectionMembersSaveCannotAddYourselfException();
-				}
-			}
-		}
-
-		if (protection.isMainOwner(member)) {
-			throw new ProtectionMembersSaveCannotAddProtectionOwnerException();
-		}
-
-		protection.getProtectedRegion().getMembers().addPlayer(member);
-	}
-
-	public void addOwner(Protection protection, UUID member) throws ProtectionOwnersSaveException {
-		addOwner(null, protection, member);
-	}
-
-	public void addOwner(Player pl, Protection protection, UUID owner) throws ProtectionOwnersSaveException {
-		if (pl != null) {
-			if (!pl.hasPermission(Permissions.PROTECTION_OWNERS_ADD_OTHERS)) {
-				if (!protection.isMainOwner(pl.getUniqueId())) {
-					throw new ProtectionOwnersSaveDeniedException();
-				}
-
-				if (owner.equals(pl.getUniqueId())) {
-					throw new ProtectionOwnersSaveCannotAddYourselfException();
-				}
-			}
-		}
-
-		if (protection.isMainOwner(owner)) {
-			throw new ProtectionOwnersSaveCannotAddProtectionOwnerException();
-		}
-
-		protection.getProtectedRegion().getOwners().addPlayer(owner);
-	}
-
-	/*
 	 * Remove methods
 	 */
 
@@ -271,40 +206,6 @@ public class ProtectionsModule implements PluginModule {
 		if (protectionsByWorld.containsKey(protection.getWorldName())) {
 			protectionsByWorld.get(protection.getWorldName()).remove(protection);
 		}
-	}
-
-	public void removeMember(Protection protection, UUID member) throws ProtectionMembersDeleteException {
-		removeMember(null, protection, member);
-	}
-
-	public void removeMember(Player pl, Protection protection, UUID member) throws ProtectionMembersDeleteException {
-		if (pl != null) {
-			if (!protection.isOwner(pl.getUniqueId())
-					&& !pl.hasPermission(Permissions.PROTECTION_MEMBERS_REMOVE_OTHERS)) {
-				throw new ProtectionMembersDeleteDeniedException();
-			}
-		}
-
-		protection.getProtectedRegion().getMembers().removePlayer(member);
-	}
-
-	public void removeOwner(Protection protection, UUID member) throws ProtectionOwnersDeleteException {
-		removeOwner(null, protection, member);
-	}
-
-	public void removeOwner(Player pl, Protection protection, UUID member) throws ProtectionOwnersDeleteException {
-		if (pl != null) {
-			if (!protection.isMainOwner(pl.getUniqueId())
-					&& !pl.hasPermission(Permissions.PROTECTION_OWNERS_REMOVE_OTHERS)) {
-				throw new ProtectionOwnersDeleteDeniedException();
-			}
-		}
-
-		if (protection.isMainOwner(member)) {
-			throw new ProtectionOwnersDeleteCannotDeleteProtectionOwnerException();
-		}
-
-		protection.getProtectedRegion().getOwners().removePlayer(member);
 	}
 
 	/*

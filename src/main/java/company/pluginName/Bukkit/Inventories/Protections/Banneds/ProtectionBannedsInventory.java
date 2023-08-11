@@ -1,6 +1,7 @@
-package company.pluginName.Bukkit.Inventories.Protections.Members;
+package company.pluginName.Bukkit.Inventories.Protections.Banneds;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -15,8 +16,8 @@ import company.pluginName.Permissions;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchPlayersInventory;
-import company.pluginName.Exceptions.ProtectionMembers.Delete.ProtectionMembersDeleteException;
-import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveException;
+import company.pluginName.Exceptions.ProtectionBanneds.Delete.ProtectionBannedsDeleteException;
+import company.pluginName.Exceptions.ProtectionBanneds.Save.ProtectionBannedsSaveException;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Utils.OfflinePlayerUtils;
@@ -33,7 +34,7 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Setter(lombok.AccessLevel.NONE)
-public class ProtectionMembersInventory extends PluginChestInventory {
+public class ProtectionBannedsInventory extends PluginChestInventory {
 
 	public static ItemStack SEARCH_PLAYER_BUTTON;
 
@@ -41,20 +42,20 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 		SEARCH_PLAYER_BUTTON = ItemStacksUtils
 				.createItemStack(ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
 						MessageBuilder
-								.createMessage(MessageString.INVENTORY_PROTECTION_MEMBERS_SEARCHMEMBERNAME.toString())
+								.createMessage(MessageString.INVENTORY_PROTECTION_BANNEDS_SEARCHBANNEDNAME.toString())
 								.toString());
 	}
 
 	private Protection protection;
-	private List<UUID> members;
+	private List<UUID> banneds;
 	private int page = 1;
 
-	public ProtectionMembersInventory(Player player, Protection protection) {
+	public ProtectionBannedsInventory(Player player, Protection protection) {
 		super(player);
 
 		setSize(27);
 		setName(MessageBuilder
-				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTION_MEMBERS_TITLE.toString())
+				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTION_BANNEDS_TITLE.toString())
 						.replacements(new TextReplacement("{protection}", () -> protection.getDisplayName())))
 				.toString());
 
@@ -65,7 +66,7 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 	public void updateContent() {
 		clearSlots();
 
-		members = getList();
+		banneds = getList();
 
 		for (int i = getSize() - 9; i < getSize(); i++) {
 			setSlot(i, GRAY_STAINED_GLASS_PANE);
@@ -85,8 +86,8 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 				new SearchPlayersInventory(getPlayer(), player -> {
 					if (player != null) {
 						try {
-							protection.getMembers().add(getPlayer(), player.getUniqueId());
-						} catch (ProtectionMembersSaveException e1) {
+							protection.getBanneds().add(getPlayer(), player.getUniqueId());
+						} catch (ProtectionBannedsSaveException e1) {
 							e1.sendError(getPlayer());
 						}
 						openInventory();
@@ -125,38 +126,38 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 			});
 		}
 
-		if (members.size() != 0) {
+		if (banneds.size() != 0) {
 			int slot = 0;
-			for (UUID member : Arrays.copyOfRange(members.toArray(new UUID[members.size()]), ((page - 1) * 18),
+			for (UUID banned : Arrays.copyOfRange(banneds.toArray(new UUID[banneds.size()]), ((page - 1) * 18),
 					(page * 18))) {
-				if (member == null) {
+				if (banned == null) {
 					break;
 				}
 
-				OfflinePlayer pl = OfflinePlayerUtils.getOfflinePlayer(member);
+				OfflinePlayer pl = OfflinePlayerUtils.getOfflinePlayer(banned);
 
 				setSlot(slot++,
 						new Button(
 								ItemStacksUtils.createItemStack(ItemStacksUtils.getPlayerHead(pl),
 										MessageBuilder
 												.createMessage(TextInput.inst()
-														.text(MessageString.INVENTORY_PROTECTION_MEMBERS_MEMBERNAME
+														.text(MessageString.INVENTORY_PROTECTION_BANNEDS_BANNEDNAME
 																.toString())
 														.replacements(
 																new TextReplacement("{player}", () -> pl.getName())))
 												.toString(),
 										MessageBuilder.createMessage(
-												MessageString.INVENTORY_PROTECTION_MEMBERS_REMOVEMEMBERLORELINE
+												MessageString.INVENTORY_PROTECTION_BANNEDS_REMOVEBANNEDLORELINE
 														.toString())
 												.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {
 								if (protection.isOwner(getPlayer().getUniqueId())
-										|| getPlayer().hasPermission(Permissions.PROTECTION_MEMBERS_REMOVE_OTHERS)) {
+										|| getPlayer().hasPermission(Permissions.PROTECTION_BANNEDS_REMOVE_OTHERS)) {
 									new ConfirmationInventory(getPlayer(), () -> {
 										try {
-											protection.getMembers().remove(getPlayer(), member);
-										} catch (ProtectionMembersDeleteException e1) {
+											protection.getBanneds().remove(getPlayer(), banned);
+										} catch (ProtectionBannedsDeleteException e1) {
 											e1.sendError(getPlayer());
 										}
 										openInventory();
@@ -169,11 +170,16 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 	}
 
 	public int getMaxPage() {
-		return (int) ((members.size() + 17) / 18D);
+		return (int) ((banneds.size() + 17) / 18D);
 	}
 
 	private List<UUID> getList() {
-		return protection.getMembers().list().stream().collect(Collectors.toList());
+		try {
+			return protection.getBanneds().list().stream().map(string -> UUID.fromString(string))
+					.collect(Collectors.toList());
+		} catch (Exception e) {
+			return new LinkedList<>();
+		}
 	}
 
 }

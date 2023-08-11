@@ -63,8 +63,8 @@ Settings:
     # and CommandStringFlags are the only flags available to be specified.
     #---
     Default-flags: 
-      greeting: '&7Entering protection from &a%player_name%"'
-      farewell: '&7Entering protection from &a%player_name%"'
+      greeting: '&7Entering protection from &a%player_name%'
+      farewell: '&7Leaving protection from &a%player_name%'
       command-on-entry: '/title %username% actionbar {"text":"&7Entering protection from &a%player_name%"}'
       command-on-exit: '/title %username% actionbar {"text":"&7Leaving protection from &a%player_name%"}'
   

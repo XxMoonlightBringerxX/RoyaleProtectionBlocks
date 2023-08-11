@@ -4,29 +4,27 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveException;
+import company.pluginName.Permissions;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.FilePckg.Settings.SettingList;
 import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Utils.OfflinePlayerUtils;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
 
-public class AddMemberSubCommand extends SubCommand {
+public class KickSubCommand extends SubCommand {
 
-	public AddMemberSubCommand(Command command) {
-		super(command, "addmember", SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_ALIASES.getContent());
+	public KickSubCommand(Command command) {
+		super(command, "kick", SettingString.COMMANDS_PROTECTIONBLOCKS_KICK_NAME.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_KICK_PERMISSION.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_KICK_DESCRIPTION.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_KICK_USAGE.toString(),
+				SettingList.COMMANDS_PROTECTIONBLOCKS_KICK_ALIASES.getContent());
 	}
 
 	@Override
@@ -45,17 +43,25 @@ public class AddMemberSubCommand extends SubCommand {
 				Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
 						.getProtectionByLocation(pl.getLocation());
 				if (protection != null) {
-					OfflinePlayer member = OfflinePlayerUtils.getOfflinePlayer(args[1]);
-					if (member != null) {
-						try {
-							protection.getMembers().add(pl, member.getUniqueId());
-
+					Player kicked = Bukkit.getPlayer(args[1]);
+					if (kicked != null) {
+						if (!kicked.hasPermission(Permissions.PROTECTION_KICK_BYPASS)) {
+							if (protection.getActions().kickPlayer(kicked)) {
+								MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_KICKED.applyPrefix())
+										.sendMessage(kicked);
+								MessageBuilder
+										.createMessage(MessageString.MESSAGE_PROTECTIONS_PLAYERKICKED.applyPrefix())
+										.sendMessage(sender);
+							} else {
+								MessageBuilder
+										.createMessage(
+												MessageString.MESSAGE_PROTECTIONS_PLAYERNOTINPROTECTION.applyPrefix())
+										.sendMessage(sender);
+							}
+						} else {
 							MessageBuilder
-									.createMessage(
-											MessageString.MESSAGE_PROTECTIONS_MEMBERS_ADDEDSUCCESSFULLY.applyPrefix())
+									.createMessage(MessageString.MESSAGE_PROTECTIONS_PLAYERWITHKICKBYPASS.applyPrefix())
 									.sendMessage(sender);
-						} catch (ProtectionMembersSaveException e) {
-							e.sendError(pl);
 						}
 					} else {
 						MessageBuilder.createMessage(MessageString.ERROR_PLAYERNOTFOUND.applyPrefix())

@@ -13,6 +13,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	// Messages
 	MESSAGE_RELOAD("Message.Reload", "&aThe plugin has been reloaded successfully."),
 
+	MESSAGE_GENERAL_NOLIMIT("Message.General.No-limit", "No limit"),
+
 	MESSAGE_PROTECTIONS_CREATEDSUCCESSFULLY("Message.Protections.Created-successfully",
 			"&aThe protection has been created successfully!"),
 	MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY("Message.Protections.Removed-successfully",
@@ -25,6 +27,14 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&aThe protection block has been hidden successfully!"),
 	MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY("Message.Protections.Shown-successfully",
 			"&aThe protection block has been shown successfully!"),
+	MESSAGE_PROTECTIONS_KICKED("Message.Protections.Kicked", "&cYou've been kicked from this protection."),
+	MESSAGE_PROTECTIONS_BANNED("Message.Protections.Banned", "&cYou've been banned from this protection."),
+	MESSAGE_PROTECTIONS_PLAYERNOTINPROTECTION("Message.Protections.Player-not-in-protection",
+			"&cThis player is not currently inside this protection."),
+	MESSAGE_PROTECTIONS_PLAYERWITHKICKBYPASS("Message.Protections.Player-with-kick-bypass",
+			"&cYou can't kick this player due his permissions."),
+	MESSAGE_PROTECTIONS_PLAYERKICKED("Message.Protections.Player-kicked",
+			"&aThe player has been kicked from this protection successfully!"),
 
 	MESSAGE_PROTECTIONS_MEMBERS_ADDEDSUCCESSFULLY("Message.Protections.Members.Added-successfully",
 			"&aThe new member has been added to the protection successfully!"),
@@ -35,6 +45,11 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&aThe new owner has been added to the protection successfully!"),
 	MESSAGE_PROTECTIONS_OWNERS_REMOVEDSUCCESSFULLY("Message.Protections.Owners.Removed-successfully",
 			"&aThe owner has been removed to the protection successfully!"),
+
+	MESSAGE_PROTECTIONS_BANNEDS_ADDEDSUCCESSFULLY("Message.Protections.Banneds.Added-successfully",
+			"&aThe player has been banned from the protection successfully!"),
+	MESSAGE_PROTECTIONS_BANNEDS_REMOVEDSUCCESSFULLY("Message.Protections.Banneds.Removed-successfully",
+			"&aThe player has been unbanned from the protection successfully!"),
 
 	MESSAGE_PROTECTIONS_BLOCKS_CREATEDSUCCESSFULLY("Message.Protections.Blocks.Created-successfully",
 			"&aThe protection block has been created successfully!"),
@@ -73,6 +88,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	INVENTORY_PROTECTION_PROTECTIONINFONAME("Inventory.Protection.Protection-info-name", "&e{owner}"),
 	INVENTORY_PROTECTION_OWNERSNAME("Inventory.Protection.Owners-name", "&eOwners"),
 	INVENTORY_PROTECTION_MEMBERSNAME("Inventory.Protection.Members-name", "&eMembers"),
+	INVENTORY_PROTECTION_BANNEDSNAME("Inventory.Protection.Banneds-name", "&eBanneds"),
 	INVENTORY_PROTECTION_FLAGSNAME("Inventory.Protection.Flags-name", "&eFlags"),
 	INVENTORY_PROTECTION_RENAMENAME("Inventory.Protection.Rename-name", "&eRename protection"),
 	INVENTORY_PROTECTION_SHOWBLOCKNAME("Inventory.Protection.Show-block-name", "&eShow the protection block"),
@@ -120,6 +136,14 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&eSearch for a new owner"),
 	INVENTORY_PROTECTION_OWNERS_REMOVEOWNERLORELINE("Inventory.Protection.Owners.Remove-owner-lore-line",
 			"&8[&cClick to remove owner&8]"),
+
+	// Inventory protection banneds items
+	INVENTORY_PROTECTION_BANNEDS_TITLE("Inventory.Protection.Banneds.Title", "{protection} > Banneds"),
+	INVENTORY_PROTECTION_BANNEDS_BANNEDNAME("Inventory.Protection.Banneds.Banned-name", "&e{player}"),
+	INVENTORY_PROTECTION_BANNEDS_SEARCHBANNEDNAME("Inventory.Protection.Banneds.Search-banned-name",
+			"&eSearch for a new banned"),
+	INVENTORY_PROTECTION_BANNEDS_REMOVEBANNEDLORELINE("Inventory.Protection.Banneds.Remove-banned-lore-line",
+			"&8[&cClick to remove banned&8]"),
 
 	// Inventory protection list items
 	INVENTORY_PROTECTIONBLOCKS_LIST_TITLE("Inventory.Protection-blocks.List.Title", "Protection Blocks"),
@@ -267,6 +291,25 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&cYou aren't allowed to add owners in this protection!"),
 	ERROR_EXCEPTION_PROTECTION_OWNERS_SAVE_UNKNOWN("Error.Exception.protection.owners.save.Unknown",
 			"&cAn unknown error happened while trying to add this owner. Please contact with an administrator!"),
+
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_DELETE_CANNOTDELETEPROTECTIONOWNER(
+			"Error.Exception.protection.banneds.delete.CannotDeleteProtectionOwner",
+			"&cYou can't remove the owner of this protection from the banneds list!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_DELETE_PERMISSIONDENIED(
+			"Error.Exception.protection.banneds.delete.PermissionDenied",
+			"&cYou aren't allowed to remove this banned!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_DELETE_UNKNOWN("Error.Exception.protection.banneds.delete.Unknown",
+			"&cAn unknown error happened while trying to remove this banned. Please contact with an administrator!"),
+
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_SAVE_CANNOTADDPROTECTIONOWNER(
+			"Error.Exception.protection.banneds.save.CannotAddProtectionOwner",
+			"&cYou can't add the owner of this protection as a banned!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_SAVE_CANNOTADDYOURSELF(
+			"Error.Exception.protection.banneds.save.CannotAddYourself", "&cYou can't add yourself as a banned!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_SAVE_PERMISSIONDENIED("Error.Exception.protection.banneds.save.PermissionDenied",
+			"&cYou aren't allowed to add banneds in this protection!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_SAVE_UNKNOWN("Error.Exception.protection.banneds.save.Unknown",
+			"&cAn unknown error happened while trying to add this banned. Please contact with an administrator!"),
 
 	ERROR_EXCEPTION_PROTECTION_BLOCKS_DELETE_PERMISSIONDENIED(
 			"Error.Exception.protection.blocks.delete.PermissionDenied",

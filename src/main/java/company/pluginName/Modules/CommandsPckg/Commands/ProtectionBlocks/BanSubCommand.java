@@ -9,7 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveException;
+import company.pluginName.Exceptions.ProtectionBanneds.Save.ProtectionBannedsSaveException;
 import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.FilePckg.Settings.SettingList;
 import company.pluginName.Modules.FilePckg.Settings.SettingString;
@@ -19,14 +19,14 @@ import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
 
-public class AddMemberSubCommand extends SubCommand {
+public class BanSubCommand extends SubCommand {
 
-	public AddMemberSubCommand(Command command) {
-		super(command, "addmember", SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_ALIASES.getContent());
+	public BanSubCommand(Command command) {
+		super(command, "ban", SettingString.COMMANDS_PROTECTIONBLOCKS_BAN_NAME.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_BAN_PERMISSION.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_BAN_DESCRIPTION.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_BAN_USAGE.toString(),
+				SettingList.COMMANDS_PROTECTIONBLOCKS_BAN_ALIASES.getContent());
 	}
 
 	@Override
@@ -45,16 +45,16 @@ public class AddMemberSubCommand extends SubCommand {
 				Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
 						.getProtectionByLocation(pl.getLocation());
 				if (protection != null) {
-					OfflinePlayer member = OfflinePlayerUtils.getOfflinePlayer(args[1]);
-					if (member != null) {
+					OfflinePlayer banned = OfflinePlayerUtils.getOfflinePlayer(args[1]);
+					if (banned != null) {
 						try {
-							protection.getMembers().add(pl, member.getUniqueId());
+							protection.getBanneds().add(pl, banned.getUniqueId());
 
 							MessageBuilder
 									.createMessage(
-											MessageString.MESSAGE_PROTECTIONS_MEMBERS_ADDEDSUCCESSFULLY.applyPrefix())
+											MessageString.MESSAGE_PROTECTIONS_BANNEDS_ADDEDSUCCESSFULLY.applyPrefix())
 									.sendMessage(sender);
-						} catch (ProtectionMembersSaveException e) {
+						} catch (ProtectionBannedsSaveException e) {
 							e.sendError(pl);
 						}
 					} else {

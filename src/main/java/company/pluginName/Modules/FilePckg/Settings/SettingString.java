@@ -10,6 +10,7 @@ import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.Fi
 @RequiredArgsConstructor
 public enum SettingString implements FileObjFieldsEnum<String> {
 	SETTINGS_PROTECTION_STARTERBLOCK("Settings.Protection.Starter-block", "Settings.Protection.Stater-block", ""),
+	SETTINGS_PROTECTION_SENDTOWORLDONKICK("Settings.Protection.Send-to-world-on-kick", "world"),
 
 	COMMANDS_PROTECTIONBLOCKS_NAME("Commands.Protection-blocks.Name", "protectionblocks"),
 	COMMANDS_PROTECTIONBLOCKS_DESCRIPTION("Commands.Protection-blocks.Description", "Open the GUI or execute commands"),
@@ -45,6 +46,24 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 			"Remove an owner on your current protection"),
 	COMMANDS_PROTECTIONBLOCKS_REMOVEOWNER_USAGE("Commands.Protection-blocks.Remove-owner.Usage", "<username>"),
 	COMMANDS_PROTECTIONBLOCKS_REMOVEOWNER_PERMISSION("Commands.Protection-blocks.Remove-owner.Permission", ""),
+
+	COMMANDS_PROTECTIONBLOCKS_BAN_NAME("Commands.Protection-blocks.Ban.Name", "ban"),
+	COMMANDS_PROTECTIONBLOCKS_BAN_DESCRIPTION("Commands.Protection-blocks.Ban.Description",
+			"Ban a player from your current protection"),
+	COMMANDS_PROTECTIONBLOCKS_BAN_USAGE("Commands.Protection-blocks.Ban.Usage", "<username>"),
+	COMMANDS_PROTECTIONBLOCKS_BAN_PERMISSION("Commands.Protection-blocks.Ban.Permission", ""),
+
+	COMMANDS_PROTECTIONBLOCKS_UNBAN_NAME("Commands.Protection-blocks.Unban.Name", "unban"),
+	COMMANDS_PROTECTIONBLOCKS_UNBAN_DESCRIPTION("Commands.Protection-blocks.Unban.Description",
+			"Unban a player from your current protection"),
+	COMMANDS_PROTECTIONBLOCKS_UNBAN_USAGE("Commands.Protection-blocks.Unban.Usage", "<username>"),
+	COMMANDS_PROTECTIONBLOCKS_UNBAN_PERMISSION("Commands.Protection-blocks.Unban.Permission", ""),
+
+	COMMANDS_PROTECTIONBLOCKS_KICK_NAME("Commands.Protection-blocks.Kick.Name", "kick"),
+	COMMANDS_PROTECTIONBLOCKS_KICK_DESCRIPTION("Commands.Protection-blocks.Kick.Description",
+			"Kick a player from your current protection"),
+	COMMANDS_PROTECTIONBLOCKS_KICK_USAGE("Commands.Protection-blocks.Kick.Usage", "<username>"),
+	COMMANDS_PROTECTIONBLOCKS_KICK_PERMISSION("Commands.Protection-blocks.Kick.Permission", ""),
 
 	COMMANDS_PROTECTIONBLOCKS_RELOAD_NAME("Commands.Protection-blocks.Reload.Name", "reload"),
 	COMMANDS_PROTECTIONBLOCKS_RELOAD_DESCRIPTION("Commands.Protection-blocks.Reload.Description", "Reload the plugin"),

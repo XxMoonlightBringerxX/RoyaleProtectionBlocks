@@ -182,7 +182,8 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 				});
 
 		TextReplacement blocksYReplacement = new TextReplacement("{blocks_y}",
-				() -> String.valueOf((newProtectionBlock.getBlocksY() * 2) + 1));
+				() -> newProtectionBlock.getBlocksY() == -1 ? MessageString.MESSAGE_GENERAL_NOLIMIT.toString()
+						: String.valueOf((newProtectionBlock.getBlocksY() * 2) + 1));
 
 		setSlot(14,
 				new Button(
@@ -202,7 +203,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 					@Override
 					public void onClick(InventoryClickEvent e) {
 						setBlocks(e, () -> newProtectionBlock.getBlocksY(),
-								(blocks) -> newProtectionBlock.setBlocksY(blocks));
+								(blocks) -> newProtectionBlock.setBlocksY(blocks), true);
 					}
 				});
 
@@ -315,6 +316,10 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 	}
 
 	public void setBlocks(InventoryClickEvent e, IntSupplier getBlocks, IntConsumer setBlocks) {
+		this.setBlocks(e, getBlocks, setBlocks, false);
+	}
+
+	public void setBlocks(InventoryClickEvent e, IntSupplier getBlocks, IntConsumer setBlocks, boolean allowUnlimited) {
 		int cur = getBlocks.getAsInt();
 		if (e.getClick() == ClickType.SHIFT_LEFT) {
 			try {
@@ -324,13 +329,13 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 								try {
 									int value = Integer.parseInt(message);
 
-									if (value < 0) {
+									if (value < 0 && (value != -1 || !allowUnlimited)) {
 										MessageBuilder.createMessage(MessageString.ERROR_NUMBERBELOWZERO.applyPrefix())
 												.sendMessage(e.getWhoClicked());
 										return true;
 									}
 
-									setBlocks.accept(value / 2);
+									setBlocks.accept(value == -1 ? value : value / 2);
 								} catch (NumberFormatException e1) {
 									MessageBuilder.createMessage(MessageString.ERROR_INVALIDNUMBER.applyPrefix())
 											.sendMessage(e.getWhoClicked());
@@ -350,7 +355,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 		} else if (e.getClick() == ClickType.LEFT) {
 			setBlocks.accept(++cur);
 			updateInventory();
-		} else if (e.getClick() == ClickType.RIGHT && cur > 0) {
+		} else if (e.getClick() == ClickType.RIGHT && (cur > (allowUnlimited ? -1 : 0))) {
 			setBlocks.accept(--cur);
 			updateInventory();
 		}

@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
+import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBannedsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
@@ -66,9 +67,9 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 				new TextReplacement("{location_x}", () -> loc != null ? String.valueOf(loc.getBlockX()) : "???"),
 				new TextReplacement("{location_y}", () -> loc != null ? String.valueOf(loc.getBlockY()) : "???"),
 				new TextReplacement("{location_z}", () -> loc != null ? String.valueOf(loc.getBlockZ()) : "???"),
-				new TextReplacement("{size_x}", () -> loc != null ? String.valueOf(block.getBlocksX()) : "???"),
-				new TextReplacement("{size_y}", () -> loc != null ? String.valueOf(block.getBlocksY()) : "???"),
-				new TextReplacement("{size_z}", () -> loc != null ? String.valueOf(block.getBlocksZ()) : "???") };
+				new TextReplacement("{size_x}", () -> block != null ? String.valueOf(block.getBlocksX()) : "???"),
+				new TextReplacement("{size_y}", () -> block != null ? String.valueOf(block.getBlocksY()) : "???"),
+				new TextReplacement("{size_z}", () -> block != null ? String.valueOf(block.getBlocksZ()) : "???") };
 
 		Slot protectionInfo = getSlot(11);
 		if (protectionInfo == null) {
@@ -123,7 +124,16 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 			}
 		});
 
-		setSlot(15, new Button(ItemStacksUtils.createItemStack(Material.COMMAND_BLOCK,
+		setSlot(15, new Button(ItemStacksUtils.createItemStack(Material.TNT,
+				MessageBuilder.createMessage(MessageString.INVENTORY_PROTECTION_BANNEDSNAME.toString()).toString())) {
+			@Override
+			public void onClick(InventoryClickEvent e) {
+				new ProtectionBannedsInventory(getPlayer(), protection).setPreviousHolder(getHolder())
+						.openInventory(MainPluginClass.getPlugin());
+			}
+		});
+
+		setSlot(16, new Button(ItemStacksUtils.createItemStack(Material.COMMAND_BLOCK,
 				MessageBuilder.createMessage(MessageString.INVENTORY_PROTECTION_FLAGSNAME.toString()).toString())) {
 			@Override
 			public void onClick(InventoryClickEvent e) {
@@ -132,7 +142,7 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 			}
 		});
 
-		setSlot(16, new Button(ItemStacksUtils.createItemStack(Material.NAME_TAG,
+		setSlot(22, new Button(ItemStacksUtils.createItemStack(Material.NAME_TAG,
 				MessageBuilder.createMessage(MessageString.INVENTORY_PROTECTION_RENAMENAME.toString()).toString())) {
 
 			@Override

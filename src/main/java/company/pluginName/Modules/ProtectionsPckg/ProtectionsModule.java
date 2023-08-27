@@ -29,9 +29,9 @@ import company.pluginName.Exceptions.Protection.Save.ProtectionSaveNoVisibleText
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveRenameDeniedException;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import company.pluginName.Utils.BlockVectorUtils;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
@@ -41,7 +41,7 @@ import relampagorojo93.LibsCollection.SpigotPlugin.PluginModule;
 
 public class ProtectionsModule implements PluginModule {
 
-	private @Getter HashMap<String, ProtectionBlock> protectionBlockById = new HashMap<>();
+	private @Getter HashMap<String, ProtectionBlock> protectionBlocks = new HashMap<>();
 	private @Getter HashMap<UUID, List<Protection>> protectionsByOwner = new HashMap<>();
 	private @Getter HashMap<String, List<Protection>> protectionsByWorld = new HashMap<>();
 	private @Getter HashMap<String, Protection> protectionByRegion = new HashMap<>();
@@ -64,8 +64,9 @@ public class ProtectionsModule implements PluginModule {
 	@Override
 	public boolean load() {
 		MainPluginClass.getPlugin().getSqlModule().getProtectionBlocks().stream()
-				.filter(block -> block.getItem() != null && block.getItem().getType() != Material.AIR)
-				.forEach(block -> protectionBlockById.put(block.getId().toLowerCase(), block));
+				.filter(block -> block.getInformation().getItem() != null
+						&& block.getInformation().getItem().getType() != Material.AIR)
+				.forEach(block -> protectionBlocks.put(block.getInformation().getId().toLowerCase(), block));
 
 		MainPluginClass.getPlugin().getSqlModule().getProtections().stream().filter(protection -> {
 			if (Bukkit.getWorld(protection.getWorldName()) != null && protection.getProtectedRegion() == null) {
@@ -100,7 +101,7 @@ public class ProtectionsModule implements PluginModule {
 				protection.toggleProtectionView();
 			}
 		}));
-		this.protectionBlockById.clear();
+		this.protectionBlocks.clear();
 		this.protectionsByOwner.clear();
 		this.protectionsByWorld.clear();
 		this.protectionByRegion.clear();
@@ -108,7 +109,7 @@ public class ProtectionsModule implements PluginModule {
 	}
 
 	public ProtectionBlock getProtectionBlockById(String id) {
-		return protectionBlockById.get(id.toLowerCase());
+		return protectionBlocks.get(id.toLowerCase());
 	}
 
 	public List<Protection> getAllowedProtections(OfflinePlayer pl) {
@@ -213,11 +214,11 @@ public class ProtectionsModule implements PluginModule {
 	 */
 
 	public void registerProtectionBlock(ProtectionBlock protectionBlock) throws ProtectionBlocksSaveException {
-		protectionBlockById.putIfAbsent(protectionBlock.getId().toLowerCase(), protectionBlock);
+		protectionBlocks.putIfAbsent(protectionBlock.getInformation().getId().toLowerCase(), protectionBlock);
 	}
 
 	public void unregisterProtectionBlock(ProtectionBlock protectionBlock) throws ProtectionBlocksDeleteException {
-		protectionBlockById.remove(protectionBlock.getId());
+		protectionBlocks.remove(protectionBlock.getInformation().getId());
 	}
 
 	/*

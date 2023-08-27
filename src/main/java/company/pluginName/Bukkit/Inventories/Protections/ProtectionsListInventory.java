@@ -16,10 +16,10 @@ import com.sk89q.worldguard.protection.flags.Flags;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
-import company.pluginName.Modules.FilePckg.Messages.MessageList;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageList;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import company.pluginName.Utils.ReflectUtils;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
@@ -27,6 +27,7 @@ import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
+import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
@@ -127,33 +128,35 @@ public class ProtectionsListInventory extends PluginChestInventory {
 						new TextReplacement("{location_z}",
 								() -> loc != null ? String.valueOf(loc.getBlockZ()) : "???") };
 
-				setSlot(slot++,
-						new Button(ItemStacksUtils.createItemStack(block.getItem().clone(),
-								MessageBuilder.createMessage(TextInput
-										.inst().text(MessageString.INVENTORY_PROTECTION_LIST_PROTECTIONNAME.toString())
-										.replacements(replacements)).toString(),
-								MessageBuilder.createMessage(TextInput.inst()
-										.text(lore.toArray(new String[lore.size()])).replacements(replacements))
-										.getStrings())) {
-							@Override
-							public void onClick(InventoryClickEvent e) {
-								if (e.getClick() == ClickType.LEFT) {
-									try {
-										World world = Bukkit.getWorld(protection.getWorldName());
-										if (unknownLocation != null) {
-											e.getWhoClicked().teleport(ReflectUtils.unknownLocationToBukkitLocation(
-													world, protection.getProtectedRegion().getFlag(Flags.TELE_LOC)));
-										}
-									} catch (Exception e1) {
-										MessageBuilder.createMessage(MessageString.ERROR_ERROR.applyPrefix())
-												.sendMessage(e.getWhoClicked());
-										e1.printStackTrace();
-									}
-								} else {
-									new ProtectionsManagerInventory(getPlayer(), protection).openInventory();
+				setSlot(slot++, new Button(ItemStacksUtils.createItemStack(
+						block != null ? block.getInformation().getItem().clone()
+								: ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), UNKNOWN_SKIN),
+						MessageBuilder.createMessage(
+								TextInput.inst().text(MessageString.INVENTORY_PROTECTION_LIST_PROTECTIONNAME.toString())
+										.replacements(replacements))
+								.toString(),
+						MessageBuilder.createMessage(
+								TextInput.inst().text(lore.toArray(new String[lore.size()])).replacements(replacements))
+								.getStrings())) {
+					@Override
+					public void onClick(InventoryClickEvent e) {
+						if (e.getClick() == ClickType.LEFT) {
+							try {
+								World world = Bukkit.getWorld(protection.getWorldName());
+								if (unknownLocation != null) {
+									e.getWhoClicked().teleport(ReflectUtils.unknownLocationToBukkitLocation(world,
+											protection.getProtectedRegion().getFlag(Flags.TELE_LOC)));
 								}
+							} catch (Exception e1) {
+								MessageBuilder.createMessage(MessageString.ERROR_ERROR.applyPrefix())
+										.sendMessage(e.getWhoClicked());
+								e1.printStackTrace();
 							}
-						});
+						} else {
+							new ProtectionsManagerInventory(getPlayer(), protection).openInventory();
+						}
+					}
+				});
 			}
 		}
 	}

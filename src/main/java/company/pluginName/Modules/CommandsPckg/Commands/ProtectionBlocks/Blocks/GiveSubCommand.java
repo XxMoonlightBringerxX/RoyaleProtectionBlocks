@@ -8,10 +8,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
+import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
@@ -30,7 +31,7 @@ public class GiveSubCommand extends SubCommand {
 	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
 		switch (args.length) {
 		case 1:
-			return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlockById().keySet().stream()
+			return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().keySet().stream()
 					.collect(Collectors.toList());
 		case 2:
 			return Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
@@ -62,7 +63,11 @@ public class GiveSubCommand extends SubCommand {
 					return true;
 				}
 
-				toGive.getInventory().addItem(block.generateItem());
+				try {
+					toGive.getInventory().addItem(block.getInformation().generateItem());
+				} catch (ProtectionBlocksGenerateItemException e) {
+					e.sendError(sender);
+				}
 			} else {
 				MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKS_NOTFOUND.applyPrefix())
 						.sendMessage(sender);

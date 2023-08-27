@@ -8,9 +8,10 @@ import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventor
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManagerInventory;
 import company.pluginName.Modules.CommandsPckg.Base.HelpSubCommand;
 import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Blocks.BlocksCommand;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
+import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Files.FilesCommand;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 
 public class ProtectionBlocksCommand extends Command {
@@ -36,6 +37,7 @@ public class ProtectionBlocksCommand extends Command {
 		addCommand(new BanSubCommand(this));
 		addCommand(new UnbanSubCommand(this));
 		addCommand(new KickSubCommand(this));
+		addCommand(new FilesCommand(this));
 		sortCommands();
 		addCommand(new HelpSubCommand(this), 0);
 	}

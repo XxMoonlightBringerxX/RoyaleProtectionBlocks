@@ -18,11 +18,13 @@ import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembe
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteException;
+import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteUnknownException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
-import company.pluginName.Modules.FilePckg.Messages.MessageList;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
+import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageList;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import company.pluginName.Utils.OfflinePlayerUtils;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
@@ -67,9 +69,12 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 				new TextReplacement("{location_x}", () -> loc != null ? String.valueOf(loc.getBlockX()) : "???"),
 				new TextReplacement("{location_y}", () -> loc != null ? String.valueOf(loc.getBlockY()) : "???"),
 				new TextReplacement("{location_z}", () -> loc != null ? String.valueOf(loc.getBlockZ()) : "???"),
-				new TextReplacement("{size_x}", () -> block != null ? String.valueOf(block.getBlocksX()) : "???"),
-				new TextReplacement("{size_y}", () -> block != null ? String.valueOf(block.getBlocksY()) : "???"),
-				new TextReplacement("{size_z}", () -> block != null ? String.valueOf(block.getBlocksZ()) : "???") };
+				new TextReplacement("{size_x}",
+						() -> block != null ? String.valueOf(block.getInformation().getBlocksX()) : "???"),
+				new TextReplacement("{size_y}",
+						() -> block != null ? String.valueOf(block.getInformation().getBlocksY()) : "???"),
+				new TextReplacement("{size_z}",
+						() -> block != null ? String.valueOf(block.getInformation().getBlocksZ()) : "???") };
 
 		Slot protectionInfo = getSlot(11);
 		if (protectionInfo == null) {
@@ -236,18 +241,31 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 						public void onClick(InventoryClickEvent e) {
 							new ConfirmationInventory(getPlayer(), () -> {
 								try {
+									ItemStack protectionBlockItem = null;
+									try {
+										ProtectionBlock protectionBlock = protection.getProtectionBlock().getObject();
+										if (protectionBlock != null) {
+											protectionBlockItem = protection.getProtectionBlock().getObject()
+													.getInformation().generateItem();
+										}
+									} catch (ProtectionBlocksGenerateItemException e1) {
+										throw new ProtectionDeleteUnknownException(e1);
+									}
+
 									if (protection.isProtectionBlockShown()) {
 										protection.hideProtectionBlock();
 									}
 
 									MainPluginClass.getPlugin().getProtectionsModule().removeProtection(protection);
 
-									HashMap<Integer, ItemStack> items = getPlayer().getInventory()
-											.addItem(protection.getProtectionBlock().getObject().generateItem());
+									if (protectionBlockItem != null) {
+										HashMap<Integer, ItemStack> items = getPlayer().getInventory()
+												.addItem(protectionBlockItem);
 
-									if (items != null && !items.isEmpty()) {
-										items.values().forEach(item -> getPlayer().getLocation().getWorld()
-												.dropItem(getPlayer().getLocation(), item));
+										if (items != null && !items.isEmpty()) {
+											items.values().forEach(item -> getPlayer().getLocation().getWorld()
+													.dropItem(getPlayer().getLocation(), item));
+										}
 									}
 
 									MessageBuilder

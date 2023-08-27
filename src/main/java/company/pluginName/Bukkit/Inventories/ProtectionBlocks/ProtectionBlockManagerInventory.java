@@ -14,12 +14,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
+import company.pluginName.Bukkit.Inventories.ProtectionBlocks.BannedWorlds.ProtectionBlockAllowedWorldsInventory;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
-import company.pluginName.Modules.FilePckg.Messages.MessageList;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageList;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
@@ -79,7 +80,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 					}
 
 					if (newRecipe != null) {
-						newRecipe.save();
+						newRecipe.save(getPlayer());
 					}
 
 					if (originalProtectionBlock != null) {
@@ -108,45 +109,49 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 		setName(MessageBuilder
 				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_TITLE.toString())
 						.replacements(new TextReplacement("{block}",
-								() -> newProtectionBlock.getId() != null ? newProtectionBlock.getId() : "???")))
+								() -> newProtectionBlock.getInformation().getId() != null
+										? newProtectionBlock.getInformation().getId()
+										: "???")))
 				.toString());
 		return super.getInventory();
 	}
 
 	@Override
 	public void updateContent() {
-		ItemStack i = (newProtectionBlock.getItem() != null ? newProtectionBlock.getItem() : NO_ITEM_SET_ITEMSTACK)
-				.clone();
+		ItemStack i = (newProtectionBlock.getInformation().getItem() != null
+				? newProtectionBlock.getInformation().getItem()
+				: NO_ITEM_SET_ITEMSTACK).clone();
 
 		ItemMeta im = i.getItemMeta();
 		List<String> lore = im.hasLore() ? im.getLore() : new ArrayList<>();
-		MessageList extraLore = newProtectionBlock.getItem() != null
+		MessageList extraLore = newProtectionBlock.getInformation().getItem() != null
 				? MessageList.INVENTORY_PROTECTIONBLOCKS_MANAGE_ITEMLORE
 				: MessageList.INVENTORY_PROTECTIONBLOCKS_MANAGE_ITEMNOTSETLORE;
 		lore.addAll(MessageBuilder.createMessage(extraLore.getContent()).getStrings());
 		im.setLore(lore);
 		i.setItemMeta(im);
 
-		setSlot(20, new Button(i) {
+		setSlot(11, new Button(i) {
 			@Override
 			public void onClick(InventoryClickEvent e) {
 				try {
 					if (e.getClick() == ClickType.LEFT) {
 						if (e.getCursor() != null && e.getCursor().getType() != Material.AIR.getMaterial()) {
 							if (originalProtectionBlock != null
-									&& e.getCursor().getType() != originalProtectionBlock.getItem().getType()) {
+									&& !originalProtectionBlock.getInformation().isSameType(e.getCursor())) {
 								MessageBuilder.createMessage(
 										MessageString.ERROR_PROTECTIONS_BLOCKS_ITEMTYPESWAPNOTALLOWED.applyPrefix())
 										.sendMessage(e.getWhoClicked());
 								return;
 							}
 
-							newProtectionBlock.setItem(e.getCursor().clone());
+							newProtectionBlock.getInformation().setItem(e.getCursor().clone());
 							e.getWhoClicked().getOpenInventory().setCursor(null);
 							updateInventory();
-						} else if (newProtectionBlock.getItem() != null) {
-							e.getWhoClicked().getOpenInventory().setCursor(newProtectionBlock.getItem());
-							newProtectionBlock.setItem(null);
+						} else if (newProtectionBlock.getInformation().getItem() != null) {
+							e.getWhoClicked().getOpenInventory()
+									.setCursor(newProtectionBlock.getInformation().getItem());
+							newProtectionBlock.getInformation().setItem(null);
 							updateInventory();
 						}
 					}
@@ -157,7 +162,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 		});
 
 		TextReplacement blocksXReplacement = new TextReplacement("{blocks_x}",
-				() -> String.valueOf((newProtectionBlock.getBlocksX() * 2) + 1));
+				() -> String.valueOf((newProtectionBlock.getInformation().getBlocksX() * 2) + 1));
 
 		setSlot(13,
 				new Button(
@@ -176,14 +181,15 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 										X_LETTER_SKIN)) {
 					@Override
 					public void onClick(InventoryClickEvent e) {
-						setBlocks(e, () -> newProtectionBlock.getBlocksX(),
-								(blocks) -> newProtectionBlock.setBlocksX(blocks));
+						setBlocks(e, () -> newProtectionBlock.getInformation().getBlocksX(),
+								(blocks) -> newProtectionBlock.getInformation().setBlocksX(blocks));
 					}
 				});
 
 		TextReplacement blocksYReplacement = new TextReplacement("{blocks_y}",
-				() -> newProtectionBlock.getBlocksY() == -1 ? MessageString.MESSAGE_GENERAL_NOLIMIT.toString()
-						: String.valueOf((newProtectionBlock.getBlocksY() * 2) + 1));
+				() -> newProtectionBlock.getInformation().getBlocksY() == -1
+						? MessageString.MESSAGE_GENERAL_NOLIMIT.toString()
+						: String.valueOf((newProtectionBlock.getInformation().getBlocksY() * 2) + 1));
 
 		setSlot(14,
 				new Button(
@@ -202,13 +208,13 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 										Y_LETTER_SKIN)) {
 					@Override
 					public void onClick(InventoryClickEvent e) {
-						setBlocks(e, () -> newProtectionBlock.getBlocksY(),
-								(blocks) -> newProtectionBlock.setBlocksY(blocks), true);
+						setBlocks(e, () -> newProtectionBlock.getInformation().getBlocksY(),
+								(blocks) -> newProtectionBlock.getInformation().setBlocksY(blocks), true);
 					}
 				});
 
 		TextReplacement blocksZReplacement = new TextReplacement("{blocks_z}",
-				() -> String.valueOf((newProtectionBlock.getBlocksZ() * 2) + 1));
+				() -> String.valueOf((newProtectionBlock.getInformation().getBlocksZ() * 2) + 1));
 
 		setSlot(15,
 				new Button(
@@ -227,22 +233,36 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 										Z_LETTER_SKIN)) {
 					@Override
 					public void onClick(InventoryClickEvent e) {
-						setBlocks(e, () -> newProtectionBlock.getBlocksZ(),
-								(blocks) -> newProtectionBlock.setBlocksZ(blocks));
+						setBlocks(e, () -> newProtectionBlock.getInformation().getBlocksZ(),
+								(blocks) -> newProtectionBlock.getInformation().setBlocksZ(blocks));
 					}
 				});
 
 		MessageString idName = this.originalProtectionBlock != null
 				? MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTMODIFIABLENAME
-				: (this.newProtectionBlock.getId() != null ? MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNAME
+				: (this.newProtectionBlock.getInformation().getId() != null
+						? MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNAME
 						: MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTSETNAME);
 
-		setSlot(31,
-				new Button(ItemStacksUtils.createItemStack(Material.NAME_TAG, MessageBuilder
-						.createMessage(TextInput.inst().text(idName.toString())
-								.replacements(new TextReplacement("{block_id}",
-										() -> newProtectionBlock.getId() != null ? newProtectionBlock.getId() : "")))
+		setSlot(29, new Button(ItemStacksUtils.createItemStack(
+				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), WORLD_SKIN),
+				MessageBuilder
+						.createMessage(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_ALLOWEDWORLDSNAME.toString())
 						.toString())) {
+			@Override
+			public void onClick(InventoryClickEvent e) {
+				new ProtectionBlockAllowedWorldsInventory(getPlayer(), newProtectionBlock).openInventory();
+			}
+		});
+
+		setSlot(31,
+				new Button(ItemStacksUtils.createItemStack(Material.NAME_TAG,
+						MessageBuilder.createMessage(TextInput.inst().text(idName.toString())
+								.replacements(new TextReplacement("{block_id}",
+										() -> newProtectionBlock.getInformation().getId() != null
+												? newProtectionBlock.getInformation().getId()
+												: "")))
+								.toString())) {
 
 					@Override
 					public void onClick(InventoryClickEvent e) {
@@ -251,7 +271,8 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 								MainPluginClass.getPlugin().getMessagesListener()
 										.startListening(getPlayer().getUniqueId(), (message) -> {
 											if (!message.equalsIgnoreCase("cancel")) {
-												newProtectionBlock.setId(!message.isEmpty() ? message : null);
+												newProtectionBlock.getInformation()
+														.setId(!message.isEmpty() ? message : null);
 											}
 											openInventory();
 											return true;
@@ -278,41 +299,48 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 			}
 		});
 
-		MessageString permissionName = this.newProtectionBlock.getPermission() != null
+		MessageString permissionName = this.newProtectionBlock.getInformation().getPermission() != null
 				? MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNAME
 				: MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNOTSETNAME;
 
-		setSlot(33, new Button(ItemStacksUtils.createItemStack(Material.PAPER, MessageBuilder.createMessage(TextInput
-				.inst().text(permissionName.toString())
-				.replacements(new TextReplacement("{block_permission}",
-						() -> newProtectionBlock.getPermission() != null ? newProtectionBlock.getPermission() : "")))
-				.toString())) {
-			@Override
-			public void onClick(InventoryClickEvent e) {
-				if (e.getClick() == ClickType.LEFT) {
-					try {
-						MainPluginClass.getPlugin().getMessagesListener().startListening(getPlayer().getUniqueId(),
-								(message) -> {
-									if (!message.equalsIgnoreCase("cancel")) {
-										newProtectionBlock.setPermission(!message.isEmpty() ? message : null);
-									}
-									openInventory();
-									return true;
-								});
-						closeInventory();
-						MessageBuilder.createMessage(
-								MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONSPECIFYINFO.applyPrefix())
-								.sendMessage(e.getWhoClicked());
-					} catch (PlayerAlreadyListeningException e1) {
-						MessageBuilder.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix())
-								.sendMessage(e.getWhoClicked());
+		setSlot(33,
+				new Button(ItemStacksUtils.createItemStack(Material.PAPER,
+						MessageBuilder.createMessage(TextInput.inst().text(permissionName.toString())
+								.replacements(new TextReplacement("{block_permission}",
+										() -> newProtectionBlock.getInformation().getPermission() != null
+												? newProtectionBlock.getInformation().getPermission()
+												: "")))
+								.toString())) {
+					@Override
+					public void onClick(InventoryClickEvent e) {
+						if (e.getClick() == ClickType.LEFT) {
+							try {
+								MainPluginClass.getPlugin().getMessagesListener()
+										.startListening(getPlayer().getUniqueId(), (message) -> {
+											if (!message.equalsIgnoreCase("cancel")) {
+												newProtectionBlock.getInformation()
+														.setPermission(!message.isEmpty() ? message : null);
+											}
+											openInventory();
+											return true;
+										});
+								closeInventory();
+								MessageBuilder.createMessage(
+										MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONSPECIFYINFO
+												.applyPrefix())
+										.sendMessage(e.getWhoClicked());
+							} catch (PlayerAlreadyListeningException e1) {
+								MessageBuilder
+										.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix())
+										.sendMessage(e.getWhoClicked());
+							}
+						} else if (e.getClick() == ClickType.RIGHT
+								&& newProtectionBlock.getInformation().getPermission() != null) {
+							newProtectionBlock.getInformation().setPermission(null);
+							updateInventory();
+						}
 					}
-				} else if (e.getClick() == ClickType.RIGHT && newProtectionBlock.getPermission() != null) {
-					newProtectionBlock.setPermission(null);
-					updateInventory();
-				}
-			}
-		});
+				});
 	}
 
 	public void setBlocks(InventoryClickEvent e, IntSupplier getBlocks, IntConsumer setBlocks) {

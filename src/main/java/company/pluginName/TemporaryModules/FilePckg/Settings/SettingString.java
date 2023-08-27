@@ -1,11 +1,11 @@
-package company.pluginName.Modules.FilePckg.Settings;
+package company.pluginName.TemporaryModules.FilePckg.Settings;
 
 import company.pluginName.Permissions;
+import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFieldsEnum;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
 
 @RequiredArgsConstructor
 public enum SettingString implements FileObjFieldsEnum<String> {
@@ -129,6 +129,27 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_USAGE("Commands.Protection-blocks.Blocks.Give.Usage", "<id> [player]"),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_PERMISSION("Commands.Protection-blocks.Blocks.Give.Permission",
 			Permissions.PROTECTION_BLOCKS_GIVE),
+
+	COMMANDS_PROTECTIONBLOCKS_FILES_NAME("Commands.Protection-blocks.Files.Name", "files"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_DESCRIPTION("Commands.Protection-blocks.Files.Description",
+			"Manage the importation and exportation of data through files"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_USAGE("Commands.Protection-blocks.Files.Usage", "[help|subcommand]"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_PERMISSION("Commands.Protection-blocks.Files.Permission",
+			Permissions.PROTECTION_FILES),
+
+	COMMANDS_PROTECTIONBLOCKS_FILES_EXPORT_NAME("Commands.Protection-blocks.Files.Export.Name", "export"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_EXPORT_DESCRIPTION("Commands.Protection-blocks.Files.Export.Description",
+			"Export all the information of an specific type of data to its respective file"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_EXPORT_USAGE("Commands.Protection-blocks.Files.Export.Usage", "<blocks>"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_EXPORT_PERMISSION("Commands.Protection-blocks.Files.Export.Permission",
+			Permissions.PROTECTION_FILES_EXPORT),
+
+	COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_NAME("Commands.Protection-blocks.Files.Import.Name", "import"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_DESCRIPTION("Commands.Protection-blocks.Files.Import.Description",
+			"Import all the information of an specific type of data from its respective file"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_USAGE("Commands.Protection-blocks.Files.Import.Usage", "<blocks>"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_PERMISSION("Commands.Protection-blocks.Files.Import.Permission",
+			Permissions.PROTECTION_FILES_IMPORT),
 
 	COMMANDS_GENERIC_HELP_NAME("Commands.Generic.Help.Name", "help"),
 	COMMANDS_GENERIC_HELP_DESCRIPTION("Commands.Generic.Help.Description", "Get all the commands"),

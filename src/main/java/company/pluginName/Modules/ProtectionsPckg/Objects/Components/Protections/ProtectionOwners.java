@@ -1,4 +1,4 @@
-package company.pluginName.Modules.ProtectionsPckg.Objects.Components;
+package company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections;
 
 import java.util.Set;
 import java.util.UUID;

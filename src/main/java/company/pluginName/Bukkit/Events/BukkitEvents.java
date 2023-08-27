@@ -1,41 +1,20 @@
 package company.pluginName.Bukkit.Events;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.WorldLoadEvent;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.MainPluginClass.Debugger.MessageType;
-import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManagerInventory;
-import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteException;
-import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
 public class BukkitEvents implements Listener {
 
@@ -45,173 +24,13 @@ public class BukkitEvents implements Listener {
 			ProtectionBlock block = MainPluginClass.getPlugin().getProtectionsModule()
 					.getProtectionBlockById(SettingString.SETTINGS_PROTECTION_STARTERBLOCK.toString());
 			if (block != null) {
-				e.getPlayer().getInventory().addItem(block.generateItem());
-			}
-		}
-	}
-
-	@EventHandler(priority = EventPriority.LOWEST)
-	public void onPlaceBlock(BlockPlaceEvent e) {
-		if (MessageType.BLOCK_PLACE.isAvailable()) {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_PLACE,
-					"Player %s is attempting to place a block on location x(%s) y(%s) z(%s)", e.getPlayer().getName(),
-					String.valueOf(e.getBlock().getX()), String.valueOf(e.getBlock().getY()),
-					String.valueOf(e.getBlock().getZ()));
-		}
-
-		if (!e.isCancelled()) {
-			if (e.canBuild()) {
-				String protectionBlockId = ItemStacksUtils.getData(e.getItemInHand(), "ProtectionBlockId");
-				if (protectionBlockId != null && !protectionBlockId.isEmpty()) {
-					ProtectionBlock protectionBlock = MainPluginClass.getPlugin().getProtectionsModule()
-							.getProtectionBlockById(protectionBlockId);
-
-					if (protectionBlock != null) {
-						if (protectionBlock.getPermission() == null
-								|| e.getPlayer().hasPermission(protectionBlock.getPermission())) {
-							if (!SettingList.SETTINGS_BANNEDWORLDS.getContent()
-									.contains(e.getBlockPlaced().getLocation().getWorld().getName())) {
-								try {
-									if (MessageType.PROTECTION_CREATION_ATTEMPT.isAvailable()) {
-										MainPluginClass.Debugger.log(MessageType.PROTECTION_CREATION_ATTEMPT,
-												"Player %s is attempting to create protection from location x(%s) y(%s) z(%s)",
-												e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
-												String.valueOf(e.getBlock().getY()),
-												String.valueOf(e.getBlock().getZ()));
-									}
-									Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-											.createProtection(e.getPlayer(), protectionBlock,
-													e.getBlock().getLocation());
-									MessageBuilder
-											.createMessage(
-													MessageString.MESSAGE_PROTECTIONS_CREATEDSUCCESSFULLY.applyPrefix())
-											.sendMessage(e.getPlayer());
-									if (MessageType.PROTECTION_CREATION.isAvailable()) {
-										MainPluginClass.Debugger.log(MessageType.PROTECTION_CREATION,
-												"Player %s created protection '%s' from location x(%s) y(%s) z(%s)",
-												e.getPlayer().getName(), protection.getDisplayName(),
-												String.valueOf(protection.getProtectionBlockLocation().getX()),
-												String.valueOf(protection.getProtectionBlockLocation().getY()),
-												String.valueOf(protection.getProtectionBlockLocation().getZ()));
-									}
-								} catch (ProtectionSaveException e1) {
-									e.setBuild(false);
-									e1.sendError(e.getPlayer());
-								}
-							} else {
-								e.setCancelled(true);
-								MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BANNEDWORLD.applyPrefix())
-										.sendMessage(e.getPlayer());
-							}
-						} else {
-							e.setCancelled(true);
-							MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_PERMISSIONDENIED.applyPrefix())
-									.sendMessage(e.getPlayer());
-						}
-						return;
-					}
-				}
-			}
-
-			Protection prot = MainPluginClass.getPlugin().getProtectionsModule()
-					.getProtectionByBlock(e.getBlock().getLocation());
-			if (prot != null) {
-				ProtectionBlock block = prot.getProtectionBlock().getObject();
-				if (block != null && block.getItem().getType() == e.getItemInHand().getType()) {
-					e.setCancelled(true);
-					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_SAMEITEMASPROTECTION.applyPrefix())
-							.sendMessage(e.getPlayer());
-				}
-			}
-		} else if (MessageType.BLOCK_PLACE_CANCELLED.isAvailable()) {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_PLACE_CANCELLED,
-					"Attempt to place a protection block was already cancelled by another plugin");
-		}
-	}
-
-	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-	public void onBreakBlock(BlockBreakEvent e) {
-		if (MessageType.BLOCK_BREAK.isAvailable()) {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK,
-					"Player %s is attempting to break a block on location x(%s) y(%s) z(%s)", e.getPlayer().getName(),
-					String.valueOf(e.getBlock().getX()), String.valueOf(e.getBlock().getY()),
-					String.valueOf(e.getBlock().getZ()));
-		}
-
-		if (!e.isCancelled()) {
-			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-					.getProtectionByBlock(e.getBlock().getLocation());
-			if (protection != null) {
 				try {
-					if (MessageType.PROTECTION_REMOVAL_ATTEMPT.isAvailable()) {
-						MainPluginClass.Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT,
-								"Player %s is attempting to remove '%s' from location x(%s) y(%s) z(%s)",
-								e.getPlayer().getName(), protection.getDisplayName(),
-								String.valueOf(protection.getProtectionBlockLocation().getX()),
-								String.valueOf(protection.getProtectionBlockLocation().getY()),
-								String.valueOf(protection.getProtectionBlockLocation().getZ()));
-					}
-					MainPluginClass.getPlugin().getProtectionsModule().removeProtection(e.getPlayer(), protection);
-					e.setDropItems(false);
-					e.setExpToDrop(0);
-					e.getBlock().getWorld().dropItem(e.getBlock().getLocation(),
-							protection.getProtectionBlock().getObject().generateItem());
-					MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
-							.sendMessage(e.getPlayer());
-
-					if (e.getPlayer().getOpenInventory().getType() != InventoryType.CRAFTING) {
-						e.getPlayer().closeInventory();
-					}
-
-					if (MessageType.PROTECTION_REMOVAL.isAvailable()) {
-						MainPluginClass.Debugger.log(MessageType.PROTECTION_REMOVAL,
-								"Player %s removed protection '%s' from location x(%s) y(%s) z(%s)",
-								e.getPlayer().getName(), protection.getDisplayName(),
-								String.valueOf(protection.getProtectionBlockLocation().getX()),
-								String.valueOf(protection.getProtectionBlockLocation().getY()),
-								String.valueOf(protection.getProtectionBlockLocation().getZ()));
-					}
-				} catch (ProtectionDeleteException e1) {
-					e.setCancelled(true);
-					e1.sendError(e.getPlayer());
+					e.getPlayer().getInventory().addItem(block.getInformation().generateItem());
+				} catch (ProtectionBlocksGenerateItemException e1) {
+					e1.sendError(Bukkit.getConsoleSender());
+					return;
 				}
 			}
-		} else if (MessageType.BLOCK_BREAK_CANCELLED.isAvailable()) {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK_CANCELLED,
-					"Attempt to break a protection block was already cancelled by another plugin");
-		}
-	}
-
-	@EventHandler(ignoreCancelled = true)
-	public void onExplodeEntity(EntityExplodeEvent e) {
-		e.blockList().removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(block.getLocation()) != null);
-	}
-
-	@EventHandler(ignoreCancelled = true)
-	public void onExplodeBlock(BlockExplodeEvent e) {
-		e.blockList().removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(block.getLocation()) != null);
-	}
-
-	@EventHandler
-	public void onClickBlock(PlayerInteractEvent e) {
-		if (e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK && e.getHand() == EquipmentSlot.HAND) {
-			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-					.getProtectionByBlock(e.getClickedBlock().getLocation());
-			if (protection != null) {
-				e.setCancelled(true);
-				onInteractProtectionBlock(protection, e.getPlayer());
-			}
-		}
-	}
-
-	@EventHandler
-	public void onMobGrief(EntityChangeBlockEvent e) {
-		Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(e.getBlock().getLocation());
-		if (protection != null) {
-			e.setCancelled(true);
 		}
 	}
 
@@ -231,64 +50,6 @@ public class BukkitEvents implements Listener {
 						}
 					}
 				});
-	}
-
-	@EventHandler
-	public void onDamageEntity(EntityDamageEvent e) {
-		List<Protection> protections = MainPluginClass.getPlugin().getProtectionsModule().getProtectionsByWorld()
-				.getOrDefault(e.getEntity().getWorld().getName(), new ArrayList<>());
-		for (Protection protection : protections) {
-			if (protection.isProtectionViewEntity(e.getEntity())) {
-				e.setCancelled(true);
-				break;
-			}
-		}
-	}
-
-	@EventHandler
-	public void onInteractEntity(PlayerInteractAtEntityEvent e) {
-		List<Protection> protections = MainPluginClass.getPlugin().getProtectionsModule().getProtectionsByWorld()
-				.getOrDefault(e.getRightClicked().getWorld().getName(), new ArrayList<>());
-		for (Protection protection : protections) {
-			if (protection.isProtectionViewEntity(e.getRightClicked())) {
-				e.setCancelled(true);
-				onInteractProtectionBlock(protection, e.getPlayer());
-				break;
-			}
-		}
-	}
-
-	private void onInteractProtectionBlock(Protection protection, Player player) {
-		if (protection != null) {
-			if (player.isSneaking() && protection.canDelete(player)) {
-				new ConfirmationInventory(player, () -> {
-					try {
-						if (protection.isProtectionBlockShown()) {
-							protection.hideProtectionBlock();
-						}
-
-						MainPluginClass.getPlugin().getProtectionsModule().removeProtection(protection);
-
-						HashMap<Integer, ItemStack> items = player.getInventory()
-								.addItem(protection.getProtectionBlock().getObject().generateItem());
-
-						if (items != null && !items.isEmpty()) {
-							items.values().forEach(
-									item -> player.getLocation().getWorld().dropItem(player.getLocation(), item));
-						}
-
-						MessageBuilder
-								.createMessage(MessageString.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
-								.sendMessage(player);
-					} catch (ProtectionDeleteException e1) {
-						e1.sendError(player);
-					}
-				}).openInventory();
-
-			} else if (protection.canManage(player)) {
-				new ProtectionsManagerInventory(player, protection).openInventory();
-			}
-		}
 	}
 
 }

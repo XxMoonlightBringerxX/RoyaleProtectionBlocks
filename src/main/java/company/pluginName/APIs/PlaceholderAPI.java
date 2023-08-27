@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
 public class PlaceholderAPI extends relampagorojo93.LibsCollection.Utils.Bukkit.APIs.PlaceholderAPI.PlaceholderAPI {

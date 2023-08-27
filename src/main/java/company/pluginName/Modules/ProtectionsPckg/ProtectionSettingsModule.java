@@ -16,13 +16,12 @@ import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import lombok.Getter;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
+import lombok.Getter;
 import relampagorojo93.LibsCollection.SpigotPlugin.LoadOn;
 import relampagorojo93.LibsCollection.SpigotPlugin.PluginModule;
-import relampagorojo93.LibsCollection.YAMLLib.YAMLFile;
-import relampagorojo93.LibsCollection.YAMLLib.Objects.Section;
 
 public class ProtectionSettingsModule implements PluginModule {
 
@@ -59,60 +58,59 @@ public class ProtectionSettingsModule implements PluginModule {
 		try {
 			List<Flag<?>> flags = MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().getAllFlags();
 
-			YAMLFile config = new YAMLFile(MainPluginClass.getPlugin().getFileModule().CONFIG_FILE.getFile());
+			PandaYaml config = new PandaYaml(MainPluginClass.getPlugin().getFileModule().CONFIG_FILE.getFile());
 
-			config.getSection("Settings.Protection.Default-flags", new Section()).getChilds().forEach(child -> {
-				if (child.isSection()) {
-					Section section = child.asSection();
+			config.getRoot().getSectionOrDefault("Settings.Protection.Default-flags").getAllNamedChilds()
+					.forEach(child -> {
+						Optional<Flag<?>> foundFlagOpt = flags.stream()
+								.filter(flag -> flag.getName().equals(child.getName())).findFirst();
 
-					Optional<Flag<?>> foundFlagOpt = flags.stream()
-							.filter(flag -> flag.getName().equals(section.getName())).findFirst();
+						if (foundFlagOpt.isPresent()) {
+							Flag<?> foundFlag = foundFlagOpt.get();
 
-					if (foundFlagOpt.isPresent()) {
-						Flag<?> foundFlag = foundFlagOpt.get();
-
-						if (foundFlag instanceof StringFlag || foundFlag instanceof CommandStringFlag) {
-							MessageBuilder.createMessage(MessageString.applyPrefix(String.format(
-									"Registering default flag '%s&7' with value '%s&7' as StringFlag|CommandStringFlag",
-									foundFlag.getName(), child.getString()))).sendMessage(Bukkit.getConsoleSender());
-							defaultFlags.put(foundFlag, child.getString());
-						} else if (foundFlag instanceof StateFlag) {
-							try {
+							if (foundFlag instanceof StringFlag || foundFlag instanceof CommandStringFlag) {
+								MessageBuilder.createMessage(MessageString.applyPrefix(String.format(
+										"Registering default flag '%s&7' with value '%s&7' as StringFlag|CommandStringFlag",
+										foundFlag.getName(), child.getString())))
+										.sendMessage(Bukkit.getConsoleSender());
+								defaultFlags.put(foundFlag, child.getString());
+							} else if (foundFlag instanceof StateFlag) {
+								try {
+									MessageBuilder
+											.createMessage(MessageString.applyPrefix(String.format(
+													"Registering default flag '%s&7' with value '%s&7' as StateFlag",
+													foundFlag.getName(), child.getString())))
+											.sendMessage(Bukkit.getConsoleSender());
+									defaultFlags.put(foundFlag, State.valueOf(child.getString().toUpperCase()));
+								} catch (IllegalArgumentException e) {
+									MessageBuilder.createMessage(MessageString.applyPrefix(String.format(
+											"Issue trying to load default flag '%s&7'. The specified value is not a valid State (ALLOW, DENY)",
+											child.getName())));
+								}
+							} else if (foundFlag instanceof SetFlag) {
 								MessageBuilder
 										.createMessage(MessageString.applyPrefix(String.format(
-												"Registering default flag '%s&7' with value '%s&7' as StateFlag",
+												"Registering default flag '%s&7' with value '%s&7' as SetFlag",
 												foundFlag.getName(), child.getString())))
 										.sendMessage(Bukkit.getConsoleSender());
-								defaultFlags.put(foundFlag, State.valueOf(child.getString().toUpperCase()));
-							} catch (IllegalArgumentException e) {
-								MessageBuilder.createMessage(MessageString.applyPrefix(String.format(
-										"Issue trying to load default flag '%s&7'. The specified value is not a valid State (ALLOW, DENY)",
-										section.getName())));
-							}
-						} else if (foundFlag instanceof SetFlag) {
-							MessageBuilder
-									.createMessage(MessageString.applyPrefix(String.format(
-											"Registering default flag '%s&7' with value '%s&7' as SetFlag",
-											foundFlag.getName(), child.getString())))
-									.sendMessage(Bukkit.getConsoleSender());
 
-							Set<String> set = new HashSet<>();
-							if (child.getStringList() == null) {
-								set.add(child.getString());
+								Set<String> set = new HashSet<>();
+								if (child.getStringList() == null) {
+									set.add(child.getString());
+								} else {
+									child.getStringList().forEach(set::add);
+								}
+
+								defaultFlags.put(foundFlag, set);
 							} else {
-								child.getStringList().forEach(set::add);
+								MessageBuilder
+										.createMessage(MessageString.applyPrefix(String.format(
+												"Not able to register default flag '%s&7'", foundFlag.getName())))
+										.sendMessage(Bukkit.getConsoleSender());
 							}
-
-							defaultFlags.put(foundFlag, set);
-						} else {
-							MessageBuilder
-									.createMessage(MessageString.applyPrefix(String
-											.format("Not able to register default flag '%s&7'", foundFlag.getName())))
-									.sendMessage(Bukkit.getConsoleSender());
 						}
-					}
-				}
-			});
+					});
+
 			config.reset();
 		} catch (Exception e) {
 			e.printStackTrace();

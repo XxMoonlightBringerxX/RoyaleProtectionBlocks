@@ -1,12 +1,12 @@
-package company.pluginName.Modules.ProtectionsPckg.Objects.Components;
+package company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

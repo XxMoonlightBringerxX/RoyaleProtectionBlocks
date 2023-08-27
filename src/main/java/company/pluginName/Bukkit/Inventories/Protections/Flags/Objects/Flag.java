@@ -14,7 +14,7 @@ import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;

@@ -1,9 +1,9 @@
-package company.pluginName.Modules.FilePckg.Settings;
+package company.pluginName.TemporaryModules.FilePckg.Settings;
 
 import java.util.Arrays;
 import java.util.List;
 
-import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
+import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFieldsEnum;
 
 public enum SettingList implements FileObjFieldsEnum<List<String>> {
 	SETTINGS_BANNEDWORLDS("Settings.Banned-worlds", Arrays.asList("World1", "World2", "World3")),
@@ -11,6 +11,8 @@ public enum SettingList implements FileObjFieldsEnum<List<String>> {
 			"tnt|Can TnT explode?|eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWU0MzUyNjgwZDBiYjI5YjkxMzhhZjc4MzMwMWEzOTFiMzQwOTBjYjQ5NDFkNTJjMDg3Y2E3M2M4MDM2Y2I1MSJ9fX0=",
 			"chest-access|Can chests be opened by others?|eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWRjMzZjOWNiNTBhNTI3YWE1NTYwN2EwZGY3MTg1YWQyMGFhYmFhOTAzZThkOWFiZmM3ODI2MDcwNTU0MGRlZiJ9fX0=",
 			"pvp|Is PvP allowed?|eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTc2NTM0MTM1M2MwMjllOWI2NTVmNGY1NzkzMWFlNmFkYzJjN2E3M2M2NTc5NDVkOTQ1YTMwNzY0MWQzNzc4In19fQ==")),
+	SETTINGS_COMMANDSONCREATION("Settings.Commands-on-creation", Arrays.asList()),
+	SETTINGS_COMMANDSONREMOVAL("Settings.Commands-on-removal", Arrays.asList()),
 
 	COMMANDS_PROTECTIONBLOCKS_ALIASES("Commands.Protection-blocks.Aliases", Arrays.asList("pb")),
 	COMMANDS_PROTECTIONBLOCKS_LIST_ALIASES("Commands.Protection-blocks.List.Aliases", Arrays.asList("l")),
@@ -34,6 +36,11 @@ public enum SettingList implements FileObjFieldsEnum<List<String>> {
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_REMOVE_ALIASES("Commands.Protection-blocks.Blocks.Remove.Aliases",
 			Arrays.asList("r")),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_ALIASES("Commands.Protection-blocks.Blocks.Give.Aliases", Arrays.asList("g")),
+	COMMANDS_PROTECTIONBLOCKS_FILES_ALIASES("Commands.Protection-blocks.Files.Aliases", Arrays.asList("f")),
+	COMMANDS_PROTECTIONBLOCKS_FILES_EXPORT_ALIASES("Commands.Protection-blocks.Files.Export.Aliases",
+			Arrays.asList("e")),
+	COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_ALIASES("Commands.Protection-blocks.Files.Import.Aliases",
+			Arrays.asList("i")),
 	COMMANDS_GENERIC_HELP_ALIASES("Commands.Generic.Help.Aliases", Arrays.asList("h"));
 
 	// Methods

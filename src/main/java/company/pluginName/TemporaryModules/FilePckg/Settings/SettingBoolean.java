@@ -1,17 +1,24 @@
-package company.pluginName.Modules.FilePckg.Settings;
+package company.pluginName.TemporaryModules.FilePckg.Settings;
 
-import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
+import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFieldsEnum;
 
 public enum SettingBoolean implements FileObjFieldsEnum<Boolean> {
 	SETTINGS_DEBUG_ENABLED("Settings.Debug.Enabled", false),
 	SETTINGS_DEBUG_MESSAGES_BLOCKPLACE("Settings.Debug.Messages.Block-place", true),
+	SETTINGS_DEBUG_MESSAGES_BLOCKPLACENOTPROTECTIONBLOCK("Settings.Debug.Messages.Block-place-not-protection-block",
+			true),
+	SETTINGS_DEBUG_MESSAGES_BLOCKPLACEISPROTECTIONBLOCK("Settings.Debug.Messages.Block-place-is-protection-block",
+			true),
+	SETTINGS_DEBUG_MESSAGES_BLOCKPLACECANCELLEDBUILD("Settings.Debug.Messages.Block-place-cancelled-build", true),
 	SETTINGS_DEBUG_MESSAGES_BLOCKPLACECANCELLED("Settings.Debug.Messages.Block-place-cancelled", true),
 	SETTINGS_DEBUG_MESSAGES_BLOCKBREAK("Settings.Debug.Messages.Block-break", true),
 	SETTINGS_DEBUG_MESSAGES_BLOCKBREAKCANCELLED("Settings.Debug.Messages.Block-break-cancelled", true),
 	SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATIONATTEMPT("Settings.Debug.Messages.Protection-creation-attempt", true),
 	SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATION("Settings.Debug.Messages.Protection-creation", true),
 	SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVALATTEMPT("Settings.Debug.Messages.Protection-removal-attempt", true),
-	SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVAL("Settings.Debug.Messages.Protection-removal", true);
+	SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVAL("Settings.Debug.Messages.Protection-removal", true),
+	SETTINGS_DEBUG_MESSAGES_ORAXENBLOCKPLACE("Settings.Debug.Messages.Oraxen-block-place", true),
+	SETTINGS_DEBUG_MESSAGES_ORAXENBLOCKBREAK("Settings.Debug.Messages.Oraxen-block-break", true);
 
 	// Methods
 	String oldpath, path;

@@ -1,10 +1,10 @@
-package company.pluginName.Modules.FilePckg.Messages;
+package company.pluginName.TemporaryModules.FilePckg.Messages;
 
+import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFieldsEnum;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
 
 @RequiredArgsConstructor
 public enum MessageString implements FileObjFieldsEnum<String> {
@@ -58,6 +58,11 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY("Message.Protections.Blocks.Removed-successfully",
 			"&aThe protection block has been removed successfully!"),
 
+	MESSAGE_FILES_EXPORTEDSUCCESSFULLY("Message.Files.Exported-successfully",
+			"All the data has been exported successfully!"),
+	MESSAGE_FILES_IMPORTEDSUCCESSFULLY("Message.Files.Imported-successfully",
+			"All the data has been imported successfully!"),
+
 	MESSAGE_HELPER_AVAILABLELEFTARROW("Message.Helper.Available-left-arrow", "&e«"),
 	MESSAGE_HELPER_UNAVAILABLELEFTARROW("Message.Helper.Unavailable-left-arrow", "&r«"),
 	MESSAGE_HELPER_AVAILABLERIGHTARROW("Message.Helper.Available-right-arrow", "&e»"),
@@ -82,6 +87,14 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&eSearch an specific player"),
 	INVENTORY_SEARCHPLAYERS_SEARCHSPECIFICPLAYERINFO("Inventory.Search-players.Search-specific-player-Info",
 			"&7Type the name of the player you're looking for. Type 'cancel' to cancel this action."),
+
+	// Inventory search world items
+	INVENTORY_SEARCHWORLDS_TITLE("Inventory.Search-worlds.Title", "Search a world"),
+	INVENTORY_SEARCHWORLDS_WORLDNAME("Inventory.Search-worlds.World-name", "&e{world}"),
+	INVENTORY_SEARCHWORLDS_SEARCHSPECIFICWORLDNAME("Inventory.Search-worlds.Search-specific-world-name",
+			"&eSearch an specific world"),
+	INVENTORY_SEARCHWORLDS_SEARCHSPECIFICWORLDINFO("Inventory.Search-worlds.Search-specific-world-info",
+			"&7Type the name of the world you're looking for. Type 'cancel' to cancel this action."),
 
 	// Inventory protection items
 	INVENTORY_PROTECTION_TITLE("Inventory.Protection.Title", "{protection}"),
@@ -173,6 +186,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTMODIFIABLENAME("Inventory.Protection-blocks.Manage.Id-not-modifiable-name",
 			"&aCurrent ID: &e{block_id} &7&o[Not modifiable]"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPENAME("Inventory.Protection-blocks.Manage.Recipe-name", "&aRecipe"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_ALLOWEDWORLDSNAME("Inventory.Protection-blocks.Manage.Allowed-worlds-name",
+			"&aAllowed worlds"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNAME("Inventory.Protection-blocks.Manage.Permission-name",
 			"&aCurrent permission: &e{block_permission}"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNOTSETNAME("Inventory.Protection-blocks.Manage.Permission-not-set-name",
@@ -184,6 +199,17 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&7Type the permission you wish to set on your protection block. Type 'cancel' to cancel this action."),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSSPECIFYINFO("Inventory.Protection-blocks.Manage.Blocks-specify-info",
 			"&7Type the amount of blocks you wish to set on your protection block. Type 'cancel' to cancel this action."),
+
+	// Inventory protection blocks allowed worlds items
+	INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_TITLE("Inventory.Protection-blocks.Allowed-worlds.Title",
+			"{block} > Allowed Worlds"),
+	INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_ALLOWEDWORLDNAME(
+			"Inventory.Protection-blocks.Allowed-worlds.Allowed-world-name", "&e{world}"),
+	INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_SEARCHWORLDNAME(
+			"Inventory.Protection-blocks.Allowed-worlds.Search-allowed-world-name", "&eSearch for a new allowed world"),
+	INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_REMOVEALLOWEDWORLDLORELINE(
+			"Inventory.Protection-blocks.Allowed-worlds.Remove-allowed-world-lore-line",
+			"&8[&cClick to remove allowed world&8]"),
 
 	// Inventory protection list items
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_TITLE("Inventory.Protection-blocks.Manage.Recipe.Title",
@@ -201,6 +227,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_ERROR("Error.Error", "&cError!"),
 	ERROR_CONSOLEDENIED("Error.Console-denied", "&cYou can't use this commands in console!"),
 	ERROR_PLAYERNOTFOUND("Error.Player-not-found", "&cThe specified player couldn't be found!"),
+	ERROR_WORLDNOTFOUND("Error.World-not-found", "&cThe specified world couldn't be found!"),
 	ERROR_NOITEMINHAND("Error.No-item-in-hand", "&cYou must have an item in your hand!"),
 	ERROR_NOTABLOCK("Error.Not-a-block", "&cThe item must be a block!"),
 	ERROR_INVALIDNUMBER("Error.Invalid-number", "&cYou must specify a valid number!"),
@@ -209,9 +236,16 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_CHATPROMPT_ALREADYPROMPTED("Error.Chat-prompt.Already-prompted",
 			"&cYou've already a pending type operation!"),
 
+	ERROR_FILES_EXPORT("Error.Files.Export",
+			"&cThere was an issue trying to export the data! Check the console for more information."),
+	ERROR_FILES_IMPORT("Error.Files.Import",
+			"&cThere was an issue trying to import the data! Check the console for more information."),
+
 	ERROR_PROTECTIONS_NOTINSIDEPROTECTION("Error.Protections.Not-inside-protection",
 			"&cYou're not inside any protection!"),
 	ERROR_PROTECTIONS_BANNEDWORLD("Error.Protections.Banned-world", "&cYou can't use protection blocks in this world!"),
+	ERROR_PROTECTIONS_NOTALLOWEDWORLD("Error.Protections.Not-allowed-world",
+			"&cYou can't use this protection block in this world!"),
 	ERROR_PROTECTIONS_NOTMAINOWNER("Error.Protections.Not-main-owner",
 			"&cYou're not the main owner of this protection!"),
 	ERROR_PROTECTIONS_NOTOWNER("Error.Protections.Not-owner", "&cYou're not an owner of this protection!"),

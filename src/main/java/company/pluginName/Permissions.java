@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 public class Permissions {
@@ -32,6 +32,10 @@ public class Permissions {
 	public static final String PROTECTION_BLOCKS_EDIT = "protectionblocks.blocks.edit";
 	public static final String PROTECTION_BLOCKS_DELETE = "protectionblocks.blocks.delete";
 	public static final String PROTECTION_BLOCKS_GIVE = "protectionblocks.blocks.give";
+
+	public static final String PROTECTION_FILES = "protectionblocks.files";
+	public static final String PROTECTION_FILES_EXPORT = "protectionblocks.files.export";
+	public static final String PROTECTION_FILES_IMPORT = "protectionblocks.files.import";
 
 	private static final String PROTECTION_MAX_PREFIX = "protectionblocks.max.";
 

@@ -16,7 +16,7 @@ import com.sk89q.worldguard.session.handler.Handler;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 public class BannedPlayersHandler extends Handler {

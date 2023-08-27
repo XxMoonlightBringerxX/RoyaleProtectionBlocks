@@ -1,4 +1,4 @@
-package company.pluginName.Modules.ProtectionsPckg.Objects.Components;
+package company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections;
 
 import java.util.Set;
 import java.util.UUID;
@@ -14,8 +14,8 @@ import company.pluginName.Exceptions.ProtectionBanneds.Save.ProtectionBannedsSav
 import company.pluginName.Exceptions.ProtectionBanneds.Save.ProtectionBannedsSaveCannotAddYourselfException;
 import company.pluginName.Exceptions.ProtectionBanneds.Save.ProtectionBannedsSaveDeniedException;
 import company.pluginName.Exceptions.ProtectionBanneds.Save.ProtectionBannedsSaveException;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Data;

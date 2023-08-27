@@ -15,8 +15,8 @@ public class RecipesModule extends CustomRecipeModule<Recipe> {
 	}
 
 	public Recipe findRecipeByProtectionBlock(ProtectionBlock protectionBlock) {
-		return this.customRecipes.values().stream()
-				.filter(recipe -> recipe.getProtectionBlock().getIdentifier().equals(protectionBlock.getId()))
+		return this.customRecipes.values().stream().filter(
+				recipe -> recipe.getProtectionBlock().getIdentifier().equals(protectionBlock.getInformation().getId()))
 				.findFirst().orElse(null);
 	}
 

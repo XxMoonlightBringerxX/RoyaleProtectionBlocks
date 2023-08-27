@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import org.bukkit.command.CommandSender;
 
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;

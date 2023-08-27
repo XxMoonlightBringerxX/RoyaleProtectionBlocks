@@ -13,7 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;

@@ -9,10 +9,10 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
 import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
@@ -32,17 +32,18 @@ public class ProtectionBlockRecipeInventory extends PluginChestInventory {
 
 		this.originalRecipe = MainPluginClass.getPlugin().getRecipesModule()
 				.findRecipeByProtectionBlock(protectionBlock);
-		this.newRecipe = new Recipe(new ReferencedProtectionBlock(protectionBlock.getId()));
+		this.newRecipe = new Recipe(new ReferencedProtectionBlock(protectionBlock.getInformation().getId()));
 
 		if (this.originalRecipe != null) {
 			this.newRecipe.copy(this.originalRecipe);
 		}
 
-		setName(MessageBuilder
-				.createMessage(
-						TextInput.inst().text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_TITLE.toString())
-								.replacements(new TextReplacement("{block}",
-										() -> protectionBlock.getId() != null ? protectionBlock.getId() : "???")))
+		setName(MessageBuilder.createMessage(
+				TextInput.inst().text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_TITLE.toString())
+						.replacements(new TextReplacement("{block}",
+								() -> protectionBlock.getInformation().getId() != null
+										? protectionBlock.getInformation().getId()
+										: "???")))
 				.toString());
 		setSize(45);
 

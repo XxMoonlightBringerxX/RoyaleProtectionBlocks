@@ -36,48 +36,64 @@ public class OraxenAPI extends AbstractAPI {
 		}
 	}
 
-	public BlockCheckingResult isCustomBlock(ItemStack item) {
+	public CheckingResult isCustomBlock(ItemStack item) {
 		if (isHooked()) {
-			return OraxenItems.getIdByItem(item) != null ? BlockCheckingResult.IS_CUSTOM_ITEM
-					: BlockCheckingResult.NOT_CUSTOM_ITEM;
+			return OraxenItems.getIdByItem(item) != null ? CheckingResult.IS_CUSTOM_ITEM
+					: CheckingResult.NOT_CUSTOM_ITEM;
 		}
-		return BlockCheckingResult.NOT_HOOKED;
+		return CheckingResult.NOT_HOOKED;
 	}
 
-	public BlockComparativeResult isSame(Block block, ItemStack item) {
+	public ComparativeResult isSame(Block block, ItemStack protectionBlock) {
 		if (isHooked()) {
-			String itemId = OraxenItems.getIdByItem(item);
+			String itemId = OraxenItems.getIdByItem(protectionBlock);
 
 			if (itemId != null) {
 				Mechanic customBlock = OraxenBlocks.getOraxenBlock(block.getLocation());
 				if (customBlock != null && customBlock.getItemID().equals(itemId)) {
-					return BlockComparativeResult.SAME;
+					return ComparativeResult.SAME;
 				}
-				return BlockComparativeResult.NOT_CUSTOM_BLOCK;
+				return ComparativeResult.NOT_CUSTOM_BLOCK;
 			}
-			return BlockComparativeResult.NOT_CUSTOM_ITEM;
+			return ComparativeResult.NOT_CUSTOM_ITEM;
 		}
-		return BlockComparativeResult.NOT_HOOKED;
+		return ComparativeResult.NOT_HOOKED;
 	}
 
-	public PlaceBlockResult setBlock(ItemStack item, Location loc) {
+	public ComparativeResult isSame(ItemStack item, ItemStack protectionBlock) {
+		if (isHooked()) {
+			String itemId = OraxenItems.getIdByItem(item);
+
+			if (itemId != null) {
+				String oraxenItemId = OraxenItems.getIdByItem(protectionBlock);
+				if (oraxenItemId != null && oraxenItemId.equals(itemId)) {
+					return ComparativeResult.SAME;
+				}
+				return ComparativeResult.NOT_CUSTOM_BLOCK;
+			}
+			return ComparativeResult.NOT_CUSTOM_ITEM;
+		}
+		return ComparativeResult.NOT_HOOKED;
+	}
+
+	public PlaceResult setBlock(ItemStack item, Location loc) {
 		if (isHooked()) {
 			if (item != null) {
 				String itemId = OraxenItems.getIdByItem(item);
 
 				if (itemId != null) {
 					OraxenBlocks.place(itemId, loc);
-					return PlaceBlockResult.PLACED;
+					return PlaceResult.PLACED;
 				}
-				return PlaceBlockResult.NOT_CUSTOM_ITEM;
+				return PlaceResult.NOT_CUSTOM_ITEM;
 			} else {
 				if (OraxenBlocks.remove(loc, null)) {
-					return PlaceBlockResult.PLACED;
+					return PlaceResult.PLACED;
 				}
-				return PlaceBlockResult.NOT_CUSTOM_BLOCK;
+				return PlaceResult.NOT_CUSTOM_BLOCK;
 			}
 		}
-		return PlaceBlockResult.NOT_HOOKED;
+		return PlaceResult.NOT_HOOKED;
 	}
 
 	@Override
@@ -90,15 +106,15 @@ public class OraxenAPI extends AbstractAPI {
 		return true;
 	}
 
-	public static enum BlockCheckingResult {
+	public static enum CheckingResult {
 		NOT_HOOKED, NOT_CUSTOM_ITEM, IS_CUSTOM_ITEM
 	}
 
-	public static enum BlockComparativeResult {
+	public static enum ComparativeResult {
 		NOT_HOOKED, NOT_CUSTOM_ITEM, NOT_CUSTOM_BLOCK, SAME
 	}
 
-	public static enum PlaceBlockResult {
+	public static enum PlaceResult {
 		NOT_HOOKED, NOT_CUSTOM_ITEM, NOT_CUSTOM_BLOCK, PLACED
 	}
 

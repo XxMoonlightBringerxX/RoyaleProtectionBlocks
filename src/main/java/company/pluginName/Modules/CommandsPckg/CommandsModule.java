@@ -18,7 +18,7 @@ public class CommandsModule extends relampagorojo93.LibsCollection.SpigotPlugin.
 		return MainPluginClass.getPlugin();
 	}
 
-	public ProtectionBlocksCommand getPlotAddonCommand() {
+	public ProtectionBlocksCommand getProtectionBlocksCommand() {
 		return (ProtectionBlocksCommand) getCommand(ProtectionBlocksCommand.class);
 	}
 

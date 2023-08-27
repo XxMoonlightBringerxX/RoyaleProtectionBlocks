@@ -5,4 +5,4 @@ version: ${project.version}
 description: ${project.description}
 api-version: 1.13
 depend: [ WorldGuard ]
-softdepend: [ PlaceholderAPI, ItemsAdder ]
+softdepend: [ PlaceholderAPI, ItemsAdder, Oraxen ]

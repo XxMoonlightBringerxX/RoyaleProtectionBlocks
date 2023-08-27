@@ -2,11 +2,13 @@ package company.pluginName.Modules.RecipesPckg.Objects;
 
 import java.util.Arrays;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
+import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveDeniedException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
@@ -37,7 +39,7 @@ public class Recipe extends CustomRecipe {
 
 	@Override
 	public ItemStack getItemStack() {
-		return protectionBlock.getObject().getItem();
+		return protectionBlock.getObject().getInformation().getItem();
 	}
 
 	@Override
@@ -47,12 +49,17 @@ public class Recipe extends CustomRecipe {
 
 	@Override
 	public String getRecipeId() {
-		return "protectionblocks_recipe_" + protectionBlock.getObject().getId();
+		return "protectionblocks_recipe_" + protectionBlock.getObject().getInformation().getId();
 	}
 
 	@Override
 	public ItemStack getResult() {
-		return protectionBlock.getObject().generateItem();
+		try {
+			return protectionBlock.getObject().getInformation().generateItem();
+		} catch (ProtectionBlocksGenerateItemException e) {
+			e.sendError(Bukkit.getConsoleSender());
+			return null;
+		}
 	}
 
 	public void save() throws ProtectionBlocksSaveException, ProtectionBlocksDeleteException {

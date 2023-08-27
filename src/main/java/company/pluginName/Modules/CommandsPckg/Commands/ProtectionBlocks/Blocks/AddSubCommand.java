@@ -11,11 +11,14 @@ import org.bukkit.inventory.ItemStack;
 import company.pluginName.MainPluginClass;
 import company.pluginName.APIs.ItemsAdderAPI;
 import company.pluginName.APIs.OraxenAPI;
+import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
+import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveUnknownException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBlocks.ProtectionBlockInformation;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
@@ -58,9 +61,9 @@ public class AddSubCommand extends SubCommand {
 				if (i != null && i.getType() != Material.AIR) {
 					if (i.getType().isBlock()
 							|| MainPluginClass.getItemsAdderAPI()
-									.isCustomBlock(i) == ItemsAdderAPI.BlockCheckingResult.IS_CUSTOM_ITEM
+									.isCustomBlock(i) == ItemsAdderAPI.CheckingResult.IS_CUSTOM_ITEM
 							|| MainPluginClass.getOraxenAPI()
-									.isCustomBlock(i) == OraxenAPI.BlockCheckingResult.IS_CUSTOM_ITEM) {
+									.isCustomBlock(i) == OraxenAPI.CheckingResult.IS_CUSTOM_ITEM) {
 						ItemStack protectionBlockItemstack = i.clone();
 						protectionBlockItemstack.setAmount(1);
 						try {
@@ -69,18 +72,24 @@ public class AddSubCommand extends SubCommand {
 								int y = Integer.parseInt(args[3]);
 								int z = Integer.parseInt(args[4]);
 
-								if (x < 0 || y < 0 || z < 0) {
+								if (x < 0 || y < -1 || z < 0) {
 									MessageBuilder.createMessage(MessageString.ERROR_NUMBERBELOWZERO.applyPrefix())
 											.sendMessage(pl);
 									return true;
 								}
 
 								String permission = args.length > 5 ? args[5] : null;
-								ProtectionBlock protectionBlock = new ProtectionBlock(args[1].toLowerCase(),
-										protectionBlockItemstack, x / 2, y / 2, z / 2, permission);
-								protectionBlock.save(pl);
+								ProtectionBlock protectionBlock = new ProtectionBlock(
+										new ProtectionBlockInformation(args[1].toLowerCase(), protectionBlockItemstack,
+												x / 2, (y == -1 ? y : y / 2), z / 2, permission));
 
-								protectionBlockItemstack = protectionBlock.generateItem();
+								try {
+									protectionBlockItemstack = protectionBlock.getInformation().generateItem();
+								} catch (ProtectionBlocksGenerateItemException e) {
+									throw new ProtectionBlocksSaveUnknownException(e);
+								}
+
+								protectionBlock.save(pl);
 								protectionBlockItemstack.setAmount(i.getAmount());
 
 								ItemStacksUtils.setItemInMainHand(pl, protectionBlockItemstack);

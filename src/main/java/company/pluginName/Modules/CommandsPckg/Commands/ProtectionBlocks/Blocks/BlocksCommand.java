@@ -5,8 +5,8 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlocksListInventory;
 import company.pluginName.Modules.CommandsPckg.Base.HelpSubCommand;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 
 public class BlocksCommand extends Command {

@@ -1,20 +1,18 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.Plugin;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
+import company.pluginName.APIs.ProtectionStonesAPI.TransferResult;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
@@ -50,59 +48,55 @@ public class TransferSubCommand extends SubCommand {
 					if (args.length > 2 && args[2].equalsIgnoreCase("confirm")) {
 						MessageBuilder.createMessage("Starting transfer process.").sendMessage(sender);
 
-						MainPluginClass.getProtectionStonesAPI().getProtectionBlocks().forEach(block -> {
-							try {
-								block.save();
-							} catch (ProtectionBlocksSaveException e) {
-								e.sendError(Bukkit.getConsoleSender());
-							}
-						});
+						TransferResult<ProtectionBlock> protectionBlocksResult = MainPluginClass.getProtectionStonesAPI()
+								.transferProtectionBlocks();
+						TransferResult<Protection> protectionsResult = MainPluginClass.getProtectionStonesAPI().transferProtections();
 
-						MessageBuilder
-								.createMessage("Finished transfer process. Attempting to disable protectionstones.")
+						MessageBuilder.createMessage(Arrays.asList("", "&eTransfer result: ",
+								String.format("&e  - &aTransfered protection blocks: %d", protectionBlocksResult.getSuccessList().size()),
+								String.format("&e  - &cFailed protection blocks: %d", protectionBlocksResult.getExceptionsList().size()),
+								"", String.format("&e  - &aTransfered protections: %d", protectionsResult.getSuccessList().size()),
+								String.format("&e  - &cFailed protections: %d", protectionsResult.getExceptionsList().size()), ""))
 								.sendMessage(sender);
+						;
 
-						Plugin plugin = Bukkit.getPluginManager().getPlugin("ProtectionStones");
-
-						Bukkit.getPluginManager().disablePlugin(plugin);
-
-						MessageBuilder
-								.createMessage("Disabled protectionstones. Attempting to remove protectionstones.")
+						MessageBuilder.createMessage(MessageString.applyPrefix(
+								"Finished transfer process. We suggest to remove every file related to protection stones, such as the plugin and its folder."))
 								.sendMessage(sender);
-
-						try {
-							Files.delete(new java.io.File(
-									plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getPath())
-									.toPath());
-							MessageBuilder.createMessage("Protectionstones removed. Shutting down the server.")
-									.sendMessage(sender);
-						} catch (IOException e) {
-							MessageBuilder.createMessage(
-									"Protectionstones couldn't be removed. Please remove the file manually. Shutting down the server.")
-									.sendMessage(sender);
-							e.printStackTrace();
-						}
-
-						Bukkit.shutdown();
+//						Plugin plugin = Bukkit.getPluginManager().getPlugin("ProtectionStones");
+//
+//						Bukkit.getPluginManager().disablePlugin(plugin);
+//
+//						MessageBuilder.createMessage("Disabled protectionstones. Attempting to remove protectionstones.")
+//								.sendMessage(sender);
+//
+//						try {
+//							Files.delete(new java.io.File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getPath())
+//									.toPath());
+//							MessageBuilder.createMessage("Protectionstones removed. Shutting down the server.").sendMessage(sender);
+//						} catch (IOException e) {
+//							MessageBuilder.createMessage(
+//									"Protectionstones couldn't be removed. Please remove the file manually. Shutting down the server.")
+//									.sendMessage(sender);
+//							e.printStackTrace();
+//						}
+//
+//						Bukkit.shutdown();
 					} else {
 						MessageBuilder
-								.createMessage(TextInput.inst()
-										.text(MessageString.MESSAGE_TRANSFER_WARNING.applyPrefix())
-										.replacements(new TextReplacement("{command}",
-												() -> String.format("%s %s confirm", getCommandPath(), args[1]))))
+								.createMessage(TextInput.inst().text(MessageString.MESSAGE_TRANSFER_WARNING.applyPrefix()).replacements(
+										new TextReplacement("{command}", () -> String.format("%s %s confirm", getCommandPath(), args[1]))))
 								.sendMessage(sender);
 					}
 				} else {
-					MessageBuilder.createMessage(
-							"ProtectionStones is not loaded. Please load ProtectionStones to transfer its data.")
+					MessageBuilder.createMessage("ProtectionStones is not loaded. Please load ProtectionStones to transfer its data.")
 							.sendMessage(sender);
 				}
 				break;
 			default:
 				MessageBuilder
-						.createMessage(TextInput.inst().text(MessageString.MESSAGE_TRANSFER_AVAILABLELIST.applyPrefix())
-								.replacements(new TextReplacement("{list}",
-										() -> PROTECTION_PLUGINS.stream().collect(Collectors.joining(", ")))))
+						.createMessage(TextInput.inst().text(MessageString.MESSAGE_TRANSFER_AVAILABLELIST.applyPrefix()).replacements(
+								new TextReplacement("{list}", () -> PROTECTION_PLUGINS.stream().collect(Collectors.joining(", ")))))
 						.sendMessage(sender);
 				break;
 			}

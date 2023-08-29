@@ -45,6 +45,7 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionMembers;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionOwners;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingBoolean;
 import company.pluginName.TemporaryModules.FilePckg.Settings.SettingInt;
 import company.pluginName.Utils.BlockVectorUtils;
 import company.pluginName.Utils.OfflinePlayerUtils;
@@ -226,6 +227,11 @@ public class Protection {
 			});
 			flags.put(MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().getWorldGuardFlag(),
 					MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(location));
+
+			if (SettingBoolean.SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION.getContent() && player != null && player.isOnline()) {
+				flags.put(Flags.TELE_LOC,
+						MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(player.getPlayer().getLocation()));
+			}
 
 			protectedRegion.setFlags(flags);
 			regionManager.addRegion(protectedRegion);

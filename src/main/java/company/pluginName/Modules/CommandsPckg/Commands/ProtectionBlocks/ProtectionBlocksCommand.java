@@ -8,9 +8,10 @@ import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventor
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManagerInventory;
 import company.pluginName.Modules.CommandsPckg.Base.HelpSubCommand;
 import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Blocks.BlocksCommand;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
+import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Files.FilesCommand;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 
 public class ProtectionBlocksCommand extends Command {
@@ -18,8 +19,7 @@ public class ProtectionBlocksCommand extends Command {
 	public ProtectionBlocksCommand() {
 		super("protectionblocks", SettingString.COMMANDS_PROTECTIONBLOCKS_NAME.toString(),
 				SettingString.COMMANDS_PROTECTIONBLOCKS_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_USAGE.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_DESCRIPTION.toString(), SettingString.COMMANDS_PROTECTIONBLOCKS_USAGE.toString(),
 				SettingList.COMMANDS_PROTECTIONBLOCKS_ALIASES.getContent());
 		addCommand(new ReloadSubCommand(this));
 		addCommand(new SetHomeSubCommand(this));
@@ -34,6 +34,10 @@ public class ProtectionBlocksCommand extends Command {
 		addCommand(new ShowSubCommand(this));
 		addCommand(new ViewSubCommand(this));
 		addCommand(new TransferSubCommand(this));
+		addCommand(new BanSubCommand(this));
+		addCommand(new UnbanSubCommand(this));
+		addCommand(new KickSubCommand(this));
+		addCommand(new FilesCommand(this));
 		sortCommands();
 		addCommand(new HelpSubCommand(this), 0);
 	}
@@ -46,8 +50,7 @@ public class ProtectionBlocksCommand extends Command {
 
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null && args.length == 0) {
-			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-					.getProtectionByLocation(pl.getLocation());
+			Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByLocation(pl.getLocation());
 			if (protection != null && protection.canManage(pl)) {
 				new ProtectionsManagerInventory(pl, protection).openInventory();
 			} else {

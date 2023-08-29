@@ -37,14 +37,19 @@ import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteUnknownEx
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveOverlapsException;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveUnknownException;
-import company.pluginName.Modules.FilePckg.Settings.SettingInt;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionActions;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionBanneds;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionMembers;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionOwners;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingInt;
 import company.pluginName.Utils.BlockVectorUtils;
 import company.pluginName.Utils.OfflinePlayerUtils;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.BlockUtils;
+import relampagorojo93.LibsCollection.Utils.Bukkit.WorldUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
@@ -65,6 +70,10 @@ public class Protection {
 	private Location protectionBlockLocation;
 	private BukkitTask protectionViewTask;
 	private @Setter(lombok.AccessLevel.NONE) @Getter(lombok.AccessLevel.NONE) Entity protectionViewEntity;
+	private ProtectionMembers members = new ProtectionMembers(this);
+	private ProtectionOwners owners = new ProtectionOwners(this);
+	private ProtectionBanneds banneds = new ProtectionBanneds(this);
+	private ProtectionActions actions = new ProtectionActions(this);
 
 	public Protection(UUID ownerUuid) {
 		this(null, ownerUuid, null, null, null, null, null);
@@ -145,18 +154,24 @@ public class Protection {
 
 	@SuppressWarnings("unchecked")
 	public void create(Location location, ProtectionBlock protectionBlock) throws ProtectionSaveException {
-		this.protectionBlock = new ReferencedProtectionBlock(protectionBlock.getId());
+		this.protectionBlock = new ReferencedProtectionBlock(protectionBlock.getInformation().getId());
 		this.worldName = location.getWorld().getName();
 		this.regionId = generateDefaultName(location).toLowerCase();
 		this.displayName = generateDefaultName(location);
 
+		int minBlockX = location.getBlockX() - protectionBlock.getInformation().getBlocksX();
+		int minBlockY = protectionBlock.getInformation().getBlocksY() == -1
+				? WorldUtils.getMinHeight(location.getWorld())
+				: location.getBlockY() - protectionBlock.getInformation().getBlocksY();
+		int minBlockZ = location.getBlockZ() - protectionBlock.getInformation().getBlocksZ();
+		int maxBlockX = location.getBlockX() + protectionBlock.getInformation().getBlocksX();
+		int maxBlockY = protectionBlock.getInformation().getBlocksY() == -1
+				? WorldUtils.getMaxHeight(location.getWorld())
+				: location.getBlockY() + protectionBlock.getInformation().getBlocksY();
+		int maxBlockZ = location.getBlockZ() + protectionBlock.getInformation().getBlocksZ();
+
 		ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
-				BlockVector3.at(location.getBlockX() - protectionBlock.getBlocksX(),
-						location.getBlockY() - protectionBlock.getBlocksY(),
-						location.getBlockZ() - protectionBlock.getBlocksZ()),
-				BlockVector3.at(location.getBlockX() + protectionBlock.getBlocksX(),
-						location.getBlockY() + protectionBlock.getBlocksY(),
-						location.getBlockZ() + protectionBlock.getBlocksZ()));
+				BlockVector3.at(minBlockX, minBlockY, minBlockZ), BlockVector3.at(maxBlockX, maxBlockY, maxBlockZ));
 
 		protectedRegion.getOwners().addPlayer(ownerUuid);
 
@@ -196,6 +211,8 @@ public class Protection {
 					flags.put(key, value);
 				}
 			});
+			flags.put(MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().getWorldGuardFlag(),
+					MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(location));
 
 			protectedRegion.setFlags(flags);
 			regionManager.addRegion(protectedRegion);
@@ -235,6 +252,8 @@ public class Protection {
 			} catch (StorageException e) {
 				throw new ProtectionDeleteUnknownException(e);
 			}
+		} else {
+			throw new ProtectionDeleteUnknownException();
 		}
 
 		MainPluginClass.getPlugin().getSqlModule().deleteProtection(this);
@@ -255,11 +274,23 @@ public class Protection {
 	public Location getProtectionBlockLocation() {
 		if (this.protectionBlockLocation == null) {
 			if (getProtectedRegion() != null) {
-				BlockVector3 vector = BlockVectorUtils.getIntersectingVector(getProtectedRegion().getMinimumPoint(),
-						getProtectedRegion().getMaximumPoint());
+				World world = Bukkit.getWorld(worldName);
+				ProtectedRegion region = getProtectedRegion();
 
-				this.protectionBlockLocation = new Location(Bukkit.getWorld(worldName), vector.getBlockX(),
-						vector.getBlockY(), vector.getBlockZ()).getBlock().getLocation();
+				if (region != null) {
+					Location loc = MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().flagState(world,
+							region);
+
+					if (loc != null) {
+						this.protectionBlockLocation = loc;
+					} else {
+						BlockVector3 vector = BlockVectorUtils.getIntersectingVector(region.getMinimumPoint(),
+								getProtectedRegion().getMaximumPoint());
+
+						this.protectionBlockLocation = new Location(Bukkit.getWorld(worldName), vector.getBlockX(),
+								vector.getBlockY(), vector.getBlockZ()).getBlock().getLocation();
+					}
+				}
 			}
 		}
 
@@ -307,15 +338,6 @@ public class Protection {
 		return isProtectionBlock(getProtectionBlockLocation().getBlock());
 	}
 
-	/**
-	 * Checks if the specified block is a protection block. A NULL boolean means the
-	 * protection block is an Oraxen protection block. A TRUE boolean means the
-	 * block is the same type as the protection block linked to this protection. A
-	 * FALSE boolean means the block is not the same type as the protection block
-	 * linked to this protection and it's not an Oraxen protection block.
-	 * 
-	 * @return If the block is a protection block or not.
-	 */
 	public boolean isProtectionBlock(Block block) {
 		boolean isSameLocation = block.getLocation().equals(getProtectionBlockLocation());
 		if (isSameLocation) {
@@ -325,60 +347,38 @@ public class Protection {
 				return true;
 			}
 
-			ItemsAdderAPI.BlockComparativeResult isCustomItemsAdder = MainPluginClass.getItemsAdderAPI().isSame(block,
-					protectionBlock.getItem());
-
-			if (isCustomItemsAdder != ItemsAdderAPI.BlockComparativeResult.NOT_HOOKED
-					&& isCustomItemsAdder != ItemsAdderAPI.BlockComparativeResult.NOT_CUSTOM_ITEM) {
-				return isCustomItemsAdder == ItemsAdderAPI.BlockComparativeResult.SAME;
-			} else {
-				OraxenAPI.BlockComparativeResult isCustomOraxen = MainPluginClass.getOraxenAPI().isSame(block,
-						protectionBlock.getItem());
-
-				if (isCustomOraxen != OraxenAPI.BlockComparativeResult.NOT_HOOKED
-						&& isCustomOraxen != OraxenAPI.BlockComparativeResult.NOT_CUSTOM_ITEM) {
-					return isCustomOraxen == OraxenAPI.BlockComparativeResult.SAME;
-				} else {
-					if (block.getType() == protectionBlock.getItem().getType()) {
-						return true;
-					}
-
-					if (block.getType() == Material.PLAYER_WALL_HEAD.getMaterial()
-							&& protectionBlock.getItem().getType() == Material.PLAYER_HEAD.getMaterial()) {
-						return true;
-					}
-				}
-			}
+			return protectionBlock.getInformation().isSameType(block);
 		}
 		return false;
 	}
 
 	/**
 	 * Checks if the current block on the protection location is a protection block
-	 * or not. Only if the {@link Protection#isProtectionBlock()} returns false,
-	 * means it's not an Oraxen block or a protection block.
+	 * or not.
 	 * 
 	 * @return If the protection block is shown or not.
 	 */
+	// TODO: Use a flag for the show and hide to prevent this cases instead of using
+	// a checking, this will optimize the checkings.
 	public boolean isProtectionBlockShown() {
-		return !(Boolean.FALSE.equals(isProtectionBlock(getProtectionBlockLocation().getBlock())));
+		return isProtectionBlock();
 	}
 
 	public void hideProtectionBlock() {
-		ItemsAdderAPI.PlaceBlockResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(null,
+		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(null,
 				getProtectionBlockLocation());
 
-		if (itemsAdderResult != ItemsAdderAPI.PlaceBlockResult.NOT_HOOKED) {
-			if (itemsAdderResult == ItemsAdderAPI.PlaceBlockResult.PLACED) {
+		if (itemsAdderResult != ItemsAdderAPI.PlaceResult.NOT_HOOKED) {
+			if (itemsAdderResult == ItemsAdderAPI.PlaceResult.PLACED) {
 				return;
 			}
 		}
 
-		OraxenAPI.PlaceBlockResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(null,
+		OraxenAPI.PlaceResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(null,
 				getProtectionBlockLocation());
 
-		if (oraxenResult != OraxenAPI.PlaceBlockResult.NOT_HOOKED) {
-			if (oraxenResult == OraxenAPI.PlaceBlockResult.PLACED) {
+		if (oraxenResult != OraxenAPI.PlaceResult.NOT_HOOKED) {
+			if (oraxenResult == OraxenAPI.PlaceResult.PLACED) {
 				return;
 			}
 		}
@@ -388,21 +388,21 @@ public class Protection {
 
 	public void showProtectionBlock() {
 		Block bBlock = getProtectionBlockLocation().getBlock();
-		ItemStack item = getProtectionBlock().getObject().getItem();
+		ItemStack item = getProtectionBlock().getObject().getInformation().getItem();
 
-		ItemsAdderAPI.PlaceBlockResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(item,
+		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(item,
 				bBlock.getLocation());
 
-		if (itemsAdderResult != ItemsAdderAPI.PlaceBlockResult.NOT_HOOKED) {
-			if (itemsAdderResult == ItemsAdderAPI.PlaceBlockResult.PLACED) {
+		if (itemsAdderResult != ItemsAdderAPI.PlaceResult.NOT_HOOKED) {
+			if (itemsAdderResult == ItemsAdderAPI.PlaceResult.PLACED) {
 				return;
 			}
 		}
 
-		OraxenAPI.PlaceBlockResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(item, bBlock.getLocation());
+		OraxenAPI.PlaceResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(item, bBlock.getLocation());
 
-		if (oraxenResult != OraxenAPI.PlaceBlockResult.NOT_HOOKED) {
-			if (oraxenResult == OraxenAPI.PlaceBlockResult.PLACED) {
+		if (oraxenResult != OraxenAPI.PlaceResult.NOT_HOOKED) {
+			if (oraxenResult == OraxenAPI.PlaceResult.PLACED) {
 				return;
 			}
 		}

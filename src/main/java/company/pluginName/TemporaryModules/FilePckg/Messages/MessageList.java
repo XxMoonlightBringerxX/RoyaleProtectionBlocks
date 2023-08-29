@@ -1,13 +1,13 @@
-package company.pluginName.Modules.FilePckg.Messages;
+package company.pluginName.TemporaryModules.FilePckg.Messages;
 
 import java.util.Arrays;
 import java.util.List;
 
+import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFieldsEnum;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
 
 @RequiredArgsConstructor
 @Getter

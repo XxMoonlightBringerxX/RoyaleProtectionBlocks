@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -15,16 +16,17 @@ import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
+import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
-import company.pluginName.Modules.FilePckg.Messages.MessageList;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageList;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
@@ -113,7 +115,7 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 					break;
 				}
 
-				ItemStack item = block.generateItem();
+				ItemStack item = block.getInformation().getItem().clone();
 				ItemMeta im = item.getItemMeta();
 
 				List<String> lore = new ArrayList<>();
@@ -140,35 +142,41 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 
 				setSlot(slot++,
 						new Button(
-								ItemStacksUtils
-										.createItemStack(item,
-												im.hasDisplayName()
-														? MessageBuilder.createMessage(im.getDisplayName()).toString()
-														: null,
-												MessageBuilder
-														.createMessage(TextInput.inst()
-																.text(lore.toArray(new String[lore.size()]))
-																.replacements(
-																		new TextReplacement("{blocks_x}",
-																				() -> String.valueOf(
-																						(block.getBlocksX() * 2) + 1)),
-																		new TextReplacement(
-																				"{blocks_y}",
-																				() -> String.valueOf(
-																						(block.getBlocksY() * 2) + 1)),
-																		new TextReplacement(
-																				"{blocks_z}",
-																				() -> String.valueOf(
-																						(block.getBlocksZ() * 2) + 1)),
-																		new TextReplacement("{block_id}",
-																				() -> block.getId()),
-																		new TextReplacement("{block_permission}",
-																				() -> block.getPermission())))
-														.getStrings())) {
+								ItemStacksUtils.createItemStack(item,
+										im.hasDisplayName() ? MessageBuilder.createMessage(im.getDisplayName())
+												.toString() : null,
+										MessageBuilder
+												.createMessage(TextInput.inst()
+														.text(lore.toArray(new String[lore.size()]))
+														.replacements(new TextReplacement("{blocks_x}", () -> String
+																.valueOf(
+																		(block.getInformation().getBlocksX() * 2) + 1)),
+																new TextReplacement("{blocks_y}",
+																		() -> block.getInformation().getBlocksY() == -1
+																				? MessageString.MESSAGE_GENERAL_NOLIMIT
+																						.toString()
+																				: String.valueOf((block.getInformation()
+																						.getBlocksY() * 2) + 1)),
+																new TextReplacement("{blocks_z}", () -> String.valueOf(
+																		(block.getInformation().getBlocksZ() * 2) + 1)),
+																new TextReplacement("{block_id}",
+																		() -> block.getInformation().getId()),
+																new TextReplacement("{block_permission}",
+																		() -> block.getInformation().getPermission()),
+																new TextReplacement("{block_allowed_worlds}",
+																		() -> block.getAllowedWorlds().get().stream()
+																				.collect(Collectors.joining(", ")))))
+												.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {
 								if (e.getClick() == ClickType.LEFT && !e.isShiftClick() && canGet) {
-									e.getWhoClicked().getOpenInventory().setCursor(block.generateItem());
+									try {
+										e.getWhoClicked().getOpenInventory()
+												.setCursor(block.getInformation().generateItem());
+									} catch (ProtectionBlocksGenerateItemException e1) {
+										e1.sendError(getPlayer());
+										return;
+									}
 								} else if (e.getClick() == ClickType.SHIFT_LEFT && canEdit) {
 									new ProtectionBlockManagerInventory(getPlayer(), block)
 											.setPreviousHolder(getHolder()).openInventory(MainPluginClass.getPlugin());
@@ -196,7 +204,7 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 	}
 
 	private Collection<ProtectionBlock> getList() {
-		return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlockById().values();
+		return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().values();
 	}
 
 }

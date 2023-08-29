@@ -10,14 +10,14 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.ProtectionMembers.Delete.ProtectionMembersDeleteException;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import company.pluginName.Utils.OfflinePlayerUtils;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 public class RemoveMemberSubCommand extends SubCommand {
 
@@ -48,8 +48,8 @@ public class RemoveMemberSubCommand extends SubCommand {
 					OfflinePlayer member = OfflinePlayerUtils.getOfflinePlayer(args[1]);
 					if (member != null) {
 						try {
-							MainPluginClass.getPlugin().getProtectionsModule().removeMember(pl, protection,
-									member.getUniqueId());
+							protection.getMembers().remove(pl, member.getUniqueId());
+
 							MessageBuilder
 									.createMessage(
 											MessageString.MESSAGE_PROTECTIONS_MEMBERS_REMOVEDSUCCESSFULLY.applyPrefix())

@@ -1,15 +1,16 @@
-package company.pluginName.Modules.FilePckg.Settings;
+package company.pluginName.TemporaryModules.FilePckg.Settings;
 
 import company.pluginName.Permissions;
+import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFieldsEnum;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
 
 @RequiredArgsConstructor
 public enum SettingString implements FileObjFieldsEnum<String> {
 	SETTINGS_PROTECTION_STARTERBLOCK("Settings.Protection.Starter-block", "Settings.Protection.Stater-block", ""),
+	SETTINGS_PROTECTION_SENDTOWORLDONKICK("Settings.Protection.Send-to-world-on-kick", "world"),
 
 	COMMANDS_PROTECTIONBLOCKS_NAME("Commands.Protection-blocks.Name", "protectionblocks"),
 	COMMANDS_PROTECTIONBLOCKS_DESCRIPTION("Commands.Protection-blocks.Description", "Open the GUI or execute commands"),
@@ -45,6 +46,24 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 			"Remove an owner on your current protection"),
 	COMMANDS_PROTECTIONBLOCKS_REMOVEOWNER_USAGE("Commands.Protection-blocks.Remove-owner.Usage", "<username>"),
 	COMMANDS_PROTECTIONBLOCKS_REMOVEOWNER_PERMISSION("Commands.Protection-blocks.Remove-owner.Permission", ""),
+
+	COMMANDS_PROTECTIONBLOCKS_BAN_NAME("Commands.Protection-blocks.Ban.Name", "ban"),
+	COMMANDS_PROTECTIONBLOCKS_BAN_DESCRIPTION("Commands.Protection-blocks.Ban.Description",
+			"Ban a player from your current protection"),
+	COMMANDS_PROTECTIONBLOCKS_BAN_USAGE("Commands.Protection-blocks.Ban.Usage", "<username>"),
+	COMMANDS_PROTECTIONBLOCKS_BAN_PERMISSION("Commands.Protection-blocks.Ban.Permission", ""),
+
+	COMMANDS_PROTECTIONBLOCKS_UNBAN_NAME("Commands.Protection-blocks.Unban.Name", "unban"),
+	COMMANDS_PROTECTIONBLOCKS_UNBAN_DESCRIPTION("Commands.Protection-blocks.Unban.Description",
+			"Unban a player from your current protection"),
+	COMMANDS_PROTECTIONBLOCKS_UNBAN_USAGE("Commands.Protection-blocks.Unban.Usage", "<username>"),
+	COMMANDS_PROTECTIONBLOCKS_UNBAN_PERMISSION("Commands.Protection-blocks.Unban.Permission", ""),
+
+	COMMANDS_PROTECTIONBLOCKS_KICK_NAME("Commands.Protection-blocks.Kick.Name", "kick"),
+	COMMANDS_PROTECTIONBLOCKS_KICK_DESCRIPTION("Commands.Protection-blocks.Kick.Description",
+			"Kick a player from your current protection"),
+	COMMANDS_PROTECTIONBLOCKS_KICK_USAGE("Commands.Protection-blocks.Kick.Usage", "<username>"),
+	COMMANDS_PROTECTIONBLOCKS_KICK_PERMISSION("Commands.Protection-blocks.Kick.Permission", ""),
 
 	COMMANDS_PROTECTIONBLOCKS_RELOAD_NAME("Commands.Protection-blocks.Reload.Name", "reload"),
 	COMMANDS_PROTECTIONBLOCKS_RELOAD_DESCRIPTION("Commands.Protection-blocks.Reload.Description", "Reload the plugin"),
@@ -117,6 +136,27 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_USAGE("Commands.Protection-blocks.Blocks.Give.Usage", "<id> [player]"),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_PERMISSION("Commands.Protection-blocks.Blocks.Give.Permission",
 			Permissions.PROTECTION_BLOCKS_GIVE),
+
+	COMMANDS_PROTECTIONBLOCKS_FILES_NAME("Commands.Protection-blocks.Files.Name", "files"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_DESCRIPTION("Commands.Protection-blocks.Files.Description",
+			"Manage the importation and exportation of data through files"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_USAGE("Commands.Protection-blocks.Files.Usage", "[help|subcommand]"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_PERMISSION("Commands.Protection-blocks.Files.Permission",
+			Permissions.PROTECTION_FILES),
+
+	COMMANDS_PROTECTIONBLOCKS_FILES_EXPORT_NAME("Commands.Protection-blocks.Files.Export.Name", "export"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_EXPORT_DESCRIPTION("Commands.Protection-blocks.Files.Export.Description",
+			"Export all the information of an specific type of data to its respective file"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_EXPORT_USAGE("Commands.Protection-blocks.Files.Export.Usage", "<blocks>"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_EXPORT_PERMISSION("Commands.Protection-blocks.Files.Export.Permission",
+			Permissions.PROTECTION_FILES_EXPORT),
+
+	COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_NAME("Commands.Protection-blocks.Files.Import.Name", "import"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_DESCRIPTION("Commands.Protection-blocks.Files.Import.Description",
+			"Import all the information of an specific type of data from its respective file"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_USAGE("Commands.Protection-blocks.Files.Import.Usage", "<blocks>"),
+	COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_PERMISSION("Commands.Protection-blocks.Files.Import.Permission",
+			Permissions.PROTECTION_FILES_IMPORT),
 
 	COMMANDS_GENERIC_HELP_NAME("Commands.Generic.Help.Name", "help"),
 	COMMANDS_GENERIC_HELP_DESCRIPTION("Commands.Generic.Help.Description", "Get all the commands"),

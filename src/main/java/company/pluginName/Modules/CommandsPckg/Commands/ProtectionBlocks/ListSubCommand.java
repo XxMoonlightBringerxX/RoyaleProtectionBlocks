@@ -10,9 +10,9 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Permissions;
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventory;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import company.pluginName.Utils.OfflinePlayerUtils;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;

@@ -1,24 +1,28 @@
 package company.pluginName;
 
+import java.util.function.Supplier;
+
 import org.bukkit.Bukkit;
 
 import company.pluginName.APIs.ItemsAdderAPI;
 import company.pluginName.APIs.OraxenAPI;
 import company.pluginName.APIs.PlaceholderAPI;
 import company.pluginName.APIs.ProtectionStonesAPI;
-import company.pluginName.APIs.WorldGuardAPI;
+import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Bukkit.Events.BukkitEvents;
+import company.pluginName.Bukkit.Events.OraxenEvents;
+import company.pluginName.Bukkit.Events.ProtectionBlockEvents;
 import company.pluginName.Bukkit.Events.RecipeEvents;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.Objects.Flag;
 import company.pluginName.Modules.CommandsPckg.CommandsModule;
-import company.pluginName.Modules.FilePckg.FileModule;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import company.pluginName.Modules.FilePckg.Settings.SettingBoolean;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionSettingsModule;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsModule;
 import company.pluginName.Modules.RecipesPckg.RecipesModule;
 import company.pluginName.Modules.SQLPckg.SQLModule;
+import company.pluginName.TemporaryModules.FilePckg.FileModule;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingBoolean;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,8 +40,8 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	// ---------------------------------------------------------------//
 
 	public MainPluginClass() {
-		super(new FileModule(), new CommandsModule(), new SQLModule(), new ProtectionSettingsModule(),
-				new ProtectionsModule(), new RecipesModule());
+		super(new FileModule(), new CommandsModule(), new SQLModule(), new ProtectionSettingsModule(), new ProtectionsModule(),
+				new RecipesModule());
 		plugin = this;
 	}
 
@@ -54,8 +58,7 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	@Override
 	public boolean beforeLoad() {
 		MessageBuilder
-				.createMessage(getPrefix() + "",
-						getPrefix() + "       _____ _____         _   _____ _         _            ",
+				.createMessage(getPrefix() + "", getPrefix() + "       _____ _____         _   _____ _         _            ",
 						getPrefix() + "      | __  |  _  |___ ___| |_| __  | |___ ___| |_ ___      ",
 						getPrefix() + "      |    -|   __|  _| . |  _| __ -| | . |  _| '_|_ -|     ",
 						getPrefix() + "      |__|__|__|  |_| |___|_| |_____|_|___|___|_,_|___|     ",
@@ -100,15 +103,23 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	public boolean enable() {
 		if (isFirstTime()) {
 			Bukkit.getPluginManager().registerEvents(new BukkitEvents(), this);
+			Bukkit.getPluginManager().registerEvents(new ProtectionBlockEvents(), this);
 			Bukkit.getPluginManager().registerEvents(new RecipeEvents(), this);
 
 			protectionStonesAPI = new ProtectionStonesAPI();
+
+			if (oraxenAPI.isHooked()) {
+				Bukkit.getPluginManager().registerEvents(new OraxenEvents(), this);
+			}
+
+			if (worldGuardAPI.isHooked()) {
+				worldGuardAPI.registerHandlers();
+			}
 		}
 		Flag.initFlags();
 		PluginChestInventory.initItems();
 		MessageBuilder
-				.createMessage(getPrefix() + "",
-						getPrefix() + "                                     __                    ",
+				.createMessage(getPrefix() + "", getPrefix() + "                                     __                    ",
 						getPrefix() + "                       _            |  |                   ",
 						getPrefix() + "                     _| |___ ___ ___|  |                   ",
 						getPrefix() + "                    | . | . |   | -_|__|                   ",
@@ -125,8 +136,7 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	@Override
 	public boolean disable() {
 		MessageBuilder
-				.createMessage(getPrefix() + "",
-						getPrefix() + "                                            __             ",
+				.createMessage(getPrefix() + "", getPrefix() + "                                            __             ",
 						getPrefix() + "                      _           _       _|  |            ",
 						getPrefix() + "              _ _ ___| |___ ___ _| |___ _| |  |            ",
 						getPrefix() + "             | | |   | | . | .'| . | -_| . |__|            ",
@@ -172,28 +182,64 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 
 	public static class Debugger {
 
-		public static void log(MessageType messageType, String message, String... args) {
-			if (SettingBoolean.SETTINGS_DEBUG_ENABLED.getContent() && messageType.isAvailable()) {
-				MessageBuilder.createMessage(MessageString.applyPrefix(message.formatted((Object[]) args)))
+		public static void log(MessageType messageType) {
+			log(messageType, () -> new Object[0]);
+		}
+
+		public static void log(MessageType messageType, Supplier<Object[]> argsSupplier) {
+			if (messageType.isAvailable() && SettingBoolean.SETTINGS_DEBUG_ENABLED.getContent()) {
+				MessageBuilder.createMessage(MessageString.applyPrefix(messageType.getMessage().formatted(argsSupplier.get())))
 						.sendMessage(Bukkit.getConsoleSender());
 			}
 		}
 
 		@AllArgsConstructor
+		@Getter
 		public static enum MessageType {
-			BLOCK_PLACE(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACE),
-			BLOCK_PLACE_CANCELLED(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACECANCELLED),
-			BLOCK_BREAK(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKBREAK),
-			BLOCK_BREAK_CANCELLED(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKBREAKCANCELLED),
-			PROTECTION_CREATION_ATTEMPT(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATIONATTEMPT),
-			PROTECTION_CREATION(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATION),
-			PROTECTION_REMOVAL_ATTEMPT(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVALATTEMPT),
-			PROTECTION_REMOVAL(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVAL);
+			BLOCK_PLACE(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACE,
+					"Player %s is attempting to place a block on location x(%s) y(%s) z(%s)"),
 
-			private SettingBoolean settingBoolean;
+			ORAXEN_BLOCK_PLACE(SettingBoolean.SETTINGS_DEBUG_MESSAGES_ORAXENBLOCKPLACE,
+					"Player %s is attempting to place an oraxen block on location x(%s) y(%s) z(%s)"),
+
+			BLOCK_PLACE_NOT_PROTECTION_BLOCK(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACENOTPROTECTIONBLOCK,
+					"Item used by %s is currently not a protection block"),
+
+			BLOCK_PLACE_IS_PROTECTION_BLOCK(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACEISPROTECTIONBLOCK,
+					"Protection block the ID '%s' has been found linked to the item used by %s"),
+
+			BLOCK_PLACE_CANCELLED_BUILD(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACECANCELLEDBUILD,
+					"Attempt to place a protection block was cancelled due player can't build"),
+
+			BLOCK_PLACE_CANCELLED(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACECANCELLED,
+					"Attempt to place a protection block was already cancelled by another plugin"),
+
+			BLOCK_BREAK(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKBREAK,
+					"Player %s is attempting to break a block on location x(%s) y(%s) z(%s)"),
+
+			ORAXEN_BLOCK_BREAK(SettingBoolean.SETTINGS_DEBUG_MESSAGES_ORAXENBLOCKBREAK,
+					"Player %s is attempting to break an oraxen block on location x(%s) y(%s) z(%s)"),
+
+			BLOCK_BREAK_CANCELLED(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKBREAKCANCELLED,
+					"Attempt to break a protection block was already cancelled by another plugin"),
+
+			PROTECTION_CREATION_ATTEMPT(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATIONATTEMPT,
+					"Player %s is attempting to create protection from location x(%s) y(%s) z(%s)"),
+
+			PROTECTION_CREATION(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONCREATION,
+					"Player %s created protection '%s' from location x(%s) y(%s) z(%s)"),
+
+			PROTECTION_REMOVAL_ATTEMPT(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVALATTEMPT,
+					"Player %s is attempting to remove '%s' from location x(%s) y(%s) z(%s)"),
+
+			PROTECTION_REMOVAL(SettingBoolean.SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVAL,
+					"Player %s removed protection '%s' from location x(%s) y(%s) z(%s)");
+
+			private SettingBoolean available;
+			private String message;
 
 			public boolean isAvailable() {
-				return settingBoolean.getContent();
+				return this.available.getContent();
 			}
 
 		}

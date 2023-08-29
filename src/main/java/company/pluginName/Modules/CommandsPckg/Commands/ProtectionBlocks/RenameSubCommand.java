@@ -8,10 +8,10 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
-import company.pluginName.Modules.FilePckg.Settings.SettingList;
-import company.pluginName.Modules.FilePckg.Settings.SettingString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;

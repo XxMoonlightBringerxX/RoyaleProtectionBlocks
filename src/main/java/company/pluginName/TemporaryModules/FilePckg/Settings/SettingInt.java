@@ -1,6 +1,6 @@
-package company.pluginName.Modules.FilePckg.Settings;
+package company.pluginName.TemporaryModules.FilePckg.Settings;
 
-import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
+import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFieldsEnum;
 
 public enum SettingInt implements FileObjFieldsEnum<Integer> {
 	SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS("Settings.Protection.Boundaries-view-duration-in-seconds", 30);

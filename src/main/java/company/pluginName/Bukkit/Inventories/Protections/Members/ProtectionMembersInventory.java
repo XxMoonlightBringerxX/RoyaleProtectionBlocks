@@ -10,8 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
@@ -19,15 +17,15 @@ import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchPlayersInventory;
 import company.pluginName.Exceptions.ProtectionMembers.Delete.ProtectionMembersDeleteException;
 import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveException;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import company.pluginName.Utils.OfflinePlayerUtils;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
@@ -48,7 +46,6 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 	}
 
 	private Protection protection;
-	private ProtectedRegion protectedRegion;
 	private List<UUID> members;
 	private int page = 1;
 
@@ -62,7 +59,6 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 				.toString());
 
 		this.protection = protection;
-		this.protectedRegion = this.protection.getProtectedRegion();
 	}
 
 	@Override
@@ -89,8 +85,7 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 				new SearchPlayersInventory(getPlayer(), player -> {
 					if (player != null) {
 						try {
-							MainPluginClass.getPlugin().getProtectionsModule().addMember(getPlayer(), protection,
-									player.getUniqueId());
+							protection.getMembers().add(getPlayer(), player.getUniqueId());
 						} catch (ProtectionMembersSaveException e1) {
 							e1.sendError(getPlayer());
 						}
@@ -160,8 +155,7 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 										|| getPlayer().hasPermission(Permissions.PROTECTION_MEMBERS_REMOVE_OTHERS)) {
 									new ConfirmationInventory(getPlayer(), () -> {
 										try {
-											MainPluginClass.getPlugin().getProtectionsModule().removeMember(getPlayer(),
-													protection, member);
+											protection.getMembers().remove(getPlayer(), member);
 										} catch (ProtectionMembersDeleteException e1) {
 											e1.sendError(getPlayer());
 										}
@@ -179,7 +173,7 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 	}
 
 	private List<UUID> getList() {
-		return this.protectedRegion.getMembers().getUniqueIds().stream().collect(Collectors.toList());
+		return protection.getMembers().list().stream().collect(Collectors.toList());
 	}
 
 }

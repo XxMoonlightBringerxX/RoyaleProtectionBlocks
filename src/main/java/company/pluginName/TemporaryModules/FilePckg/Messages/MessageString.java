@@ -1,10 +1,10 @@
-package company.pluginName.Modules.FilePckg.Messages;
+package company.pluginName.TemporaryModules.FilePckg.Messages;
 
+import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFieldsEnum;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import relampagorojo93.LibsCollection.SpigotPlugin.Defaults.FileModuleObjects.FileObjFieldsEnum;
 
 @RequiredArgsConstructor
 public enum MessageString implements FileObjFieldsEnum<String> {
@@ -13,18 +13,25 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	// Messages
 	MESSAGE_RELOAD("Message.Reload", "&aThe plugin has been reloaded successfully."),
 
-	MESSAGE_PROTECTIONS_CREATEDSUCCESSFULLY("Message.Protections.Created-successfully",
-			"&aThe protection has been created successfully!"),
-	MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY("Message.Protections.Removed-successfully",
-			"&aThe protection has been removed successfully!"),
+	MESSAGE_GENERAL_NOLIMIT("Message.General.No-limit", "No limit"),
+
+	MESSAGE_PROTECTIONS_CREATEDSUCCESSFULLY("Message.Protections.Created-successfully", "&aThe protection has been created successfully!"),
+	MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY("Message.Protections.Removed-successfully", "&aThe protection has been removed successfully!"),
 	MESSAGE_PROTECTIONS_HOMESETSUCCESSFULLY("Message.Protections.Home-set-successfully",
 			"&aThe protection's home has been set successfully!"),
 	MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY("Message.Protections.Renamed-successfully",
 			"&aThe protection's name has been changed successfully!"),
 	MESSAGE_PROTECTIONS_HIDDENSUCCESSFULLY("Message.Protections.Hidden-successfully",
 			"&aThe protection block has been hidden successfully!"),
-	MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY("Message.Protections.Shown-successfully",
-			"&aThe protection block has been shown successfully!"),
+	MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY("Message.Protections.Shown-successfully", "&aThe protection block has been shown successfully!"),
+	MESSAGE_PROTECTIONS_KICKED("Message.Protections.Kicked", "&cYou've been kicked from this protection."),
+	MESSAGE_PROTECTIONS_BANNED("Message.Protections.Banned", "&cYou've been banned from this protection."),
+	MESSAGE_PROTECTIONS_PLAYERNOTINPROTECTION("Message.Protections.Player-not-in-protection",
+			"&cThis player is not currently inside this protection."),
+	MESSAGE_PROTECTIONS_PLAYERWITHKICKBYPASS("Message.Protections.Player-with-kick-bypass",
+			"&cYou can't kick this player due his permissions."),
+	MESSAGE_PROTECTIONS_PLAYERKICKED("Message.Protections.Player-kicked",
+			"&aThe player has been kicked from this protection successfully!"),
 
 	MESSAGE_PROTECTIONS_MEMBERS_ADDEDSUCCESSFULLY("Message.Protections.Members.Added-successfully",
 			"&aThe new member has been added to the protection successfully!"),
@@ -36,6 +43,11 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	MESSAGE_PROTECTIONS_OWNERS_REMOVEDSUCCESSFULLY("Message.Protections.Owners.Removed-successfully",
 			"&aThe owner has been removed to the protection successfully!"),
 
+	MESSAGE_PROTECTIONS_BANNEDS_ADDEDSUCCESSFULLY("Message.Protections.Banneds.Added-successfully",
+			"&aThe player has been banned from the protection successfully!"),
+	MESSAGE_PROTECTIONS_BANNEDS_REMOVEDSUCCESSFULLY("Message.Protections.Banneds.Removed-successfully",
+			"&aThe player has been unbanned from the protection successfully!"),
+
 	MESSAGE_PROTECTIONS_BLOCKS_CREATEDSUCCESSFULLY("Message.Protections.Blocks.Created-successfully",
 			"&aThe protection block has been created successfully!"),
 	MESSAGE_PROTECTIONS_BLOCKS_SAVEDSUCCESSFULLY("Message.Protections.Blocks.Saved-successfully",
@@ -43,10 +55,12 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY("Message.Protections.Blocks.Removed-successfully",
 			"&aThe protection block has been removed successfully!"),
 
-	MESSAGE_TRANSFER_AVAILABLELIST("Message.Transfer.Available-list",
-			"&7Available protection plugins to transfer from: &f{list}"),
+	MESSAGE_TRANSFER_AVAILABLELIST("Message.Transfer.Available-list", "&7Available protection plugins to transfer from: &f{list}"),
 	MESSAGE_TRANSFER_WARNING("Message.Transfer.Warning",
 			"&7You're about to transfer all the data from another plugin to RoyaleProtectionBlocks. Once it starts, it'll block the server and start incorporating all the data. At the end, the server will be closed and the plugin will attempt to remove the one you decided to take the data from. Make sure this plugin is removed after this process, as in some systems, it can be very common that it doesn't allow to remove the file automatically. Please, type &e{command} &7to confirm your choice."),
+
+	MESSAGE_FILES_EXPORTEDSUCCESSFULLY("Message.Files.Exported-successfully", "All the data has been exported successfully!"),
+	MESSAGE_FILES_IMPORTEDSUCCESSFULLY("Message.Files.Imported-successfully", "All the data has been imported successfully!"),
 
 	MESSAGE_HELPER_AVAILABLELEFTARROW("Message.Helper.Available-left-arrow", "&e«"),
 	MESSAGE_HELPER_UNAVAILABLELEFTARROW("Message.Helper.Unavailable-left-arrow", "&r«"),
@@ -61,31 +75,35 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	INVENTORY_GENERAL_NEXTPAGENAME("Inventory.General.Next-name", "&eNext"),
 
 	// Inventory confirm items
-	INVENTORY_CONFIRM_TITLE("Inventory.Confirm.Title", "Are you sure?"),
-	INVENTORY_CONFIRM_YESNAME("Inventory.Confirm.Yes-name", "&aYes"),
+	INVENTORY_CONFIRM_TITLE("Inventory.Confirm.Title", "Are you sure?"), INVENTORY_CONFIRM_YESNAME("Inventory.Confirm.Yes-name", "&aYes"),
 	INVENTORY_CONFIRM_NONAME("Inventory.Confirm.No-name", "&cNo"),
 
 	// Inventory search player items
 	INVENTORY_SEARCHPLAYERS_TITLE("Inventory.Search-players.Title", "Search a player"),
 	INVENTORY_SEARCHPLAYERS_PLAYERNAME("Inventory.Search-players.Player-name", "&e{player}"),
-	INVENTORY_SEARCHPLAYERS_SEARCHSPECIFICPLAYERNAME("Inventory.Search-players.Search-specific-player-name",
-			"&eSearch an specific player"),
+	INVENTORY_SEARCHPLAYERS_SEARCHSPECIFICPLAYERNAME("Inventory.Search-players.Search-specific-player-name", "&eSearch an specific player"),
 	INVENTORY_SEARCHPLAYERS_SEARCHSPECIFICPLAYERINFO("Inventory.Search-players.Search-specific-player-Info",
 			"&7Type the name of the player you're looking for. Type 'cancel' to cancel this action."),
+
+	// Inventory search world items
+	INVENTORY_SEARCHWORLDS_TITLE("Inventory.Search-worlds.Title", "Search a world"),
+	INVENTORY_SEARCHWORLDS_WORLDNAME("Inventory.Search-worlds.World-name", "&e{world}"),
+	INVENTORY_SEARCHWORLDS_SEARCHSPECIFICWORLDNAME("Inventory.Search-worlds.Search-specific-world-name", "&eSearch an specific world"),
+	INVENTORY_SEARCHWORLDS_SEARCHSPECIFICWORLDINFO("Inventory.Search-worlds.Search-specific-world-info",
+			"&7Type the name of the world you're looking for. Type 'cancel' to cancel this action."),
 
 	// Inventory protection items
 	INVENTORY_PROTECTION_TITLE("Inventory.Protection.Title", "{protection}"),
 	INVENTORY_PROTECTION_PROTECTIONINFONAME("Inventory.Protection.Protection-info-name", "&e{owner}"),
 	INVENTORY_PROTECTION_OWNERSNAME("Inventory.Protection.Owners-name", "&eOwners"),
 	INVENTORY_PROTECTION_MEMBERSNAME("Inventory.Protection.Members-name", "&eMembers"),
+	INVENTORY_PROTECTION_BANNEDSNAME("Inventory.Protection.Banneds-name", "&eBanneds"),
 	INVENTORY_PROTECTION_FLAGSNAME("Inventory.Protection.Flags-name", "&eFlags"),
 	INVENTORY_PROTECTION_RENAMENAME("Inventory.Protection.Rename-name", "&eRename protection"),
 	INVENTORY_PROTECTION_SHOWBLOCKNAME("Inventory.Protection.Show-block-name", "&eShow the protection block"),
 	INVENTORY_PROTECTION_HIDEBLOCKNAME("Inventory.Protection.Hide-block-name", "&eHide the protection block"),
-	INVENTORY_PROTECTION_SHOWBOUNDARIESNAME("Inventory.Protection.Show-boundaries-name",
-			"&eShow the protection boundaries"),
-	INVENTORY_PROTECTION_HIDEBOUNDARIESNAME("Inventory.Protection.Hide-boundaries-name",
-			"&eHide the protection boundaries"),
+	INVENTORY_PROTECTION_SHOWBOUNDARIESNAME("Inventory.Protection.Show-boundaries-name", "&eShow the protection boundaries"),
+	INVENTORY_PROTECTION_HIDEBOUNDARIESNAME("Inventory.Protection.Hide-boundaries-name", "&eHide the protection boundaries"),
 	INVENTORY_PROTECTION_TYPENEWNAMEINFO("Inventory.Protection.Type-new-name-Info",
 			"&7Type the new name for the protection. Type 'cancel' to cancel this action."),
 	INVENTORY_PROTECTION_DELETEPROTECTIONNAME("Inventory.Protection.Delete-protection-name", "&cDelete protection"),
@@ -93,8 +111,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	// Inventory protection list items
 	INVENTORY_PROTECTION_LIST_TITLE("Inventory.Protection.List.Title", "Protections"),
 	INVENTORY_PROTECTION_LIST_PROTECTIONNAME("Inventory.Protection.List.Protection-name", "&e{protection}"),
-	INVENTORY_PROTECTION_LIST_PROTECTIONTELEPORTNOHOMELORELINE(
-			"Inventory.Protection.List.Protection-teleport-no-home-lore-line",
+	INVENTORY_PROTECTION_LIST_PROTECTIONTELEPORTNOHOMELORELINE("Inventory.Protection.List.Protection-teleport-no-home-lore-line",
 			" &8- &a&mLeft click&r&a: &7No home set yet"),
 	INVENTORY_PROTECTION_LIST_PROTECTIONTELEPORTLORELINE("Inventory.Protection.List.Protection-teleport-lore-line",
 			" &8- &aLeft click: &eTeleport to protection home"),
@@ -113,18 +130,22 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	// Inventory protection members items
 	INVENTORY_PROTECTION_MEMBERS_TITLE("Inventory.Protection.Members.Title", "{protection} > Members"),
 	INVENTORY_PROTECTION_MEMBERS_MEMBERNAME("Inventory.Protection.Members.Member-name", "&e{player}"),
-	INVENTORY_PROTECTION_MEMBERS_SEARCHMEMBERNAME("Inventory.Protection.Members.Search-member-name",
-			"&eSearch for a new member"),
+	INVENTORY_PROTECTION_MEMBERS_SEARCHMEMBERNAME("Inventory.Protection.Members.Search-member-name", "&eSearch for a new member"),
 	INVENTORY_PROTECTION_MEMBERS_REMOVEMEMBERLORELINE("Inventory.Protection.Members.Remove-member-lore-line",
 			"&8[&cClick to remove member&8]"),
 
 	// Inventory protection owners items
 	INVENTORY_PROTECTION_OWNERS_TITLE("Inventory.Protection.Owners.Title", "{protection} > Owners"),
 	INVENTORY_PROTECTION_OWNERS_OWNERNAME("Inventory.Protection.Owners.Owner-name", "&e{player}"),
-	INVENTORY_PROTECTION_OWNERS_SEARCHOWNERNAME("Inventory.Protection.Owners.Search-owner-name",
-			"&eSearch for a new owner"),
-	INVENTORY_PROTECTION_OWNERS_REMOVEOWNERLORELINE("Inventory.Protection.Owners.Remove-owner-lore-line",
-			"&8[&cClick to remove owner&8]"),
+	INVENTORY_PROTECTION_OWNERS_SEARCHOWNERNAME("Inventory.Protection.Owners.Search-owner-name", "&eSearch for a new owner"),
+	INVENTORY_PROTECTION_OWNERS_REMOVEOWNERLORELINE("Inventory.Protection.Owners.Remove-owner-lore-line", "&8[&cClick to remove owner&8]"),
+
+	// Inventory protection banneds items
+	INVENTORY_PROTECTION_BANNEDS_TITLE("Inventory.Protection.Banneds.Title", "{protection} > Banneds"),
+	INVENTORY_PROTECTION_BANNEDS_BANNEDNAME("Inventory.Protection.Banneds.Banned-name", "&e{player}"),
+	INVENTORY_PROTECTION_BANNEDS_SEARCHBANNEDNAME("Inventory.Protection.Banneds.Search-banned-name", "&eSearch for a new banned"),
+	INVENTORY_PROTECTION_BANNEDS_REMOVEBANNEDLORELINE("Inventory.Protection.Banneds.Remove-banned-lore-line",
+			"&8[&cClick to remove banned&8]"),
 
 	// Inventory protection list items
 	INVENTORY_PROTECTIONBLOCKS_LIST_TITLE("Inventory.Protection-blocks.List.Title", "Protection Blocks"),
@@ -139,76 +160,75 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 
 	// Inventory protection list items
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_TITLE("Inventory.Protection-blocks.Manage.Title", "Protection Blocks > {block}"),
-	INVENTORY_PROTECTIONBLOCKS_MANAGE_ITEMNOTSETNAME("Inventory.Protection-blocks.Manage.Item-not-set-name",
-			"&7&oNot set yet"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_ITEMNOTSETNAME("Inventory.Protection-blocks.Manage.Item-not-set-name", "&7&oNot set yet"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSXNAME("Inventory.Protection-blocks.Manage.Blocks-x-name",
 			"&aCurrent blocks on X: &e{blocks_x}"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSYNAME("Inventory.Protection-blocks.Manage.Blocks-y-name",
 			"&aCurrent blocks on Y: &e{blocks_y}"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSZNAME("Inventory.Protection-blocks.Manage.Blocks-z-name",
 			"&aCurrent blocks on Z: &e{blocks_z}"),
-	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNAME("Inventory.Protection-blocks.Manage.Id-name",
-			"&aCurrent ID: &e{block_id}"),
-	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTSETNAME("Inventory.Protection-blocks.Manage.Id-not-set-name",
-			"&aCurrent ID: &7&oNot set yet"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNAME("Inventory.Protection-blocks.Manage.Id-name", "&aCurrent ID: &e{block_id}"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTSETNAME("Inventory.Protection-blocks.Manage.Id-not-set-name", "&aCurrent ID: &7&oNot set yet"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTMODIFIABLENAME("Inventory.Protection-blocks.Manage.Id-not-modifiable-name",
 			"&aCurrent ID: &e{block_id} &7&o[Not modifiable]"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPENAME("Inventory.Protection-blocks.Manage.Recipe-name", "&aRecipe"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_ALLOWEDWORLDSNAME("Inventory.Protection-blocks.Manage.Allowed-worlds-name", "&aAllowed worlds"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNAME("Inventory.Protection-blocks.Manage.Permission-name",
 			"&aCurrent permission: &e{block_permission}"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONNOTSETNAME("Inventory.Protection-blocks.Manage.Permission-not-set-name",
 			"&aCurrent permission: &7&oNot set yet"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_IDSPECIFYINFO("Inventory.Protection-blocks.Manage.Id-specify-info",
 			"&7Type the ID you wish to set on your protection block. Type 'cancel' to cancel this action."),
-	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONSPECIFYINFO(
-			"Inventory.Protection-blocks.Manage.Permission-specify-info",
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_PERMISSIONSPECIFYINFO("Inventory.Protection-blocks.Manage.Permission-specify-info",
 			"&7Type the permission you wish to set on your protection block. Type 'cancel' to cancel this action."),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSSPECIFYINFO("Inventory.Protection-blocks.Manage.Blocks-specify-info",
 			"&7Type the amount of blocks you wish to set on your protection block. Type 'cancel' to cancel this action."),
 
+	// Inventory protection blocks allowed worlds items
+	INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_TITLE("Inventory.Protection-blocks.Allowed-worlds.Title", "{block} > Allowed Worlds"),
+	INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_ALLOWEDWORLDNAME("Inventory.Protection-blocks.Allowed-worlds.Allowed-world-name", "&e{world}"),
+	INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_SEARCHWORLDNAME("Inventory.Protection-blocks.Allowed-worlds.Search-allowed-world-name",
+			"&eSearch for a new allowed world"),
+	INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_REMOVEALLOWEDWORLDLORELINE(
+			"Inventory.Protection-blocks.Allowed-worlds.Remove-allowed-world-lore-line", "&8[&cClick to remove allowed world&8]"),
+
 	// Inventory protection list items
-	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_TITLE("Inventory.Protection-blocks.Manage.Recipe.Title",
-			"{block} > Recipe"),
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_TITLE("Inventory.Protection-blocks.Manage.Recipe.Title", "{block} > Recipe"),
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONNAME("Inventory.Protection-blocks.Manage.Recipe.Permission-name",
 			"&aCurrent permission: &e{block_permission}"),
-	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONNOTSETNAME(
-			"Inventory.Protection-blocks.Manage.Recipe.Permission-not-set-name",
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONNOTSETNAME("Inventory.Protection-blocks.Manage.Recipe.Permission-not-set-name",
 			"&aCurrent permission: &7&oNot set yet"),
-	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONSPECIFYINFO(
-			"Inventory.Protection-blocks.Manage.Recipe.Permission-specify-info",
+	INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONSPECIFYINFO("Inventory.Protection-blocks.Manage.Recipe.Permission-specify-info",
 			"&7Type the permission you wish to set on your recipe. Type 'cancel' to cancel this action."),
 
 	// Errors
-	ERROR_ERROR("Error.Error", "&cError!"),
-	ERROR_CONSOLEDENIED("Error.Console-denied", "&cYou can't use this commands in console!"),
+	ERROR_ERROR("Error.Error", "&cError!"), ERROR_CONSOLEDENIED("Error.Console-denied", "&cYou can't use this commands in console!"),
 	ERROR_PLAYERNOTFOUND("Error.Player-not-found", "&cThe specified player couldn't be found!"),
+	ERROR_WORLDNOTFOUND("Error.World-not-found", "&cThe specified world couldn't be found!"),
 	ERROR_NOITEMINHAND("Error.No-item-in-hand", "&cYou must have an item in your hand!"),
 	ERROR_NOTABLOCK("Error.Not-a-block", "&cThe item must be a block!"),
 	ERROR_INVALIDNUMBER("Error.Invalid-number", "&cYou must specify a valid number!"),
 	ERROR_NUMBERBELOWZERO("Error.Number-below-zero", "&cYou must specify a number higher than or equal to zero!"),
 
-	ERROR_CHATPROMPT_ALREADYPROMPTED("Error.Chat-prompt.Already-prompted",
-			"&cYou've already a pending type operation!"),
+	ERROR_CHATPROMPT_ALREADYPROMPTED("Error.Chat-prompt.Already-prompted", "&cYou've already a pending type operation!"),
 
-	ERROR_PROTECTIONS_NOTINSIDEPROTECTION("Error.Protections.Not-inside-protection",
-			"&cYou're not inside any protection!"),
+	ERROR_FILES_EXPORT("Error.Files.Export", "&cThere was an issue trying to export the data! Check the console for more information."),
+	ERROR_FILES_IMPORT("Error.Files.Import", "&cThere was an issue trying to import the data! Check the console for more information."),
+
+	ERROR_PROTECTIONS_NOTINSIDEPROTECTION("Error.Protections.Not-inside-protection", "&cYou're not inside any protection!"),
 	ERROR_PROTECTIONS_BANNEDWORLD("Error.Protections.Banned-world", "&cYou can't use protection blocks in this world!"),
-	ERROR_PROTECTIONS_NOTMAINOWNER("Error.Protections.Not-main-owner",
-			"&cYou're not the main owner of this protection!"),
+	ERROR_PROTECTIONS_NOTALLOWEDWORLD("Error.Protections.Not-allowed-world", "&cYou can't use this protection block in this world!"),
+	ERROR_PROTECTIONS_NOTMAINOWNER("Error.Protections.Not-main-owner", "&cYou're not the main owner of this protection!"),
 	ERROR_PROTECTIONS_NOTOWNER("Error.Protections.Not-owner", "&cYou're not an owner of this protection!"),
-	ERROR_PROTECTIONS_PERMISSIONDENIED("Error.Protections.Permission-denied",
-			"&cYou don't have permissions to use this protection block!"),
-	ERROR_PROTECTIONS_BLOCKALREADYHIDDEN("Error.Protections.Block-already-hidden",
-			"&cThe protection block is already hidden!"),
-	ERROR_PROTECTIONS_BLOCKALREADYSHOWN("Error.Protections.Block-already-shown",
-			"&cThe protection block is already shown!"),
+	ERROR_PROTECTIONS_PERMISSIONDENIED("Error.Protections.Permission-denied", "&cYou don't have permissions to use this protection block!"),
+	ERROR_PROTECTIONS_BLOCKALREADYHIDDEN("Error.Protections.Block-already-hidden", "&cThe protection block is already hidden!"),
+	ERROR_PROTECTIONS_BLOCKALREADYSHOWN("Error.Protections.Block-already-shown", "&cThe protection block is already shown!"),
 	ERROR_PROTECTIONS_BLOCKEDBYBLOCK("Error.Protections.Blocked-by-block",
 			"&cThere's another block where the protection block should be placed!"),
 	ERROR_PROTECTIONS_SAMEITEMASPROTECTION("Error.Protections.Same-item-as-protection",
 			"&cYou can't place items of the same type as the protection block where the protection block is originally placed!"),
 
-	ERROR_PROTECTIONS_BLOCKS_NOTFOUND("Error.Protections.Blocks.Not-found",
-			"&cThere's no protection block with this ID!"),
+	ERROR_PROTECTIONS_BLOCKS_NOTFOUND("Error.Protections.Blocks.Not-found", "&cThere's no protection block with this ID!"),
 	ERROR_PROTECTIONS_BLOCKS_ITEMTYPESWAPNOTALLOWED("Error.Protections.Blocks.Item-type-swap-not-allowed",
 			"&cYou can't switch the item type of a registered protection block!"),
 
@@ -239,17 +259,15 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_NOVISIBLETEXT("Error.Exception.protection.save.NoVisibleText",
 			"&cThe text you're typing must be visible!"),
 
-	ERROR_EXCEPTION_PROTECTION_MEMBERS_DELETE_PERMISSIONDENIED(
-			"Error.Exception.protection.members.delete.PermissionDenied",
+	ERROR_EXCEPTION_PROTECTION_MEMBERS_DELETE_PERMISSIONDENIED("Error.Exception.protection.members.delete.PermissionDenied",
 			"&cYou aren't allowed to remove this member!"),
 	ERROR_EXCEPTION_PROTECTION_MEMBERS_DELETE_UNKNOWN("Error.Exception.protection.members.delete.Unknown",
 			"&cAn unknown error happened while trying to remove this member. Please contact with an administrator!"),
 
-	ERROR_EXCEPTION_PROTECTION_MEMBERS_SAVE_CANNOTADDPROTECTIONOWNER(
-			"Error.Exception.protection.members.save.CannotAddProtectionOwner",
+	ERROR_EXCEPTION_PROTECTION_MEMBERS_SAVE_CANNOTADDPROTECTIONOWNER("Error.Exception.protection.members.save.CannotAddProtectionOwner",
 			"&cYou can't add the owner of this protection as a member!"),
-	ERROR_EXCEPTION_PROTECTION_MEMBERS_SAVE_CANNOTADDYOURSELF(
-			"Error.Exception.protection.members.save.CannotAddYourself", "&cYou can't add yourself as a member!"),
+	ERROR_EXCEPTION_PROTECTION_MEMBERS_SAVE_CANNOTADDYOURSELF("Error.Exception.protection.members.save.CannotAddYourself",
+			"&cYou can't add yourself as a member!"),
 	ERROR_EXCEPTION_PROTECTION_MEMBERS_SAVE_PERMISSIONDENIED("Error.Exception.protection.members.save.PermissionDenied",
 			"&cYou aren't allowed to add members in this protection!"),
 	ERROR_EXCEPTION_PROTECTION_MEMBERS_SAVE_UNKNOWN("Error.Exception.protection.members.save.Unknown",
@@ -258,13 +276,12 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_EXCEPTION_PROTECTION_OWNERS_DELETE_CANNOTDELETEPROTECTIONOWNER(
 			"Error.Exception.protection.owners.delete.CannotDeleteProtectionOwner",
 			"&cYou can't remove the owner of this protection from the owners list!"),
-	ERROR_EXCEPTION_PROTECTION_OWNERS_DELETE_PERMISSIONDENIED(
-			"Error.Exception.protection.owners.delete.PermissionDenied", "&cYou aren't allowed to remove this owner!"),
+	ERROR_EXCEPTION_PROTECTION_OWNERS_DELETE_PERMISSIONDENIED("Error.Exception.protection.owners.delete.PermissionDenied",
+			"&cYou aren't allowed to remove this owner!"),
 	ERROR_EXCEPTION_PROTECTION_OWNERS_DELETE_UNKNOWN("Error.Exception.protection.owners.delete.Unknown",
 			"&cAn unknown error happened while trying to remove this owner. Please contact with an administrator!"),
 
-	ERROR_EXCEPTION_PROTECTION_OWNERS_SAVE_CANNOTADDPROTECTIONOWNER(
-			"Error.Exception.protection.owners.save.CannotAddProtectionOwner",
+	ERROR_EXCEPTION_PROTECTION_OWNERS_SAVE_CANNOTADDPROTECTIONOWNER("Error.Exception.protection.owners.save.CannotAddProtectionOwner",
 			"&cYou can't add the owner of this protection as an owner!"),
 	ERROR_EXCEPTION_PROTECTION_OWNERS_SAVE_CANNOTADDYOURSELF("Error.Exception.protection.owners.save.CannotAddYourself",
 			"&cYou can't add yourself as an owner!"),
@@ -273,8 +290,24 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_EXCEPTION_PROTECTION_OWNERS_SAVE_UNKNOWN("Error.Exception.protection.owners.save.Unknown",
 			"&cAn unknown error happened while trying to add this owner. Please contact with an administrator!"),
 
-	ERROR_EXCEPTION_PROTECTION_BLOCKS_DELETE_PERMISSIONDENIED(
-			"Error.Exception.protection.blocks.delete.PermissionDenied",
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_DELETE_CANNOTDELETEPROTECTIONOWNER(
+			"Error.Exception.protection.banneds.delete.CannotDeleteProtectionOwner",
+			"&cYou can't remove the owner of this protection from the banneds list!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_DELETE_PERMISSIONDENIED("Error.Exception.protection.banneds.delete.PermissionDenied",
+			"&cYou aren't allowed to remove this banned!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_DELETE_UNKNOWN("Error.Exception.protection.banneds.delete.Unknown",
+			"&cAn unknown error happened while trying to remove this banned. Please contact with an administrator!"),
+
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_SAVE_CANNOTADDPROTECTIONOWNER("Error.Exception.protection.banneds.save.CannotAddProtectionOwner",
+			"&cYou can't add the owner of this protection as a banned!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_SAVE_CANNOTADDYOURSELF("Error.Exception.protection.banneds.save.CannotAddYourself",
+			"&cYou can't add yourself as a banned!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_SAVE_PERMISSIONDENIED("Error.Exception.protection.banneds.save.PermissionDenied",
+			"&cYou aren't allowed to add banneds in this protection!"),
+	ERROR_EXCEPTION_PROTECTION_BANNEDS_SAVE_UNKNOWN("Error.Exception.protection.banneds.save.Unknown",
+			"&cAn unknown error happened while trying to add this banned. Please contact with an administrator!"),
+
+	ERROR_EXCEPTION_PROTECTION_BLOCKS_DELETE_PERMISSIONDENIED("Error.Exception.protection.blocks.delete.PermissionDenied",
 			"&cYou aren't allowed to remove this protection block!"),
 	ERROR_EXCEPTION_PROTECTION_BLOCKS_DELETE_SQL("Error.Exception.protection.blocks.delete.SQL",
 			"&cThere was an error trying to delete this protection block from the database. Please contact with an administrator!"),

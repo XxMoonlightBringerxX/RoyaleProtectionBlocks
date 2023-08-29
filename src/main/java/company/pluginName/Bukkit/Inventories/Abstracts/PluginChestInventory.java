@@ -7,11 +7,14 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlockManagerInventory;
+import company.pluginName.Bukkit.Inventories.ProtectionBlocks.BannedWorlds.ProtectionBlockAllowedWorldsInventory;
+import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBannedsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchPlayersInventory;
-import company.pluginName.Modules.FilePckg.Messages.MessageString;
+import company.pluginName.Bukkit.Inventories.Shared.SearchWorldsInventory;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.ChestInventory;
@@ -32,6 +35,7 @@ public abstract class PluginChestInventory extends ChestInventory {
 	public static final String Z_LETTER_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzA1ZjE4ZDQxNmY2OGU5YmQxOWQ1NWRmOWZhNzQyZWRmYmYxYTUyNWM4ZTI5ZjY1OWFlODMzYWYyMTdkNTM1In19fQ==";
 	public static final String UNKNOWN_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=";
 	public static final String TRASH_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDQxZjRlZGJjNjhjOTA2MTM1NTI0MmJkNzNlZmZjOTI5OWEzMjUyYjlmMTFlODJiNWYxZWM3YjNiNmFjMCJ9fX0=";
+	public static final String WORLD_SKIN = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzY5MTk2YjMzMGM2Yjg5NjJmMjNhZDU2MjdmYjZlY2NlNDcyZWFmNWM5ZDQ0Zjc5MWY2NzA5YzdkMGY0ZGVjZSJ9fX0=";
 
 	protected static ItemStack LEFT_ARROW_ITEM;
 	protected static ItemStack RIGHT_ARROW_ITEM;
@@ -59,9 +63,12 @@ public abstract class PluginChestInventory extends ChestInventory {
 
 		ProtectionMembersInventory.initItems();
 		ProtectionOwnersInventory.initItems();
+		ProtectionBannedsInventory.initItems();
 		ConfirmationInventory.initItems();
 		SearchPlayersInventory.initItems();
+		SearchWorldsInventory.initItems();
 		ProtectionBlockManagerInventory.initItems();
+		ProtectionBlockAllowedWorldsInventory.initItems();
 	}
 
 	public PluginChestInventory(Player player) {

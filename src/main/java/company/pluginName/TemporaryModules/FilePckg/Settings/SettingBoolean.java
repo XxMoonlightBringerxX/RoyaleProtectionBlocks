@@ -4,6 +4,7 @@ import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFie
 
 public enum SettingBoolean implements FileObjFieldsEnum<Boolean> {
 	SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION("Settings.Protection.Set-player-position-as-home-on-creation", true),
+	SETTINGS_PROTECTION_OPENINVENTORYONINTERACT("Settings.Protection.Open-inventory-on-interact", true),
 	SETTINGS_DEBUG_ENABLED("Settings.Debug.Enabled", false),
 	SETTINGS_DEBUG_MESSAGES_BLOCKPLACE("Settings.Debug.Messages.Block-place", true),
 	SETTINGS_DEBUG_MESSAGES_BLOCKPLACENOTPROTECTIONBLOCK("Settings.Debug.Messages.Block-place-not-protection-block", true),
@@ -17,7 +18,9 @@ public enum SettingBoolean implements FileObjFieldsEnum<Boolean> {
 	SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVALATTEMPT("Settings.Debug.Messages.Protection-removal-attempt", true),
 	SETTINGS_DEBUG_MESSAGES_PROTECTIONREMOVAL("Settings.Debug.Messages.Protection-removal", true),
 	SETTINGS_DEBUG_MESSAGES_ORAXENBLOCKPLACE("Settings.Debug.Messages.Oraxen-block-place", true),
-	SETTINGS_DEBUG_MESSAGES_ORAXENBLOCKBREAK("Settings.Debug.Messages.Oraxen-block-break", true);
+	SETTINGS_DEBUG_MESSAGES_ORAXENBLOCKBREAK("Settings.Debug.Messages.Oraxen-block-break", true),
+	SETTINGS_DEBUG_MESSAGES_ITEMSADDERBLOCKPLACE("Settings.Debug.Messages.Itemsadder-block-place", true),
+	SETTINGS_DEBUG_MESSAGES_ITEMSADDERBLOCKBREAK("Settings.Debug.Messages.Itemsadder-block-break", true);
 
 	// Methods
 	String oldpath, path;

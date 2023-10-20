@@ -10,6 +10,7 @@ import company.pluginName.APIs.PlaceholderAPI;
 import company.pluginName.APIs.ProtectionStonesAPI;
 import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Bukkit.Events.BukkitEvents;
+import company.pluginName.Bukkit.Events.ItemsAdderEvents;
 import company.pluginName.Bukkit.Events.OraxenEvents;
 import company.pluginName.Bukkit.Events.ProtectionBlockEvents;
 import company.pluginName.Bukkit.Events.RecipeEvents;
@@ -18,6 +19,7 @@ import company.pluginName.Bukkit.Inventories.Protections.Flags.Objects.Flag;
 import company.pluginName.Modules.CommandsPckg.CommandsModule;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionSettingsModule;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsModule;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsRemoverModule;
 import company.pluginName.Modules.RecipesPckg.RecipesModule;
 import company.pluginName.Modules.SQLPckg.SQLModule;
 import company.pluginName.TemporaryModules.FilePckg.FileModule;
@@ -41,7 +43,7 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 
 	public MainPluginClass() {
 		super(new FileModule(), new CommandsModule(), new SQLModule(), new ProtectionSettingsModule(), new ProtectionsModule(),
-				new RecipesModule());
+				new ProtectionsRemoverModule(), new RecipesModule());
 		plugin = this;
 	}
 
@@ -112,6 +114,10 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 				Bukkit.getPluginManager().registerEvents(new OraxenEvents(), this);
 			}
 
+			if (itemsAdderAPI.isHooked()) {
+				Bukkit.getPluginManager().registerEvents(new ItemsAdderEvents(), this);
+			}
+
 			if (worldGuardAPI.isHooked()) {
 				worldGuardAPI.registerHandlers();
 			}
@@ -168,6 +174,10 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 		return (ProtectionsModule) getModule(ProtectionsModule.class);
 	}
 
+	public ProtectionsRemoverModule getProtectionsRemoverModule() {
+		return (ProtectionsRemoverModule) getModule(ProtectionsRemoverModule.class);
+	}
+
 	public ProtectionSettingsModule getProtectionSettingsModule() {
 		return (ProtectionSettingsModule) getModule(ProtectionSettingsModule.class);
 	}
@@ -202,6 +212,9 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 			ORAXEN_BLOCK_PLACE(SettingBoolean.SETTINGS_DEBUG_MESSAGES_ORAXENBLOCKPLACE,
 					"Player %s is attempting to place an oraxen block on location x(%s) y(%s) z(%s)"),
 
+			ITEMSADDER_BLOCK_PLACE(SettingBoolean.SETTINGS_DEBUG_MESSAGES_ITEMSADDERBLOCKPLACE,
+					"Player %s is attempting to place an itemsadder block on location x(%s) y(%s) z(%s)"),
+
 			BLOCK_PLACE_NOT_PROTECTION_BLOCK(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKPLACENOTPROTECTIONBLOCK,
 					"Item used by %s is currently not a protection block"),
 
@@ -219,6 +232,9 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 
 			ORAXEN_BLOCK_BREAK(SettingBoolean.SETTINGS_DEBUG_MESSAGES_ORAXENBLOCKBREAK,
 					"Player %s is attempting to break an oraxen block on location x(%s) y(%s) z(%s)"),
+
+			ITEMSADDER_BLOCK_BREAK(SettingBoolean.SETTINGS_DEBUG_MESSAGES_ITEMSADDERBLOCKBREAK,
+					"Player %s is attempting to break an itemsadder block on location x(%s) y(%s) z(%s)"),
 
 			BLOCK_BREAK_CANCELLED(SettingBoolean.SETTINGS_DEBUG_MESSAGES_BLOCKBREAKCANCELLED,
 					"Attempt to break a protection block was already cancelled by another plugin"),

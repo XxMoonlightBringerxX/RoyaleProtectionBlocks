@@ -14,18 +14,21 @@ import lombok.Setter;
 public enum MessageList implements FileObjFieldsEnum<List<String>> {
 	// Messages
 	MESSAGE_HELPER_HEADER("Message.Helper.Header",
-			Arrays.asList(" ", "&c・。・。・。・。・。・。・。%left_arrow%&r %current_page%/%max_page% %right_arrow%&c。・。・。・。・。・。・。・",
-					" ")),
+			Arrays.asList(" ", "&c・。・。・。・。・。・。・。%left_arrow%&r %current_page%/%max_page% %right_arrow%&c。・。・。・。・。・。・。・", " ")),
 	MESSAGE_HELPER_BODY("Message.Helper.Body", Arrays.asList("&6%command_usage%", "  &8%command_description%")),
 	MESSAGE_HELPER_FOOTER("Message.Helper.Footer", Arrays.asList(" ", "&c・。・。・。・。・。・。・。・。・。・。・。・。・。・。・。・。・", " ")),
+	MESSAGE_TRANSFER_RESULT("Message.Transfer.Result",
+			Arrays.asList("", "&eTransfer result: ", "", "&e  - &aTransferred protection blocks: {transferred_protection_blocks}",
+					"&e  - &cFailed protection blocks: {failed_protection_blocks}", "",
+					"&e  - &aTransferred protections: {transferred_protections}", "&e  - &cFailed protections: {failed_protections}", "",
+					"&e  - &aRequired time: {required_time} ms", "&e  - &cErrors in console: {errors_in_console}", "")),
 
 	INVENTORY_PROTECTION_PROTECTIONINFOLORE("Inventory.Protection.Protection-info-lore",
 			Arrays.asList("&0", "&a&oWorld: &e{world}", "&a&oLocation: &ex={location_x},y={location_y},z={location_z}",
 					"&a&oSize: &e{size_x}x{size_y}x{size_z}")),
 
 	INVENTORY_PROTECTION_LIST_PROTECTIONLORE("Inventory.Protection.List.Protection-lore",
-			Arrays.asList("&0", "&a&oWorld: &e{world}",
-					"&a&oLocation: &ex={location_x},y={location_y},z={location_z}")),
+			Arrays.asList("&0", "&a&oWorld: &e{world}", "&a&oLocation: &ex={location_x},y={location_y},z={location_z}")),
 
 	INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKLORE("Inventory.Protection-blocks.List.Block-lore",
 			Arrays.asList("&0", "&a&oBlock ID: &e{block_id}", "&a&oBlock size: &e{blocks_x}x{blocks_y}x{blocks_z}")),

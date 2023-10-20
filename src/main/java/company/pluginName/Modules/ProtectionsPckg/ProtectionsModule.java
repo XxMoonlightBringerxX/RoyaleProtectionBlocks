@@ -125,10 +125,11 @@ public class ProtectionsModule implements PluginModule {
 			}
 		}
 
-		return this.createProtection(pl.getUniqueId(), protectionBlock, location);
+		return this.createProtection(pl.getUniqueId(), pl, protectionBlock, location);
 	}
 
-	public Protection createProtection(UUID ownerUuid, ProtectionBlock protectionBlock, Location location) throws ProtectionSaveException {
+	public Protection createProtection(UUID ownerUuid, Player creator, ProtectionBlock protectionBlock, Location location)
+			throws ProtectionSaveException {
 		for (Protection prot : protectionByRegion.values()) {
 			if (prot.getProtectionBlockLocation().equals(location.getBlock().getLocation())) {
 				throw new ProtectionSaveAlreadyOccupiedException();
@@ -137,7 +138,7 @@ public class ProtectionsModule implements PluginModule {
 
 		Protection protection = new Protection(ownerUuid);
 
-		protection.create(location, protectionBlock);
+		protection.create(creator, location, protectionBlock);
 
 		protectionByRegion.put(protection.getRegionId(), protection);
 		protectionsByOwner.putIfAbsent(ownerUuid, new ArrayList<>());

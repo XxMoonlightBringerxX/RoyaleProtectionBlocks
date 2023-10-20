@@ -7,10 +7,7 @@ import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFie
 
 public enum SettingList implements FileObjFieldsEnum<List<String>> {
 	SETTINGS_BANNEDWORLDS("Settings.Banned-worlds", Arrays.asList("World1", "World2", "World3")),
-	SETTINGS_EDITABLEFLAGS("Settings.Editable-flags", Arrays.asList(
-			"tnt|Can TnT explode?|eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWU0MzUyNjgwZDBiYjI5YjkxMzhhZjc4MzMwMWEzOTFiMzQwOTBjYjQ5NDFkNTJjMDg3Y2E3M2M4MDM2Y2I1MSJ9fX0=",
-			"chest-access|Can chests be opened by others?|eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWRjMzZjOWNiNTBhNTI3YWE1NTYwN2EwZGY3MTg1YWQyMGFhYmFhOTAzZThkOWFiZmM3ODI2MDcwNTU0MGRlZiJ9fX0=",
-			"pvp|Is PvP allowed?|eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTc2NTM0MTM1M2MwMjllOWI2NTVmNGY1NzkzMWFlNmFkYzJjN2E3M2M2NTc5NDVkOTQ1YTMwNzY0MWQzNzc4In19fQ==")),
+
 	SETTINGS_COMMANDSONCREATION("Settings.Commands-on-creation", Arrays.asList()),
 	SETTINGS_COMMANDSONREMOVAL("Settings.Commands-on-removal", Arrays.asList()),
 
@@ -18,8 +15,8 @@ public enum SettingList implements FileObjFieldsEnum<List<String>> {
 	COMMANDS_PROTECTIONBLOCKS_LIST_ALIASES("Commands.Protection-blocks.List.Aliases", Arrays.asList("l")),
 	COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_ALIASES("Commands.Protection-blocks.Add-member.Aliases", Arrays.asList("am")),
 	COMMANDS_PROTECTIONBLOCKS_REMOVEMEMBER_ALIASES("Commands.Protection-blocks.Remove-member.Aliases", Arrays.asList("rm")),
-	COMMANDS_PROTECTIONBLOCKS_ADDOWNER_ALIASES("Commands.Protection-blocks.Add-owner.Aliases", Arrays.asList("l")),
-	COMMANDS_PROTECTIONBLOCKS_REMOVEOWNER_ALIASES("Commands.Protection-blocks.Remove-owner.Aliases", Arrays.asList("l")),
+	COMMANDS_PROTECTIONBLOCKS_ADDOWNER_ALIASES("Commands.Protection-blocks.Add-owner.Aliases", Arrays.asList("ao")),
+	COMMANDS_PROTECTIONBLOCKS_REMOVEOWNER_ALIASES("Commands.Protection-blocks.Remove-owner.Aliases", Arrays.asList("ro")),
 	COMMANDS_PROTECTIONBLOCKS_BAN_ALIASES("Commands.Protection-blocks.Ban.Aliases", Arrays.asList("bn")),
 	COMMANDS_PROTECTIONBLOCKS_UNBAN_ALIASES("Commands.Protection-blocks.Unban.Aliases", Arrays.asList("ubn")),
 	COMMANDS_PROTECTIONBLOCKS_KICK_ALIASES("Commands.Protection-blocks.Kick.Aliases", Arrays.asList("k")),
@@ -28,6 +25,7 @@ public enum SettingList implements FileObjFieldsEnum<List<String>> {
 	COMMANDS_PROTECTIONBLOCKS_SETHOME_ALIASES("Commands.Protection-blocks.Set-home.Aliases", Arrays.asList("sh")),
 	COMMANDS_PROTECTIONBLOCKS_HIDE_ALIASES("Commands.Protection-blocks.Hide.Aliases", Arrays.asList("h")),
 	COMMANDS_PROTECTIONBLOCKS_SHOW_ALIASES("Commands.Protection-blocks.Show.Aliases", Arrays.asList("sw")),
+	COMMANDS_PROTECTIONBLOCKS_PURGE_ALIASES("Commands.Protection-blocks.Purge.Aliases", Arrays.asList("p")),
 	COMMANDS_PROTECTIONBLOCKS_VIEW_ALIASES("Commands.Protection-blocks.View.Aliases", Arrays.asList("v")),
 	COMMANDS_PROTECTIONBLOCKS_TRANSFER_ALIASES("Commands.Protection-blocks.Transfer.Aliases", Arrays.asList("t")),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_ALIASES("Commands.Protection-blocks.Blocks.Aliases", Arrays.asList("b")),

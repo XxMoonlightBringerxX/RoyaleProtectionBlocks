@@ -27,7 +27,6 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
@@ -74,26 +73,29 @@ public class Protection {
 	private Location protectionBlockLocation;
 	private BukkitTask protectionViewTask;
 	private @Setter(lombok.AccessLevel.NONE) @Getter(lombok.AccessLevel.NONE) Entity protectionViewEntity;
+	private @Setter(lombok.AccessLevel.NONE) long createdDate;
 	private ProtectionMembers members = new ProtectionMembers(this);
 	private ProtectionOwners owners = new ProtectionOwners(this);
 	private ProtectionBanneds banneds = new ProtectionBanneds(this);
 	private ProtectionActions actions = new ProtectionActions(this);
 
 	public Protection(UUID ownerUuid) {
-		this(null, ownerUuid, null, null, null, null, null);
-	}
-
-	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName, String displayName) {
-		this(regionId, ownerUuid, protectionBlock, worldName, displayName, null, null);
+		this(null, ownerUuid, null, null, null, 0, null, null);
 	}
 
 	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName, String displayName,
-			ProtectedRegion protectedRegion, Location protectionBlockLocation) {
+			long createdDate) {
+		this(regionId, ownerUuid, protectionBlock, worldName, displayName, createdDate, null, null);
+	}
+
+	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName, String displayName,
+			long createdDate, ProtectedRegion protectedRegion, Location protectionBlockLocation) {
 		this.regionId = regionId;
 		this.ownerUuid = ownerUuid;
 		this.protectionBlock = protectionBlock;
 		this.worldName = worldName;
 		this.displayName = displayName;
+		this.createdDate = createdDate;
 		this.protectedRegion = protectedRegion;
 		this.protectionBlockLocation = protectionBlockLocation;
 	}
@@ -170,7 +172,7 @@ public class Protection {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void create(Location location, ProtectionBlock protectionBlock) throws ProtectionSaveException {
+	public void create(Player creator, Location location, ProtectionBlock protectionBlock) throws ProtectionSaveException {
 		this.protectionBlock = new ReferencedProtectionBlock(protectionBlock.getInformation().getId());
 		this.worldName = location.getWorld().getName();
 		this.regionId = generateDefaultName(location).toLowerCase();
@@ -198,10 +200,8 @@ public class Protection {
 
 		List<ProtectedRegion> overlaps = protectedRegion.getIntersectingRegions(regionManager.getRegions().values());
 
-		if (overlaps.size() > 0 && overlaps.stream().anyMatch(prot -> {
-			Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByRegion().get(prot.getId());
-			return protection == null || !protection.isMainOwner(ownerUuid);
-		})) {
+		if (creator != null && !creator.hasPermission(Permissions.PROTECTION_OVERLAP_BYPASS) && overlaps.size() > 0 && overlaps.stream()
+				.anyMatch(prot -> prot.getOwners().size() == 0 || !prot.getOwners().getUniqueIds().iterator().next().equals(ownerUuid))) {
 			throw new ProtectionSaveOverlapsException();
 		}
 
@@ -235,20 +235,14 @@ public class Protection {
 
 			protectedRegion.setFlags(flags);
 			regionManager.addRegion(protectedRegion);
-			regionManager.save();
 
 			this.protectedRegion = protectedRegion;
+			this.createdDate = System.currentTimeMillis();
 
 			MainPluginClass.getPlugin().getSqlModule().saveProtection(this);
 		} catch (Exception e) {
 			if (regionManager.hasRegion(protectedRegion.getId())) {
 				regionManager.removeRegion(protectedRegion.getId());
-
-				try {
-					regionManager.save();
-				} catch (StorageException e2) {
-					throw new ProtectionSaveUnknownException(e2);
-				}
 			}
 			throw e instanceof ProtectionSaveException ? (ProtectionSaveException) e : new ProtectionSaveUnknownException(e);
 		}
@@ -262,16 +256,9 @@ public class Protection {
 		}
 
 		if (regionManager.hasRegion(regionId)) {
-			try {
-				regionManager.removeRegion(regionId);
-				regionManager.save();
+			regionManager.removeRegion(regionId);
 
-				this.protectedRegion = null;
-			} catch (StorageException e) {
-				throw new ProtectionDeleteUnknownException(e);
-			}
-		} else {
-			throw new ProtectionDeleteUnknownException();
+			this.protectedRegion = null;
 		}
 
 		MainPluginClass.getPlugin().getSqlModule().deleteProtection(this);

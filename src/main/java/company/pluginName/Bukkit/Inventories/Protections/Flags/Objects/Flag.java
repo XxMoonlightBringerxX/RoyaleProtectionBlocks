@@ -4,17 +4,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.bukkit.inventory.ItemStack;
+
+import com.sk89q.worldguard.protection.flags.RegionGroup;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackUtilities;
+import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
+import darkpanda73.PandaUtils.PandaYaml.Objects.YamlObject;
+import darkpanda73.PandaUtils.PandaYaml.Objects.YamlSection;
+import darkpanda73.PandaUtils.PandaYaml.Objects.Data.YamlData;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -31,26 +39,42 @@ public class Flag<T> {
 	public static void initFlags() {
 		HashMap<String, FlagItemData> itemDatas = new HashMap<>();
 
-		SettingList.SETTINGS_EDITABLEFLAGS.getContent().forEach(config -> {
-			String[] split = config.split("\\|");
-			if (split.length == 3) {
-				itemDatas.put(split[0], new FlagItemData(split[1], split[2]));
+		try {
+			PandaYaml yaml = new PandaYaml(MainPluginClass.getPlugin().getFileModule().CONFIG_FILE.getFile());
+
+			YamlSection section = yaml.getRoot().getSection("Settings.Flags");
+			if (section != null) {
+				section.getChilds().stream().filter(YamlObject::isYamlSection).map(YamlObject::asYamlSection).forEach(childSection -> {
+					try {
+						YamlData<?> group = childSection.getData("Group");
+						itemDatas.put(childSection.getName(), new FlagItemData(ItemStackUtilities.mapToItem(childSection.toMap()),
+								group != null ? RegionGroup.valueOf(group.getString().toUpperCase()) : null));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				});
 			}
-		});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		List<Flag<?>> list = new ArrayList<>();
 		try {
-			list = MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().getAllFlags().stream()
-					.filter(flag -> itemDatas.containsKey(flag.getName())).map(wFlag -> {
+			List<com.sk89q.worldguard.protection.flags.Flag<?>> worldGuardFlags = MainPluginClass.getWorldGuardAPI().getInternalWorldGuard()
+					.getAllFlags();
+
+			list = itemDatas.keySet().stream().map(flag -> worldGuardFlags.stream()
+					.filter(worldGuardFlag -> worldGuardFlag.getName().equals(flag)).findFirst().orElse(null)).filter(Objects::nonNull)
+					.map(wFlag -> {
+						FlagItemData data = itemDatas.get(wFlag.getName());
 						if (wFlag instanceof StringFlag) {
 							StringFlag stringFlag = (StringFlag) wFlag;
-							return new Flag<String>(stringFlag.getName(), String.class, setFlagValue(stringFlag),
-									getFlagValue(stringFlag), stringFlag.getDefault(),
-									itemDatas.get(stringFlag.getName()));
+							return new Flag<String>(stringFlag.getName(), String.class, setFlagValue(stringFlag, data.getRegionGroup()),
+									getFlagValue(stringFlag), stringFlag.getDefault(), stringFlag.getRegionGroupFlag().getDefault(), data);
 						} else if (wFlag instanceof StateFlag) {
 							StateFlag stateFlag = (StateFlag) wFlag;
-							return new Flag<State>(stateFlag.getName(), State.class, setFlagValue(stateFlag),
-									getFlagValue(stateFlag), stateFlag.getDefault(),
+							return new Flag<State>(stateFlag.getName(), State.class, setFlagValue(stateFlag, data.getRegionGroup()),
+									getFlagValue(stateFlag), stateFlag.getDefault(), stateFlag.getRegionGroupFlag().getDefault(),
 									itemDatas.get(stateFlag.getName()));
 						}
 						return null;
@@ -62,9 +86,11 @@ public class Flag<T> {
 		FLAGS = Collections.unmodifiableList(list);
 	}
 
-	private static <T> BiConsumer<ProtectedRegion, T> setFlagValue(com.sk89q.worldguard.protection.flags.Flag<T> flag) {
+	private static <T> BiConsumer<ProtectedRegion, T> setFlagValue(com.sk89q.worldguard.protection.flags.Flag<T> flag,
+			RegionGroup regionGroup) {
 		return (protectedRegion, value) -> {
 			protectedRegion.setFlag(flag, value);
+			protectedRegion.setFlag(flag.getRegionGroupFlag(), regionGroup);
 		};
 	}
 
@@ -79,6 +105,7 @@ public class Flag<T> {
 	private @Getter(lombok.AccessLevel.NONE) @Setter(lombok.AccessLevel.NONE) BiConsumer<ProtectedRegion, T> setter;
 	private @Getter(lombok.AccessLevel.NONE) @Setter(lombok.AccessLevel.NONE) Function<ProtectedRegion, T> getter;
 	private T defaultValue;
+	private RegionGroup defaultRegion;
 	private FlagItemData itemData;
 
 	public void setFlagValue(ProtectedRegion protectedRegion, T value) {
@@ -95,8 +122,8 @@ public class Flag<T> {
 	@AllArgsConstructor
 	public static class FlagItemData {
 
-		private String name;
-		private String skin;
+		private ItemStack item;
+		private RegionGroup regionGroup;
 
 	}
 

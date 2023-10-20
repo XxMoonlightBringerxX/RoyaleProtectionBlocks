@@ -83,8 +83,7 @@ public class FileObj {
 							nw = yFile.getRoot().set(field.getPath(), field.getDefaultContent());
 						}
 
-						field.setObjectContent(nw.asYamlData().getData() != null ? nw.asYamlData().getData()
-								: field.getDefaultContent());
+						field.setObjectContent(nw.asYamlData().getData() != null ? nw.asYamlData().getData() : field.getDefaultContent());
 					}
 				}
 
@@ -103,27 +102,31 @@ public class FileObj {
 
 	private PandaYaml fileVersionCheck(PandaYaml oldyaml, PandaYaml newyaml, HashMap<String, String> oldtonew) {
 		try {
-			int oldversion = oldyaml.getRoot().getOrDefault("Version", 0).asYamlData().getInteger(),
-					newversion = newyaml.getRoot().getOrDefault("Version", 0).asYamlData().getInteger();
-			YamlData<?> oldsection;
-			if (oldversion < newversion) {
-				for (YamlData<?> newsection : newyaml.getRoot().getAllNamedChilds()) {
-					if (!newsection.getName().equals("Version")
-							&& (oldsection = oldyaml.getRoot().getData(newsection.toPath())) != null
-							&& oldsection.isYamlData()) {
-						newyaml.getRoot().set(newsection.toPath(), oldsection.getData());
+			int currentVersion = oldyaml.getRoot().getDataOrDefault("Version", 0).getInteger();
+			int defaultVersion = newyaml.getRoot().getDataOrDefault("Version", 0).getInteger();
+
+			if (currentVersion < defaultVersion) {
+				PandaYaml defaultYaml = newyaml.cloneYaml();
+
+				for (YamlData<?> currentSection : oldyaml.getRoot().getAllNamedChilds()) {
+					if (!currentSection.toPath().equals("Version")) {
+						defaultYaml.getRoot().set(currentSection.toPath(), currentSection);
 					}
 				}
 
+				YamlData<?> currentSection;
 				for (Entry<String, String> entry : oldtonew.entrySet()) {
-					if ((oldsection = oldyaml.getRoot().getData(entry.getKey())) != null) {
-						newyaml.getRoot().set(entry.getValue(), oldsection.getData());
+					currentSection = defaultYaml.getRoot().getData(entry.getKey());
+					if (currentSection != null) {
+						defaultYaml.getRoot().set(entry.getValue(), currentSection.getData());
+						defaultYaml.getRoot().remove(entry.getValue());
 					}
 				}
 
-				return newyaml;
+				return defaultYaml;
 			}
 		} catch (Exception e) {
+			System.out.println(String.format("Unable to update file '%s' with new default file content:", getFile().getPath()));
 			e.printStackTrace();
 		}
 		return oldyaml;

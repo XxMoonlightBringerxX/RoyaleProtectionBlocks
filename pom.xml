@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>0.0.21 Alpha</version>
+	<version>0.0.23 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -82,6 +82,11 @@
 		<dependency>
 			<groupId>PandaUtils</groupId>
 			<artifactId>PandaRecipes</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaUtilities</artifactId>
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>

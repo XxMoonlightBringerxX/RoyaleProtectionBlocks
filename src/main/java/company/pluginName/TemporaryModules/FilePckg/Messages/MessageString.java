@@ -56,8 +56,21 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&aThe protection block has been removed successfully!"),
 
 	MESSAGE_TRANSFER_AVAILABLELIST("Message.Transfer.Available-list", "&7Available protection plugins to transfer from: &f{list}"),
+	MESSAGE_TRANSFER_PROTECTIONSTONESNOTLOADED("Message.Transfer.Protection-stones-not-loaded",
+			"&cProtectionStones is not loaded. Please load ProtectionStones to transfer its data."),
 	MESSAGE_TRANSFER_WARNING("Message.Transfer.Warning",
-			"&7You're about to transfer all the data from another plugin to RoyaleProtectionBlocks. Once it starts, it'll block the server and start incorporating all the data. At the end, the server will be closed and the plugin will attempt to remove the one you decided to take the data from. Make sure this plugin is removed after this process, as in some systems, it can be very common that it doesn't allow to remove the file automatically. Please, type &e{command} &7to confirm your choice."),
+			"&7You're about to transfer all the data from another plugin to RoyaleProtectionBlocks. Once it starts, it's not recomended to stop the server. This process may remove the old regions and lead to losing some in case their transfer fails. Remember to keep a backup of the WorldGuard and desired plugin folder in case something goes wrong. Make sure to remove the plugin you want to transfer from once the transfer finishes, as it can lead to unexpected behaviors if there are two protection plugins. Please, type &e{command} &7to confirm your choice."),
+	MESSAGE_TRANSFER_START("Message.Transfer.Start", "&7Starting transfer process..."),
+	MESSAGE_TRANSFER_END("Message.Transfer.End",
+			"&7Transfer finished! Remember to check the results and, if everything went okey, remove the old protection plugin."),
+
+	MESSAGE_PURGE_WARNING("Message.Purge.Warning",
+			"&7You're about to delete a total amount of &e{amount} &7protections depending on the player's last playtime, some protections may be lost if any error occurs. If there may be some important protections you want to prevent from being removed, remember to make a backup just in case. Please, type &e{command} &7to confirm your choice."),
+	MESSAGE_PURGE_SEARCH("Message.Purge.Search", "&7Searching matching protections..."),
+	MESSAGE_PURGE_START("Message.Purge.Start", "&7Starting purge process..."),
+	MESSAGE_PURGE_END("Message.Purge.End", "&aPurge finished! A total amount of &e{amount} &aprotections has been purged."),
+	MESSAGE_PURGE_ERROR("Message.Purge.Error",
+			"&7A total amount of &e{amount} protections couldn't be purged. Check the console to see the related errors."),
 
 	MESSAGE_FILES_EXPORTEDSUCCESSFULLY("Message.Files.Exported-successfully", "All the data has been exported successfully!"),
 	MESSAGE_FILES_IMPORTEDSUCCESSFULLY("Message.Files.Imported-successfully", "All the data has been imported successfully!"),
@@ -214,6 +227,10 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 
 	ERROR_FILES_EXPORT("Error.Files.Export", "&cThere was an issue trying to export the data! Check the console for more information."),
 	ERROR_FILES_IMPORT("Error.Files.Import", "&cThere was an issue trying to import the data! Check the console for more information."),
+
+	ERROR_PURGE_INVALIDPARAMETER("Error.Purge.Invalid-parameter",
+			"&cYou must specify a valid parameter! (Available: --days, --hours, --minutes)"),
+	ERROR_PURGE_NOVALUEFORPARAMETER("Error.Purge.No-value-for-parameter", "&cYou must specify a value for the parameter!"),
 
 	ERROR_PROTECTIONS_NOTINSIDEPROTECTION("Error.Protections.Not-inside-protection", "&cYou're not inside any protection!"),
 	ERROR_PROTECTIONS_BANNEDWORLD("Error.Protections.Banned-world", "&cYou can't use protection blocks in this world!"),

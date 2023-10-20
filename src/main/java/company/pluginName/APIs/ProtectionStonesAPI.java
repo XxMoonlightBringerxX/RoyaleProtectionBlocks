@@ -1,6 +1,7 @@
 package company.pluginName.APIs;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -9,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -16,7 +18,9 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
+import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveCannotAddProtectionOwnerException;
 import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveException;
+import company.pluginName.Exceptions.ProtectionOwners.Save.ProtectionOwnersSaveCannotAddProtectionOwnerException;
 import company.pluginName.Exceptions.ProtectionOwners.Save.ProtectionOwnersSaveException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
@@ -86,6 +90,7 @@ public class ProtectionStonesAPI extends AbstractAPI {
 							.sendMessage(Bukkit.getConsoleSender());
 					e.printStackTrace();
 					exceptionsList.add(e);
+					errorsInConsole.set(true);
 				}
 			});
 		}
@@ -132,7 +137,10 @@ public class ProtectionStonesAPI extends AbstractAPI {
 	}
 
 	private TransferResult<Protection> transferRegion(PSRegion protectionStonesRegion) {
-		Map<Flag<?>, Object> flags = protectionStonesRegion.getWGRegion().getFlags();
+		Map<Flag<?>, Object> flags = new HashMap<>(protectionStonesRegion.getWGRegion().getFlags());
+
+		World world = protectionStonesRegion.getWorld();
+		String id = protectionStonesRegion.getId();
 
 		List<UUID> owners = protectionStonesRegion.getOwners();
 		List<UUID> members = protectionStonesRegion.getMembers();
@@ -140,9 +148,8 @@ public class ProtectionStonesAPI extends AbstractAPI {
 		String displayName = protectionStonesRegion.getName();
 		Location home = protectionStonesRegion.getHome();
 
-		flags.keySet().stream()
-				.filter(flag -> flag.getName().startsWith("ps-") || flag == FlagHandler.GREET_ACTION || flag == FlagHandler.FAREWELL_ACTION)
-				.forEach(flags::remove);
+		flags.keySet().removeIf(
+				flag -> flag.getName().startsWith("ps-") || flag == FlagHandler.GREET_ACTION || flag == FlagHandler.FAREWELL_ACTION);
 
 		List<PSRegion> regions = new ArrayList<>();
 
@@ -152,29 +159,34 @@ public class ProtectionStonesAPI extends AbstractAPI {
 			regions.add(protectionStonesRegion);
 		}
 
-		ProtectionStones.removePSRegion(protectionStonesRegion.getWorld(), protectionStonesRegion.getId());
-
 		List<Protection> successList = new ArrayList<>();
 		List<Throwable> exceptionsList = new ArrayList<>();
 		AtomicReference<Boolean> errorsInConsole = new AtomicReference<>(false);
 
-		regions.forEach(region -> {
-			PSProtectBlock protectBlock = ProtectionStones.getBlockOptions(protectionStonesRegion.getType());
+		PSProtectBlock protectBlock = ProtectionStones.getBlockOptions(protectionStonesRegion.getType());
 
-			if (protectBlock != null) {
+		if (protectBlock != null) {
+			regions.forEach(region -> {
 				ProtectionBlock protectionBlock = MainPluginClass.getPlugin().getProtectionsModule()
 						.getProtectionBlockById(protectBlock.alias);
 
 				if (protectionBlock != null) {
 					try {
-						Protection protection = MainPluginClass.getPlugin().getProtectionsModule().createProtection(owners.get(0),
+						Protection protection = MainPluginClass.getPlugin().getProtectionsModule().createProtection(owners.get(0), null,
 								protectionBlock, region.getProtectBlock().getLocation());
-						protection.create(region.getProtectBlock().getLocation(), protectionBlock);
 
-						successList.add(protection);
+						protection.getProtectedRegion().getFlags().forEach((flag, value) -> {
+							if (MainPluginClass.getWorldGuardAPI().getBannedPlayersFlag().getWorldGuardFlag() == flag
+									|| MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().getWorldGuardFlag() == flag) {
+								flags.put(flag, value);
+							}
+						});
 
 						protection.getProtectedRegion().setFlags(flags);
-						protection.setDisplayName(displayName);
+
+						if (displayName != null) {
+							protection.setDisplayName(displayName);
+						}
 
 						if (!(protectionStonesRegion instanceof PSMergedRegion)) {
 							try {
@@ -191,10 +203,12 @@ public class ProtectionStonesAPI extends AbstractAPI {
 						owners.forEach(owner -> {
 							try {
 								protection.getOwners().add(owner);
+							} catch (ProtectionOwnersSaveCannotAddProtectionOwnerException e) {
 							} catch (ProtectionOwnersSaveException e) {
 								MessageBuilder.createMessage(MessageString.applyPrefix(String
-										.format("&cUnable to add owner to protection '%s': %s", protection.getRegionId(), e.getMessage())))
+										.format("&cUnable to add owner on protection '%s': %s", protection.getRegionId(), e.getMessage())))
 										.sendMessage(Bukkit.getConsoleSender());
+								e.sendError(Bukkit.getConsoleSender());
 								e.printStackTrace();
 								errorsInConsole.set(true);
 							}
@@ -203,22 +217,32 @@ public class ProtectionStonesAPI extends AbstractAPI {
 						members.forEach(member -> {
 							try {
 								protection.getMembers().add(member);
+							} catch (ProtectionMembersSaveCannotAddProtectionOwnerException e) {
 							} catch (ProtectionMembersSaveException e) {
 								MessageBuilder.createMessage(MessageString.applyPrefix(String
-										.format("&cUnable to add member to protection '%s': %s", protection.getRegionId(), e.getMessage())))
+										.format("&cUnable to add member on protection '%s': %s", protection.getRegionId(), e.getMessage())))
 										.sendMessage(Bukkit.getConsoleSender());
+								e.sendError(Bukkit.getConsoleSender());
 								e.printStackTrace();
 								errorsInConsole.set(true);
 							}
 						});
+
+						successList.add(protection);
 					} catch (ProtectionSaveException e) {
+						MessageBuilder
+								.createMessage(MessageString.applyPrefix(String
+										.format("&cUnable to save information for protection '%s': %s", region.getId(), e.getMessage())))
+								.sendMessage(Bukkit.getConsoleSender());
 						e.sendError(Bukkit.getConsoleSender());
 						exceptionsList.add(e);
 						errorsInConsole.set(true);
 					}
 				}
-			}
-		});
+			});
+		}
+
+		ProtectionStones.removePSRegion(world, id);
 
 		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get()) {
 		};

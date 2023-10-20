@@ -38,6 +38,7 @@ public class ProtectionBlocksCommand extends Command {
 		addCommand(new UnbanSubCommand(this));
 		addCommand(new KickSubCommand(this));
 		addCommand(new FilesCommand(this));
+		addCommand(new PurgeSubCommand(this));
 		sortCommands();
 		addCommand(new HelpSubCommand(this), 0);
 	}

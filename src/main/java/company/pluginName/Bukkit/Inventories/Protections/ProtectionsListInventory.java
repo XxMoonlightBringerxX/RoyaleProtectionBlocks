@@ -4,15 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-
-import com.sk89q.worldguard.protection.flags.Flags;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
@@ -20,7 +16,6 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.TemporaryModules.FilePckg.Messages.MessageList;
 import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.Utils.ReflectUtils;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
@@ -49,9 +44,7 @@ public class ProtectionsListInventory extends PluginChestInventory {
 		this.owner = owner;
 
 		setSize(27);
-		setName(MessageBuilder
-				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTION_LIST_TITLE.toString()))
-				.toString());
+		setName(MessageBuilder.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTION_LIST_TITLE.toString())).toString());
 	}
 
 	@Override
@@ -94,20 +87,19 @@ public class ProtectionsListInventory extends PluginChestInventory {
 
 		if (protections.size() != 0) {
 			int slot = 0;
-			for (Protection protection : Arrays.copyOfRange(protections.toArray(new Protection[protections.size()]),
-					((page - 1) * 18), (page * 18))) {
+			for (Protection protection : Arrays.copyOfRange(protections.toArray(new Protection[protections.size()]), ((page - 1) * 18),
+					(page * 18))) {
 				if (protection == null) {
 					break;
 				}
 
-				final Object unknownLocation = protection.getProtectedRegion().getFlag(Flags.TELE_LOC);
+				Location homeLocation = protection.getHome();
 
 				List<String> lore = new ArrayList<>();
 				lore.addAll(MessageList.INVENTORY_PROTECTION_LIST_PROTECTIONLORE.getContent());
 				lore.add("&0");
-				if (unknownLocation != null || protection.isMainOwner(getPlayer().getUniqueId())) {
-					lore.add(unknownLocation != null
-							? MessageString.INVENTORY_PROTECTION_LIST_PROTECTIONTELEPORTLORELINE.toString()
+				if (homeLocation != null || protection.isMainOwner(getPlayer().getUniqueId())) {
+					lore.add(homeLocation != null ? MessageString.INVENTORY_PROTECTION_LIST_PROTECTIONTELEPORTLORELINE.toString()
 							: MessageString.INVENTORY_PROTECTION_LIST_PROTECTIONTELEPORTNOHOMELORELINE.toString());
 				}
 				if (protection.canManage(getPlayer())) {
@@ -118,39 +110,26 @@ public class ProtectionsListInventory extends PluginChestInventory {
 
 				ProtectionBlock block = protection.getProtectionBlock().getObject();
 
-				TextReplacement[] replacements = {
-						new TextReplacement("{protection}", () -> protection.getDisplayName()),
+				TextReplacement[] replacements = { new TextReplacement("{protection}", () -> protection.getDisplayName()),
 						new TextReplacement("{world}", () -> protection.getWorldName()),
-						new TextReplacement("{location_x}",
-								() -> loc != null ? String.valueOf(loc.getBlockX()) : "???"),
-						new TextReplacement("{location_y}",
-								() -> loc != null ? String.valueOf(loc.getBlockY()) : "???"),
-						new TextReplacement("{location_z}",
-								() -> loc != null ? String.valueOf(loc.getBlockZ()) : "???") };
+						new TextReplacement("{location_x}", () -> loc != null ? String.valueOf(loc.getBlockX()) : "???"),
+						new TextReplacement("{location_y}", () -> loc != null ? String.valueOf(loc.getBlockY()) : "???"),
+						new TextReplacement("{location_z}", () -> loc != null ? String.valueOf(loc.getBlockZ()) : "???") };
 
 				setSlot(slot++, new Button(ItemStacksUtils.createItemStack(
 						block != null ? block.getInformation().getItem().clone()
 								: ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), UNKNOWN_SKIN),
-						MessageBuilder.createMessage(
-								TextInput.inst().text(MessageString.INVENTORY_PROTECTION_LIST_PROTECTIONNAME.toString())
-										.replacements(replacements))
+						MessageBuilder.createMessage(TextInput.inst()
+								.text(MessageString.INVENTORY_PROTECTION_LIST_PROTECTIONNAME.toString()).replacements(replacements))
 								.toString(),
-						MessageBuilder.createMessage(
-								TextInput.inst().text(lore.toArray(new String[lore.size()])).replacements(replacements))
+						MessageBuilder
+								.createMessage(TextInput.inst().text(lore.toArray(new String[lore.size()])).replacements(replacements))
 								.getStrings())) {
 					@Override
 					public void onClick(InventoryClickEvent e) {
 						if (e.getClick() == ClickType.LEFT) {
-							try {
-								World world = Bukkit.getWorld(protection.getWorldName());
-								if (unknownLocation != null) {
-									e.getWhoClicked().teleport(ReflectUtils.unknownLocationToBukkitLocation(world,
-											protection.getProtectedRegion().getFlag(Flags.TELE_LOC)));
-								}
-							} catch (Exception e1) {
-								MessageBuilder.createMessage(MessageString.ERROR_ERROR.applyPrefix())
-										.sendMessage(e.getWhoClicked());
-								e1.printStackTrace();
+							if (homeLocation != null) {
+								e.getWhoClicked().teleport(homeLocation);
 							}
 						} else {
 							new ProtectionsManagerInventory(getPlayer(), protection).openInventory();

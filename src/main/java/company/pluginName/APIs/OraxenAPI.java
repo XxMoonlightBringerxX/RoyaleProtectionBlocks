@@ -27,7 +27,7 @@ public class OraxenAPI extends AbstractAPI {
 			MessageBuilder.createMessage(getPrefix().concat("<Oraxen> Done!.")).sendMessage(Bukkit.getConsoleSender());
 		} catch (Exception e) {
 			MessageBuilder
-					.createMessage(getPrefix().concat("<Oraxen> ItemsAdder could not be loaded. ")
+					.createMessage(getPrefix().concat("<Oraxen> Oraxen could not be loaded. ")
 							.concat(isOptional() ? "Ignoring its implementation." : ""))
 					.sendMessage(Bukkit.getConsoleSender());
 			if (!isOptional()) {

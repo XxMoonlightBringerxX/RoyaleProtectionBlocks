@@ -45,12 +45,14 @@ public class WorldGuardAPI extends relampagorojo93.LibsCollection.Utils.Bukkit.A
 			try {
 				getInternalWorldGuard().registerHandler(BannedPlayersHandler.FACTORY, EntryFlag.FACTORY);
 
-				MessageBuilder.createMessage(getPrefix().concat(
-						"<WorldGuard> Registered handler to manage banned players on protections successfully."))
+				MessageBuilder
+						.createMessage(
+								getPrefix().concat("<WorldGuard> Registered handler to manage banned players on protections successfully."))
 						.sendMessage(Bukkit.getConsoleSender());
 			} catch (Exception e) {
-				MessageBuilder.createMessage(getPrefix().concat(
-						"<WorldGuard> There was an issue trying to register the handler to amange banned players on protections!"))
+				MessageBuilder
+						.createMessage(getPrefix().concat(
+								"<WorldGuard> There was an issue trying to register the handler to amange banned players on protections!"))
 						.sendMessage(Bukkit.getConsoleSender());
 				e.printStackTrace();
 			}

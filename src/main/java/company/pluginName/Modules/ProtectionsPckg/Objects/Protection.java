@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,8 +24,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
@@ -42,9 +44,11 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionMembers;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionOwners;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingBoolean;
 import company.pluginName.TemporaryModules.FilePckg.Settings.SettingInt;
 import company.pluginName.Utils.BlockVectorUtils;
 import company.pluginName.Utils.OfflinePlayerUtils;
+import company.pluginName.Utils.ReflectUtils;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,8 +61,7 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 public class Protection {
 
 	private static String generateDefaultName(Location location) {
-		return location.getWorld().getName() + "_" + location.getBlockX() + "_" + location.getBlockY() + "_"
-				+ location.getBlockZ();
+		return location.getWorld().getName() + "_" + location.getBlockX() + "_" + location.getBlockY() + "_" + location.getBlockZ();
 	}
 
 	private String regionId;
@@ -70,29 +73,50 @@ public class Protection {
 	private Location protectionBlockLocation;
 	private BukkitTask protectionViewTask;
 	private @Setter(lombok.AccessLevel.NONE) @Getter(lombok.AccessLevel.NONE) Entity protectionViewEntity;
+	private @Setter(lombok.AccessLevel.NONE) long createdDate;
 	private ProtectionMembers members = new ProtectionMembers(this);
 	private ProtectionOwners owners = new ProtectionOwners(this);
 	private ProtectionBanneds banneds = new ProtectionBanneds(this);
 	private ProtectionActions actions = new ProtectionActions(this);
 
 	public Protection(UUID ownerUuid) {
-		this(null, ownerUuid, null, null, null, null, null);
+		this(null, ownerUuid, null, null, null, 0, null, null);
 	}
 
-	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName,
-			String displayName) {
-		this(regionId, ownerUuid, protectionBlock, worldName, displayName, null, null);
+	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName, String displayName,
+			long createdDate) {
+		this(regionId, ownerUuid, protectionBlock, worldName, displayName, createdDate, null, null);
 	}
 
-	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName,
-			String displayName, ProtectedRegion protectedRegion, Location protectionBlockLocation) {
+	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName, String displayName,
+			long createdDate, ProtectedRegion protectedRegion, Location protectionBlockLocation) {
 		this.regionId = regionId;
 		this.ownerUuid = ownerUuid;
 		this.protectionBlock = protectionBlock;
 		this.worldName = worldName;
 		this.displayName = displayName;
+		this.createdDate = createdDate;
 		this.protectedRegion = protectedRegion;
 		this.protectionBlockLocation = protectionBlockLocation;
+	}
+
+	/*
+	 * Flags methods
+	 */
+
+	public Location getHome() {
+		Object location = getProtectedRegion().getFlag(Flags.TELE_LOC);
+		if (location != null) {
+			return ReflectUtils.unknownLocationToBukkitLocation(Bukkit.getWorld(getWorldName()), location);
+		}
+		return null;
+	}
+
+	public void setHome(Location location) throws Exception {
+		ProtectedRegion region = getProtectedRegion();
+		Map<Flag<?>, Object> flags = region.getFlags();
+		flags.put(Flags.TELE_LOC, MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(location));
+		region.setFlags(flags);
 	}
 
 	/*
@@ -115,27 +139,23 @@ public class Protection {
 					protectionViewTask = Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
 						AtomicInteger seconds = new AtomicInteger(0);
 						protectionViewEntity = BlockUtils.setLocationGlowing(getProtectionBlockLocation());
-						protectionViewTask = Bukkit.getScheduler()
-								.runTaskTimerAsynchronously(MainPluginClass.getPlugin(), () -> {
-									locationsForParticles.forEach((loc) -> {
-										DustOptions dustOptions = new DustOptions(
-												Color.fromRGB((int) (Math.random() * 256), (int) (Math.random() * 256),
-														(int) (Math.random() * 256)),
-												1.0F);
-										loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 1, dustOptions);
-									});
+						protectionViewTask = Bukkit.getScheduler().runTaskTimerAsynchronously(MainPluginClass.getPlugin(), () -> {
+							locationsForParticles.forEach((loc) -> {
+								DustOptions dustOptions = new DustOptions(Color.fromRGB((int) (Math.random() * 256),
+										(int) (Math.random() * 256), (int) (Math.random() * 256)), 1.0F);
+								loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 1, dustOptions);
+							});
 
-									seconds.set(seconds.get() + 1);
-									if (seconds.get() >= SettingInt.SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS
-											.getContent()) {
-										Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
-											protectionViewTask.cancel();
-											protectionViewTask = null;
-											protectionViewEntity.remove();
-											protectionViewEntity = null;
-										});
-									}
-								}, 0, 20);
+							seconds.set(seconds.get() + 1);
+							if (seconds.get() >= SettingInt.SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS.getContent()) {
+								Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
+									protectionViewTask.cancel();
+									protectionViewTask = null;
+									protectionViewEntity.remove();
+									protectionViewEntity = null;
+								});
+							}
+						}, 0, 20);
 					});
 				}
 			});
@@ -147,31 +167,28 @@ public class Protection {
 	}
 
 	public boolean isProtectionViewEntity(Entity ent) {
-		return this.isProtectionViewActive() && this.protectionViewEntity != null
-				&& ent.getType() == EntityType.MAGMA_CUBE
+		return this.isProtectionViewActive() && this.protectionViewEntity != null && ent.getType() == EntityType.MAGMA_CUBE
 				&& this.protectionViewEntity.getUniqueId().equals(ent.getUniqueId());
 	}
 
 	@SuppressWarnings("unchecked")
-	public void create(Location location, ProtectionBlock protectionBlock) throws ProtectionSaveException {
+	public void create(Player creator, Location location, ProtectionBlock protectionBlock) throws ProtectionSaveException {
 		this.protectionBlock = new ReferencedProtectionBlock(protectionBlock.getInformation().getId());
 		this.worldName = location.getWorld().getName();
 		this.regionId = generateDefaultName(location).toLowerCase();
 		this.displayName = generateDefaultName(location);
 
 		int minBlockX = location.getBlockX() - protectionBlock.getInformation().getBlocksX();
-		int minBlockY = protectionBlock.getInformation().getBlocksY() == -1
-				? WorldUtils.getMinHeight(location.getWorld())
+		int minBlockY = protectionBlock.getInformation().getBlocksY() == -1 ? WorldUtils.getMinHeight(location.getWorld())
 				: location.getBlockY() - protectionBlock.getInformation().getBlocksY();
 		int minBlockZ = location.getBlockZ() - protectionBlock.getInformation().getBlocksZ();
 		int maxBlockX = location.getBlockX() + protectionBlock.getInformation().getBlocksX();
-		int maxBlockY = protectionBlock.getInformation().getBlocksY() == -1
-				? WorldUtils.getMaxHeight(location.getWorld())
+		int maxBlockY = protectionBlock.getInformation().getBlocksY() == -1 ? WorldUtils.getMaxHeight(location.getWorld())
 				: location.getBlockY() + protectionBlock.getInformation().getBlocksY();
 		int maxBlockZ = location.getBlockZ() + protectionBlock.getInformation().getBlocksZ();
 
-		ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
-				BlockVector3.at(minBlockX, minBlockY, minBlockZ), BlockVector3.at(maxBlockX, maxBlockY, maxBlockZ));
+		ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId, BlockVector3.at(minBlockX, minBlockY, minBlockZ),
+				BlockVector3.at(maxBlockX, maxBlockY, maxBlockZ));
 
 		protectedRegion.getOwners().addPlayer(ownerUuid);
 
@@ -183,11 +200,8 @@ public class Protection {
 
 		List<ProtectedRegion> overlaps = protectedRegion.getIntersectingRegions(regionManager.getRegions().values());
 
-		if (overlaps.size() > 0 && overlaps.stream().anyMatch(prot -> {
-			Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByRegion()
-					.get(prot.getId());
-			return protection == null || !protection.isMainOwner(ownerUuid);
-		})) {
+		if (creator != null && !creator.hasPermission(Permissions.PROTECTION_OVERLAP_BYPASS) && overlaps.size() > 0 && overlaps.stream()
+				.anyMatch(prot -> prot.getOwners().size() == 0 || !prot.getOwners().getUniqueIds().iterator().next().equals(ownerUuid))) {
 			throw new ProtectionSaveOverlapsException();
 		}
 
@@ -201,8 +215,8 @@ public class Protection {
 						flags.put(key, MainPluginClass.getPlaceholderAPI().applyPlaceholders((String) value, player));
 					} else if (value instanceof Set) {
 						Set<String> set = new HashSet<>();
-						((Set<String>) value).forEach(string -> set
-								.add(MainPluginClass.getPlaceholderAPI().applyPlaceholders(string, player)));
+						((Set<String>) value)
+								.forEach(string -> set.add(MainPluginClass.getPlaceholderAPI().applyPlaceholders(string, player)));
 						flags.put(key, set);
 					} else {
 						flags.put(key, value);
@@ -214,25 +228,23 @@ public class Protection {
 			flags.put(MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().getWorldGuardFlag(),
 					MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(location));
 
+			if (SettingBoolean.SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION.getContent() && player != null && player.isOnline()) {
+				flags.put(Flags.TELE_LOC,
+						MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(player.getPlayer().getLocation()));
+			}
+
 			protectedRegion.setFlags(flags);
 			regionManager.addRegion(protectedRegion);
-			regionManager.save();
 
 			this.protectedRegion = protectedRegion;
+			this.createdDate = System.currentTimeMillis();
 
 			MainPluginClass.getPlugin().getSqlModule().saveProtection(this);
 		} catch (Exception e) {
 			if (regionManager.hasRegion(protectedRegion.getId())) {
 				regionManager.removeRegion(protectedRegion.getId());
-
-				try {
-					regionManager.save();
-				} catch (StorageException e2) {
-					throw new ProtectionSaveUnknownException(e2);
-				}
 			}
-			throw e instanceof ProtectionSaveException ? (ProtectionSaveException) e
-					: new ProtectionSaveUnknownException(e);
+			throw e instanceof ProtectionSaveException ? (ProtectionSaveException) e : new ProtectionSaveUnknownException(e);
 		}
 	}
 
@@ -244,16 +256,9 @@ public class Protection {
 		}
 
 		if (regionManager.hasRegion(regionId)) {
-			try {
-				regionManager.removeRegion(regionId);
-				regionManager.save();
+			regionManager.removeRegion(regionId);
 
-				this.protectedRegion = null;
-			} catch (StorageException e) {
-				throw new ProtectionDeleteUnknownException(e);
-			}
-		} else {
-			throw new ProtectionDeleteUnknownException();
+			this.protectedRegion = null;
 		}
 
 		MainPluginClass.getPlugin().getSqlModule().deleteProtection(this);
@@ -278,8 +283,7 @@ public class Protection {
 				ProtectedRegion region = getProtectedRegion();
 
 				if (region != null) {
-					Location loc = MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().flagState(world,
-							region);
+					Location loc = MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().flagState(world, region);
 
 					if (loc != null) {
 						this.protectionBlockLocation = loc;
@@ -287,8 +291,8 @@ public class Protection {
 						BlockVector3 vector = BlockVectorUtils.getIntersectingVector(region.getMinimumPoint(),
 								getProtectedRegion().getMaximumPoint());
 
-						this.protectionBlockLocation = new Location(Bukkit.getWorld(worldName), vector.getBlockX(),
-								vector.getBlockY(), vector.getBlockZ()).getBlock().getLocation();
+						this.protectionBlockLocation = new Location(Bukkit.getWorld(worldName), vector.getBlockX(), vector.getBlockY(),
+								vector.getBlockZ()).getBlock().getLocation();
 					}
 				}
 			}
@@ -365,8 +369,7 @@ public class Protection {
 	}
 
 	public void hideProtectionBlock() {
-		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(null,
-				getProtectionBlockLocation());
+		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(null, getProtectionBlockLocation());
 
 		if (itemsAdderResult != ItemsAdderAPI.PlaceResult.NOT_HOOKED) {
 			if (itemsAdderResult == ItemsAdderAPI.PlaceResult.PLACED) {
@@ -374,8 +377,7 @@ public class Protection {
 			}
 		}
 
-		OraxenAPI.PlaceResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(null,
-				getProtectionBlockLocation());
+		OraxenAPI.PlaceResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(null, getProtectionBlockLocation());
 
 		if (oraxenResult != OraxenAPI.PlaceResult.NOT_HOOKED) {
 			if (oraxenResult == OraxenAPI.PlaceResult.PLACED) {
@@ -390,8 +392,7 @@ public class Protection {
 		Block bBlock = getProtectionBlockLocation().getBlock();
 		ItemStack item = getProtectionBlock().getObject().getInformation().getItem();
 
-		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(item,
-				bBlock.getLocation());
+		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(item, bBlock.getLocation());
 
 		if (itemsAdderResult != ItemsAdderAPI.PlaceResult.NOT_HOOKED) {
 			if (itemsAdderResult == ItemsAdderAPI.PlaceResult.PLACED) {

@@ -67,9 +67,8 @@ public class ProtectionBlockEvents implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onBreakBlock(BlockBreakEvent e) {
-		MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK,
-				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
-						String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
+		MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK, () -> new Object[] { e.getPlayer().getName(),
+				String.valueOf(e.getBlock().getX()), String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
 
 		if (!e.isCancelled()) {
 			switch (EventsUtils.onVanillaBlockBreakEvent(e.getPlayer(), e.getBlock())) {
@@ -91,34 +90,31 @@ public class ProtectionBlockEvents implements Listener {
 	/**
 	 * Event used to control the interactions of the players to the protection
 	 * blocks. If a protection is found by the right-clicked block, then it'll
-	 * execute the interaction behaviour for protections.
+	 * execute the interaction behavior for protections.
 	 * 
 	 * @param e
 	 */
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent e) {
-		switch (e.getHand().name()) {
-		case "HAND":
-			if (e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+		if (e.getHand() != null && e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+			switch (e.getHand().name()) {
+			case "HAND":
 				Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
 						.getProtectionByBlock(e.getClickedBlock().getLocation());
 				if (protection != null) {
 					e.setCancelled(true);
 					EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
 				}
-			}
-			break;
-		case "OFF_HAND":
-			if (e.getItem() != null) {
+				break;
+			case "OFF_HAND":
 				String protectionBlockId = null;
 
 				try {
-					protectionBlockId = ItemStackDataUtilities.getPersistentData(e.getItem(),
-							MainPluginClass.getPlugin(), ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
+					protectionBlockId = ItemStackDataUtilities.getPersistentData(e.getItem(), MainPluginClass.getPlugin(),
+							ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
 				} catch (Exception e1) {
 					MessageBuilder.createMessage(MessageString.applyPrefix(
-							"An error has ocurred trying to retrieve the Protection Block ID from an item: %s"
-									.formatted(e1.getMessage())))
+							"An error has ocurred trying to retrieve the Protection Block ID from an item: %s".formatted(e1.getMessage())))
 							.sendMessage(Bukkit.getConsoleSender());
 					e1.printStackTrace();
 				}
@@ -126,8 +122,8 @@ public class ProtectionBlockEvents implements Listener {
 				if (protectionBlockId != null && !protectionBlockId.isEmpty()) {
 					e.setCancelled(true);
 				}
+				break;
 			}
-			break;
 		}
 	}
 
@@ -157,20 +153,19 @@ public class ProtectionBlockEvents implements Listener {
 
 	@EventHandler(ignoreCancelled = true)
 	public void onExplodeEntity(EntityExplodeEvent e) {
-		e.blockList().removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(block.getLocation()) != null);
+		e.blockList()
+				.removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(block.getLocation()) != null);
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onExplodeBlock(BlockExplodeEvent e) {
-		e.blockList().removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(block.getLocation()) != null);
+		e.blockList()
+				.removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(block.getLocation()) != null);
 	}
 
 	@EventHandler
 	public void onMobGrief(EntityChangeBlockEvent e) {
-		Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(e.getBlock().getLocation());
 		if (protection != null) {
 			e.setCancelled(true);
 		}

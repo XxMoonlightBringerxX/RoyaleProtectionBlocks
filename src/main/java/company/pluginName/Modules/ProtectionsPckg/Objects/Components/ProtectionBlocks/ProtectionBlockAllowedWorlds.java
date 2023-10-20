@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Getter(lombok.AccessLevel.NONE)
 public class ProtectionBlockAllowedWorlds {
 
-	private Set<String> allowedWorlds = Collections.unmodifiableSet(new HashSet<>());
+	private Set<String> allowedWorlds = Collections.emptySet();
 
 	public Set<String> get() {
 		return allowedWorlds;
@@ -34,12 +34,14 @@ public class ProtectionBlockAllowedWorlds {
 	}
 
 	public synchronized void clear() {
-		this.allowedWorlds = Collections.unmodifiableSet(new HashSet<>());
+		this.allowedWorlds = Collections.emptySet();
 	}
 
 	public synchronized void copy(ProtectionBlockAllowedWorlds allowedWorlds) {
 		this.clear();
-		allowedWorlds.get().forEach(this.allowedWorlds::add);
+		HashSet<String> newSet = new HashSet<>();
+		allowedWorlds.get().forEach(newSet::add);
+		this.allowedWorlds = Collections.unmodifiableSet(newSet);
 	}
 
 }

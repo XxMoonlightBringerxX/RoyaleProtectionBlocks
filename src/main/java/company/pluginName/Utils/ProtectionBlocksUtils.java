@@ -101,6 +101,7 @@ public class ProtectionBlocksUtils {
 		values.put(BLOCKSY_SECTION, protectionBlock.getInformation().getBlocksY());
 		values.put(BLOCKSZ_SECTION, protectionBlock.getInformation().getBlocksZ());
 		values.put(PERMISSION_SECTION, protectionBlock.getInformation().getPermission());
+		values.put(PRICE_SECTION, protectionBlock.getInformation().getPrice());
 		values.put(ITEM_TYPE_SECTION, material != null ? material.name() : null);
 		values.put(ITEM_NAME_SECTION, im.hasDisplayName() ? im.getDisplayName() : null);
 		values.put(ITEM_LORE_SECTION, im.hasLore() ? im.getLore() : null);

@@ -38,6 +38,5 @@
 	<classpathentry kind="lib" path="D:/Eclipse/Libs/PlaceholderAPI-2.9.2.jar"/>
 	<classpathentry kind="lib" path="D:/Eclipse/Libs/worldedit-bukkit-7.1.0.jar"/>
 	<classpathentry kind="lib" path="D:/Eclipse/Libs/worldguard-legacy-7.0.0-rc-1.jar"/>
-	<classpathentry kind="lib" path="D:/Eclipse/Libs/Vault.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

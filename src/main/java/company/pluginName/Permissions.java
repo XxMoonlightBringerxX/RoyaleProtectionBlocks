@@ -29,6 +29,8 @@ public class Permissions {
 	public static final String PROTECTION_RELOAD = "protectionblocks.reload";
 	public static final String PROTECTION_TRANSFER = "protectionblocks.transfer";
 	public static final String PROTECTION_PURGE = "protectionblocks.purge";
+	public static final String PROTECTION_SPAWN = "protectionblocks.setspawn";
+	public static final String PROTECTION_SETSPAWN = "protectionblocks.setspawn";
 
 	public static final String PROTECTION_BLOCKS = "protectionblocks.blocks";
 	public static final String PROTECTION_BLOCKS_CREATE = "protectionblocks.blocks.create";
@@ -51,9 +53,8 @@ public class Permissions {
 					i = Integer.parseInt(p.substring(PROTECTION_MAX_PREFIX.length()));
 					break;
 				} catch (NumberFormatException e) {
-					MessageBuilder
-							.createMessage(MessageString
-									.applyPrefix("There's something wrong with " + pl.getName() + "'s permission: " + perm.getPermission()))
+					MessageBuilder.createMessage(MessageString.applyPrefix(
+							"There's something wrong with " + pl.getName() + "'s permission: " + perm.getPermission()))
 							.sendMessage(Bukkit.getConsoleSender());
 					break;
 				}

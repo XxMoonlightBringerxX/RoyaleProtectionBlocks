@@ -41,6 +41,8 @@ public class ProtectionBlocksCommand extends Command {
 		addCommand(new FilesCommand(this));
 		addCommand(new PurgeSubCommand(this));
 		addCommand(new LeaveSubCommand(this));
+		addCommand(new SetSpawnSubCommand(this));
+		addCommand(new SpawnSubCommand(this));
 		if (MainPluginClass.getVaultAPI().isHooked()) {
 			addCommand(new BuySubCommand(this));
 		}

@@ -10,7 +10,6 @@ import lombok.Setter;
 @RequiredArgsConstructor
 public enum SettingString implements FileObjFieldsEnum<String> {
 	SETTINGS_PROTECTION_STARTERBLOCK("Settings.Protection.Starter-block", "Settings.Protection.Stater-block", ""),
-	SETTINGS_PROTECTION_SENDTOWORLDONKICK("Settings.Protection.Send-to-world-on-kick", "world"),
 	SETTINGS_PROTECTION_AUTOPURGE_EXECUTEEVERY("Settings.Protection.Auto-purge.Execute-every", ""),
 	SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN("Settings.Protection.Auto-purge.Purge-older-than", "7d"),
 
@@ -158,6 +157,18 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_USAGE("Commands.Protection-blocks.Blocks.Give.Usage", "<id> [player]"),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_PERMISSION("Commands.Protection-blocks.Blocks.Give.Permission",
 			Permissions.PROTECTION_BLOCKS_GIVE),
+
+	COMMANDS_PROTECTIONBLOCKS_SPAWN_NAME("Commands.Protection-blocks.Spawn.Name", "spawn"),
+	COMMANDS_PROTECTIONBLOCKS_SPAWN_DESCRIPTION("Commands.Protection-blocks.Spawn.Description",
+			"Use this command to check whether the spawn has been set properly or not"),
+	COMMANDS_PROTECTIONBLOCKS_SPAWN_PERMISSION("Commands.Protection-blocks.Spawn.Permission",
+			Permissions.PROTECTION_SPAWN),
+
+	COMMANDS_PROTECTIONBLOCKS_SETSPAWN_NAME("Commands.Protection-blocks.Set-spawn.Name", "setspawn"),
+	COMMANDS_PROTECTIONBLOCKS_SETSPAWN_DESCRIPTION("Commands.Protection-blocks.Set-spawn.Description",
+			"Specify the spawn configured for the plugin. This one is mostly used to send players after being kicked or banned from a protection"),
+	COMMANDS_PROTECTIONBLOCKS_SETSPAWN_PERMISSION("Commands.Protection-blocks.Set-spawn.Permission",
+			Permissions.PROTECTION_SETSPAWN),
 
 	COMMANDS_PROTECTIONBLOCKS_FILES_NAME("Commands.Protection-blocks.Files.Name", "files"),
 	COMMANDS_PROTECTIONBLOCKS_FILES_DESCRIPTION("Commands.Protection-blocks.Files.Description",

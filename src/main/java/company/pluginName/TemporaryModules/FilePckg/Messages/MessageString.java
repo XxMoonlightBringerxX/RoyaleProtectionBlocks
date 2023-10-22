@@ -12,6 +12,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 
 	// Messages
 	MESSAGE_RELOAD("Message.Reload", "&aThe plugin has been reloaded successfully."),
+	MESSAGE_SETSPAWNSUCCESSFULLY("Message.Set-spawn-successfully", "&aA new spawn has ben set successfully."),
 
 	MESSAGE_GENERAL_NOLIMIT("Message.General.No-limit", "No limit"),
 
@@ -259,6 +260,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_INSUFFICIENTBALANCE("Error.Inventory-full", "&cYou don't have enough balance to purchase this!"),
 	ERROR_INVALIDNUMBER("Error.Invalid-number", "&cYou must specify a valid number!"),
 	ERROR_NUMBERBELOWZERO("Error.Number-below-zero", "&cYou must specify a number higher than or equal to zero!"),
+	ERROR_SETSPAWNERROR("Error.Set-spawn-error",
+			"&cThere was an error trying to specify a new spawn. Check the console!"),
 
 	ERROR_CHATPROMPT_ALREADYPROMPTED("Error.Chat-prompt.Already-prompted",
 			"&cYou've already a pending type operation!"),

@@ -210,8 +210,9 @@ public class Protection {
 		List<ProtectedRegion> overlaps = protectedRegion.getIntersectingRegions(regionManager.getRegions().values());
 
 		if (creator != null && !creator.hasPermission(Permissions.PROTECTION_OVERLAP_BYPASS) && overlaps.size() > 0
-				&& overlaps.stream().anyMatch(prot -> prot.getOwners().size() == 0
-						|| !prot.getOwners().getUniqueIds().iterator().next().equals(ownerUuid))) {
+				&& (!SettingBoolean.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent()
+						|| overlaps.stream().anyMatch(prot -> prot.getOwners().size() == 0
+								|| !prot.getOwners().getUniqueIds().iterator().next().equals(ownerUuid)))) {
 			throw new ProtectionSaveOverlapsException();
 		}
 

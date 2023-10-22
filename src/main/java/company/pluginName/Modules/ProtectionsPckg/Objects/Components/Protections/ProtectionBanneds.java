@@ -37,7 +37,7 @@ public class ProtectionBanneds {
 	public void add(Player pl, UUID banned) throws ProtectionBannedsSaveException {
 		if (pl != null) {
 			if (!pl.hasPermission(Permissions.PROTECTION_BANNEDS_ADD_OTHERS)) {
-				if (!this.protection.isOwner(pl.getUniqueId())) {
+				if (!this.protection.getOwners().list().contains(pl.getUniqueId())) {
 					throw new ProtectionBannedsSaveDeniedException();
 				}
 
@@ -76,7 +76,7 @@ public class ProtectionBanneds {
 
 	public void remove(Player pl, UUID banned) throws ProtectionBannedsDeleteException {
 		if (pl != null) {
-			if (!this.protection.isOwner(pl.getUniqueId())
+			if (!this.protection.getOwners().list().contains(pl.getUniqueId())
 					&& !pl.hasPermission(Permissions.PROTECTION_BANNEDS_REMOVE_OTHERS)) {
 				throw new ProtectionBannedsDeleteDeniedException();
 			}

@@ -64,15 +64,17 @@ public class ProtectionsModule implements PluginModule {
 	@Override
 	public boolean load() {
 		MainPluginClass.getPlugin().getSqlModule().getProtectionBlocks().stream()
-				.filter(block -> block.getInformation().getItem() != null && block.getInformation().getItem().getType() != Material.AIR)
+				.filter(block -> block.getInformation().getItem() != null
+						&& block.getInformation().getItem().getType() != Material.AIR)
 				.forEach(block -> protectionBlocks.put(block.getInformation().getId().toLowerCase(), block));
 
 		MainPluginClass.getPlugin().getSqlModule().getProtections().stream().filter(protection -> {
 			if (Bukkit.getWorld(protection.getWorldName()) != null && protection.getProtectedRegion() == null) {
 				try {
 					MessageBuilder
-							.createMessage(MessageString.applyPrefix("&7Removing protection '" + protection.getRegionId()
-									+ "' as it couldn't be found on '" + protection.getWorldName() + "'"))
+							.createMessage(
+									MessageString.applyPrefix("&7Removing protection '" + protection.getRegionId()
+											+ "' as it couldn't be found on '" + protection.getWorldName() + "'"))
 							.sendMessage(Bukkit.getConsoleSender());
 					removeProtection(protection);
 				} catch (ProtectionDeleteException e) {
@@ -111,16 +113,19 @@ public class ProtectionsModule implements PluginModule {
 	}
 
 	public List<Protection> getAllowedProtections(OfflinePlayer pl) {
-		return protectionByRegion.values().stream().filter(prot -> prot.isOwner(pl.getUniqueId())).collect(Collectors.toList());
+		return protectionByRegion.values().stream().filter(prot -> prot.getOwners().list().contains(pl.getUniqueId()))
+				.collect(Collectors.toList());
 	}
 
 	/*
 	 * Create methods
 	 */
 
-	public Protection createProtection(Player pl, ProtectionBlock protectionBlock, Location location) throws ProtectionSaveException {
+	public Protection createProtection(Player pl, ProtectionBlock protectionBlock, Location location)
+			throws ProtectionSaveException {
 		if (!pl.hasPermission(Permissions.PROTECTION_MAX_BYPASS)) {
-			if (Permissions.getMaxCapacity(pl) <= protectionsByOwner.getOrDefault(pl.getUniqueId(), new ArrayList<>()).size()) {
+			if (Permissions.getMaxCapacity(pl) <= protectionsByOwner.getOrDefault(pl.getUniqueId(), new ArrayList<>())
+					.size()) {
 				throw new ProtectionSaveMaxReachedException();
 			}
 		}
@@ -128,8 +133,8 @@ public class ProtectionsModule implements PluginModule {
 		return this.createProtection(pl.getUniqueId(), pl, protectionBlock, location);
 	}
 
-	public Protection createProtection(UUID ownerUuid, Player creator, ProtectionBlock protectionBlock, Location location)
-			throws ProtectionSaveException {
+	public Protection createProtection(UUID ownerUuid, Player creator, ProtectionBlock protectionBlock,
+			Location location) throws ProtectionSaveException {
 		for (Protection prot : protectionByRegion.values()) {
 			if (prot.getProtectionBlockLocation().equals(location.getBlock().getLocation())) {
 				throw new ProtectionSaveAlreadyOccupiedException();
@@ -159,7 +164,8 @@ public class ProtectionsModule implements PluginModule {
 
 	public void renameProtection(Player pl, Protection protection, String newName) throws ProtectionSaveException {
 		if (pl != null) {
-			if (!protection.isOwner(pl.getUniqueId()) && !pl.hasPermission(Permissions.PROTECTION_RENAME_OTHERS)) {
+			if (!protection.getOwners().list().contains(pl.getUniqueId())
+					&& !pl.hasPermission(Permissions.PROTECTION_RENAME_OTHERS)) {
 				throw new ProtectionSaveRenameDeniedException();
 			}
 		}
@@ -168,8 +174,8 @@ public class ProtectionsModule implements PluginModule {
 			throw new ProtectionSaveNoVisibleTextException();
 		}
 
-		if (protectionByRegion.values().stream().anyMatch(
-				prot -> !prot.getRegionId().equals(protection.getRegionId()) && prot.getDisplayName().equalsIgnoreCase(newName))) {
+		if (protectionByRegion.values().stream().anyMatch(prot -> !prot.getRegionId().equals(protection.getRegionId())
+				&& prot.getDisplayName().equalsIgnoreCase(newName))) {
 			throw new ProtectionSaveNameInUseException();
 		}
 
@@ -219,19 +225,22 @@ public class ProtectionsModule implements PluginModule {
 	 */
 
 	public Protection getProtectionByLocation(Location location) {
-		ApplicableRegionSet regions = getApplicableRegions(location.getWorld(), BlockVectorUtils.locationToVector(location));
+		ApplicableRegionSet regions = getApplicableRegions(location.getWorld(),
+				BlockVectorUtils.locationToVector(location));
 
 		if (regions == null) {
 			return null;
 		}
 
-		return regions.getRegions().stream().map(region -> protectionByRegion.get(region.getId())).filter(prot -> prot != null)
-				.sorted((r1, r2) -> Integer.compare(r1.getProtectedRegion().getPriority(), r2.getProtectedRegion().getPriority()))
+		return regions.getRegions().stream().map(region -> protectionByRegion.get(region.getId()))
+				.filter(prot -> prot != null).sorted((r1, r2) -> Integer.compare(r1.getProtectedRegion().getPriority(),
+						r2.getProtectedRegion().getPriority()))
 				.findFirst().orElse(null);
 	}
 
 	public Protection getProtectionByBlock(Location location) {
-		ApplicableRegionSet regions = getApplicableRegions(location.getWorld(), BlockVectorUtils.locationToVector(location));
+		ApplicableRegionSet regions = getApplicableRegions(location.getWorld(),
+				BlockVectorUtils.locationToVector(location));
 
 		if (regions == null) {
 			return null;

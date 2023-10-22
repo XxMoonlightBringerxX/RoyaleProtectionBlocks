@@ -26,6 +26,7 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
 		<attributes>
+			<attribute name="module" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
@@ -34,8 +35,9 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/relam/OneDrive/Libraries/PlaceholderAPI-2.9.2.jar"/>
-	<classpathentry kind="lib" path="C:/Users/relam/OneDrive/Libraries/worldedit-bukkit-7.1.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/relam/OneDrive/Libraries/worldguard-legacy-7.0.0-rc-1.jar"/>
+	<classpathentry kind="lib" path="D:/Eclipse/Libs/PlaceholderAPI-2.9.2.jar"/>
+	<classpathentry kind="lib" path="D:/Eclipse/Libs/worldedit-bukkit-7.1.0.jar"/>
+	<classpathentry kind="lib" path="D:/Eclipse/Libs/worldguard-legacy-7.0.0-rc-1.jar"/>
+	<classpathentry kind="lib" path="D:/Eclipse/Libs/Vault.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

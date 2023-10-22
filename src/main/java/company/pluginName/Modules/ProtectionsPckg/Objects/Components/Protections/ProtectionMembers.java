@@ -1,9 +1,12 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.entity.Player;
+
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.Permissions;
 import company.pluginName.Exceptions.ProtectionMembers.Delete.ProtectionMembersDeleteDeniedException;
@@ -23,7 +26,8 @@ public class ProtectionMembers {
 	private Protection protection;
 
 	public Set<UUID> list() {
-		return this.protection.getProtectedRegion().getMembers().getUniqueIds();
+		ProtectedRegion region = this.protection.getProtectedRegion();
+		return region != null ? region.getMembers().getUniqueIds() : Collections.emptySet();
 	}
 
 	public void add(UUID member) throws ProtectionMembersSaveException {
@@ -33,7 +37,7 @@ public class ProtectionMembers {
 	public void add(Player pl, UUID member) throws ProtectionMembersSaveException {
 		if (pl != null) {
 			if (!pl.hasPermission(Permissions.PROTECTION_MEMBERS_ADD_OTHERS)) {
-				if (!this.protection.isOwner(pl.getUniqueId())) {
+				if (!this.protection.getOwners().list().contains(pl.getUniqueId())) {
 					throw new ProtectionMembersSaveDeniedException();
 				}
 
@@ -55,8 +59,8 @@ public class ProtectionMembers {
 	}
 
 	public void remove(Player pl, UUID member) throws ProtectionMembersDeleteException {
-		if (pl != null) {
-			if (!this.protection.isOwner(pl.getUniqueId())
+		if (pl != null && !pl.getUniqueId().equals(member)) {
+			if (!this.protection.getOwners().list().contains(pl.getUniqueId())
 					&& !pl.hasPermission(Permissions.PROTECTION_MEMBERS_REMOVE_OTHERS)) {
 				throw new ProtectionMembersDeleteDeniedException();
 			}

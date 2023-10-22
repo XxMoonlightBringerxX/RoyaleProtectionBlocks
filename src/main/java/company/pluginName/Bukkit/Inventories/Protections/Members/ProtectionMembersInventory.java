@@ -151,7 +151,7 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 												.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {
-								if (protection.isOwner(getPlayer().getUniqueId())
+								if (protection.getOwners().list().contains(getPlayer().getUniqueId())
 										|| getPlayer().hasPermission(Permissions.PROTECTION_MEMBERS_REMOVE_OTHERS)) {
 									new ConfirmationInventory(getPlayer(), () -> {
 										try {
@@ -159,8 +159,7 @@ public class ProtectionMembersInventory extends PluginChestInventory {
 										} catch (ProtectionMembersDeleteException e1) {
 											e1.sendError(getPlayer());
 										}
-										openInventory();
-									}).openInventory();
+									}).openInventory(MainPluginClass.getPlugin());
 								}
 							}
 						});

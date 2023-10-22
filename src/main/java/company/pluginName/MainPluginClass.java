@@ -8,6 +8,7 @@ import company.pluginName.APIs.ItemsAdderAPI;
 import company.pluginName.APIs.OraxenAPI;
 import company.pluginName.APIs.PlaceholderAPI;
 import company.pluginName.APIs.ProtectionStonesAPI;
+import company.pluginName.APIs.VaultAPI;
 import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Bukkit.Events.BukkitEvents;
 import company.pluginName.Bukkit.Events.ItemsAdderEvents;
@@ -42,8 +43,8 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	// ---------------------------------------------------------------//
 
 	public MainPluginClass() {
-		super(new FileModule(), new CommandsModule(), new SQLModule(), new ProtectionSettingsModule(), new ProtectionsModule(),
-				new ProtectionsRemoverModule(), new RecipesModule());
+		super(new FileModule(), new CommandsModule(), new SQLModule(), new ProtectionSettingsModule(),
+				new ProtectionsModule(), new ProtectionsRemoverModule(), new RecipesModule());
 		plugin = this;
 	}
 
@@ -60,7 +61,8 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	@Override
 	public boolean beforeLoad() {
 		MessageBuilder
-				.createMessage(getPrefix() + "", getPrefix() + "       _____ _____         _   _____ _         _            ",
+				.createMessage(getPrefix() + "",
+						getPrefix() + "       _____ _____         _   _____ _         _            ",
 						getPrefix() + "      | __  |  _  |___ ___| |_| __  | |___ ___| |_ ___      ",
 						getPrefix() + "      |    -|   __|  _| . |  _| __ -| | . |  _| '_|_ -|     ",
 						getPrefix() + "      |__|__|__|  |_| |___|_| |_____|_|___|___|_,_|___|     ",
@@ -98,6 +100,9 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 
 	@Override
 	public boolean beforeEnable() {
+		if (isFirstTime()) {
+			vaultAPI = new VaultAPI();
+		}
 		return true;
 	}
 
@@ -125,7 +130,8 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 		Flag.initFlags();
 		PluginChestInventory.initItems();
 		MessageBuilder
-				.createMessage(getPrefix() + "", getPrefix() + "                                     __                    ",
+				.createMessage(getPrefix() + "",
+						getPrefix() + "                                     __                    ",
 						getPrefix() + "                       _            |  |                   ",
 						getPrefix() + "                     _| |___ ___ ___|  |                   ",
 						getPrefix() + "                    | . | . |   | -_|__|                   ",
@@ -142,7 +148,8 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	@Override
 	public boolean disable() {
 		MessageBuilder
-				.createMessage(getPrefix() + "", getPrefix() + "                                            __             ",
+				.createMessage(getPrefix() + "",
+						getPrefix() + "                                            __             ",
 						getPrefix() + "                      _           _       _|  |            ",
 						getPrefix() + "              _ _ ___| |___ ___ _| |___ _| |  |            ",
 						getPrefix() + "             | | |   | | . | .'| . | -_| . |__|            ",
@@ -161,6 +168,7 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 	private @Getter static ItemsAdderAPI itemsAdderAPI;
 	private @Getter static OraxenAPI oraxenAPI;
 	private @Getter static ProtectionStonesAPI protectionStonesAPI;
+	private @Getter static VaultAPI vaultAPI;
 
 	public FileModule getFileModule() {
 		return (FileModule) getModule(FileModule.class);
@@ -198,7 +206,9 @@ public class MainPluginClass extends MainClass implements CanLoad, CanEnable, Ca
 
 		public static void log(MessageType messageType, Supplier<Object[]> argsSupplier) {
 			if (messageType.isAvailable() && SettingBoolean.SETTINGS_DEBUG_ENABLED.getContent()) {
-				MessageBuilder.createMessage(MessageString.applyPrefix(messageType.getMessage().formatted(argsSupplier.get())))
+				MessageBuilder
+						.createMessage(
+								MessageString.applyPrefix(messageType.getMessage().formatted(argsSupplier.get())))
 						.sendMessage(Bukkit.getConsoleSender());
 			}
 		}

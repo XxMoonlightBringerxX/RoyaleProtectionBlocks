@@ -28,6 +28,7 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Messages.Exceptions.PlayerAlreadyListeningException;
+import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
 
 public class ProtectionBlockManagerInventory extends PluginChestInventory {
 
@@ -341,6 +342,53 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 						}
 					}
 				});
+
+		MessageString priceName = this.newProtectionBlock.getInformation().getPrice() != null
+				? MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PRICENAME
+				: MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PRICENOTSETNAME;
+
+		setSlot(34, new Button(ItemStacksUtils.createItemStack(Material.GOLD_INGOT,
+				MessageBuilder
+						.createMessage(TextInput.inst().text(priceName.toString())
+								.replacements(new TextReplacement("{block_price}",
+										() -> newProtectionBlock.getInformation().getPrice() != null
+												? StringsHelper
+														.toDecimal(newProtectionBlock.getInformation().getPrice(), 2)
+												: "")))
+						.toString())) {
+			@Override
+			public void onClick(InventoryClickEvent e) {
+				try {
+					MainPluginClass.getPlugin().getMessagesListener().startListening(getPlayer().getUniqueId(),
+							(message) -> {
+								if (!message.equalsIgnoreCase("cancel")) {
+									try {
+										double price = Double.parseDouble(message);
+
+										if (price <= 0D) {
+											newProtectionBlock.getInformation().setPrice(null);
+										} else {
+											newProtectionBlock.getInformation().setPrice(price);
+										}
+									} catch (NumberFormatException e1) {
+										MessageBuilder.createMessage(MessageString.ERROR_INVALIDNUMBER.applyPrefix())
+												.sendMessage(e.getWhoClicked());
+									}
+								}
+								openInventory();
+								return true;
+							});
+					closeInventory();
+					MessageBuilder
+							.createMessage(
+									MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSSPECIFYINFO.applyPrefix())
+							.sendMessage(e.getWhoClicked());
+				} catch (PlayerAlreadyListeningException e1) {
+					MessageBuilder.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix())
+							.sendMessage(e.getWhoClicked());
+				}
+			}
+		});
 	}
 
 	public void setBlocks(InventoryClickEvent e, IntSupplier getBlocks, IntConsumer setBlocks) {

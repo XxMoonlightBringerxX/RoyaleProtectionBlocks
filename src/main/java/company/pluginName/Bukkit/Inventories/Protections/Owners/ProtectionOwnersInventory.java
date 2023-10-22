@@ -139,9 +139,13 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 
 				OfflinePlayer pl = OfflinePlayerUtils.getOfflinePlayer(owner);
 
+				final boolean canRemove = protection.isMainOwner(getPlayer().getUniqueId())
+						|| (protection.getOwners().list().contains(getPlayer().getUniqueId())
+								&& pl.getUniqueId().equals(owner))
+						|| getPlayer().hasPermission(Permissions.PROTECTION_OWNERS_ADD_OTHERS);
+
 				List<String> lore = new ArrayList<>();
-				if (protection.isMainOwner(getPlayer().getUniqueId())
-						|| getPlayer().hasPermission(Permissions.PROTECTION_OWNERS_ADD_OTHERS)) {
+				if (canRemove) {
 					lore.add(MessageString.INVENTORY_PROTECTION_OWNERS_REMOVEOWNERLORELINE.toString());
 				}
 
@@ -159,16 +163,18 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 												.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {
-								if (protection.isMainOwner(getPlayer().getUniqueId())
-										|| getPlayer().hasPermission(Permissions.PROTECTION_OWNERS_REMOVE_OTHERS)) {
+								if (canRemove) {
 									new ConfirmationInventory(getPlayer(), () -> {
 										try {
 											protection.getOwners().remove(getPlayer(), owner);
 										} catch (ProtectionOwnersDeleteException e1) {
 											e1.sendError(getPlayer());
 										}
-										openInventory();
-									}).openInventory();
+
+										if (!owner.equals(getPlayer().getUniqueId())) {
+											openInventory();
+										}
+									}).setPreviousInventory(null).openInventory(MainPluginClass.getPlugin());
 								}
 							}
 						});

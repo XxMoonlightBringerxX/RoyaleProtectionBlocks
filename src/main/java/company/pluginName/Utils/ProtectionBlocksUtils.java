@@ -31,6 +31,7 @@ public class ProtectionBlocksUtils {
 	private static final String BLOCKSY_SECTION = "Blocks-y";
 	private static final String BLOCKSZ_SECTION = "Blocks-z";
 	private static final String PERMISSION_SECTION = "Permission";
+	private static final String PRICE_SECTION = "Price";
 	private static final String ITEM_TYPE_SECTION = "Item.Type";
 	private static final String ITEM_NAME_SECTION = "Item.Name";
 	private static final String ITEM_LORE_SECTION = "Item.Lore";
@@ -122,6 +123,7 @@ public class ProtectionBlocksUtils {
 		int blocksY;
 		int blocksZ;
 		String permission;
+		Double price;
 		Material material;
 		String name;
 		String skin;
@@ -150,6 +152,12 @@ public class ProtectionBlocksUtils {
 			permission = map.containsKey(PERMISSION_SECTION) ? (String) map.get(PERMISSION_SECTION) : null;
 		} catch (ClassCastException e) {
 			throw new Exception("The value '%s' is currently not a string.".formatted(map.get(PERMISSION_SECTION)));
+		}
+
+		try {
+			price = map.containsKey(PRICE_SECTION) ? Double.parseDouble(map.get(PRICE_SECTION).toString()) : null;
+		} catch (ClassCastException e) {
+			throw new Exception("The value '%s' is currently not a decimal.".formatted(map.get(PRICE_SECTION)));
 		}
 
 		try {
@@ -198,6 +206,14 @@ public class ProtectionBlocksUtils {
 				protectionBlock.getInformation().setPermission(permission);
 			}
 
+			if (map.containsKey(PRICE_SECTION)) {
+				if (price != null && price <= 0D) {
+					protectionBlock.getInformation().setPrice(null);
+				} else {
+					protectionBlock.getInformation().setPrice(price);
+				}
+			}
+
 			if (map.containsKey(ALLOWEDWORLDS_SECTION)) {
 				protectionBlock.getAllowedWorlds().clear();
 				allowedWorlds.forEach(protectionBlock.getAllowedWorlds()::add);
@@ -233,7 +249,8 @@ public class ProtectionBlocksUtils {
 				item = ItemStacksUtils.setSkin(item, skin);
 			}
 
-			return new ProtectionBlock(new ProtectionBlockInformation(id, item, blocksX, blocksY, blocksZ, permission),
+			return new ProtectionBlock(
+					new ProtectionBlockInformation(id, item, blocksX, blocksY, blocksZ, permission, price),
 					allowedWorlds != null ? new ProtectionBlockAllowedWorlds(new HashSet<>(allowedWorlds))
 							: new ProtectionBlockAllowedWorlds());
 		}

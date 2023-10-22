@@ -152,7 +152,7 @@ public class ProtectionBannedsInventory extends PluginChestInventory {
 												.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {
-								if (protection.isOwner(getPlayer().getUniqueId())
+								if (protection.getOwners().list().contains(getPlayer().getUniqueId())
 										|| getPlayer().hasPermission(Permissions.PROTECTION_BANNEDS_REMOVE_OTHERS)) {
 									new ConfirmationInventory(getPlayer(), () -> {
 										try {

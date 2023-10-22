@@ -28,6 +28,7 @@ public class ProtectionBlockInformation {
 	private int blocksY;
 	private int blocksZ;
 	private String permission;
+	private Double price;
 
 	public void setItem(ItemStack item) throws ProtectionBlocksSaveException {
 		if (item != null) {
@@ -70,6 +71,7 @@ public class ProtectionBlockInformation {
 		this.blocksY = information.blocksY;
 		this.blocksZ = information.blocksZ;
 		this.permission = information.permission;
+		this.price = information.price;
 	}
 
 }

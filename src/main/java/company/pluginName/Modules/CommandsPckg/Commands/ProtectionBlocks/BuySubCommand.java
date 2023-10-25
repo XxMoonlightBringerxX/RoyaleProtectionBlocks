@@ -1,21 +1,19 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventory;
-import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
+import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlocksShopInventory;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
 import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import net.milkbowl.vault.economy.EconomyResponse;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
 import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
 
@@ -32,7 +30,9 @@ public class BuySubCommand extends SubCommand {
 	@Override
 	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
 		if (args.length == 1) {
-			return new ArrayList<>(MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().keySet());
+			return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().entrySet().stream()
+					.filter(entry -> entry.getValue().getInformation().isForSale()).map(Entry::getKey)
+					.collect(Collectors.toList());
 		}
 		return EMPTY_LIST;
 	}
@@ -45,42 +45,8 @@ public class BuySubCommand extends SubCommand {
 				ProtectionBlock block = MainPluginClass.getPlugin().getProtectionsModule()
 						.getProtectionBlockById(args[1]);
 				if (block != null) {
-					if (block.getInformation().getPrice() != null) {
-						try {
-							ItemStack item = block.getInformation().generateItem();
-							boolean hasAvailableSpace = true;
-
-							if (pl.getInventory().firstEmpty() == -1) {
-								if (pl.getInventory().containsAtLeast(item, 1)) {
-									if (pl.getInventory().addItem(item).isEmpty()) {
-										pl.getInventory().removeItem(item);
-									} else {
-										hasAvailableSpace = false;
-									}
-								} else {
-									hasAvailableSpace = false;
-								}
-							}
-
-							if (hasAvailableSpace) {
-								EconomyResponse response = MainPluginClass.getVaultAPI().getEcon().withdrawPlayer(pl,
-										block.getInformation().getPrice());
-								if (response.transactionSuccess()) {
-									pl.getInventory().addItem(item);
-								} else {
-									MessageBuilder
-											.createMessage(
-													MessageString.applyPrefix(MessageString.ERROR_INSUFFICIENTBALANCE))
-											.sendMessage(sender);
-								}
-							} else {
-								MessageBuilder
-										.createMessage(MessageString.applyPrefix(MessageString.ERROR_INVENTORYFULL))
-										.sendMessage(sender);
-							}
-						} catch (ProtectionBlocksGenerateItemException e) {
-							e.sendError(pl);
-						}
+					if (block.getInformation().isForSale()) {
+						block.purchase(pl);
 					} else {
 						MessageBuilder
 								.createMessage(
@@ -93,7 +59,7 @@ public class BuySubCommand extends SubCommand {
 							.sendMessage(sender);
 				}
 			} else {
-				new ProtectionsListInventory(pl).openInventory();
+				new ProtectionBlocksShopInventory(pl).openInventory();
 			}
 		} else {
 			MessageBuilder.createMessage(MessageString.applyPrefix(MessageString.ERROR_CONSOLEDENIED))

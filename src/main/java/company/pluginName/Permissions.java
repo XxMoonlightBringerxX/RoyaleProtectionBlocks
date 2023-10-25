@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
+import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
@@ -25,6 +26,7 @@ public class Permissions {
 	public static final String PROTECTION_OWNERS_REMOVE_OTHERS = "protectionblocks.owners.remove.others";
 	public static final String PROTECTION_OVERLAP_BYPASS = "protectionblocks.overlap.bypass";
 	public static final String PROTECTION_MAX_BYPASS = "protectionblocks.max.bypass";
+	public static final String PROTECTION_ECONOMY_BYPASS = "protectionblocks.economy.bypass";
 
 	public static final String PROTECTION_RELOAD = "protectionblocks.reload";
 	public static final String PROTECTION_TRANSFER = "protectionblocks.transfer";
@@ -44,19 +46,35 @@ public class Permissions {
 
 	private static final String PROTECTION_MAX_PREFIX = "protectionblocks.max.";
 
-	public static int getMaxCapacity(Player pl) {
-		int i = 0;
+	private static final String PROTECTION_BLOCK_MAX_PREFIX = "protectionblocks.{block}.max.";
+
+	public static int getMaxCapacity(Player pl, ProtectionBlock block) {
+		Integer i = null;
+		String blockPermissionPrefix = PROTECTION_BLOCK_MAX_PREFIX.replace("{block}", block.getInformation().getId());
 		for (PermissionAttachmentInfo perm : pl.getEffectivePermissions()) {
 			String p = perm.getPermission().toLowerCase();
-			if (perm.getValue() && p.startsWith(PROTECTION_MAX_PREFIX)) {
-				try {
-					i = Integer.parseInt(p.substring(PROTECTION_MAX_PREFIX.length()));
-					break;
-				} catch (NumberFormatException e) {
-					MessageBuilder.createMessage(MessageString.applyPrefix(
-							"There's something wrong with " + pl.getName() + "'s permission: " + perm.getPermission()))
-							.sendMessage(Bukkit.getConsoleSender());
-					break;
+			if (perm.getValue()) {
+				if (i == null && p.startsWith(PROTECTION_MAX_PREFIX)) {
+					try {
+						i = Integer.parseInt(p.substring(PROTECTION_MAX_PREFIX.length()));
+					} catch (NumberFormatException e) {
+						MessageBuilder
+								.createMessage(MessageString.applyPrefix("There's something wrong with " + pl.getName()
+										+ "'s permission: " + perm.getPermission()))
+								.sendMessage(Bukkit.getConsoleSender());
+						continue;
+					}
+				} else if (p.startsWith(blockPermissionPrefix)) {
+					try {
+						i = Integer.parseInt(p.substring(blockPermissionPrefix.length()));
+						break;
+					} catch (NumberFormatException e) {
+						MessageBuilder
+								.createMessage(MessageString.applyPrefix("There's something wrong with " + pl.getName()
+										+ "'s permission: " + perm.getPermission()))
+								.sendMessage(Bukkit.getConsoleSender());
+						continue;
+					}
 				}
 			}
 		}

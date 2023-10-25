@@ -8,6 +8,8 @@ public enum SettingBoolean implements FileObjFieldsEnum<Boolean> {
 	SETTINGS_PROTECTION_OPENINVENTORYONINTERACT("Settings.Protection.Open-inventory-on-interact", true),
 	SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER(
 			"Settings.Protection.Allow-regions-inside-another-from-same-owner", true),
+	SETTINGS_PROTECTIONBLOCK_REQUESTCONFIRMATIONONPURCHASETHROUGHGUI(
+			"Settings.Protection-block.Request-confirmation-on-purchase-through-gui", false),
 	SETTINGS_DEBUG_ENABLED("Settings.Debug.Enabled", false),
 	SETTINGS_DEBUG_MESSAGES_BLOCKPLACE("Settings.Debug.Messages.Block-place", true),
 	SETTINGS_DEBUG_MESSAGES_BLOCKPLACENOTPROTECTIONBLOCK("Settings.Debug.Messages.Block-place-not-protection-block",

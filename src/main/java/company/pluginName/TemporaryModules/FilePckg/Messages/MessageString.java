@@ -180,7 +180,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	INVENTORY_PROTECTION_BANNEDS_REMOVEBANNEDLORELINE("Inventory.Protection.Banneds.Remove-banned-lore-line",
 			"&8[&cClick to remove banned&8]"),
 
-	// Inventory protection list items
+	// Inventory protection blocks list items
 	INVENTORY_PROTECTIONBLOCKS_LIST_TITLE("Inventory.Protection-blocks.List.Title", "Protection Blocks"),
 	INVENTORY_PROTECTIONBLOCKS_LIST_CREATEBLOCKITEM("Inventory.Protection-blocks.List.Create-block-item",
 			"&eCreate a new protection block"),
@@ -190,6 +190,9 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			" &8&o- &aLeft click + Shift: &eEdit the block"),
 	INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKREMOVELORELINE("Inventory.Protection-blocks.List.Block-remove-lore-line",
 			" &8&o- &aRight click: &eRemove the block"),
+
+	// Inventory protection blocks shop items
+	INVENTORY_PROTECTIONBLOCKS_SHOP_TITLE("Inventory.Protection-blocks.Shop.Title", "Shop"),
 
 	// Inventory protection list items
 	INVENTORY_PROTECTIONBLOCKS_MANAGE_TITLE("Inventory.Protection-blocks.Manage.Title", "Protection Blocks > {block}"),

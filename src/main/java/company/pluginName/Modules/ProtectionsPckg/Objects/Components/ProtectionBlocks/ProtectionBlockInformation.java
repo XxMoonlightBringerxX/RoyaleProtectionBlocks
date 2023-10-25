@@ -53,6 +53,10 @@ public class ProtectionBlockInformation {
 		}
 	}
 
+	public boolean isForSale() {
+		return this.price != null && this.price > 0D;
+	}
+
 	public ItemType getItemType() {
 		return ProtectionBlocksUtils.getItemType(item);
 	}

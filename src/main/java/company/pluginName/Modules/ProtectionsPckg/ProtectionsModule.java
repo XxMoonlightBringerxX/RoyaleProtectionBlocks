@@ -124,8 +124,8 @@ public class ProtectionsModule implements PluginModule {
 	public Protection createProtection(Player pl, ProtectionBlock protectionBlock, Location location)
 			throws ProtectionSaveException {
 		if (!pl.hasPermission(Permissions.PROTECTION_MAX_BYPASS)) {
-			if (Permissions.getMaxCapacity(pl) <= protectionsByOwner.getOrDefault(pl.getUniqueId(), new ArrayList<>())
-					.size()) {
+			if (Permissions.getMaxCapacity(pl, protectionBlock) <= protectionsByOwner
+					.getOrDefault(pl.getUniqueId(), new ArrayList<>()).size()) {
 				throw new ProtectionSaveMaxReachedException();
 			}
 		}

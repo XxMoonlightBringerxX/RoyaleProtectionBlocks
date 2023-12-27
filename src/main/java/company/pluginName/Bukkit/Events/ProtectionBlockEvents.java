@@ -9,6 +9,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -67,8 +69,9 @@ public class ProtectionBlockEvents implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onBreakBlock(BlockBreakEvent e) {
-		MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK, () -> new Object[] { e.getPlayer().getName(),
-				String.valueOf(e.getBlock().getX()), String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
+		MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK,
+				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
+						String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
 
 		if (!e.isCancelled()) {
 			switch (EventsUtils.onVanillaBlockBreakEvent(e.getPlayer(), e.getBlock())) {
@@ -110,11 +113,12 @@ public class ProtectionBlockEvents implements Listener {
 				String protectionBlockId = null;
 
 				try {
-					protectionBlockId = ItemStackDataUtilities.getPersistentData(e.getItem(), MainPluginClass.getPlugin(),
-							ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
+					protectionBlockId = ItemStackDataUtilities.getPersistentData(e.getItem(),
+							MainPluginClass.getPlugin(), ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
 				} catch (Exception e1) {
 					MessageBuilder.createMessage(MessageString.applyPrefix(
-							"An error has ocurred trying to retrieve the Protection Block ID from an item: %s".formatted(e1.getMessage())))
+							"An error has ocurred trying to retrieve the Protection Block ID from an item: %s"
+									.formatted(e1.getMessage())))
 							.sendMessage(Bukkit.getConsoleSender());
 					e1.printStackTrace();
 				}
@@ -153,20 +157,38 @@ public class ProtectionBlockEvents implements Listener {
 
 	@EventHandler(ignoreCancelled = true)
 	public void onExplodeEntity(EntityExplodeEvent e) {
-		e.blockList()
-				.removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(block.getLocation()) != null);
+		e.blockList().removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule()
+				.getProtectionByBlock(block.getLocation()) != null);
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onExplodeBlock(BlockExplodeEvent e) {
-		e.blockList()
-				.removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(block.getLocation()) != null);
+		e.blockList().removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule()
+				.getProtectionByBlock(block.getLocation()) != null);
 	}
 
 	@EventHandler
 	public void onMobGrief(EntityChangeBlockEvent e) {
-		Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
+				.getProtectionByBlock(e.getBlock().getLocation());
 		if (protection != null) {
+			e.setCancelled(true);
+		}
+	}
+
+	@EventHandler
+	public void onBlockFromTo(BlockFromToEvent e) {
+		Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
+				.getProtectionByBlock(e.getBlock().getLocation());
+		if (protection != null) {
+			e.setCancelled(true);
+		}
+	}
+
+	@EventHandler
+	public void onPistonExtend(BlockPistonExtendEvent e) {
+		if (e.getBlocks().stream().anyMatch(block -> MainPluginClass.getPlugin().getProtectionsModule()
+				.getProtectionByBlock(block.getLocation()) != null)) {
 			e.setCancelled(true);
 		}
 	}

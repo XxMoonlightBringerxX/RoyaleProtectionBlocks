@@ -17,6 +17,7 @@ import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
@@ -34,7 +35,7 @@ public class SearchWorldsInventory extends PluginChestInventory {
 
 	public static void initItems() {
 		SEARCH_SPECIFIC_PLAYER_ITEM = ItemStacksUtils
-				.createItemStack(ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
+				.createItemStack(SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
 						MessageBuilder
 								.createMessage(MessageString.INVENTORY_SEARCHWORLDS_SEARCHSPECIFICWORLDNAME.toString())
 								.toString());
@@ -138,7 +139,7 @@ public class SearchWorldsInventory extends PluginChestInventory {
 					break;
 				}
 
-				i = ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), WORLD_SKIN);
+				i = SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), WORLD_SKIN);
 				im = i.getItemMeta();
 
 				im.setDisplayName(

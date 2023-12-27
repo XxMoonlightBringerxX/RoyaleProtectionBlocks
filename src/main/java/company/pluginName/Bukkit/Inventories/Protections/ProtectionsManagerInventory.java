@@ -29,6 +29,7 @@ import company.pluginName.Utils.OfflinePlayerUtils;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Item;
@@ -233,7 +234,7 @@ public class ProtectionsManagerInventory extends PluginChestInventory {
 		if (protection.canDelete(getPlayer())) {
 			setSlot(getSize() - 1,
 					new Button(ItemStacksUtils.createItemStack(
-							ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), TRASH_SKIN),
+							SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), TRASH_SKIN),
 							MessageBuilder
 									.createMessage(MessageString.INVENTORY_PROTECTION_DELETEPROTECTIONNAME.toString())
 									.toString())) {

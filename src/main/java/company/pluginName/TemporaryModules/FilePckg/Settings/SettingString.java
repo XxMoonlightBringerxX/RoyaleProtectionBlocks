@@ -102,11 +102,16 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 	COMMANDS_PROTECTIONBLOCKS_VIEW_USAGE("Commands.Protection-blocks.View.Usage", ""),
 	COMMANDS_PROTECTIONBLOCKS_VIEW_PERMISSION("Commands.Protection-blocks.View.Permission", ""),
 
+	COMMANDS_PROTECTIONBLOCKS_LEAVE_NAME("Commands.Protection-blocks.Leave.Name", "leave"),
+	COMMANDS_PROTECTIONBLOCKS_LEAVE_DESCRIPTION("Commands.Protection-blocks.Leave.Description",
+			"Leave a protection, stop being an owner or a member"),
+	COMMANDS_PROTECTIONBLOCKS_LEAVE_PERMISSION("Commands.Protection-blocks.Leave.Permission", ""),
+
 	COMMANDS_PROTECTIONBLOCKS_PURGE_NAME("Commands.Protection-blocks.Purge.Name", "purge"),
 	COMMANDS_PROTECTIONBLOCKS_PURGE_DESCRIPTION("Commands.Protection-blocks.Purge.Description",
 			"Delete protections older than the specified time, based on the last connection of the owner or their creation date"),
 	COMMANDS_PROTECTIONBLOCKS_PURGE_USAGE("Commands.Protection-blocks.Purge.Usage",
-			"[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--config] [confirm]"),
+			"[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--config] [--show-ignored-players] [--export-only] [confirm]"),
 	COMMANDS_PROTECTIONBLOCKS_PURGE_PERMISSION("Commands.Protection-blocks.Purge.Permission",
 			Permissions.PROTECTION_PURGE),
 
@@ -117,6 +122,12 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 			"[plugin to transfer] <confirm>"),
 	COMMANDS_PROTECTIONBLOCKS_TRANSFER_PERMISSION("Commands.Protection-blocks.Transfer.Permission",
 			Permissions.PROTECTION_TRANSFER),
+
+	COMMANDS_PROTECTIONBLOCKS_BUY_NAME("Commands.Protection-blocks.Buy.Name", "buy"),
+	COMMANDS_PROTECTIONBLOCKS_BUY_DESCRIPTION("Commands.Protection-blocks.Buy.Description",
+			"Purchase protection blocks which are on sale"),
+	COMMANDS_PROTECTIONBLOCKS_BUY_USAGE("Commands.Protection-blocks.Buy.Usage", "[protection block]"),
+	COMMANDS_PROTECTIONBLOCKS_BUY_PERMISSION("Commands.Protection-blocks.Buy.Permission", ""),
 
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_NAME("Commands.Protection-blocks.Blocks.Name", "blocks"),
 	COMMANDS_PROTECTIONBLOCKS_BLOCKS_DESCRIPTION("Commands.Protection-blocks.Blocks.Description",

@@ -14,12 +14,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
@@ -34,7 +35,7 @@ public class SearchPlayersInventory extends PluginChestInventory {
 
 	public static void initItems() {
 		SEARCH_SPECIFIC_PLAYER_ITEM = ItemStacksUtils.createItemStack(
-				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
+				SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
 				MessageBuilder.createMessage(MessageString.INVENTORY_SEARCHPLAYERS_SEARCHSPECIFICPLAYERNAME.toString())
 						.toString());
 	}

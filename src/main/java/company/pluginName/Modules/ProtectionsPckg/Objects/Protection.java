@@ -49,6 +49,7 @@ import company.pluginName.TemporaryModules.FilePckg.Settings.SettingInt;
 import company.pluginName.Utils.BlockVectorUtils;
 import company.pluginName.Utils.OfflinePlayerUtils;
 import company.pluginName.Utils.ReflectUtils;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -67,6 +68,7 @@ public class Protection {
 
 	private String regionId;
 	private UUID ownerUuid;
+	private String ownerName;
 	private ReferencedProtectionBlock protectionBlock;
 	private String worldName;
 	private String displayName;
@@ -99,6 +101,18 @@ public class Protection {
 		this.createdDate = createdDate;
 		this.protectedRegion = protectedRegion;
 		this.protectionBlockLocation = protectionBlockLocation;
+	}
+
+	/*
+	 * Data methods
+	 */
+
+	public String getOwnerName() {
+		if (ownerName == null) {
+			OfflinePlayer owner = OfflinePlayerUtils.getOfflinePlayer(ownerUuid);
+			this.ownerName = owner != null ? owner.getName() : "";
+		}
+		return this.ownerName;
 	}
 
 	/*
@@ -220,20 +234,31 @@ public class Protection {
 			OfflinePlayer player = OfflinePlayerUtils.getOfflinePlayer(this.ownerUuid);
 
 			HashMap<com.sk89q.worldguard.protection.flags.Flag<?>, Object> flags = new HashMap<>();
-			MainPluginClass.getPlugin().getProtectionSettingsModule().getDefaultFlags().forEach((key, value) -> {
+			MainPluginClass.getPlugin().getProtectionSettingsModule().getDefaultFlags().forEach(defaultFlag -> {
 				if (MainPluginClass.getPlaceholderAPI().isHooked()) {
-					if (value instanceof String) {
-						flags.put(key, MainPluginClass.getPlaceholderAPI().applyPlaceholders((String) value, player));
-					} else if (value instanceof Set) {
+					if (defaultFlag.getValue() instanceof String) {
+						flags.put(defaultFlag.getFlag(),
+								MessageBuilder.createMessage(MainPluginClass.getPlaceholderAPI()
+										.applyPlaceholders((String) defaultFlag.getValue(), player)
+										.replaceAll("\\\\%", "%")).toString());
+					} else if (defaultFlag.getValue() instanceof Set) {
 						Set<String> set = new HashSet<>();
-						((Set<String>) value).forEach(string -> set
-								.add(MainPluginClass.getPlaceholderAPI().applyPlaceholders(string, player)));
-						flags.put(key, set);
+						((Set<String>) defaultFlag.getValue())
+								.forEach(string -> set.add(MessageBuilder
+										.createMessage(MainPluginClass.getPlaceholderAPI()
+												.applyPlaceholders(string, player).replaceAll("\\\\%", "%"))
+										.toString()));
+						flags.put(defaultFlag.getFlag(), set);
 					} else {
-						flags.put(key, value);
+						flags.put(defaultFlag.getFlag(), defaultFlag.getValue());
 					}
 				} else {
-					flags.put(key, value);
+					flags.put(defaultFlag.getFlag(), defaultFlag.getValue());
+				}
+
+				if (defaultFlag.getRegionGroup() != null && defaultFlag.getFlag().getRegionGroupFlag() != null
+						&& defaultFlag.getFlag().getRegionGroupFlag().getDefault() != defaultFlag.getRegionGroup()) {
+					flags.put(defaultFlag.getFlag().getRegionGroupFlag(), defaultFlag.getRegionGroup());
 				}
 			});
 			flags.put(MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().getWorldGuardFlag(),
@@ -317,21 +342,6 @@ public class Protection {
 
 	public boolean isMainOwner(UUID playerUuid) {
 		return this.ownerUuid.equals(playerUuid);
-	}
-
-	public boolean isOwner(UUID ownerUuid) {
-		RegionManager regionManager = getRegionManager();
-
-		if (regionManager != null && regionManager.hasRegion(regionId)) {
-			return regionManager.getRegion(regionId)
-					.isOwner(MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().wrapPlayer(ownerUuid));
-		}
-
-		return false;
-	}
-
-	public boolean isMember(UUID memberUuid, ProtectedRegion rg) {
-		return rg.getMembers().getPlayers().contains(memberUuid.toString());
 	}
 
 	public void setDisplayName(String displayName) throws ProtectionSaveException {
@@ -497,15 +507,25 @@ public class Protection {
 	}
 
 	public boolean canManage(Player pl) {
-		return this.isOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_MANAGE_OTHERS);
+		return this.getOwners().list().contains(pl.getUniqueId())
+				|| pl.hasPermission(Permissions.PROTECTION_MANAGE_OTHERS);
 	}
 
 	public boolean canToggleBlock(Player pl) {
-		return this.isOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_TOGGLEBLOCK_OTHERS);
+		return this.getOwners().list().contains(pl.getUniqueId())
+				|| pl.hasPermission(Permissions.PROTECTION_TOGGLEBLOCK_OTHERS);
 	}
 
 	public boolean canViewBoundaries(Player pl) {
-		return this.isOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_VIEW_OTHERS);
+		return this.getOwners().list().contains(pl.getUniqueId())
+				|| pl.hasPermission(Permissions.PROTECTION_VIEW_OTHERS);
+	}
+
+	public boolean canTeleport(Player pl) {
+		return (this.getOwners().list().contains(pl.getUniqueId())
+				|| this.getMembers().list().contains(pl.getUniqueId())
+						&& pl.hasPermission(Permissions.PROTECTION_TELEPORT))
+				|| pl.hasPermission(Permissions.PROTECTION_TELEPORT_OTHERS);
 	}
 
 }

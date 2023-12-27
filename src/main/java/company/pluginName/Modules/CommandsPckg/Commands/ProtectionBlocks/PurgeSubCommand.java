@@ -1,5 +1,6 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,43 +36,76 @@ public class PurgeSubCommand extends SubCommand {
 			PurgeConfiguration purgeConfiguration = new PurgeConfiguration();
 			for (int i = 1; i < args.length; i++) {
 				switch (args[i].toLowerCase()) {
+				case "--export-only":
+					Bukkit.getScheduler().runTaskAsynchronously(MainPluginClass.getPlugin(), () -> {
+						MessageBuilder.createMessage(MessageString.MESSAGE_PURGE_SEARCH.applyPrefix())
+								.sendMessage(sender);
+
+						List<Protection> protectionsToPurge = MainPluginClass.getPlugin().getProtectionsRemoverModule()
+								.retrieveProtectionsToPurge(purgeConfiguration);
+
+						try {
+							File file = MainPluginClass.getPlugin().getProtectionsRemoverModule()
+									.exportProtections(purgeConfiguration, protectionsToPurge);
+
+							MessageBuilder
+									.createMessage(TextInput.inst()
+											.text(MessageString.MESSAGE_PURGE_EXPORTEND.applyPrefix()).replacements(
+													new TextReplacement("{amount}",
+															() -> String.valueOf(protectionsToPurge.size())),
+													new TextReplacement("{file}", () -> file.getName())))
+									.sendMessage(sender);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					});
+					return true;
 				case "confirm":
 					Bukkit.getScheduler().runTaskAsynchronously(MainPluginClass.getPlugin(), () -> {
-						MessageBuilder.createMessage(MessageString.MESSAGE_PURGE_START.applyPrefix()).sendMessage(sender);
+						MessageBuilder.createMessage(MessageString.MESSAGE_PURGE_START.applyPrefix())
+								.sendMessage(sender);
 
 						List<Protection> protectionsToPurge = MainPluginClass.getPlugin().getProtectionsRemoverModule()
 								.retrieveProtectionsToPurge(purgeConfiguration);
 
 						Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
-							List<Protection> removedProtections = MainPluginClass.getPlugin().getProtectionsRemoverModule()
-									.purgeProtections(protectionsToPurge);
+							List<Protection> removedProtections = MainPluginClass.getPlugin()
+									.getProtectionsRemoverModule().purgeProtections(protectionsToPurge);
 
 							MessageBuilder
 									.createMessage(TextInput.inst().text(MessageString.MESSAGE_PURGE_END.applyPrefix())
-											.replacements(new TextReplacement("{amount}", () -> String.valueOf(removedProtections.size()))))
+											.replacements(new TextReplacement("{amount}",
+													() -> String.valueOf(removedProtections.size()))))
 									.sendMessage(sender);
 
 							if (protectionsToPurge.size() != 0) {
 								MessageBuilder
-										.createMessage(TextInput.inst().text(MessageString.MESSAGE_PURGE_ERROR.applyPrefix()).replacements(
-												new TextReplacement("{amount}", () -> String.valueOf(protectionsToPurge.size()))))
+										.createMessage(
+												TextInput.inst().text(MessageString.MESSAGE_PURGE_ERROR.applyPrefix())
+														.replacements(new TextReplacement("{amount}",
+																() -> String.valueOf(protectionsToPurge.size()))))
 										.sendMessage(sender);
 							}
 						});
 					});
 					return true;
+				case "--show-ignored-players":
+					purgeConfiguration.setShowIgnoredPlayers(true);
+					break;
 				case "--config":
-					purgeConfiguration.copy(MainPluginClass.getPlugin().getProtectionsRemoverModule().getConfiguredPurgeConfiguration());
+					purgeConfiguration.copy(MainPluginClass.getPlugin().getProtectionsRemoverModule()
+							.getConfiguredPurgeConfiguration());
 					break;
 				case "--days":
 				case "--hours":
 				case "--minutes":
 					if (args.length > i + 1) {
 						try {
-							Integer number = Integer.parseInt(args[++i]);
+							Integer number = Integer.parseInt(args[i + 1]);
 
 							if (number < 0) {
-								MessageBuilder.createMessage(MessageString.ERROR_NUMBERBELOWZERO.applyPrefix()).sendMessage(sender);
+								MessageBuilder.createMessage(MessageString.ERROR_NUMBERBELOWZERO.applyPrefix())
+										.sendMessage(sender);
 								return true;
 							}
 
@@ -82,16 +116,21 @@ public class PurgeSubCommand extends SubCommand {
 							} else {
 								purgeConfiguration.setMinutes(number);
 							}
+
+							i++;
 						} catch (NumberFormatException e) {
-							MessageBuilder.createMessage(MessageString.ERROR_INVALIDNUMBER.applyPrefix()).sendMessage(sender);
+							MessageBuilder.createMessage(MessageString.ERROR_INVALIDNUMBER.applyPrefix())
+									.sendMessage(sender);
 							return true;
 						}
 					} else {
-						MessageBuilder.createMessage(MessageString.ERROR_PURGE_NOVALUEFORPARAMETER.applyPrefix()).sendMessage(sender);
+						MessageBuilder.createMessage(MessageString.ERROR_PURGE_NOVALUEFORPARAMETER.applyPrefix())
+								.sendMessage(sender);
 					}
 					break;
 				default:
-					MessageBuilder.createMessage(MessageString.ERROR_PURGE_INVALIDPARAMETER.applyPrefix()).sendMessage(sender);
+					MessageBuilder.createMessage(MessageString.ERROR_PURGE_INVALIDPARAMETER.applyPrefix())
+							.sendMessage(sender);
 					return true;
 				}
 			}
@@ -102,10 +141,14 @@ public class PurgeSubCommand extends SubCommand {
 				List<Protection> protectionsToPurge = MainPluginClass.getPlugin().getProtectionsRemoverModule()
 						.retrieveProtectionsToPurge(purgeConfiguration);
 				MessageBuilder
-						.createMessage(TextInput.inst().text(MessageString.MESSAGE_PURGE_WARNING.applyPrefix())
-								.replacements(new TextReplacement("{amount}", () -> String.valueOf(protectionsToPurge.size())),
-										new TextReplacement("{command}", () -> String.format("/%s %s confirm", getCommandPath(),
-												Arrays.stream(Arrays.copyOfRange(args, 1, args.length)).collect(Collectors.joining(" "))))))
+						.createMessage(
+								TextInput.inst().text(MessageString.MESSAGE_PURGE_WARNING.applyPrefix()).replacements(
+										new TextReplacement("{amount}",
+												() -> String.valueOf(protectionsToPurge.size())),
+										new TextReplacement("{command}",
+												() -> String.format("/%s %s confirm", getCommandPath(),
+														Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
+																.collect(Collectors.joining(" "))))))
 						.sendMessage(sender);
 			});
 		} else {

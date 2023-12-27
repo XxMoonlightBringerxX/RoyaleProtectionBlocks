@@ -76,8 +76,8 @@ Settings:
     Default-flags: 
       greeting: "&7Entering protection from &a%player_name%"
       farewell: "&7Leaving protection from &a%player_name%"
-      command-on-entry: "/title %username% actionbar {\"text\":\"&7Entering protection from &a%player_name%\"}"
-      command-on-exit: "/title %username% actionbar {\"text\":\"&7Leaving protection from &a%player_name%\"}"
+      console-command-on-entry: "/title \%username\% actionbar {\"text\":\"&7Entering protection from &a%player_name%\"}"
+      console-command-on-exit: "/title \%username\% actionbar {\"text\":\"&7Leaving protection from &a%player_name%\"}"
       
     Send-to-world-on-kick: "world"
 

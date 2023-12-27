@@ -24,10 +24,12 @@ import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Messages.Exceptions.PlayerAlreadyListeningException;
+import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
 
 public class ProtectionBlockManagerInventory extends PluginChestInventory {
 
@@ -166,8 +168,8 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 
 		setSlot(13,
 				new Button(
-						ItemStacksUtils
-								.setSkin(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
+						SkinUtilities.NMS
+								.setSkinSafe(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
 										MessageBuilder.createMessage(TextInput.inst()
 												.text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSXNAME
 														.toString())
@@ -193,8 +195,8 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 
 		setSlot(14,
 				new Button(
-						ItemStacksUtils
-								.setSkin(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
+						SkinUtilities.NMS
+								.setSkinSafe(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
 										MessageBuilder.createMessage(TextInput.inst()
 												.text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSYNAME
 														.toString())
@@ -218,8 +220,8 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 
 		setSlot(15,
 				new Button(
-						ItemStacksUtils
-								.setSkin(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
+						SkinUtilities.NMS
+								.setSkinSafe(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
 										MessageBuilder.createMessage(TextInput.inst()
 												.text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSZNAME
 														.toString())
@@ -245,7 +247,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 						: MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTSETNAME);
 
 		setSlot(29, new Button(ItemStacksUtils.createItemStack(
-				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), WORLD_SKIN),
+				SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), WORLD_SKIN),
 				MessageBuilder
 						.createMessage(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_ALLOWEDWORLDSNAME.toString())
 						.toString())) {
@@ -341,6 +343,53 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 						}
 					}
 				});
+
+		MessageString priceName = this.newProtectionBlock.getInformation().getPrice() != null
+				? MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PRICENAME
+				: MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_PRICENOTSETNAME;
+
+		setSlot(34, new Button(ItemStacksUtils.createItemStack(Material.GOLD_INGOT,
+				MessageBuilder
+						.createMessage(TextInput.inst().text(priceName.toString())
+								.replacements(new TextReplacement("{block_price}",
+										() -> newProtectionBlock.getInformation().getPrice() != null
+												? StringsHelper
+														.toCurrency(newProtectionBlock.getInformation().getPrice())
+												: "")))
+						.toString())) {
+			@Override
+			public void onClick(InventoryClickEvent e) {
+				try {
+					MainPluginClass.getPlugin().getMessagesListener().startListening(getPlayer().getUniqueId(),
+							(message) -> {
+								if (!message.equalsIgnoreCase("cancel")) {
+									try {
+										double price = Double.parseDouble(message);
+
+										if (price <= 0D) {
+											newProtectionBlock.getInformation().setPrice(null);
+										} else {
+											newProtectionBlock.getInformation().setPrice(price);
+										}
+									} catch (NumberFormatException e1) {
+										MessageBuilder.createMessage(MessageString.ERROR_INVALIDNUMBER.applyPrefix())
+												.sendMessage(e.getWhoClicked());
+									}
+								}
+								openInventory();
+								return true;
+							});
+					closeInventory();
+					MessageBuilder
+							.createMessage(
+									MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSSPECIFYINFO.applyPrefix())
+							.sendMessage(e.getWhoClicked());
+				} catch (PlayerAlreadyListeningException e1) {
+					MessageBuilder.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix())
+							.sendMessage(e.getWhoClicked());
+				}
+			}
+		});
 	}
 
 	public void setBlocks(InventoryClickEvent e, IntSupplier getBlocks, IntConsumer setBlocks) {

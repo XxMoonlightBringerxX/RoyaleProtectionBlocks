@@ -1,9 +1,11 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects;
 
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
+import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteDeniedException;
 import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveDeniedException;
@@ -13,10 +15,13 @@ import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveI
 import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveItemNullException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBlocks.ProtectionBlockAllowedWorlds;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBlocks.ProtectionBlockInformation;
+import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import net.milkbowl.vault.economy.EconomyResponse;
 
 @Data
 @Accessors(chain = true)
@@ -47,6 +52,45 @@ public class ProtectionBlock {
 
 		this.information.setId(protectionBlock.getInformation().getId());
 		this.copy(protectionBlock);
+	}
+
+	public void purchase(Player pl) {
+		try {
+			ItemStack item = getInformation().generateItem();
+			boolean hasAvailableSpace = true;
+
+			if (pl.getInventory().firstEmpty() == -1) {
+				if (pl.getInventory().containsAtLeast(item, 1)) {
+					if (pl.getInventory().addItem(item).isEmpty()) {
+						pl.getInventory().removeItem(item);
+					} else {
+						hasAvailableSpace = false;
+					}
+				} else {
+					hasAvailableSpace = false;
+				}
+			}
+
+			if (hasAvailableSpace) {
+				if (pl.hasPermission(Permissions.PROTECTION_ECONOMY_BYPASS)) {
+					pl.getInventory().addItem(item);
+				} else {
+					EconomyResponse response = MainPluginClass.getVaultAPI().getEcon().withdrawPlayer(pl,
+							getInformation().getPrice());
+					if (response.transactionSuccess()) {
+						pl.getInventory().addItem(item);
+					} else {
+						MessageBuilder.createMessage(MessageString.applyPrefix(MessageString.ERROR_INSUFFICIENTBALANCE))
+								.sendMessage(pl);
+					}
+				}
+			} else {
+				MessageBuilder.createMessage(MessageString.applyPrefix(MessageString.ERROR_INVENTORYFULL))
+						.sendMessage(pl);
+			}
+		} catch (ProtectionBlocksGenerateItemException e) {
+			e.sendError(pl);
+		}
 	}
 
 	public void save() throws ProtectionBlocksSaveException {

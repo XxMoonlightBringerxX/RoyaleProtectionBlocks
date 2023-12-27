@@ -16,6 +16,7 @@ import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
@@ -32,7 +33,7 @@ public class ProtectionBlockAllowedWorldsInventory extends PluginChestInventory 
 
 	public static void initItems() {
 		SEARCH_PLAYER_BUTTON = ItemStacksUtils
-				.createItemStack(ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
+				.createItemStack(SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
 						MessageBuilder.createMessage(
 								MessageString.INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_SEARCHWORLDNAME.toString())
 								.toString());
@@ -126,7 +127,7 @@ public class ProtectionBlockAllowedWorldsInventory extends PluginChestInventory 
 				}
 
 				setSlot(slot++, new Button(ItemStacksUtils.createItemStack(
-						ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), WORLD_SKIN),
+						SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), WORLD_SKIN),
 						MessageBuilder.createMessage(TextInput.inst()
 								.text(MessageString.INVENTORY_PROTECTIONBLOCKS_ALLOWEDWORLDS_ALLOWEDWORLDNAME
 										.toString())

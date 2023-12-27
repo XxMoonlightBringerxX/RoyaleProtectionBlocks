@@ -40,33 +40,41 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 	protected void generateTables() {
 		Table t;
 		getDatabase()
-				.addTable((t = new Table(getDatabase(), "Protections"))
-						.addColumns(new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setPrimary(true).setNotNull(true),
-								new Column(t, "OwnerUuid", "CHAR(36)", Types.CHAR).setNotNull(true),
-								new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "WorldName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "DisplayName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "CreatedDate", "BIGINT", Types.BIGINT).setNotNull(false)))
-				.addTable((t = new Table(getDatabase(), "ProtectionBlocks")).addColumns(
-						new Column(t, "Id", "VARCHAR(32)", Types.VARCHAR).setPrimary(true).setUnique(true).setNotNull(true),
-						new Column(t, "Item", "BLOB", Types.BLOB).setNotNull(true),
-						new Column(t, "BlocksX", "INTEGER", Types.INTEGER).setNotNull(true),
-						new Column(t, "BlocksY", "INTEGER", Types.INTEGER).setNotNull(true),
-						new Column(t, "BlocksZ", "INTEGER", Types.INTEGER).setNotNull(true),
-						new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR), new Column(t, "Recipe", "BLOB", Types.BLOB),
-						new Column(t, "RecipePermission", "VARCHAR(64)", Types.VARCHAR)))
-				.addTable((t = new Table(getDatabase(), "Recipes"))
-						.addColumns(
-								new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setPrimary(true).setUnique(true)
+				.addTable((t = new Table(getDatabase(), "Protections")).addColumns(
+						new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setPrimary(true).setNotNull(true),
+						new Column(t, "OwnerUuid", "CHAR(36)", Types.CHAR).setNotNull(true),
+						new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
+						new Column(t, "WorldName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
+						new Column(t, "DisplayName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
+						new Column(t, "CreatedDate", "BIGINT", Types.BIGINT).setNotNull(false)))
+				.addTable(
+						(t = new Table(getDatabase(), "ProtectionBlocks")).addColumns(
+								new Column(t, "Id", "VARCHAR(32)", Types.VARCHAR).setPrimary(true).setUnique(true)
 										.setNotNull(true),
-								new Column(t, "Recipe", "BLOB", Types.BLOB).setNotNull(true),
-								new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR))
-						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
-								Arrays.asList(getDatabase().getTable("ProtectionBlocks").getColumn("Id")))))
+								new Column(t, "Item", "BLOB", Types.BLOB).setNotNull(true),
+								new Column(t, "BlocksX", "INTEGER", Types.INTEGER).setNotNull(true),
+								new Column(t, "BlocksY", "INTEGER", Types.INTEGER).setNotNull(true),
+								new Column(t, "BlocksZ", "INTEGER", Types.INTEGER).setNotNull(true),
+								new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR),
+								new Column(t, "Price", "DECIMAL(11,2)", Types.DECIMAL),
+								new Column(t, "Recipe", "BLOB", Types.BLOB), new Column(t, "RecipePermission",
+										"VARCHAR(64)", Types.VARCHAR)))
+				.addTable(
+						(t = new Table(getDatabase(), "Recipes"))
+								.addColumns(
+										new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR)
+												.setPrimary(true).setUnique(true).setNotNull(true),
+										new Column(t, "Recipe", "BLOB", Types.BLOB).setNotNull(true),
+										new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR))
+								.addForeignConstraint(
+										new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
+												Arrays.asList(
+														getDatabase().getTable("ProtectionBlocks").getColumn("Id")))))
 				.addTable((t = new Table(getDatabase(), "ProtectionBlockAllowedWorlds"))
 						.addColumns(new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
 								new Column(t, "WorldName", "VARCHAR(256)", Types.VARCHAR))
-						.addUniqueConstraint(new UniqueConstraint(t.getColumn("ProtectionBlockId"), t.getColumn("WorldName")))
+						.addUniqueConstraint(
+								new UniqueConstraint(t.getColumn("ProtectionBlockId"), t.getColumn("WorldName")))
 						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
 								Arrays.asList(getDatabase().getTable("ProtectionBlocks").getColumn("Id")))));
 	}
@@ -78,15 +86,17 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 				long createdDate = set.getLong("CreatedDate");
 
 				if (createdDate == 0) {
-					Protection protection = new Protection(set.getString("RegionId"), UUID.fromString(set.getString("ownerUuid")),
-							new ReferencedProtectionBlock(set.getString("ProtectionBlockId")), set.getString("WorldName"),
-							set.getString("DisplayName"), System.currentTimeMillis());
+					Protection protection = new Protection(set.getString("RegionId"),
+							UUID.fromString(set.getString("ownerUuid")),
+							new ReferencedProtectionBlock(set.getString("ProtectionBlockId")),
+							set.getString("WorldName"), set.getString("DisplayName"), System.currentTimeMillis());
 					saveProtection(protection);
 					protections.add(protection);
 				} else {
-					protections.add(new Protection(set.getString("RegionId"), UUID.fromString(set.getString("ownerUuid")),
-							new ReferencedProtectionBlock(set.getString("ProtectionBlockId")), set.getString("WorldName"),
-							set.getString("DisplayName"), createdDate));
+					protections
+							.add(new Protection(set.getString("RegionId"), UUID.fromString(set.getString("ownerUuid")),
+									new ReferencedProtectionBlock(set.getString("ProtectionBlockId")),
+									set.getString("WorldName"), set.getString("DisplayName"), createdDate));
 				}
 			}
 		} catch (SQLException e) {
@@ -100,11 +110,14 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 
 	public List<ProtectionBlock> getProtectionBlocks() {
 		List<ProtectionBlock> protectionBlocks = new ArrayList<>();
-		try (ResultSet set = this.getDatabase().select(Arrays.asList(this.getDatabase().getTable("ProtectionBlocks")))) {
+		try (ResultSet set = this.getDatabase()
+				.select(Arrays.asList(this.getDatabase().getTable("ProtectionBlocks")))) {
 			while (set.next()) {
 				protectionBlocks.add(new ProtectionBlock(
-						new ProtectionBlockInformation(set.getString("Id"), ItemStacksUtils.itemsParse(set.getBytes("Item"))[0],
-								set.getInt("BlocksX"), set.getInt("BlocksY"), set.getInt("BlocksZ"), set.getString("Permission")),
+						new ProtectionBlockInformation(set.getString("Id"),
+								ItemStacksUtils.itemsParse(set.getBytes("Item"))[0], set.getInt("BlocksX"),
+								set.getInt("BlocksY"), set.getInt("BlocksZ"), set.getString("Permission"),
+								(set.getObject("Price") != null ? set.getDouble("Price") : null)),
 						getProtectionBlockAllowedWorlds(set.getString("Id"))));
 			}
 		} catch (SQLException e) {
@@ -118,8 +131,9 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 	private ProtectionBlockAllowedWorlds getProtectionBlockAllowedWorlds(String protectionBlockId) {
 		HashSet<String> allowedWorlds = new HashSet<>();
 		Table t = this.getDatabase().getTable("ProtectionBlockAllowedWorlds");
-		try (ResultSet set = this.getDatabase().select(Arrays.asList(t), new Condition(
-				new Condition(t.getColumn("ProtectionBlockId"), new Data(Types.VARCHAR, protectionBlockId), ConditionType.EQUAL)))) {
+		try (ResultSet set = this.getDatabase().select(Arrays.asList(t),
+				new Condition(new Condition(t.getColumn("ProtectionBlockId"),
+						new Data(Types.VARCHAR, protectionBlockId), ConditionType.EQUAL)))) {
 			while (set.next()) {
 				allowedWorlds.add(set.getString("WorldName"));
 			}
@@ -159,20 +173,21 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 		HashMap<Column, Data> values = new HashMap<>();
 		values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
 		values.put(t.getColumn("OwnerUuid"), new Data(Types.CHAR, protection.getOwnerUuid().toString()));
-		values.put(t.getColumn("ProtectionBlockId"), new Data(Types.VARCHAR, protection.getProtectionBlock().getIdentifier()));
+		values.put(t.getColumn("ProtectionBlockId"),
+				new Data(Types.VARCHAR, protection.getProtectionBlock().getIdentifier()));
 		values.put(t.getColumn("WorldName"), new Data(Types.VARCHAR, protection.getWorldName()));
 		values.put(t.getColumn("DisplayName"), new Data(Types.VARCHAR, protection.getDisplayName()));
 		values.put(t.getColumn("CreatedDate"), new Data(Types.BIGINT, protection.getCreatedDate()));
-		if (!this.getDatabase().insertOrUpdate(t, values,
-				new Condition(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
+		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("RegionId"),
+				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
 			throw new ProtectionSaveSQLException();
 		}
 	}
 
 	public void deleteProtection(Protection protection) throws ProtectionDeleteSQLException {
 		Table t = this.getDatabase().getTable("Protections");
-		if (!this.getDatabase().delete(t, new Condition(
-				new Condition(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL)))) {
+		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("RegionId"),
+				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL)))) {
 			throw new ProtectionDeleteSQLException();
 		}
 	}
@@ -181,16 +196,19 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 		Table t = this.getDatabase().getTable("ProtectionBlocks");
 		HashMap<Column, Data> values = new HashMap<>();
 		values.put(t.getColumn("Id"), new Data(Types.VARCHAR, protectionBlock.getInformation().getId()));
-		values.put(t.getColumn("Item"),
-				new Data(Types.BLOB, ItemStacksUtils.itemsParse(new ItemStack[] { protectionBlock.getInformation().getItem() })));
+		values.put(t.getColumn("Item"), new Data(Types.BLOB,
+				ItemStacksUtils.itemsParse(new ItemStack[] { protectionBlock.getInformation().getItem() })));
 		values.put(t.getColumn("BlocksX"), new Data(Types.INTEGER, protectionBlock.getInformation().getBlocksX()));
 		values.put(t.getColumn("BlocksY"), new Data(Types.INTEGER, protectionBlock.getInformation().getBlocksY()));
 		values.put(t.getColumn("BlocksZ"), new Data(Types.INTEGER, protectionBlock.getInformation().getBlocksZ()));
 		values.put(t.getColumn("Permission"),
 				new Data(protectionBlock.getInformation().getPermission() != null ? Types.INTEGER : Types.NULL,
 						protectionBlock.getInformation().getPermission()));
-		if (!this.getDatabase().insertOrUpdate(t, values,
-				new Condition(t.getColumn("Id"), new Data(Types.CHAR, protectionBlock.getInformation().getId()), ConditionType.EQUAL))) {
+		values.put(t.getColumn("Price"),
+				new Data(protectionBlock.getInformation().getPrice() != null ? Types.INTEGER : Types.NULL,
+						protectionBlock.getInformation().getPrice()));
+		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("Id"),
+				new Data(Types.CHAR, protectionBlock.getInformation().getId()), ConditionType.EQUAL))) {
 			throw new ProtectionBlocksSaveSQLException();
 		}
 
@@ -205,7 +223,8 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 			List<Map<Column, Data>> valuesList = new ArrayList<>();
 			protectionBlock.getAllowedWorlds().get().stream().forEach(allowedWorld -> {
 				HashMap<Column, Data> map = new HashMap<>();
-				map.put(finalT.getColumn("ProtectionBlockId"), new Data(Types.VARCHAR, protectionBlock.getInformation().getId()));
+				map.put(finalT.getColumn("ProtectionBlockId"),
+						new Data(Types.VARCHAR, protectionBlock.getInformation().getId()));
 				map.put(finalT.getColumn("WorldName"), new Data(Types.VARCHAR, allowedWorld));
 				valuesList.add(map);
 			});
@@ -237,16 +256,20 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 		values.put(t.getColumn("Recipe"), new Data(Types.BLOB, ItemStacksUtils.itemsParse(recipe.getRecipe())));
 		values.put(t.getColumn("Permission"),
 				new Data(recipe.getPermission() != null ? Types.INTEGER : Types.NULL, recipe.getPermission()));
-		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("ProtectionBlockId"),
-				new Data(Types.CHAR, recipe.getProtectionBlock().getObject().getInformation().getId()), ConditionType.EQUAL))) {
+		if (!this.getDatabase().insertOrUpdate(t, values,
+				new Condition(t.getColumn("ProtectionBlockId"),
+						new Data(Types.CHAR, recipe.getProtectionBlock().getObject().getInformation().getId()),
+						ConditionType.EQUAL))) {
 			throw new ProtectionBlocksSaveSQLException();
 		}
 	}
 
 	public void deleteRecipe(Recipe recipe) throws ProtectionBlocksDeleteSQLException {
 		Table t = this.getDatabase().getTable("Recipes");
-		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("ProtectionBlockId"),
-				new Data(Types.VARCHAR, recipe.getProtectionBlock().getObject().getInformation().getId()), ConditionType.EQUAL)))) {
+		if (!this.getDatabase().delete(t,
+				new Condition(new Condition(t.getColumn("ProtectionBlockId"),
+						new Data(Types.VARCHAR, recipe.getProtectionBlock().getObject().getInformation().getId()),
+						ConditionType.EQUAL)))) {
 			throw new ProtectionBlocksDeleteSQLException();
 		}
 	}
@@ -298,12 +321,13 @@ public class SQLModule extends darkpanda73.LibsCollection.PandaSQL.Spigot.SQLMod
 
 	@Override
 	protected String getSQLiteFile() {
-		return String.valueOf(MainPluginClass.getPlugin().getFileModule().PLUGIN_FOLDER.getFolder().getPath()) + "/DB.sqlite";
+		return String.valueOf(MainPluginClass.getPlugin().getFileModule().PLUGIN_FOLDER.getFolder().getPath())
+				+ "/DB.sqlite";
 	}
 
 	@Override
 	protected int getVersion() {
-		return 4;
+		return 5;
 	}
 
 	@Override

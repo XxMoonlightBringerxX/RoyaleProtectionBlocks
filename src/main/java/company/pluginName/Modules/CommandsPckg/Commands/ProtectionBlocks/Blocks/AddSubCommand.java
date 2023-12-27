@@ -81,7 +81,7 @@ public class AddSubCommand extends SubCommand {
 								String permission = args.length > 5 ? args[5] : null;
 								ProtectionBlock protectionBlock = new ProtectionBlock(
 										new ProtectionBlockInformation(args[1].toLowerCase(), protectionBlockItemstack,
-												x / 2, (y == -1 ? y : y / 2), z / 2, permission));
+												x / 2, (y == -1 ? y : y / 2), z / 2, permission, null));
 
 								try {
 									protectionBlockItemstack = protectionBlock.getInformation().generateItem();

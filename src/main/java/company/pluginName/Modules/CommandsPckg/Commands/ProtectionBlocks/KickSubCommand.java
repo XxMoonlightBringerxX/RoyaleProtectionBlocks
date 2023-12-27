@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
+import company.pluginName.Exceptions.Protection.ProtectionKickDeniedException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
@@ -46,17 +47,20 @@ public class KickSubCommand extends SubCommand {
 					Player kicked = Bukkit.getPlayer(args[1]);
 					if (kicked != null) {
 						if (!kicked.hasPermission(Permissions.PROTECTION_KICK_BYPASS)) {
-							if (protection.getActions().kickPlayer(kicked)) {
-								MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_KICKED.applyPrefix())
-										.sendMessage(kicked);
-								MessageBuilder
-										.createMessage(MessageString.MESSAGE_PROTECTIONS_PLAYERKICKED.applyPrefix())
-										.sendMessage(sender);
-							} else {
-								MessageBuilder
-										.createMessage(
-												MessageString.MESSAGE_PROTECTIONS_PLAYERNOTINPROTECTION.applyPrefix())
-										.sendMessage(sender);
+							try {
+								if (protection.getActions().kickPlayer(pl, kicked)) {
+									MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_KICKED.applyPrefix())
+											.sendMessage(kicked);
+									MessageBuilder
+											.createMessage(MessageString.MESSAGE_PROTECTIONS_PLAYERKICKED.applyPrefix())
+											.sendMessage(sender);
+								} else {
+									MessageBuilder.createMessage(
+											MessageString.MESSAGE_PROTECTIONS_PLAYERNOTINPROTECTION.applyPrefix())
+											.sendMessage(sender);
+								}
+							} catch (ProtectionKickDeniedException e) {
+								e.sendError(pl);
 							}
 						} else {
 							MessageBuilder

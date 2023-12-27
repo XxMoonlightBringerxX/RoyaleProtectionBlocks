@@ -24,6 +24,7 @@ import company.pluginName.Utils.OfflinePlayerUtils;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
@@ -40,7 +41,7 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 
 	public static void initItems() {
 		SEARCH_PLAYER_BUTTON = ItemStacksUtils
-				.createItemStack(ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
+				.createItemStack(SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
 						MessageBuilder
 								.createMessage(MessageString.INVENTORY_PROTECTION_OWNERS_SEARCHOWNERNAME.toString())
 								.toString());
@@ -139,9 +140,13 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 
 				OfflinePlayer pl = OfflinePlayerUtils.getOfflinePlayer(owner);
 
+				final boolean canRemove = protection.isMainOwner(getPlayer().getUniqueId())
+						|| (protection.getOwners().list().contains(getPlayer().getUniqueId())
+								&& pl.getUniqueId().equals(owner))
+						|| getPlayer().hasPermission(Permissions.PROTECTION_OWNERS_ADD_OTHERS);
+
 				List<String> lore = new ArrayList<>();
-				if (protection.isMainOwner(getPlayer().getUniqueId())
-						|| getPlayer().hasPermission(Permissions.PROTECTION_OWNERS_ADD_OTHERS)) {
+				if (canRemove) {
 					lore.add(MessageString.INVENTORY_PROTECTION_OWNERS_REMOVEOWNERLORELINE.toString());
 				}
 
@@ -159,16 +164,18 @@ public class ProtectionOwnersInventory extends PluginChestInventory {
 												.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {
-								if (protection.isMainOwner(getPlayer().getUniqueId())
-										|| getPlayer().hasPermission(Permissions.PROTECTION_OWNERS_REMOVE_OTHERS)) {
+								if (canRemove) {
 									new ConfirmationInventory(getPlayer(), () -> {
 										try {
 											protection.getOwners().remove(getPlayer(), owner);
 										} catch (ProtectionOwnersDeleteException e1) {
 											e1.sendError(getPlayer());
 										}
-										openInventory();
-									}).openInventory();
+
+										if (!owner.equals(getPlayer().getUniqueId())) {
+											openInventory();
+										}
+									}).setPreviousInventory(null).openInventory(MainPluginClass.getPlugin());
 								}
 							}
 						});

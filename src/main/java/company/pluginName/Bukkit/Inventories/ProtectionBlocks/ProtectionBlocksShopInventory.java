@@ -7,53 +7,45 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Permissions;
 import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
-import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
-import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.TemporaryModules.FilePckg.Messages.MessageList;
 import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import company.pluginName.TemporaryModules.FilePckg.Settings.SettingBoolean;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
-import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
+import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Setter(lombok.AccessLevel.NONE)
-public class ProtectionBlocksListInventory extends PluginChestInventory {
+public class ProtectionBlocksShopInventory extends PluginChestInventory {
 
 	private int page = 1;
 
-	public ProtectionBlocksListInventory(Player player) {
+	public ProtectionBlocksShopInventory(Player player) {
 		super(player);
 
 		setSize(27);
 		setName(MessageBuilder
-				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_TITLE.toString()))
+				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTIONBLOCKS_SHOP_TITLE.toString()))
 				.toString());
 	}
 
 	@Override
 	public void updateContent() {
-		boolean canGet = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_GIVE);
-		boolean canEdit = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_EDIT);
-		boolean canCreate = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_CREATE);
-		boolean canDelete = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_DELETE);
 
 		clearSlots();
 
@@ -91,23 +83,6 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 			});
 		}
 
-		if (canCreate) {
-			setSlot(getSize() - 5,
-					new Button(
-							SkinUtilities.NMS.setSkinSafe(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
-									MessageBuilder.createMessage(
-											MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_CREATEBLOCKITEM.toString())
-											.toString()),
-									PLUS_SKIN)) {
-
-						@Override
-						public void onClick(InventoryClickEvent e) {
-							new ProtectionBlockManagerInventory(getPlayer()).setPreviousHolder(getHolder())
-									.openInventory(MainPluginClass.getPlugin());
-						}
-					});
-		}
-
 		if (blocks.size() != 0) {
 			int slot = 0;
 			for (ProtectionBlock block : Arrays.copyOfRange(blocks.toArray(new ProtectionBlock[blocks.size()]),
@@ -123,23 +98,7 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 				if (im.hasLore()) {
 					lore.addAll(im.getLore());
 				}
-				lore.addAll(MessageList.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKLORE.getContent());
-
-				if (canGet || canDelete) {
-					lore.add("&0");
-
-					if (canGet) {
-						lore.add(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKCOPYLORELINE.toString());
-					}
-
-					if (canEdit) {
-						lore.add(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKEDITLORELINE.toString());
-					}
-
-					if (canDelete) {
-						lore.add(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKREMOVELORELINE.toString());
-					}
-				}
+				lore.addAll(MessageList.INVENTORY_PROTECTIONBLOCKS_SHOP_PROTECTIONBLOCKLORE.getContent());
 
 				setSlot(slot++,
 						new Button(
@@ -148,10 +107,12 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 												.toString() : null,
 										MessageBuilder
 												.createMessage(TextInput.inst()
-														.text(lore.toArray(new String[lore.size()]))
-														.replacements(new TextReplacement("{blocks_x}", () -> String
-																.valueOf(
-																		(block.getInformation().getBlocksX() * 2) + 1)),
+														.text(lore.toArray(new String[lore.size()])).replacements(
+																new TextReplacement(
+																		"{blocks_x}",
+																		() -> String.valueOf(
+																				(block.getInformation().getBlocksX()
+																						* 2) + 1)),
 																new TextReplacement("{blocks_y}",
 																		() -> block.getInformation().getBlocksY() == -1
 																				? MessageString.MESSAGE_GENERAL_NOLIMIT
@@ -166,33 +127,20 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 																		() -> block.getInformation().getPermission()),
 																new TextReplacement("{block_allowed_worlds}",
 																		() -> block.getAllowedWorlds().get().stream()
-																				.collect(Collectors.joining(", ")))))
+																				.collect(Collectors.joining(", "))),
+																new TextReplacement("{block_price}",
+																		() -> StringsHelper.toCurrency(
+																				block.getInformation().getPrice()))))
 												.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {
-								if (e.getClick() == ClickType.LEFT && !e.isShiftClick() && canGet) {
-									try {
-										e.getWhoClicked().getOpenInventory()
-												.setCursor(block.getInformation().generateItem());
-									} catch (ProtectionBlocksGenerateItemException e1) {
-										e1.sendError(getPlayer());
-										return;
-									}
-								} else if (e.getClick() == ClickType.SHIFT_LEFT && canEdit) {
-									new ProtectionBlockManagerInventory(getPlayer(), block)
-											.setPreviousHolder(getHolder()).openInventory(MainPluginClass.getPlugin());
-								} else if (e.getClick() == ClickType.RIGHT && canDelete) {
+								if (SettingBoolean.SETTINGS_PROTECTIONBLOCK_REQUESTCONFIRMATIONONPURCHASETHROUGHGUI
+										.getContent()) {
 									new ConfirmationInventory(getPlayer(), () -> {
-										try {
-											block.delete(getPlayer());
-											MessageBuilder.createMessage(
-													MessageString.MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY
-															.applyPrefix())
-													.sendMessage(getPlayer());
-										} catch (ProtectionBlocksDeleteException e1) {
-											e1.sendError(getPlayer());
-										}
+										block.purchase(getPlayer());
 									}).openInventory();
+								} else {
+									block.purchase(getPlayer());
 								}
 							}
 						});
@@ -205,7 +153,8 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 	}
 
 	private Collection<ProtectionBlock> getList() {
-		return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().values();
+		return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().values().stream()
+				.filter(block -> block.getInformation().isForSale()).collect(Collectors.toList());
 	}
 
 }

@@ -49,6 +49,7 @@ import company.pluginName.TemporaryModules.FilePckg.Settings.SettingInt;
 import company.pluginName.Utils.BlockVectorUtils;
 import company.pluginName.Utils.OfflinePlayerUtils;
 import company.pluginName.Utils.ReflectUtils;
+import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -61,11 +62,13 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 public class Protection {
 
 	private static String generateDefaultName(Location location) {
-		return location.getWorld().getName() + "_" + location.getBlockX() + "_" + location.getBlockY() + "_" + location.getBlockZ();
+		return location.getWorld().getName() + "_" + location.getBlockX() + "_" + location.getBlockY() + "_"
+				+ location.getBlockZ();
 	}
 
 	private String regionId;
 	private UUID ownerUuid;
+	private String ownerName;
 	private ReferencedProtectionBlock protectionBlock;
 	private String worldName;
 	private String displayName;
@@ -83,13 +86,13 @@ public class Protection {
 		this(null, ownerUuid, null, null, null, 0, null, null);
 	}
 
-	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName, String displayName,
-			long createdDate) {
+	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName,
+			String displayName, long createdDate) {
 		this(regionId, ownerUuid, protectionBlock, worldName, displayName, createdDate, null, null);
 	}
 
-	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName, String displayName,
-			long createdDate, ProtectedRegion protectedRegion, Location protectionBlockLocation) {
+	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName,
+			String displayName, long createdDate, ProtectedRegion protectedRegion, Location protectionBlockLocation) {
 		this.regionId = regionId;
 		this.ownerUuid = ownerUuid;
 		this.protectionBlock = protectionBlock;
@@ -98,6 +101,18 @@ public class Protection {
 		this.createdDate = createdDate;
 		this.protectedRegion = protectedRegion;
 		this.protectionBlockLocation = protectionBlockLocation;
+	}
+
+	/*
+	 * Data methods
+	 */
+
+	public String getOwnerName() {
+		if (ownerName == null) {
+			OfflinePlayer owner = OfflinePlayerUtils.getOfflinePlayer(ownerUuid);
+			this.ownerName = owner != null ? owner.getName() : "";
+		}
+		return this.ownerName;
 	}
 
 	/*
@@ -139,23 +154,27 @@ public class Protection {
 					protectionViewTask = Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
 						AtomicInteger seconds = new AtomicInteger(0);
 						protectionViewEntity = BlockUtils.setLocationGlowing(getProtectionBlockLocation());
-						protectionViewTask = Bukkit.getScheduler().runTaskTimerAsynchronously(MainPluginClass.getPlugin(), () -> {
-							locationsForParticles.forEach((loc) -> {
-								DustOptions dustOptions = new DustOptions(Color.fromRGB((int) (Math.random() * 256),
-										(int) (Math.random() * 256), (int) (Math.random() * 256)), 1.0F);
-								loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 1, dustOptions);
-							});
+						protectionViewTask = Bukkit.getScheduler()
+								.runTaskTimerAsynchronously(MainPluginClass.getPlugin(), () -> {
+									locationsForParticles.forEach((loc) -> {
+										DustOptions dustOptions = new DustOptions(
+												Color.fromRGB((int) (Math.random() * 256), (int) (Math.random() * 256),
+														(int) (Math.random() * 256)),
+												1.0F);
+										loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 1, dustOptions);
+									});
 
-							seconds.set(seconds.get() + 1);
-							if (seconds.get() >= SettingInt.SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS.getContent()) {
-								Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
-									protectionViewTask.cancel();
-									protectionViewTask = null;
-									protectionViewEntity.remove();
-									protectionViewEntity = null;
-								});
-							}
-						}, 0, 20);
+									seconds.set(seconds.get() + 1);
+									if (seconds.get() >= SettingInt.SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS
+											.getContent()) {
+										Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
+											protectionViewTask.cancel();
+											protectionViewTask = null;
+											protectionViewEntity.remove();
+											protectionViewEntity = null;
+										});
+									}
+								}, 0, 20);
 					});
 				}
 			});
@@ -167,28 +186,32 @@ public class Protection {
 	}
 
 	public boolean isProtectionViewEntity(Entity ent) {
-		return this.isProtectionViewActive() && this.protectionViewEntity != null && ent.getType() == EntityType.MAGMA_CUBE
+		return this.isProtectionViewActive() && this.protectionViewEntity != null
+				&& ent.getType() == EntityType.MAGMA_CUBE
 				&& this.protectionViewEntity.getUniqueId().equals(ent.getUniqueId());
 	}
 
 	@SuppressWarnings("unchecked")
-	public void create(Player creator, Location location, ProtectionBlock protectionBlock) throws ProtectionSaveException {
+	public void create(Player creator, Location location, ProtectionBlock protectionBlock)
+			throws ProtectionSaveException {
 		this.protectionBlock = new ReferencedProtectionBlock(protectionBlock.getInformation().getId());
 		this.worldName = location.getWorld().getName();
 		this.regionId = generateDefaultName(location).toLowerCase();
 		this.displayName = generateDefaultName(location);
 
 		int minBlockX = location.getBlockX() - protectionBlock.getInformation().getBlocksX();
-		int minBlockY = protectionBlock.getInformation().getBlocksY() == -1 ? WorldUtils.getMinHeight(location.getWorld())
+		int minBlockY = protectionBlock.getInformation().getBlocksY() == -1
+				? WorldUtils.getMinHeight(location.getWorld())
 				: location.getBlockY() - protectionBlock.getInformation().getBlocksY();
 		int minBlockZ = location.getBlockZ() - protectionBlock.getInformation().getBlocksZ();
 		int maxBlockX = location.getBlockX() + protectionBlock.getInformation().getBlocksX();
-		int maxBlockY = protectionBlock.getInformation().getBlocksY() == -1 ? WorldUtils.getMaxHeight(location.getWorld())
+		int maxBlockY = protectionBlock.getInformation().getBlocksY() == -1
+				? WorldUtils.getMaxHeight(location.getWorld())
 				: location.getBlockY() + protectionBlock.getInformation().getBlocksY();
 		int maxBlockZ = location.getBlockZ() + protectionBlock.getInformation().getBlocksZ();
 
-		ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId, BlockVector3.at(minBlockX, minBlockY, minBlockZ),
-				BlockVector3.at(maxBlockX, maxBlockY, maxBlockZ));
+		ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
+				BlockVector3.at(minBlockX, minBlockY, minBlockZ), BlockVector3.at(maxBlockX, maxBlockY, maxBlockZ));
 
 		protectedRegion.getOwners().addPlayer(ownerUuid);
 
@@ -200,8 +223,10 @@ public class Protection {
 
 		List<ProtectedRegion> overlaps = protectedRegion.getIntersectingRegions(regionManager.getRegions().values());
 
-		if (creator != null && !creator.hasPermission(Permissions.PROTECTION_OVERLAP_BYPASS) && overlaps.size() > 0 && overlaps.stream()
-				.anyMatch(prot -> prot.getOwners().size() == 0 || !prot.getOwners().getUniqueIds().iterator().next().equals(ownerUuid))) {
+		if (creator != null && !creator.hasPermission(Permissions.PROTECTION_OVERLAP_BYPASS) && overlaps.size() > 0
+				&& (!SettingBoolean.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent()
+						|| overlaps.stream().anyMatch(prot -> prot.getOwners().size() == 0
+								|| !prot.getOwners().getUniqueIds().iterator().next().equals(ownerUuid)))) {
 			throw new ProtectionSaveOverlapsException();
 		}
 
@@ -209,28 +234,40 @@ public class Protection {
 			OfflinePlayer player = OfflinePlayerUtils.getOfflinePlayer(this.ownerUuid);
 
 			HashMap<com.sk89q.worldguard.protection.flags.Flag<?>, Object> flags = new HashMap<>();
-			MainPluginClass.getPlugin().getProtectionSettingsModule().getDefaultFlags().forEach((key, value) -> {
+			MainPluginClass.getPlugin().getProtectionSettingsModule().getDefaultFlags().forEach(defaultFlag -> {
 				if (MainPluginClass.getPlaceholderAPI().isHooked()) {
-					if (value instanceof String) {
-						flags.put(key, MainPluginClass.getPlaceholderAPI().applyPlaceholders((String) value, player));
-					} else if (value instanceof Set) {
+					if (defaultFlag.getValue() instanceof String) {
+						flags.put(defaultFlag.getFlag(),
+								MessageBuilder.createMessage(MainPluginClass.getPlaceholderAPI()
+										.applyPlaceholders((String) defaultFlag.getValue(), player)
+										.replaceAll("\\\\%", "%")).toString());
+					} else if (defaultFlag.getValue() instanceof Set) {
 						Set<String> set = new HashSet<>();
-						((Set<String>) value)
-								.forEach(string -> set.add(MainPluginClass.getPlaceholderAPI().applyPlaceholders(string, player)));
-						flags.put(key, set);
+						((Set<String>) defaultFlag.getValue())
+								.forEach(string -> set.add(MessageBuilder
+										.createMessage(MainPluginClass.getPlaceholderAPI()
+												.applyPlaceholders(string, player).replaceAll("\\\\%", "%"))
+										.toString()));
+						flags.put(defaultFlag.getFlag(), set);
 					} else {
-						flags.put(key, value);
+						flags.put(defaultFlag.getFlag(), defaultFlag.getValue());
 					}
 				} else {
-					flags.put(key, value);
+					flags.put(defaultFlag.getFlag(), defaultFlag.getValue());
+				}
+
+				if (defaultFlag.getRegionGroup() != null && defaultFlag.getFlag().getRegionGroupFlag() != null
+						&& defaultFlag.getFlag().getRegionGroupFlag().getDefault() != defaultFlag.getRegionGroup()) {
+					flags.put(defaultFlag.getFlag().getRegionGroupFlag(), defaultFlag.getRegionGroup());
 				}
 			});
 			flags.put(MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().getWorldGuardFlag(),
 					MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(location));
 
-			if (SettingBoolean.SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION.getContent() && player != null && player.isOnline()) {
-				flags.put(Flags.TELE_LOC,
-						MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(player.getPlayer().getLocation()));
+			if (SettingBoolean.SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION.getContent() && player != null
+					&& player.isOnline()) {
+				flags.put(Flags.TELE_LOC, MainPluginClass.getWorldGuardAPI().getInternalWorldGuard()
+						.adapt(player.getPlayer().getLocation()));
 			}
 
 			protectedRegion.setFlags(flags);
@@ -244,7 +281,8 @@ public class Protection {
 			if (regionManager.hasRegion(protectedRegion.getId())) {
 				regionManager.removeRegion(protectedRegion.getId());
 			}
-			throw e instanceof ProtectionSaveException ? (ProtectionSaveException) e : new ProtectionSaveUnknownException(e);
+			throw e instanceof ProtectionSaveException ? (ProtectionSaveException) e
+					: new ProtectionSaveUnknownException(e);
 		}
 	}
 
@@ -283,7 +321,8 @@ public class Protection {
 				ProtectedRegion region = getProtectedRegion();
 
 				if (region != null) {
-					Location loc = MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().flagState(world, region);
+					Location loc = MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().flagState(world,
+							region);
 
 					if (loc != null) {
 						this.protectionBlockLocation = loc;
@@ -291,8 +330,8 @@ public class Protection {
 						BlockVector3 vector = BlockVectorUtils.getIntersectingVector(region.getMinimumPoint(),
 								getProtectedRegion().getMaximumPoint());
 
-						this.protectionBlockLocation = new Location(Bukkit.getWorld(worldName), vector.getBlockX(), vector.getBlockY(),
-								vector.getBlockZ()).getBlock().getLocation();
+						this.protectionBlockLocation = new Location(Bukkit.getWorld(worldName), vector.getBlockX(),
+								vector.getBlockY(), vector.getBlockZ()).getBlock().getLocation();
 					}
 				}
 			}
@@ -303,21 +342,6 @@ public class Protection {
 
 	public boolean isMainOwner(UUID playerUuid) {
 		return this.ownerUuid.equals(playerUuid);
-	}
-
-	public boolean isOwner(UUID ownerUuid) {
-		RegionManager regionManager = getRegionManager();
-
-		if (regionManager != null && regionManager.hasRegion(regionId)) {
-			return regionManager.getRegion(regionId)
-					.isOwner(MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().wrapPlayer(ownerUuid));
-		}
-
-		return false;
-	}
-
-	public boolean isMember(UUID memberUuid, ProtectedRegion rg) {
-		return rg.getMembers().getPlayers().contains(memberUuid.toString());
 	}
 
 	public void setDisplayName(String displayName) throws ProtectionSaveException {
@@ -369,7 +393,8 @@ public class Protection {
 	}
 
 	public void hideProtectionBlock() {
-		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(null, getProtectionBlockLocation());
+		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(null,
+				getProtectionBlockLocation());
 
 		if (itemsAdderResult != ItemsAdderAPI.PlaceResult.NOT_HOOKED) {
 			if (itemsAdderResult == ItemsAdderAPI.PlaceResult.PLACED) {
@@ -377,7 +402,8 @@ public class Protection {
 			}
 		}
 
-		OraxenAPI.PlaceResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(null, getProtectionBlockLocation());
+		OraxenAPI.PlaceResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(null,
+				getProtectionBlockLocation());
 
 		if (oraxenResult != OraxenAPI.PlaceResult.NOT_HOOKED) {
 			if (oraxenResult == OraxenAPI.PlaceResult.PLACED) {
@@ -392,7 +418,8 @@ public class Protection {
 		Block bBlock = getProtectionBlockLocation().getBlock();
 		ItemStack item = getProtectionBlock().getObject().getInformation().getItem();
 
-		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(item, bBlock.getLocation());
+		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(item,
+				bBlock.getLocation());
 
 		if (itemsAdderResult != ItemsAdderAPI.PlaceResult.NOT_HOOKED) {
 			if (itemsAdderResult == ItemsAdderAPI.PlaceResult.PLACED) {
@@ -480,15 +507,25 @@ public class Protection {
 	}
 
 	public boolean canManage(Player pl) {
-		return this.isOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_MANAGE_OTHERS);
+		return this.getOwners().list().contains(pl.getUniqueId())
+				|| pl.hasPermission(Permissions.PROTECTION_MANAGE_OTHERS);
 	}
 
 	public boolean canToggleBlock(Player pl) {
-		return this.isOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_TOGGLEBLOCK_OTHERS);
+		return this.getOwners().list().contains(pl.getUniqueId())
+				|| pl.hasPermission(Permissions.PROTECTION_TOGGLEBLOCK_OTHERS);
 	}
 
 	public boolean canViewBoundaries(Player pl) {
-		return this.isOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_VIEW_OTHERS);
+		return this.getOwners().list().contains(pl.getUniqueId())
+				|| pl.hasPermission(Permissions.PROTECTION_VIEW_OTHERS);
+	}
+
+	public boolean canTeleport(Player pl) {
+		return (this.getOwners().list().contains(pl.getUniqueId())
+				|| this.getMembers().list().contains(pl.getUniqueId())
+						&& pl.hasPermission(Permissions.PROTECTION_TELEPORT))
+				|| pl.hasPermission(Permissions.PROTECTION_TELEPORT_OTHERS);
 	}
 
 }

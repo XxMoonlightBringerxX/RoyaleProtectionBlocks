@@ -50,14 +50,19 @@ public class ProtectionStonesAPI extends AbstractAPI {
 			if (Bukkit.getPluginManager().isPluginEnabled("ProtectionStones")) {
 				this.hooked = true;
 
-				MessageBuilder.createMessage(getPrefix().concat("<ProtectionStones> Done!.")).sendMessage(Bukkit.getConsoleSender());
+				MessageBuilder.createMessage(getPrefix().concat("<ProtectionStones> Done!."))
+						.sendMessage(Bukkit.getConsoleSender());
 			} else {
-				MessageBuilder.createMessage(getPrefix().concat("<ProtectionStones> ProtectionStones is not enabled. ")
-						.concat(isOptional() ? "Ignoring its implementation." : "")).sendMessage(Bukkit.getConsoleSender());
+				MessageBuilder
+						.createMessage(getPrefix().concat("<ProtectionStones> ProtectionStones is not enabled. ")
+								.concat(isOptional() ? "Ignoring its implementation." : ""))
+						.sendMessage(Bukkit.getConsoleSender());
 			}
 		} catch (Exception e) {
-			MessageBuilder.createMessage(getPrefix().concat("<ProtectionStones> ProtectionStones could not be loaded. ")
-					.concat(isOptional() ? "Ignoring its implementation." : "")).sendMessage(Bukkit.getConsoleSender());
+			MessageBuilder
+					.createMessage(getPrefix().concat("<ProtectionStones> ProtectionStones could not be loaded. ")
+							.concat(isOptional() ? "Ignoring its implementation." : ""))
+					.sendMessage(Bukkit.getConsoleSender());
 			if (!isOptional()) {
 				e.printStackTrace();
 			}
@@ -72,21 +77,22 @@ public class ProtectionStonesAPI extends AbstractAPI {
 		if (isHooked()) {
 			ProtectionStones.getInstance().getConfiguredBlocks().forEach(pb -> {
 				try {
-					ProtectionBlock block = new ProtectionBlock(new ProtectionBlockInformation(pb.alias, pb.createItem(), pb.xRadius,
-							pb.yRadius, pb.zRadius, pb.permission != null && !pb.permission.isEmpty() ? pb.permission : null));
+					ProtectionBlock block = new ProtectionBlock(new ProtectionBlockInformation(pb.alias,
+							pb.createItem(), pb.xRadius, pb.yRadius, pb.zRadius,
+							pb.permission != null && !pb.permission.isEmpty() ? pb.permission : null, pb.price));
 
 					if (pb.worlds.size() > 0 && pb.worldListType != null && !pb.worldListType.isBlank()) {
-						Bukkit.getWorlds().stream()
-								.filter(world -> pb.worldListType.equalsIgnoreCase("whitelist") == pb.worlds.contains(world.getName()));
+						Bukkit.getWorlds().stream().filter(world -> pb.worldListType
+								.equalsIgnoreCase("whitelist") == pb.worlds.contains(world.getName()));
 					}
 
 					block.save();
 
 					successList.add(block);
 				} catch (ProtectionBlocksSaveException e) {
-					MessageBuilder
-							.createMessage(MessageString.applyPrefix(String
-									.format("&cUnable to create protection block using config from '%s': %s", pb.alias, e.getMessage())))
+					MessageBuilder.createMessage(MessageString
+							.applyPrefix(String.format("&cUnable to create protection block using config from '%s': %s",
+									pb.alias, e.getMessage())))
 							.sendMessage(Bukkit.getConsoleSender());
 					e.printStackTrace();
 					exceptionsList.add(e);
@@ -107,9 +113,10 @@ public class ProtectionStonesAPI extends AbstractAPI {
 		if (isHooked()) {
 			Bukkit.getWorlds().stream().forEach(world -> {
 				try {
-					RegionManager regionManager = MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().getRegionManager(world);
-					regionManager.getRegions().entrySet().stream().filter((entry) -> ProtectionStones.isPSRegion(entry.getValue()))
-							.map((entry) -> {
+					RegionManager regionManager = MainPluginClass.getWorldGuardAPI().getInternalWorldGuard()
+							.getRegionManager(world);
+					regionManager.getRegions().entrySet().stream()
+							.filter((entry) -> ProtectionStones.isPSRegion(entry.getValue())).map((entry) -> {
 								List<PSRegion> regions = ProtectionStones.getPSRegions(world, entry.getKey());
 
 								return regions.size() > 0 ? this.transferRegion(regions.get(0)) : null;
@@ -123,8 +130,8 @@ public class ProtectionStonesAPI extends AbstractAPI {
 							});
 				} catch (Throwable e) {
 					MessageBuilder
-							.createMessage(MessageString.applyPrefix(
-									String.format("&cUnable to process regions for world '%s': %s", world.getName(), e.getMessage())))
+							.createMessage(MessageString.applyPrefix(String.format(
+									"&cUnable to process regions for world '%s': %s", world.getName(), e.getMessage())))
 							.sendMessage(Bukkit.getConsoleSender());
 					e.printStackTrace();
 					errorsInConsole.set(true);
@@ -148,8 +155,8 @@ public class ProtectionStonesAPI extends AbstractAPI {
 		String displayName = protectionStonesRegion.getName();
 		Location home = protectionStonesRegion.getHome();
 
-		flags.keySet().removeIf(
-				flag -> flag.getName().startsWith("ps-") || flag == FlagHandler.GREET_ACTION || flag == FlagHandler.FAREWELL_ACTION);
+		flags.keySet().removeIf(flag -> flag.getName().startsWith("ps-") || flag == FlagHandler.GREET_ACTION
+				|| flag == FlagHandler.FAREWELL_ACTION);
 
 		List<PSRegion> regions = new ArrayList<>();
 
@@ -172,12 +179,13 @@ public class ProtectionStonesAPI extends AbstractAPI {
 
 				if (protectionBlock != null) {
 					try {
-						Protection protection = MainPluginClass.getPlugin().getProtectionsModule().createProtection(owners.get(0), null,
-								protectionBlock, region.getProtectBlock().getLocation());
+						Protection protection = MainPluginClass.getPlugin().getProtectionsModule().createProtection(
+								owners.get(0), null, protectionBlock, region.getProtectBlock().getLocation());
 
 						protection.getProtectedRegion().getFlags().forEach((flag, value) -> {
 							if (MainPluginClass.getWorldGuardAPI().getBannedPlayersFlag().getWorldGuardFlag() == flag
-									|| MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().getWorldGuardFlag() == flag) {
+									|| MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag()
+											.getWorldGuardFlag() == flag) {
 								flags.put(flag, value);
 							}
 						});
@@ -192,8 +200,10 @@ public class ProtectionStonesAPI extends AbstractAPI {
 							try {
 								protection.setHome(home);
 							} catch (Exception e) {
-								MessageBuilder.createMessage(MessageString.applyPrefix(String
-										.format("&cUnable to set home for protection '%s': %s", protection.getRegionId(), e.getMessage())))
+								MessageBuilder
+										.createMessage(MessageString.applyPrefix(
+												String.format("&cUnable to set home for protection '%s': %s",
+														protection.getRegionId(), e.getMessage())))
 										.sendMessage(Bukkit.getConsoleSender());
 								e.printStackTrace();
 								errorsInConsole.set(true);
@@ -205,8 +215,10 @@ public class ProtectionStonesAPI extends AbstractAPI {
 								protection.getOwners().add(owner);
 							} catch (ProtectionOwnersSaveCannotAddProtectionOwnerException e) {
 							} catch (ProtectionOwnersSaveException e) {
-								MessageBuilder.createMessage(MessageString.applyPrefix(String
-										.format("&cUnable to add owner on protection '%s': %s", protection.getRegionId(), e.getMessage())))
+								MessageBuilder
+										.createMessage(MessageString.applyPrefix(
+												String.format("&cUnable to add owner on protection '%s': %s",
+														protection.getRegionId(), e.getMessage())))
 										.sendMessage(Bukkit.getConsoleSender());
 								e.sendError(Bukkit.getConsoleSender());
 								e.printStackTrace();
@@ -219,8 +231,10 @@ public class ProtectionStonesAPI extends AbstractAPI {
 								protection.getMembers().add(member);
 							} catch (ProtectionMembersSaveCannotAddProtectionOwnerException e) {
 							} catch (ProtectionMembersSaveException e) {
-								MessageBuilder.createMessage(MessageString.applyPrefix(String
-										.format("&cUnable to add member on protection '%s': %s", protection.getRegionId(), e.getMessage())))
+								MessageBuilder
+										.createMessage(MessageString.applyPrefix(
+												String.format("&cUnable to add member on protection '%s': %s",
+														protection.getRegionId(), e.getMessage())))
 										.sendMessage(Bukkit.getConsoleSender());
 								e.sendError(Bukkit.getConsoleSender());
 								e.printStackTrace();
@@ -231,8 +245,9 @@ public class ProtectionStonesAPI extends AbstractAPI {
 						successList.add(protection);
 					} catch (ProtectionSaveException e) {
 						MessageBuilder
-								.createMessage(MessageString.applyPrefix(String
-										.format("&cUnable to save information for protection '%s': %s", region.getId(), e.getMessage())))
+								.createMessage(MessageString.applyPrefix(
+										String.format("&cUnable to save information for protection '%s': %s",
+												region.getId(), e.getMessage())))
 								.sendMessage(Bukkit.getConsoleSender());
 						e.sendError(Bukkit.getConsoleSender());
 						exceptionsList.add(e);

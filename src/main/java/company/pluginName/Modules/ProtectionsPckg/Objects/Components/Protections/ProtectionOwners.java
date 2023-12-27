@@ -1,9 +1,12 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.entity.Player;
+
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.Permissions;
 import company.pluginName.Exceptions.ProtectionOwners.Delete.ProtectionOwnersDeleteCannotDeleteProtectionOwnerException;
@@ -24,7 +27,8 @@ public class ProtectionOwners {
 	private Protection protection;
 
 	public Set<UUID> list() {
-		return this.protection.getProtectedRegion().getOwners().getUniqueIds();
+		ProtectedRegion region = this.protection.getProtectedRegion();
+		return region != null ? region.getOwners().getUniqueIds() : Collections.emptySet();
 	}
 
 	public void add(UUID owner) throws ProtectionOwnersSaveException {
@@ -56,7 +60,7 @@ public class ProtectionOwners {
 	}
 
 	public void remove(Player pl, UUID owner) throws ProtectionOwnersDeleteException {
-		if (pl != null) {
+		if (pl != null && !pl.getUniqueId().equals(owner)) {
 			if (!this.protection.isMainOwner(pl.getUniqueId())
 					&& !pl.hasPermission(Permissions.PROTECTION_OWNERS_REMOVE_OTHERS)) {
 				throw new ProtectionOwnersDeleteDeniedException();

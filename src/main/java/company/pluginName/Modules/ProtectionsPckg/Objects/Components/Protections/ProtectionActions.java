@@ -1,12 +1,12 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import company.pluginName.MainPluginClass;
+import company.pluginName.Permissions;
+import company.pluginName.Exceptions.Protection.ProtectionKickDeniedException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -16,16 +16,26 @@ public class ProtectionActions {
 
 	private Protection protection;
 
-	public boolean kickPlayer(Player pl) {
-		Location loc = pl.getLocation();
-		if (protection.getProtectedRegion().contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) {
-			World world = Bukkit.getWorld(SettingString.SETTINGS_PROTECTION_SENDTOWORLDONKICK.toString());
+	public boolean kickPlayer(Player playerToKick) {
+		try {
+			return kickPlayer(null, playerToKick);
+		} catch (ProtectionKickDeniedException e) {
+			return false;
+		}
+	}
 
-			if (world == null) {
-				world = Bukkit.getWorlds().get(0);
+	public boolean kickPlayer(Player pl, Player playerToKick) throws ProtectionKickDeniedException {
+		if (pl != null) {
+			if (!pl.hasPermission(Permissions.PROTECTION_KICK_OTHERS)) {
+				if (!this.protection.getOwners().list().contains(pl.getUniqueId())) {
+					throw new ProtectionKickDeniedException();
+				}
 			}
+		}
 
-			pl.teleport(world.getSpawnLocation());
+		Location loc = playerToKick.getLocation();
+		if (protection.getProtectedRegion().contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) {
+			playerToKick.teleport(MainPluginClass.getPlugin().getProtectionSettingsModule().getSpawn());
 			return true;
 		}
 		return false;

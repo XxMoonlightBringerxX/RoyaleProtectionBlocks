@@ -24,6 +24,7 @@ import company.pluginName.Utils.OfflinePlayerUtils;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
@@ -40,7 +41,7 @@ public class ProtectionBannedsInventory extends PluginChestInventory {
 
 	public static void initItems() {
 		SEARCH_PLAYER_BUTTON = ItemStacksUtils
-				.createItemStack(ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
+				.createItemStack(SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
 						MessageBuilder
 								.createMessage(MessageString.INVENTORY_PROTECTION_BANNEDS_SEARCHBANNEDNAME.toString())
 								.toString());
@@ -152,7 +153,7 @@ public class ProtectionBannedsInventory extends PluginChestInventory {
 												.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {
-								if (protection.isOwner(getPlayer().getUniqueId())
+								if (protection.getOwners().list().contains(getPlayer().getUniqueId())
 										|| getPlayer().hasPermission(Permissions.PROTECTION_BANNEDS_REMOVE_OTHERS)) {
 									new ConfirmationInventory(getPlayer(), () -> {
 										try {

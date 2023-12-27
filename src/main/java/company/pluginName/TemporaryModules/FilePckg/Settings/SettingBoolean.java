@@ -3,12 +3,19 @@ package company.pluginName.TemporaryModules.FilePckg.Settings;
 import company.pluginName.TemporaryModules.FilePckg.FileModuleObjects.FileObjFieldsEnum;
 
 public enum SettingBoolean implements FileObjFieldsEnum<Boolean> {
-	SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION("Settings.Protection.Set-player-position-as-home-on-creation", true),
+	SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION(
+			"Settings.Protection.Set-player-position-as-home-on-creation", true),
 	SETTINGS_PROTECTION_OPENINVENTORYONINTERACT("Settings.Protection.Open-inventory-on-interact", true),
+	SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER(
+			"Settings.Protection.Allow-regions-inside-another-from-same-owner", true),
+	SETTINGS_PROTECTIONBLOCK_REQUESTCONFIRMATIONONPURCHASETHROUGHGUI(
+			"Settings.Protection-block.Request-confirmation-on-purchase-through-gui", false),
 	SETTINGS_DEBUG_ENABLED("Settings.Debug.Enabled", false),
 	SETTINGS_DEBUG_MESSAGES_BLOCKPLACE("Settings.Debug.Messages.Block-place", true),
-	SETTINGS_DEBUG_MESSAGES_BLOCKPLACENOTPROTECTIONBLOCK("Settings.Debug.Messages.Block-place-not-protection-block", true),
-	SETTINGS_DEBUG_MESSAGES_BLOCKPLACEISPROTECTIONBLOCK("Settings.Debug.Messages.Block-place-is-protection-block", true),
+	SETTINGS_DEBUG_MESSAGES_BLOCKPLACENOTPROTECTIONBLOCK("Settings.Debug.Messages.Block-place-not-protection-block",
+			true),
+	SETTINGS_DEBUG_MESSAGES_BLOCKPLACEISPROTECTIONBLOCK("Settings.Debug.Messages.Block-place-is-protection-block",
+			true),
 	SETTINGS_DEBUG_MESSAGES_BLOCKPLACECANCELLEDBUILD("Settings.Debug.Messages.Block-place-cancelled-build", true),
 	SETTINGS_DEBUG_MESSAGES_BLOCKPLACECANCELLED("Settings.Debug.Messages.Block-place-cancelled", true),
 	SETTINGS_DEBUG_MESSAGES_BLOCKBREAK("Settings.Debug.Messages.Block-break", true),

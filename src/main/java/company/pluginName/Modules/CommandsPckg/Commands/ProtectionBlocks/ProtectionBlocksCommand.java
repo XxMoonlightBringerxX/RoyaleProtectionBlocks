@@ -19,7 +19,8 @@ public class ProtectionBlocksCommand extends Command {
 	public ProtectionBlocksCommand() {
 		super("protectionblocks", SettingString.COMMANDS_PROTECTIONBLOCKS_NAME.toString(),
 				SettingString.COMMANDS_PROTECTIONBLOCKS_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_DESCRIPTION.toString(), SettingString.COMMANDS_PROTECTIONBLOCKS_USAGE.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_DESCRIPTION.toString(),
+				SettingString.COMMANDS_PROTECTIONBLOCKS_USAGE.toString(),
 				SettingList.COMMANDS_PROTECTIONBLOCKS_ALIASES.getContent());
 		addCommand(new ReloadSubCommand(this));
 		addCommand(new SetHomeSubCommand(this));
@@ -39,6 +40,12 @@ public class ProtectionBlocksCommand extends Command {
 		addCommand(new KickSubCommand(this));
 		addCommand(new FilesCommand(this));
 		addCommand(new PurgeSubCommand(this));
+		addCommand(new LeaveSubCommand(this));
+		addCommand(new SetSpawnSubCommand(this));
+		addCommand(new SpawnSubCommand(this));
+		if (MainPluginClass.getVaultAPI().isHooked()) {
+			addCommand(new BuySubCommand(this));
+		}
 		sortCommands();
 		addCommand(new HelpSubCommand(this), 0);
 	}
@@ -51,7 +58,8 @@ public class ProtectionBlocksCommand extends Command {
 
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null && args.length == 0) {
-			Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByLocation(pl.getLocation());
+			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
+					.getProtectionByLocation(pl.getLocation());
 			if (protection != null && protection.canManage(pl)) {
 				new ProtectionsManagerInventory(pl, protection).openInventory();
 			} else {

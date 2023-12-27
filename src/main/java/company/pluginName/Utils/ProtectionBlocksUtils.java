@@ -18,6 +18,7 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBlocks.ProtectionBlockAllowedWorlds;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBlocks.ProtectionBlockInformation;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.Getter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
@@ -150,13 +151,17 @@ public class ProtectionBlocksUtils {
 		}
 
 		try {
-			permission = map.containsKey(PERMISSION_SECTION) ? (String) map.get(PERMISSION_SECTION) : null;
+			permission = map.containsKey(PERMISSION_SECTION) && map.get(PERMISSION_SECTION) != null
+					? (String) map.get(PERMISSION_SECTION)
+					: null;
 		} catch (ClassCastException e) {
 			throw new Exception("The value '%s' is currently not a string.".formatted(map.get(PERMISSION_SECTION)));
 		}
 
 		try {
-			price = map.containsKey(PRICE_SECTION) ? Double.parseDouble(map.get(PRICE_SECTION).toString()) : null;
+			price = map.containsKey(PRICE_SECTION) && map.get(PRICE_SECTION) != null
+					? Double.parseDouble(map.get(PRICE_SECTION).toString())
+					: null;
 		} catch (ClassCastException e) {
 			throw new Exception("The value '%s' is currently not a decimal.".formatted(map.get(PRICE_SECTION)));
 		}
@@ -169,25 +174,32 @@ public class ProtectionBlocksUtils {
 		}
 
 		try {
-			name = map.containsKey(ITEM_NAME_SECTION) ? (String) map.get(ITEM_NAME_SECTION) : null;
+			name = map.containsKey(ITEM_NAME_SECTION) && map.get(ITEM_NAME_SECTION) != null
+					? (String) map.get(ITEM_NAME_SECTION)
+					: null;
 		} catch (ClassCastException e) {
 			throw new Exception("The value '%s' is currently not a string.".formatted(map.get(ITEM_NAME_SECTION)));
 		}
 
 		try {
-			skin = map.containsKey(ITEM_SKIN_SECTION) ? (String) map.get(ITEM_SKIN_SECTION) : null;
+			skin = map.containsKey(ITEM_SKIN_SECTION) && map.get(ITEM_SKIN_SECTION) != null
+					? (String) map.get(ITEM_SKIN_SECTION)
+					: null;
 		} catch (ClassCastException e) {
 			throw new Exception("The value '%s' is currently not a string.".formatted(map.get(ITEM_SKIN_SECTION)));
 		}
 
 		try {
-			lore = map.containsKey(ITEM_LORE_SECTION) ? (List<String>) map.get(ITEM_LORE_SECTION) : null;
+			lore = map.containsKey(ITEM_LORE_SECTION) && map.get(ITEM_LORE_SECTION) != null
+					? (List<String>) map.get(ITEM_LORE_SECTION)
+					: null;
 		} catch (ClassCastException e) {
 			throw new Exception("The value '%s' is currently not a string list.".formatted(map.get(ITEM_LORE_SECTION)));
 		}
 
 		try {
-			allowedWorlds = map.containsKey(ALLOWEDWORLDS_SECTION) ? (List<String>) map.get(ALLOWEDWORLDS_SECTION)
+			allowedWorlds = map.containsKey(ALLOWEDWORLDS_SECTION) && map.get(ALLOWEDWORLDS_SECTION) != null
+					? (List<String>) map.get(ALLOWEDWORLDS_SECTION)
 					: null;
 		} catch (ClassCastException e) {
 			throw new Exception(
@@ -223,7 +235,7 @@ public class ProtectionBlocksUtils {
 			ItemStack item = protectionBlock.getInformation().getItem().clone();
 
 			if (map.containsKey(ITEM_SKIN_SECTION) && item.getType() == Material.PLAYER_HEAD.getMaterial()) {
-				item = ItemStacksUtils.setSkin(item, skin);
+				item = SkinUtilities.NMS.setSkinSafe(item, skin);
 			}
 
 			ItemMeta im = item.getItemMeta();
@@ -247,7 +259,7 @@ public class ProtectionBlocksUtils {
 					lore != null ? MessageBuilder.createMessage(lore).getStrings() : null);
 
 			if (skin != null && !skin.isEmpty() && item.getType() == Material.PLAYER_HEAD.getMaterial()) {
-				item = ItemStacksUtils.setSkin(item, skin);
+				item = SkinUtilities.NMS.setSkinSafe(item, skin);
 			}
 
 			return new ProtectionBlock(

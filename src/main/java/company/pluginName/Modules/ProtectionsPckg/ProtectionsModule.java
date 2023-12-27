@@ -1,6 +1,7 @@
 package company.pluginName.Modules.ProtectionsPckg;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -113,8 +114,8 @@ public class ProtectionsModule implements PluginModule {
 	}
 
 	public List<Protection> getAllowedProtections(OfflinePlayer pl) {
-		return protectionByRegion.values().stream().filter(prot -> prot.getOwners().list().contains(pl.getUniqueId()))
-				.collect(Collectors.toList());
+		return protectionByRegion.values().stream().filter(prot -> prot.getOwners().list().contains(pl.getUniqueId())
+				|| prot.getMembers().list().contains(pl.getUniqueId())).collect(Collectors.toList());
 	}
 
 	/*
@@ -124,9 +125,25 @@ public class ProtectionsModule implements PluginModule {
 	public Protection createProtection(Player pl, ProtectionBlock protectionBlock, Location location)
 			throws ProtectionSaveException {
 		if (!pl.hasPermission(Permissions.PROTECTION_MAX_BYPASS)) {
-			if (Permissions.getMaxCapacity(pl, protectionBlock) <= protectionsByOwner
-					.getOrDefault(pl.getUniqueId(), new ArrayList<>()).size()) {
-				throw new ProtectionSaveMaxReachedException();
+			Integer perBlockMaxCapacity = Permissions.getPerBlockMaxCapacity(pl, protectionBlock);
+
+			if (perBlockMaxCapacity != null) {
+				if (perBlockMaxCapacity <= protectionsByOwner.getOrDefault(pl.getUniqueId(), Collections.emptyList())
+						.stream().filter(protection -> protection.getProtectionBlock().getIdentifier()
+								.equals(protectionBlock.getInformation().getId()))
+						.count()) {
+					throw new ProtectionSaveMaxReachedException();
+				}
+			} else {
+				Integer generalMaxCapacity = Permissions.getGeneralMaxCapacity(pl);
+				if (generalMaxCapacity != null) {
+					if (generalMaxCapacity <= protectionsByOwner.getOrDefault(pl.getUniqueId(), new ArrayList<>())
+							.size()) {
+						throw new ProtectionSaveMaxReachedException();
+					}
+				} else {
+					throw new ProtectionSaveMaxReachedException();
+				}
 			}
 		}
 

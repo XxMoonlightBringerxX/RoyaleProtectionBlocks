@@ -24,6 +24,7 @@ import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
@@ -167,8 +168,8 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 
 		setSlot(13,
 				new Button(
-						ItemStacksUtils
-								.setSkin(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
+						SkinUtilities.NMS
+								.setSkinSafe(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
 										MessageBuilder.createMessage(TextInput.inst()
 												.text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSXNAME
 														.toString())
@@ -194,8 +195,8 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 
 		setSlot(14,
 				new Button(
-						ItemStacksUtils
-								.setSkin(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
+						SkinUtilities.NMS
+								.setSkinSafe(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
 										MessageBuilder.createMessage(TextInput.inst()
 												.text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSYNAME
 														.toString())
@@ -219,8 +220,8 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 
 		setSlot(15,
 				new Button(
-						ItemStacksUtils
-								.setSkin(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
+						SkinUtilities.NMS
+								.setSkinSafe(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
 										MessageBuilder.createMessage(TextInput.inst()
 												.text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_BLOCKSZNAME
 														.toString())
@@ -246,7 +247,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 						: MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_IDNOTSETNAME);
 
 		setSlot(29, new Button(ItemStacksUtils.createItemStack(
-				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), WORLD_SKIN),
+				SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), WORLD_SKIN),
 				MessageBuilder
 						.createMessage(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_ALLOWEDWORLDSNAME.toString())
 						.toString())) {
@@ -353,7 +354,7 @@ public class ProtectionBlockManagerInventory extends PluginChestInventory {
 								.replacements(new TextReplacement("{block_price}",
 										() -> newProtectionBlock.getInformation().getPrice() != null
 												? StringsHelper
-														.toDecimal(newProtectionBlock.getInformation().getPrice(), 2)
+														.toCurrency(newProtectionBlock.getInformation().getPrice())
 												: "")))
 						.toString())) {
 			@Override

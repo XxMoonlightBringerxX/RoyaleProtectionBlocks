@@ -108,7 +108,8 @@ public class ProtectionBlocksShopInventory extends PluginChestInventory {
 										MessageBuilder
 												.createMessage(TextInput.inst()
 														.text(lore.toArray(new String[lore.size()])).replacements(
-																new TextReplacement("{blocks_x}",
+																new TextReplacement(
+																		"{blocks_x}",
 																		() -> String.valueOf(
 																				(block.getInformation().getBlocksX()
 																						* 2) + 1)),
@@ -128,8 +129,8 @@ public class ProtectionBlocksShopInventory extends PluginChestInventory {
 																		() -> block.getAllowedWorlds().get().stream()
 																				.collect(Collectors.joining(", "))),
 																new TextReplacement("{block_price}",
-																		() -> StringsHelper.toDecimal(
-																				block.getInformation().getPrice(), 2))))
+																		() -> StringsHelper.toCurrency(
+																				block.getInformation().getPrice()))))
 												.getStrings())) {
 							@Override
 							public void onClick(InventoryClickEvent e) {

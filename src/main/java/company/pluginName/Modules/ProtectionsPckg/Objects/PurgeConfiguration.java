@@ -12,6 +12,7 @@ public class PurgeConfiguration {
 	private int days = 0;
 	private long millis = 0;
 	private BasedOn basedOn = BasedOn.PLAYER_LAST_TIME;
+	private boolean showIgnoredPlayers = false;
 
 	public void copy(PurgeConfiguration configuration) {
 		this.minutes = configuration.minutes;
@@ -22,7 +23,7 @@ public class PurgeConfiguration {
 	}
 
 	public static enum BasedOn {
-		PLAYER_LAST_TIME, REGION_CREATED_DAYE;
+		PLAYER_LAST_TIME, REGION_CREATED_DATE;
 	}
 
 }

@@ -24,6 +24,7 @@ import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
 import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
@@ -93,7 +94,7 @@ public class ProtectionBlocksListInventory extends PluginChestInventory {
 		if (canCreate) {
 			setSlot(getSize() - 5,
 					new Button(
-							ItemStacksUtils.setSkin(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
+							SkinUtilities.NMS.setSkinSafe(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
 									MessageBuilder.createMessage(
 											MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_CREATEBLOCKITEM.toString())
 											.toString()),

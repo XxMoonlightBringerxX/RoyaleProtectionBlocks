@@ -30,30 +30,36 @@ public class LeaveSubCommand extends SubCommand {
 			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
 					.getProtectionByLocation(pl.getLocation());
 			if (protection != null) {
-				try {
-					boolean left = false;
+				if (!protection.isMainOwner(pl.getUniqueId())) {
+					try {
+						boolean left = false;
 
-					if (protection.getOwners().list().contains(pl.getUniqueId())) {
+						if (protection.getOwners().list().contains(pl.getUniqueId())) {
+							protection.getOwners().remove(pl.getUniqueId());
+							left = true;
+						}
+
+						if (protection.getMembers().list().contains(pl.getUniqueId())) {
+							protection.getMembers().remove(pl.getUniqueId());
+							left = true;
+						}
+
+						if (left) {
+							MessageBuilder
+									.createMessage(MessageString.MESSAGE_PROTECTIONS_LEFTSUCCESSFULLY.applyPrefix())
+									.sendMessage(sender);
+						} else {
+							MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTMEMBER.applyPrefix())
+									.sendMessage(sender);
+						}
 						protection.getOwners().remove(pl.getUniqueId());
-						left = true;
-					}
-
-					if (protection.getMembers().list().contains(pl.getUniqueId())) {
 						protection.getMembers().remove(pl.getUniqueId());
-						left = true;
+					} catch (ProtectionMembersDeleteException | ProtectionOwnersDeleteException e) {
+						e.sendError(pl);
 					}
-
-					if (left) {
-						MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_LEFTSUCCESSFULLY.applyPrefix())
-								.sendMessage(sender);
-					} else {
-						MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTMEMBER.applyPrefix())
-								.sendMessage(sender);
-					}
-					protection.getOwners().remove(pl.getUniqueId());
-					protection.getMembers().remove(pl.getUniqueId());
-				} catch (ProtectionMembersDeleteException | ProtectionOwnersDeleteException e) {
-					e.sendError(pl);
+				} else {
+					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_LEAVEDENIEDTOMAINOWNER.applyPrefix())
+							.sendMessage(sender);
 				}
 			} else {
 				MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix())

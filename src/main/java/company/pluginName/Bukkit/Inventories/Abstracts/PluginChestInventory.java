@@ -8,6 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import company.pluginName.MainPluginClass;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlockManagerInventory;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.BannedWorlds.ProtectionBlockAllowedWorldsInventory;
+import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBannedsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
@@ -16,6 +17,7 @@ import company.pluginName.Bukkit.Inventories.Shared.SearchPlayersInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchWorldsInventory;
 import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.ChestInventory;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Item;
@@ -46,21 +48,27 @@ public abstract class PluginChestInventory extends ChestInventory {
 
 	public static void initItems() {
 		LEFT_ARROW_ITEM = ItemStacksUtils.createItemStack(
-				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), LEFT_ARROW_SKIN),
+				SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), LEFT_ARROW_SKIN),
 				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_PREVIOUSPAGENAME.toString()).toString());
+
 		RIGHT_ARROW_ITEM = ItemStacksUtils.createItemStack(
-				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), RIGHT_ARROW_SKIN),
+				SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), RIGHT_ARROW_SKIN),
 				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_NEXTPAGENAME.toString()).toString());
+
 		CLOSE_ITEM = ItemStacksUtils.createItemStack(
-				ItemStacksUtils.setSkin(Material.PLAYER_HEAD.getItemStack(), CLOSE_SKIN),
+				SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), CLOSE_SKIN),
 				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_CLOSENAME.toString()).toString());
+
 		CONFIRM_ITEM = ItemStacksUtils.createItemStack(Material.LIME_STAINED_GLASS_PANE,
 				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_CONFIRMNAME.toString()).toString());
+
 		CANCEL_ITEM = ItemStacksUtils.createItemStack(Material.RED_STAINED_GLASS_PANE,
 				MessageBuilder.createMessage(MessageString.INVENTORY_GENERAL_CANCELNAME.toString()).toString());
+
 		GRAY_STAINED_GLASS_PANE = new Item(ItemStacksUtils.createItemStack(Material.GRAY_STAINED_GLASS_PANE,
 				MessageBuilder.createMessage("&0").toString()));
 
+		ProtectionsListInventory.initItems();
 		ProtectionMembersInventory.initItems();
 		ProtectionOwnersInventory.initItems();
 		ProtectionBannedsInventory.initItems();

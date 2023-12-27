@@ -6,7 +6,9 @@ import java.util.List;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
+import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
+import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.MainPluginClass;
@@ -42,8 +44,10 @@ public class ProtectionFlagsInventory extends PluginChestInventory {
 		this.flags = Flag.FLAGS;
 
 		setSize(27);
-		setName(MessageBuilder.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTION_FLAGS_TITLE.toString())
-				.replacements(new TextReplacement("{protection}", () -> protection.getDisplayName()))).toString());
+		setName(MessageBuilder
+				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTION_FLAGS_TITLE.toString())
+						.replacements(new TextReplacement("{protection}", () -> protection.getDisplayName())))
+				.toString());
 	}
 
 	@Override
@@ -92,42 +96,28 @@ public class ProtectionFlagsInventory extends PluginChestInventory {
 
 		if (flags.size() != 0) {
 			int slot = 0;
-			for (Flag<?> flag : Arrays.copyOfRange(flags.toArray(new Flag<?>[flags.size()]), ((page - 1) * (getSize() - 9)),
-					(page * (getSize() - 9)))) {
+			for (Flag<?> flag : Arrays.copyOfRange(flags.toArray(new Flag<?>[flags.size()]),
+					((page - 1) * (getSize() - 9)), (page * (getSize() - 9)))) {
 				if (flag == null) {
 					break;
 				}
 
-				setSlot(slot++, new Button(
-						ItemStackUtilities.setReplacements(flag.getItemData().getItem().clone(), new TextReplacement("{value}", () -> {
-							if (flag.getType() == State.class) {
-								return ((State) flag.getFlagValue(protectedRegion) == State.ALLOW
-										? MessageString.INVENTORY_PROTECTION_FLAGS_ALLOWVALUENAME.toString()
-										: MessageString.INVENTORY_PROTECTION_FLAGS_DENYVALUENAME.toString()).toString();
-							} else if (flag.getType() == String.class) {
-								String text = (String) flag.getFlagValue(protectedRegion);
-								return MessageBuilder
-										.createMessage(
-												TextInput.inst().text(MessageString.INVENTORY_PROTECTION_FLAGS_STRINGVALUENAME.toString())
-														.replacements(new TextReplacement("{text}", () -> text != null ? text : "---")))
-										.toString();
-							}
-							return "&7???";
-						}))) {
+				setSlot(slot++, new Button(ItemStackUtilities.setReplacements(flag.getItemData().getItem().clone(),
+						new TextReplacement("{value}", () -> flag.getFlagValueAsString(protectedRegion)))) {
 
 					@SuppressWarnings("unchecked")
 					@Override
 					public void onClick(InventoryClickEvent e) {
-						if (flag.getType() == State.class) {
+						if (flag.getWorldGuardFlag() instanceof StateFlag) {
 							Flag<State> stateFlag = (Flag<State>) flag;
 							stateFlag.setFlagValue(protectedRegion,
 									stateFlag.getFlagValue(protectedRegion) == State.ALLOW ? State.DENY : State.ALLOW);
 							updateInventory();
-						} else if (flag.getType() == String.class) {
+						} else if (flag.getWorldGuardFlag() instanceof StringFlag) {
 							Flag<String> stringFlag = (Flag<String>) flag;
 							try {
-								MainPluginClass.getPlugin().getMessagesListener().startListening(e.getWhoClicked().getUniqueId(),
-										(message) -> {
+								MainPluginClass.getPlugin().getMessagesListener()
+										.startListening(e.getWhoClicked().getUniqueId(), (message) -> {
 											if (!message.equalsIgnoreCase("cancel")) {
 												stringFlag.setFlagValue(protectedRegion, message);
 											}
@@ -136,8 +126,8 @@ public class ProtectionFlagsInventory extends PluginChestInventory {
 										});
 								closeInventory();
 								MessageBuilder
-										.createMessage(MessageString
-												.applyPrefix(MessageString.INVENTORY_PROTECTION_FLAGS_STRINGSPECIFYINFO.toString()))
+										.createMessage(MessageString.applyPrefix(
+												MessageString.INVENTORY_PROTECTION_FLAGS_STRINGSPECIFYINFO.toString()))
 										.sendMessage(e.getWhoClicked());
 							} catch (PlayerAlreadyListeningException ex) {
 								MessageBuilder.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.toString())

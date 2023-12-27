@@ -111,7 +111,7 @@ public enum SettingString implements FileObjFieldsEnum<String> {
 	COMMANDS_PROTECTIONBLOCKS_PURGE_DESCRIPTION("Commands.Protection-blocks.Purge.Description",
 			"Delete protections older than the specified time, based on the last connection of the owner or their creation date"),
 	COMMANDS_PROTECTIONBLOCKS_PURGE_USAGE("Commands.Protection-blocks.Purge.Usage",
-			"[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--config] [confirm]"),
+			"[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--config] [--show-ignored-players] [--export-only] [confirm]"),
 	COMMANDS_PROTECTIONBLOCKS_PURGE_PERMISSION("Commands.Protection-blocks.Purge.Permission",
 			Permissions.PROTECTION_PURGE),
 

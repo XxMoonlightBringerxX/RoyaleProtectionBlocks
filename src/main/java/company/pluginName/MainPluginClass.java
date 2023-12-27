@@ -6,9 +6,9 @@ import org.bukkit.Bukkit;
 
 import company.pluginName.APIs.ItemsAdderAPI;
 import company.pluginName.APIs.OraxenAPI;
-import company.pluginName.APIs.PlaceholderAPI;
 import company.pluginName.APIs.ProtectionStonesAPI;
 import company.pluginName.APIs.VaultAPI;
+import company.pluginName.APIs.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Bukkit.Events.BukkitEvents;
 import company.pluginName.Bukkit.Events.ItemsAdderEvents;

@@ -54,8 +54,8 @@ public class ProtectionBanneds {
 		Player bannedPlayer = Bukkit.getPlayer(banned);
 
 		if (bannedPlayer != null) {
-			if (!bannedPlayer.hasPermission(Permissions.PROTECTION_BANNEDS_BYPASS)
-					&& protection.getActions().kickPlayer(bannedPlayer)) {
+			if (bannedPlayer.hasPermission(Permissions.PROTECTION_BANNEDS_BYPASS)
+					|| protection.getActions().kickPlayer(bannedPlayer)) {
 				MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_BANNED.applyPrefix())
 						.sendMessage(bannedPlayer);
 			}

@@ -72,13 +72,15 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&7Transfer finished! Remember to check the results and, if everything went okey, remove the old protection plugin."),
 
 	MESSAGE_PURGE_WARNING("Message.Purge.Warning",
-			"&7You're about to delete a total amount of &e{amount} &7protections depending on the player's last playtime, some protections may be lost if any error occurs. If there may be some important protections you want to prevent from being removed, remember to make a backup just in case. Please, type &e{command} &7to confirm your choice."),
+			"&7You're about to delete a total amount of &e{amount} &7protection(s) depending on the player's last playtime, some protections may be lost if any error occurs. If there may be some important protections you want to prevent from being removed, remember to make a backup just in case. Please, type &e{command} &7to confirm your choice."),
 	MESSAGE_PURGE_SEARCH("Message.Purge.Search", "&7Searching matching protections..."),
 	MESSAGE_PURGE_START("Message.Purge.Start", "&7Starting purge process..."),
 	MESSAGE_PURGE_END("Message.Purge.End",
-			"&aPurge finished! A total amount of &e{amount} &aprotections has been purged."),
+			"&aPurge finished! A total amount of &e{amount} &aprotection(s) has been purged."),
 	MESSAGE_PURGE_ERROR("Message.Purge.Error",
-			"&7A total amount of &e{amount} protections couldn't be purged. Check the console to see the related errors."),
+			"&7A total amount of &e{amount} protection(s) couldn't be purged. Check the console to see the related errors."),
+	MESSAGE_PURGE_EXPORTEND("Message.Purge.Export-end",
+			"&aExportation finished! A total amount of &e{amount} &aprotection(s) has been found and exported to a new JSON file called '&e{file}' on your plugin's directory."),
 
 	MESSAGE_FILES_EXPORTEDSUCCESSFULLY("Message.Files.Exported-successfully",
 			"All the data has been exported successfully!"),
@@ -146,6 +148,9 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			" &8- &aLeft click: &eTeleport to protection home"),
 	INVENTORY_PROTECTION_LIST_PROTECTIONEDITLORELINE("Inventory.Protection.List.Protection-edit-lore-line",
 			" &8- &aRight click: &eManage protection"),
+	INVENTORY_PROTECTION_LIST_FILTER_ALL("Inventory.Protection.List.Filter.All", "&aCurrent filter: &eAll"),
+	INVENTORY_PROTECTION_LIST_FILTER_OWN("Inventory.Protection.List.Filter.Own", "&aCurrent filter: &eOwn"),
+	INVENTORY_PROTECTION_LIST_FILTER_OTHERS("Inventory.Protection.List.Filter.Others", "&aCurrent filter: &eOthers"),
 
 	// Inventory protection flags items
 	INVENTORY_PROTECTION_FLAGS_TITLE("Inventory.Protection.Flags.Title", "{protection} > Flags"),
@@ -155,6 +160,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	INVENTORY_PROTECTION_FLAGS_STRINGVALUENAME("Inventory.Protection.Flags.String-value-name", "&b{text}"),
 	INVENTORY_PROTECTION_FLAGS_STRINGSPECIFYINFO("Inventory.Protection.Flags.String-specify-info",
 			"&7Type the text you want to specify in this flag. Type 'cancel' to cancel this action."),
+	INVENTORY_PROTECTION_FLAGS_NOTDEFINEDNAME("Inventory.Protection.Flags.Not-defined-name", "&7Not defined"),
 
 	// Inventory protection members items
 	INVENTORY_PROTECTION_MEMBERS_TITLE("Inventory.Protection.Members.Title", "{protection} > Members"),
@@ -260,7 +266,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 	ERROR_NOITEMINHAND("Error.No-item-in-hand", "&cYou must have an item in your hand!"),
 	ERROR_NOTABLOCK("Error.Not-a-block", "&cThe item must be a block!"),
 	ERROR_INVENTORYFULL("Error.Inventory-full", "&cYou don't have enough space on your inventory!"),
-	ERROR_INSUFFICIENTBALANCE("Error.Inventory-full", "&cYou don't have enough balance to purchase this!"),
+	ERROR_INSUFFICIENTBALANCE("Error.Insufficient-balance", "&cYou don't have enough balance to purchase this!"),
 	ERROR_INVALIDNUMBER("Error.Invalid-number", "&cYou must specify a valid number!"),
 	ERROR_NUMBERBELOWZERO("Error.Number-below-zero", "&cYou must specify a number higher than or equal to zero!"),
 	ERROR_SETSPAWNERROR("Error.Set-spawn-error",
@@ -275,7 +281,7 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&cThere was an issue trying to import the data! Check the console for more information."),
 
 	ERROR_PURGE_INVALIDPARAMETER("Error.Purge.Invalid-parameter",
-			"&cYou must specify a valid parameter! (Available: --days, --hours, --minutes)"),
+			"&cYou must specify a valid parameter! (Available: --days, --hours, --minutes, --config, --show-ignored-players, --export-only)"),
 	ERROR_PURGE_NOVALUEFORPARAMETER("Error.Purge.No-value-for-parameter",
 			"&cYou must specify a value for the parameter!"),
 
@@ -298,6 +304,8 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&cThere's another block where the protection block should be placed!"),
 	ERROR_PROTECTIONS_SAMEITEMASPROTECTION("Error.Protections.Same-item-as-protection",
 			"&cYou can't place items of the same type as the protection block where the protection block is originally placed!"),
+	ERROR_PROTECTIONS_LEAVEDENIEDTOMAINOWNER("Error.Protections.Leave-denied-to-main-owner",
+			"&cYou can't leave your own protection!"),
 
 	ERROR_PROTECTIONS_BLOCKS_NOTFOUND("Error.Protections.Blocks.Not-found",
 			"&cThere's no protection block with this ID!"),
@@ -332,6 +340,9 @@ public enum MessageString implements FileObjFieldsEnum<String> {
 			"&cAn unknown error happened while trying to save this protection. Please contact with an administrator!"),
 	ERROR_EXCEPTION_PROTECTION_BLOCKS_SAVE_NOVISIBLETEXT("Error.Exception.protection.save.NoVisibleText",
 			"&cThe text you're typing must be visible!"),
+
+	ERROR_EXCEPTION_PROTECTION_KICK_DENIED("Error.Exception.protection.kick.Denied",
+			"&cYou can't kick this player in this protection!"),
 
 	ERROR_EXCEPTION_PROTECTION_MEMBERS_DELETE_PERMISSIONDENIED(
 			"Error.Exception.protection.members.delete.PermissionDenied",

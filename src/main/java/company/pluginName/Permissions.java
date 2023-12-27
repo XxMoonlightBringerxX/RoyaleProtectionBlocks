@@ -10,6 +10,8 @@ import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 public class Permissions {
 
+	public static final String PROTECTION_TELEPORT = "protectionblocks.teleport";
+	public static final String PROTECTION_TELEPORT_OTHERS = "protectionblocks.teleport.others";
 	public static final String PROTECTION_LIST_OTHERS = "protectionblocks.list.others";
 	public static final String PROTECTION_DELETE_OTHERS = "protectionblocks.delete.others";
 	public static final String PROTECTION_MANAGE_OTHERS = "protectionblocks.manage.others";
@@ -21,6 +23,7 @@ public class Permissions {
 	public static final String PROTECTION_BANNEDS_ADD_OTHERS = "protectionblocks.banneds.add.others";
 	public static final String PROTECTION_BANNEDS_REMOVE_OTHERS = "protectionblocks.banneds.remove.others";
 	public static final String PROTECTION_BANNEDS_BYPASS = "protectionblocks.banneds.bypass";
+	public static final String PROTECTION_KICK_OTHERS = "protectionblocks.kick.others";
 	public static final String PROTECTION_KICK_BYPASS = "protectionblocks.kick.bypass";
 	public static final String PROTECTION_OWNERS_ADD_OTHERS = "protectionblocks.owners.add.others";
 	public static final String PROTECTION_OWNERS_REMOVE_OTHERS = "protectionblocks.owners.remove.others";
@@ -48,9 +51,8 @@ public class Permissions {
 
 	private static final String PROTECTION_BLOCK_MAX_PREFIX = "protectionblocks.{block}.max.";
 
-	public static int getMaxCapacity(Player pl, ProtectionBlock block) {
+	public static Integer getGeneralMaxCapacity(Player pl) {
 		Integer i = null;
-		String blockPermissionPrefix = PROTECTION_BLOCK_MAX_PREFIX.replace("{block}", block.getInformation().getId());
 		for (PermissionAttachmentInfo perm : pl.getEffectivePermissions()) {
 			String p = perm.getPermission().toLowerCase();
 			if (perm.getValue()) {
@@ -62,9 +64,24 @@ public class Permissions {
 								.createMessage(MessageString.applyPrefix("There's something wrong with " + pl.getName()
 										+ "'s permission: " + perm.getPermission()))
 								.sendMessage(Bukkit.getConsoleSender());
+						i = null;
 						continue;
 					}
-				} else if (p.startsWith(blockPermissionPrefix)) {
+				}
+			}
+		}
+		return i;
+	}
+
+	public static Integer getPerBlockMaxCapacity(Player pl, ProtectionBlock block) {
+		Integer i = null;
+		String blockPermissionPrefix = block != null
+				? PROTECTION_BLOCK_MAX_PREFIX.replace("{block}", block.getInformation().getId())
+				: null;
+		for (PermissionAttachmentInfo perm : pl.getEffectivePermissions()) {
+			String p = perm.getPermission().toLowerCase();
+			if (perm.getValue()) {
+				if (blockPermissionPrefix != null && p.startsWith(blockPermissionPrefix)) {
 					try {
 						i = Integer.parseInt(p.substring(blockPermissionPrefix.length()));
 						break;
@@ -73,6 +90,7 @@ public class Permissions {
 								.createMessage(MessageString.applyPrefix("There's something wrong with " + pl.getName()
 										+ "'s permission: " + perm.getPermission()))
 								.sendMessage(Bukkit.getConsoleSender());
+						i = null;
 						continue;
 					}
 				}

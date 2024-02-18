@@ -6,64 +6,80 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
-public class RemoveSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = BlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "remove",
+		pathName = "Remove",
+		defaultName = "remove",
+		defaultDescription = "Remove an existing block",
+		defaultUsage = "<id>",
+		defaultPermission = "protectionblocks.blocks.remove",
+		defaultAliases = "r")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class RemoveSubCommand extends PandaSubCommand {
 
-	public RemoveSubCommand(Command command) {
-		super(command, "remove", SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_REMOVE_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_REMOVE_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_REMOVE_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_REMOVE_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_BLOCKS_REMOVE_ALIASES.getContent());
+	@PandaInject
+	private static ProtectionBlocksService protectionBlocksService;
+
+	public RemoveSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
+	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
 		switch (args.length) {
 		case 1:
-			return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().keySet().stream()
-					.collect(Collectors.toList());
+			return protectionBlocksService.getProtectionBlocks().keySet().stream().collect(Collectors.toList());
 		default:
 			return EMPTY_LIST;
 		}
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			if (args.length > 1) {
-				ProtectionBlock block = MainPluginClass.getPlugin().getProtectionsModule()
-						.getProtectionBlockById(args[1]);
+				ProtectionBlock block = protectionBlocksService.getProtectionBlockById(args[1]);
 				if (block != null) {
 					try {
 						block.delete(pl);
-						MessageBuilder
-								.createMessage(
-										MessageString.MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY.applyPrefix())
-								.sendMessage(pl);
-					} catch (ProtectionBlocksDeleteException e) {
+						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY.applyPrefix())
+								.process().sendMessage(pl);
+					} catch (RoyaleProtectionBlocksException e) {
 						e.sendError(pl);
 					}
 				} else {
-					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKS_NOTFOUND.applyPrefix())
+					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_BLOCKS_NOTFOUND.applyPrefix()).process()
 							.sendMessage(pl);
 				}
 			} else {
-				MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(pl);
+				MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process().sendMessage(pl);
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix()).sendMessage(sender);
+			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 		}
-		return true;
+		return new TrueResponse();
 	}
 }

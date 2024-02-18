@@ -12,8 +12,8 @@ import com.sk89q.worldedit.math.BlockVector3;
 public class BlockVectorUtils {
 
 	public static BlockVector3 getIntersectingVector(BlockVector3 vector1, BlockVector3 vector2) {
-		return BlockVector3.at((vector1.getBlockX() + vector2.getBlockX()) / 2, (vector1.getBlockY() + vector2.getBlockY()) / 2,
-				(vector1.getBlockZ() + vector2.getBlockZ()) / 2);
+		return BlockVector3.at((vector1.getBlockX() + vector2.getBlockX()) / 2,
+				(vector1.getBlockY() + vector2.getBlockY()) / 2, (vector1.getBlockZ() + vector2.getBlockZ()) / 2);
 	}
 
 	public static BlockVector3 locationToVector(Location location) {
@@ -30,21 +30,23 @@ public class BlockVectorUtils {
 		}
 
 		BlockVector2 newRegionMinLocation = newRegion.stream().reduce(null,
-				(vector1,
-						vector2) -> (vector1 == null
-								|| (vector2.getBlockX() <= vector1.getBlockX() && vector2.getBlockZ() <= vector1.getBlockZ())) ? vector2
-										: vector1);
+				(vector1, vector2) -> (vector1 == null
+						|| (vector2.getBlockX() <= vector1.getBlockX() && vector2.getBlockZ() <= vector1.getBlockZ()))
+								? vector2
+								: vector1);
 		BlockVector2 newRegionMaxLocation = newRegion.stream().reduce(null,
-				(vector1,
-						vector2) -> (vector1 == null
-								|| (vector2.getBlockX() >= vector1.getBlockX() && vector2.getBlockZ() >= vector1.getBlockZ())) ? vector2
-										: vector1);
+				(vector1, vector2) -> (vector1 == null
+						|| (vector2.getBlockX() >= vector1.getBlockX() && vector2.getBlockZ() >= vector1.getBlockZ()))
+								? vector2
+								: vector1);
 
 		List<BlockVector2> list = new LinkedList<>();
 		int currentIndex = IntStream.range(0, originalRegion.size()).filter(i -> {
 			BlockVector2 vector = originalRegion.get(i);
-			return !MathUtils.between(vector.getBlockX(), newRegionMinLocation.getBlockX(), newRegionMaxLocation.getBlockX())
-					|| !MathUtils.between(vector.getBlockZ(), newRegionMinLocation.getBlockZ(), newRegionMaxLocation.getBlockZ());
+			return !MathUtils.between(vector.getBlockX(), newRegionMinLocation.getBlockX(),
+					newRegionMaxLocation.getBlockX())
+					|| !MathUtils.between(vector.getBlockZ(), newRegionMinLocation.getBlockZ(),
+							newRegionMaxLocation.getBlockZ());
 		}).findFirst().orElse(-1);
 
 		if (currentIndex == -1) {
@@ -71,11 +73,15 @@ public class BlockVectorUtils {
 				if ((xIsConstant && xIsConstant2 && firstVector.getBlockX() == firstVector2.getBlockX())
 						|| (zIsConstant && zIsConstant2 && firstVector.getBlockZ() == firstVector2.getBlockZ())) {
 					boolean intersectionXSameZ = zIsConstant && zIsConstant2
-							&& (MathUtils.between(firstVector.getBlockX(), firstVector2.getBlockX(), secondVector2.getBlockX())
-									|| MathUtils.between(secondVector.getBlockX(), firstVector2.getBlockX(), secondVector2.getBlockX()));
+							&& (MathUtils.between(firstVector.getBlockX(), firstVector2.getBlockX(),
+									secondVector2.getBlockX())
+									|| MathUtils.between(secondVector.getBlockX(), firstVector2.getBlockX(),
+											secondVector2.getBlockX()));
 					boolean intersectionZSameX = xIsConstant && xIsConstant2
-							&& (MathUtils.between(firstVector.getBlockZ(), firstVector2.getBlockZ(), secondVector2.getBlockZ())
-									|| MathUtils.between(secondVector.getBlockZ(), firstVector2.getBlockZ(), secondVector2.getBlockZ()));
+							&& (MathUtils.between(firstVector.getBlockZ(), firstVector2.getBlockZ(),
+									secondVector2.getBlockZ())
+									|| MathUtils.between(secondVector.getBlockZ(), firstVector2.getBlockZ(),
+											secondVector2.getBlockZ()));
 
 					if (intersectionXSameZ || intersectionZSameX) {
 						firstVector = secondVector2;
@@ -90,11 +96,15 @@ public class BlockVectorUtils {
 					}
 				} else {
 					boolean intersectionX = zIsConstant
-							&& MathUtils.between(firstVector.getBlockZ(), firstVector2.getBlockZ(), secondVector2.getBlockZ())
-							&& (MathUtils.betweenExclusive(firstVector2.getBlockX(), firstVector.getBlockX(), secondVector.getBlockX()));
+							&& MathUtils.between(firstVector.getBlockZ(), firstVector2.getBlockZ(),
+									secondVector2.getBlockZ())
+							&& (MathUtils.betweenExclusive(firstVector2.getBlockX(), firstVector.getBlockX(),
+									secondVector.getBlockX()));
 					boolean intersectionZ = xIsConstant
-							&& MathUtils.between(firstVector.getBlockX(), firstVector2.getBlockX(), secondVector2.getBlockX())
-							&& (MathUtils.betweenExclusive(firstVector2.getBlockZ(), firstVector.getBlockZ(), secondVector.getBlockZ()));
+							&& MathUtils.between(firstVector.getBlockX(), firstVector2.getBlockX(),
+									secondVector2.getBlockX())
+							&& (MathUtils.betweenExclusive(firstVector2.getBlockZ(), firstVector.getBlockZ(),
+									secondVector.getBlockZ()));
 
 					if (intersectionX || intersectionZ) {
 						firstVector = intersectionX ? BlockVector2.at(firstVector2.getBlockX(), firstVector.getBlockZ())

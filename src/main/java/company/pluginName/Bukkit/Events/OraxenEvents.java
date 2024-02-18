@@ -4,10 +4,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.EquipmentSlot;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.MainPluginClass.Debugger.MessageType;
+import company.pluginName.Debugger;
+import company.pluginName.Debugger.MessageType;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Utils.EventsUtils;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import io.th0rgal.oraxen.api.events.noteblock.OraxenNoteBlockBreakEvent;
 import io.th0rgal.oraxen.api.events.noteblock.OraxenNoteBlockDamageEvent;
 import io.th0rgal.oraxen.api.events.noteblock.OraxenNoteBlockInteractEvent;
@@ -17,7 +20,11 @@ import io.th0rgal.oraxen.api.events.stringblock.OraxenStringBlockDamageEvent;
 import io.th0rgal.oraxen.api.events.stringblock.OraxenStringBlockInteractEvent;
 import io.th0rgal.oraxen.api.events.stringblock.OraxenStringBlockPlaceEvent;
 
+@PandaListener(optional = true)
 public class OraxenEvents implements Listener {
+
+	@PandaInject
+	private ProtectionsService protectionsService;
 
 	@EventHandler
 	public void onNoteBlockPlace(OraxenNoteBlockPlaceEvent e) {
@@ -25,8 +32,9 @@ public class OraxenEvents implements Listener {
 			return;
 		}
 
-		MainPluginClass.Debugger.log(MessageType.ORAXEN_BLOCK_PLACE, () -> new Object[] { e.getPlayer().getName(),
-				String.valueOf(e.getBlock().getX()), String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
+		Debugger.log(MessageType.ORAXEN_BLOCK_PLACE,
+				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
+						String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
 
 		if (!e.isCancelled()) {
 			switch (EventsUtils.onOraxenBlockPlaceEvent(e.getPlayer(), e.getBlock(), null, e.getItemInHand())) {
@@ -37,13 +45,13 @@ public class OraxenEvents implements Listener {
 				break;
 			}
 		} else {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_PLACE_CANCELLED);
+			Debugger.log(MessageType.BLOCK_PLACE_CANCELLED);
 		}
 	}
 
 	@EventHandler
 	public void onNoteBlockInteract(OraxenNoteBlockInteractEvent e) {
-		Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
 		if (protection != null) {
 			e.setCancelled(true);
 			EventsUtils.onOraxenBlockInteractEvent(e.getPlayer(), protection);
@@ -52,7 +60,7 @@ public class OraxenEvents implements Listener {
 
 	@EventHandler
 	public void onNoteBlockDamage(OraxenNoteBlockDamageEvent e) {
-		Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
 		if (protection != null) {
 			e.setCancelled(true);
 		}
@@ -60,8 +68,9 @@ public class OraxenEvents implements Listener {
 
 	@EventHandler
 	public void onNoteBlockBreak(OraxenNoteBlockBreakEvent e) {
-		MainPluginClass.Debugger.log(MessageType.ORAXEN_BLOCK_BREAK, () -> new Object[] { e.getPlayer().getName(),
-				String.valueOf(e.getBlock().getX()), String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
+		Debugger.log(MessageType.ORAXEN_BLOCK_BREAK,
+				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
+						String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
 
 		if (!e.isCancelled()) {
 			switch (EventsUtils.onOraxenBlockBreakEvent(e.getPlayer(), e.getBlock())) {
@@ -73,7 +82,7 @@ public class OraxenEvents implements Listener {
 				break;
 			}
 		} else {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
+			Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
 		}
 	}
 
@@ -83,8 +92,9 @@ public class OraxenEvents implements Listener {
 			return;
 		}
 
-		MainPluginClass.Debugger.log(MessageType.ORAXEN_BLOCK_PLACE, () -> new Object[] { e.getPlayer().getName(),
-				String.valueOf(e.getBlock().getX()), String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
+		Debugger.log(MessageType.ORAXEN_BLOCK_PLACE,
+				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
+						String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
 
 		if (!e.isCancelled()) {
 			switch (EventsUtils.onOraxenBlockPlaceEvent(e.getPlayer(), e.getBlock(), null, e.getItemInHand())) {
@@ -95,13 +105,13 @@ public class OraxenEvents implements Listener {
 				break;
 			}
 		} else {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_PLACE_CANCELLED);
+			Debugger.log(MessageType.BLOCK_PLACE_CANCELLED);
 		}
 	}
 
 	@EventHandler
 	public void onStringBlockInteract(OraxenStringBlockInteractEvent e) {
-		Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
 		if (protection != null) {
 			e.setCancelled(true);
 			EventsUtils.onOraxenBlockInteractEvent(e.getPlayer(), protection);
@@ -110,7 +120,7 @@ public class OraxenEvents implements Listener {
 
 	@EventHandler
 	public void onStringBlockDamage(OraxenStringBlockDamageEvent e) {
-		Protection protection = MainPluginClass.getPlugin().getProtectionsModule().getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
 		if (protection != null) {
 			e.setCancelled(true);
 		}
@@ -118,8 +128,9 @@ public class OraxenEvents implements Listener {
 
 	@EventHandler
 	public void onStringBlockBreak(OraxenStringBlockBreakEvent e) {
-		MainPluginClass.Debugger.log(MessageType.ORAXEN_BLOCK_BREAK, () -> new Object[] { e.getPlayer().getName(),
-				String.valueOf(e.getBlock().getX()), String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
+		Debugger.log(MessageType.ORAXEN_BLOCK_BREAK,
+				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
+						String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
 
 		if (!e.isCancelled()) {
 			switch (EventsUtils.onOraxenBlockBreakEvent(e.getPlayer(), e.getBlock())) {
@@ -130,7 +141,7 @@ public class OraxenEvents implements Listener {
 				break;
 			}
 		} else {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
+			Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
 		}
 	}
 

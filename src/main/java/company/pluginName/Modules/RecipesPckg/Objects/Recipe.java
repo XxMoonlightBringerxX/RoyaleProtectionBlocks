@@ -8,19 +8,19 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
-import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
-import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
-import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveDeniedException;
-import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
+import company.pluginName.Exceptions.Exceptions;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
+import company.pluginName.Modules.RecipesPckg.RecipesService;
+import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaCraftableItems.Objects.CustomRecipe;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import relampagorojo93.LibsCollection.SpigotPlugin.MainClass;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -29,12 +29,22 @@ import relampagorojo93.LibsCollection.SpigotPlugin.MainClass;
 @Setter(lombok.AccessLevel.NONE)
 public class Recipe extends CustomRecipe {
 
+	@PandaInject
+	private static MainPluginClass plugin;
+
+	@PandaInject
+	private static SQLService sqlService;
+
+	@PandaInject
+	private static RecipesService recipesService;
+
 	private @NonNull ReferencedProtectionBlock protectionBlock;
 	private @Setter String permission;
 
 	public void copy(Recipe customRecipe) {
 		this.protectionBlock = customRecipe.protectionBlock;
 		this.recipe = Arrays.copyOf(customRecipe.recipe, customRecipe.recipe.length);
+		this.permission = customRecipe.getPermission();
 	}
 
 	@Override
@@ -43,8 +53,8 @@ public class Recipe extends CustomRecipe {
 	}
 
 	@Override
-	public MainClass getPlugin() {
-		return MainPluginClass.getPlugin();
+	public MainPluginClass getPlugin() {
+		return plugin;
 	}
 
 	@Override
@@ -56,29 +66,29 @@ public class Recipe extends CustomRecipe {
 	public ItemStack getResult() {
 		try {
 			return protectionBlock.getObject().getInformation().generateItem();
-		} catch (ProtectionBlocksGenerateItemException e) {
+		} catch (RoyaleProtectionBlocksException e) {
 			e.sendError(Bukkit.getConsoleSender());
 			return null;
 		}
 	}
 
-	public void save() throws ProtectionBlocksSaveException, ProtectionBlocksDeleteException {
+	public void save() throws RoyaleProtectionBlocksException {
 		this.save(null);
 	}
 
-	public void save(Player player) throws ProtectionBlocksSaveException, ProtectionBlocksDeleteException {
+	public void save(Player player) throws RoyaleProtectionBlocksException, RoyaleProtectionBlocksException {
 		if (player != null) {
 			if (!player.hasPermission(Permissions.PROTECTION_BLOCKS_EDIT)) {
-				throw new ProtectionBlocksSaveDeniedException();
+				throw Exceptions.Protections.Blocks.Save.PERMISSIONDENIED.generateException();
 			}
 		}
 
 		if (this.hasRecipe()) {
-			MainPluginClass.getPlugin().getSqlModule().saveRecipe(this);
-			MainPluginClass.getPlugin().getRecipesModule().registerRecipe(this);
+			sqlService.saveRecipe(this);
+			recipesService.registerRecipe(this);
 		} else {
-			MainPluginClass.getPlugin().getSqlModule().deleteRecipe(this);
-			MainPluginClass.getPlugin().getRecipesModule().unregisterRecipe(this);
+			sqlService.deleteRecipe(this);
+			recipesService.unregisterRecipe(this);
 		}
 	}
 

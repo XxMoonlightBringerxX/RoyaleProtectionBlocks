@@ -14,12 +14,16 @@ import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
 import com.sk89q.worldguard.session.handler.Handler;
 
-import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
+import company.pluginName.Modules.FilePckg.Messages;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 
 public class BannedPlayersHandler extends Handler {
+
+	@PandaInject
+	public static WorldGuardAPI worldGuardApi;
 
 	public static final Factory FACTORY = new Factory();
 
@@ -40,7 +44,7 @@ public class BannedPlayersHandler extends Handler {
 	@Override
 	public boolean onCrossBoundary(LocalPlayer player, Location from, Location to, ApplicableRegionSet toSet,
 			Set<ProtectedRegion> entered, Set<ProtectedRegion> exited, MoveType moveType) {
-		SetFlag<String> flag = MainPluginClass.getWorldGuardAPI().getBannedPlayersFlag().getWorldGuardFlag();
+		SetFlag<String> flag = worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag();
 
 		if (flag != null) {
 			Set<String> bannedUsers = toSet.queryValue(player, flag);
@@ -55,7 +59,7 @@ public class BannedPlayersHandler extends Handler {
 					long now = System.currentTimeMillis();
 
 					if ((now - lastMessage) > MESSAGE_THRESHOLD) {
-						MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_BANNED.applyPrefix())
+						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BANNED.applyPrefix()).process()
 								.sendMessage(Bukkit.getPlayer(player.getUniqueId()));
 						lastMessage = now;
 					}

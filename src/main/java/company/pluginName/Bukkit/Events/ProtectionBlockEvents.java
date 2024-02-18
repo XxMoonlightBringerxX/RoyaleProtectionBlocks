@@ -18,16 +18,31 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import company.pluginName.Debugger;
+import company.pluginName.Debugger.MessageType;
 import company.pluginName.MainPluginClass;
-import company.pluginName.MainPluginClass.Debugger.MessageType;
+import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
 import company.pluginName.Utils.EventsUtils;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackData.ItemStackDataUtilities;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
+@PandaListener
 public class ProtectionBlockEvents implements Listener {
+
+	@PandaInject
+	private MainPluginClass plugin;
+
+	@PandaInject
+	private ProtectionsService protectionsService;
+
+	@PandaInject
+	private ProtectionBlocksService protectionBlocksService;
 
 	/**
 	 * Event used to check if a block is placed, usually to check if the block is a
@@ -40,7 +55,7 @@ public class ProtectionBlockEvents implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlaceBlock(BlockPlaceEvent e) {
-		MainPluginClass.Debugger.log(MessageType.BLOCK_PLACE,
+		Debugger.log(MessageType.BLOCK_PLACE,
 				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlockPlaced().getX()),
 						String.valueOf(e.getBlockPlaced().getY()), String.valueOf(e.getBlockPlaced().getZ()) });
 
@@ -54,7 +69,7 @@ public class ProtectionBlockEvents implements Listener {
 				break;
 			}
 		} else {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_PLACE_CANCELLED);
+			Debugger.log(MessageType.BLOCK_PLACE_CANCELLED);
 		}
 	}
 
@@ -69,7 +84,7 @@ public class ProtectionBlockEvents implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onBreakBlock(BlockBreakEvent e) {
-		MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK,
+		Debugger.log(MessageType.BLOCK_BREAK,
 				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
 						String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
 
@@ -86,7 +101,7 @@ public class ProtectionBlockEvents implements Listener {
 				break;
 			}
 		} else {
-			MainPluginClass.Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
+			Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
 		}
 	}
 
@@ -102,8 +117,7 @@ public class ProtectionBlockEvents implements Listener {
 		if (e.getHand() != null && e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
 			switch (e.getHand().name()) {
 			case "HAND":
-				Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-						.getProtectionByBlock(e.getClickedBlock().getLocation());
+				Protection protection = protectionsService.getProtectionByBlock(e.getClickedBlock().getLocation());
 				if (protection != null) {
 					e.setCancelled(true);
 					EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
@@ -113,13 +127,14 @@ public class ProtectionBlockEvents implements Listener {
 				String protectionBlockId = null;
 
 				try {
-					protectionBlockId = ItemStackDataUtilities.getPersistentData(e.getItem(),
-							MainPluginClass.getPlugin(), ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
+					protectionBlockId = ItemStackDataUtilities.getPersistentData(e.getItem(), plugin,
+							ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
 				} catch (Exception e1) {
-					MessageBuilder.createMessage(MessageString.applyPrefix(
-							"An error has ocurred trying to retrieve the Protection Block ID from an item: %s"
-									.formatted(e1.getMessage())))
-							.sendMessage(Bukkit.getConsoleSender());
+					MessageTemplate
+							.inst(PandaPrefixedStringField.applyPrefix(
+									"An error has ocurred trying to retrieve the Protection Block ID from an item: %s"
+											.formatted(e1.getMessage())))
+							.process().sendMessage(Bukkit.getConsoleSender());
 					e1.printStackTrace();
 				}
 
@@ -140,7 +155,7 @@ public class ProtectionBlockEvents implements Listener {
 	 */
 	@EventHandler
 	public void onInteractEntity(PlayerInteractAtEntityEvent e) {
-		List<Protection> protections = MainPluginClass.getPlugin().getProtectionsModule().getProtectionsByWorld()
+		List<Protection> protections = protectionsService.getProtectionsByWorld()
 				.getOrDefault(e.getRightClicked().getWorld().getName(), new ArrayList<>());
 		for (Protection protection : protections) {
 			if (protection.isProtectionViewEntity(e.getRightClicked())) {
@@ -157,20 +172,17 @@ public class ProtectionBlockEvents implements Listener {
 
 	@EventHandler(ignoreCancelled = true)
 	public void onExplodeEntity(EntityExplodeEvent e) {
-		e.blockList().removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(block.getLocation()) != null);
+		e.blockList().removeIf(block -> protectionsService.getProtectionByBlock(block.getLocation()) != null);
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onExplodeBlock(BlockExplodeEvent e) {
-		e.blockList().removeIf(block -> MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(block.getLocation()) != null);
+		e.blockList().removeIf(block -> protectionsService.getProtectionByBlock(block.getLocation()) != null);
 	}
 
 	@EventHandler
 	public void onMobGrief(EntityChangeBlockEvent e) {
-		Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
 		if (protection != null) {
 			e.setCancelled(true);
 		}
@@ -178,8 +190,7 @@ public class ProtectionBlockEvents implements Listener {
 
 	@EventHandler
 	public void onBlockFromTo(BlockFromToEvent e) {
-		Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
 		if (protection != null) {
 			e.setCancelled(true);
 		}
@@ -187,15 +198,15 @@ public class ProtectionBlockEvents implements Listener {
 
 	@EventHandler
 	public void onPistonExtend(BlockPistonExtendEvent e) {
-		if (e.getBlocks().stream().anyMatch(block -> MainPluginClass.getPlugin().getProtectionsModule()
-				.getProtectionByBlock(block.getLocation()) != null)) {
+		if (e.getBlocks().stream()
+				.anyMatch(block -> protectionsService.getProtectionByBlock(block.getLocation()) != null)) {
 			e.setCancelled(true);
 		}
 	}
 
 	@EventHandler
 	public void onDamageEntity(EntityDamageEvent e) {
-		List<Protection> protections = MainPluginClass.getPlugin().getProtectionsModule().getProtectionsByWorld()
+		List<Protection> protections = protectionsService.getProtectionsByWorld()
 				.getOrDefault(e.getEntity().getWorld().getName(), new ArrayList<>());
 		for (Protection protection : protections) {
 			if (protection.isProtectionViewEntity(e.getEntity())) {

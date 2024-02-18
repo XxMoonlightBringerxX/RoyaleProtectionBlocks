@@ -6,190 +6,117 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.Permissions;
-import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
-import company.pluginName.Bukkit.Inventories.Shared.SearchPlayersInventory;
-import company.pluginName.Exceptions.ProtectionOwners.Delete.ProtectionOwnersDeleteException;
-import company.pluginName.Exceptions.ProtectionOwners.Save.ProtectionOwnersSaveException;
+import company.pluginName.Bukkit.Inventories.Shared.SearchPlayerInventory;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.Utils.OfflinePlayerUtils;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
-import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
-import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryData;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
 
-@Data
-@EqualsAndHashCode(callSuper = false)
-@Setter(lombok.AccessLevel.NONE)
-public class ProtectionOwnersInventory extends PluginChestInventory {
+@Inventory("protections_owners")
+public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 
-	public static ItemStack SEARCH_PLAYER_BUTTON;
-
-	public static void initItems() {
-		SEARCH_PLAYER_BUTTON = ItemStacksUtils
-				.createItemStack(SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
-						MessageBuilder
-								.createMessage(MessageString.INVENTORY_PROTECTION_OWNERS_SEARCHOWNERNAME.toString())
-								.toString());
-	}
+	private static final String ENTITY_DELETELORELINE_PATH = "Entity.Delete-lore-line";
 
 	private Protection protection;
-	private List<UUID> owners;
-	private int page = 1;
 
 	public ProtectionOwnersInventory(Player player, Protection protection) {
 		super(player);
-
-		setSize(27);
-		setName(MessageBuilder
-				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTION_OWNERS_TITLE.toString())
-						.replacements(new TextReplacement("{protection}", () -> protection.getDisplayName())))
-				.toString());
 
 		this.protection = protection;
 	}
 
 	@Override
-	public void updateContent() {
-		clearSlots();
-
-		owners = getList();
-
-		for (int i = getSize() - 9; i < getSize(); i++) {
-			setSlot(i, GRAY_STAINED_GLASS_PANE);
-		}
-
-		setSlot(18, new Button(CLOSE_ITEM) {
-			@Override
-			public void onClick(InventoryClickEvent e) {
-				goToPreviousHolder();
-			}
-		});
-
-		if (protection.isMainOwner(getPlayer().getUniqueId())
-				|| getPlayer().hasPermission(Permissions.PROTECTION_OWNERS_ADD_OTHERS)) {
-			setSlot(22, new Button(SEARCH_PLAYER_BUTTON) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					closeInventory();
-					new SearchPlayersInventory(getPlayer(), player -> {
-						if (player != null) {
-							try {
-								protection.getOwners().add(getPlayer(), player.getUniqueId());
-							} catch (ProtectionOwnersSaveException e1) {
-								e1.sendError(getPlayer());
-							}
-							openInventory();
-						} else {
-							openInventory();
-						}
-					}).setPreviousHolder(getHolder()).openInventory(MainPluginClass.getPlugin());
-				}
-			});
-		}
-
-		int maxPage = getMaxPage();
-
-		if (page < 1) {
-			page = 1;
-		} else if (page > maxPage) {
-			page = maxPage;
-		}
-
-		if (page > 1) {
-			setSlot(getSize() - 6, new Button(LEFT_ARROW_ITEM) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					page--;
-					updateInventory();
-				}
-			});
-		}
-
-		if (page < maxPage) {
-			setSlot(getSize() - 4, new Button(RIGHT_ARROW_ITEM) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					page++;
-					updateInventory();
-				}
-			});
-		}
-
-		if (owners.size() != 0) {
-			int slot = 0;
-			for (UUID owner : Arrays.copyOfRange(owners.toArray(new UUID[owners.size()]), ((page - 1) * 18),
-					(page * 18))) {
-				if (owner == null) {
-					break;
-				}
-
-				OfflinePlayer pl = OfflinePlayerUtils.getOfflinePlayer(owner);
-
-				final boolean canRemove = protection.isMainOwner(getPlayer().getUniqueId())
-						|| (protection.getOwners().list().contains(getPlayer().getUniqueId())
-								&& pl.getUniqueId().equals(owner))
-						|| getPlayer().hasPermission(Permissions.PROTECTION_OWNERS_ADD_OTHERS);
-
-				List<String> lore = new ArrayList<>();
-				if (canRemove) {
-					lore.add(MessageString.INVENTORY_PROTECTION_OWNERS_REMOVEOWNERLORELINE.toString());
-				}
-
-				setSlot(slot++,
-						new Button(
-								ItemStacksUtils.createItemStack(ItemStacksUtils.getPlayerHead(pl),
-										MessageBuilder
-												.createMessage(TextInput.inst()
-														.text(MessageString.INVENTORY_PROTECTION_OWNERS_OWNERNAME
-																.toString())
-														.replacements(
-																new TextReplacement("{player}", () -> pl.getName())))
-												.toString(),
-										MessageBuilder.createMessage(lore.toArray(new String[lore.size()]))
-												.getStrings())) {
-							@Override
-							public void onClick(InventoryClickEvent e) {
-								if (canRemove) {
-									new ConfirmationInventory(getPlayer(), () -> {
-										try {
-											protection.getOwners().remove(getPlayer(), owner);
-										} catch (ProtectionOwnersDeleteException e1) {
-											e1.sendError(getPlayer());
-										}
-
-										if (!owner.equals(getPlayer().getUniqueId())) {
-											openInventory();
-										}
-									}).setPreviousInventory(null).openInventory(MainPluginClass.getPlugin());
-								}
-							}
-						});
-			}
-		}
+	protected String getTitle() {
+		return MessageTemplate.inst(super.getTitle()).setReplacements(new Replacement("{protection}",
+				() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getRegionId()))
+				.process().toString();
 	}
 
-	public int getMaxPage() {
-		return (int) ((owners.size() + 17) / 18D);
-	}
-
-	private List<UUID> getList() {
+	@Override
+	protected List<UUID> getEntityList() {
 		return protection.getOwners().list().stream().filter(uuid -> !this.protection.isMainOwner(uuid))
 				.collect(Collectors.toList());
+	}
+
+	@ItemGenerator("Search-button")
+	private ItemStack generateSearchButton(Item item) {
+		return protection.canAddOwner(getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+	}
+
+	@ItemExecutor("Close-button")
+	private void executeCloseButton() {
+		goToPreviousHolder();
+	}
+
+	@ItemExecutor("Search-button")
+	private void executeSearchButton() {
+		closeInventory();
+		new SearchPlayerInventory(getPlayer(), player -> {
+			if (player != null) {
+				try {
+					protection.getOwners().add(getPlayer(), player.getUniqueId());
+				} catch (RoyaleProtectionBlocksException e1) {
+					e1.sendError(getPlayer());
+				}
+				openInventory();
+			} else {
+				openInventory();
+			}
+		}).openInventory();
+	}
+
+	@Override
+	protected ItemStack generateEntityItem(UUID entity) {
+		OfflinePlayer pl = OfflinePlayerUtilities.getOfflinePlayer(entity);
+
+		final boolean canRemove = protection.canRemoveOwner(getPlayer());
+
+		ItemBuilder builder = ItemBuilder.inst().setMaterial(Material.PLAYER_HEAD)
+				.fromMap(getChestInventoryData().getCustomFields(), PagedChestInventoryData.ENTITY_PATH)
+				.setReplacements(new Replacement("{player}", () -> pl.getName()));
+
+		List<String> lore = new ArrayList<>(Arrays.asList(builder.getLore()));
+		if (canRemove) {
+			lore.add(" ");
+			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_DELETELORELINE_PATH).toString());
+		}
+		builder.setLore(lore);
+
+		return processPlayerHead(builder, entity);
+	}
+
+	@Override
+	protected void onEntityClick(InventoryClickEvent e, UUID entity) {
+		final boolean canRemove = protection.canRemoveOwner(getPlayer());
+
+		if (canRemove) {
+			new ConfirmationInventory(getPlayer(), () -> {
+				try {
+					protection.getOwners().remove(getPlayer(), entity);
+				} catch (RoyaleProtectionBlocksException e1) {
+					e1.sendError(getPlayer());
+				}
+
+				if (!entity.equals(getPlayer().getUniqueId())) {
+					openInventory();
+				}
+			}).setPreviousInventory(null).openInventory();
+		}
 	}
 
 }

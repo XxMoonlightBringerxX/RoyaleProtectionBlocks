@@ -10,26 +10,38 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Permissions;
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventory;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import company.pluginName.Utils.OfflinePlayerUtils;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import company.pluginName.Modules.FilePckg.Messages;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 
-public class ListSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "list",
+		pathName = "List",
+		defaultName = "list",
+		defaultDescription = "Open a list with all your protections",
+		defaultUsage = "[username]",
+		defaultAliases = "l")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class ListSubCommand extends PandaSubCommand {
 
-	public ListSubCommand(Command command) {
-		super(command, "list", SettingString.COMMANDS_PROTECTIONBLOCKS_LIST_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_LIST_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_LIST_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_LIST_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_LIST_ALIASES.getContent());
+	public ListSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
+	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
 		if (args.length == 1) {
 			return Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
 		}
@@ -37,23 +49,25 @@ public class ListSubCommand extends SubCommand {
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
-		Player pl = sender instanceof Player ? (Player) sender : null;
-		if (pl != null) {
-			if (args.length > 1 && pl.hasPermission(Permissions.PROTECTION_LIST_OTHERS)) {
-				OfflinePlayer owner = OfflinePlayerUtils.getOfflinePlayer(args[1]);
-				if (owner != null) {
-					new ProtectionsListInventory(pl, owner).openInventory();
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
+		return CommandResponse.queuedAsync(() -> {
+
+			Player pl = sender instanceof Player ? (Player) sender : null;
+			if (pl != null) {
+				if (args.length > 1 && pl.hasPermission(Permissions.PROTECTION_LIST_OTHERS)) {
+					OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(args[1]);
+					if (owner != null) {
+						new ProtectionsListInventory(pl, owner).openInventory();
+					} else {
+						MessageTemplate.inst(Messages.ERROR_PLAYERNOTFOUND.applyPrefix()).process().sendMessage(sender);
+					}
 				} else {
-					MessageBuilder.createMessage(MessageString.ERROR_PLAYERNOTFOUND.applyPrefix()).sendMessage(sender);
+					new ProtectionsListInventory(pl).openInventory();
 				}
 			} else {
-				new ProtectionsListInventory(pl).openInventory();
+				MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 			}
-		} else {
-			MessageBuilder.createMessage(MessageString.applyPrefix(MessageString.ERROR_CONSOLEDENIED))
-					.sendMessage(sender);
-		}
-		return true;
+		});
 	}
 }

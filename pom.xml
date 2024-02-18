@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>0.0.27 Alpha</version>
+	<version>0.1.0.4 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -50,14 +50,24 @@
 			<version>1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>SpigotDebug</groupId>
-			<artifactId>SpigotDebug</artifactId>
+			<groupId>SpigotPlugin</groupId>
+			<artifactId>SpigotPlugin</artifactId>
 			<version>1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>SpigotCommands</groupId>
-			<artifactId>SpigotCommands</artifactId>
-			<version>1.0</version>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaPlugin</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaAPIs</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaCommandsModule</artifactId>
+			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
 			<groupId>PandaUtils</groupId>
@@ -65,19 +75,14 @@
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
-			<groupId>SpigotPlugin</groupId>
-			<artifactId>SpigotPlugin</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
 			<groupId>PandaUtils</groupId>
 			<artifactId>PandaUtilities</artifactId>
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
-			<groupId>PandaSQL</groupId>
-			<artifactId>PandaSQL</artifactId>
-			<version>1.0</version>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaSQLModule</artifactId>
+			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
 			<groupId>PandaUtils</groupId>
@@ -87,6 +92,31 @@
 		<dependency>
 			<groupId>PandaUtils</groupId>
 			<artifactId>PandaYaml</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaFilesModule</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaInventories</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaPlayerDataModule</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaJavaUtilities</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaUpdateChecker</artifactId>
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
@@ -180,7 +210,7 @@
 								</relocation>
 								<relocation>
 									<pattern>company.pluginName</pattern>
-									<shadedPattern>${project.package}.${project.groupId}</shadedPattern>
+									<shadedPattern>${project.package}.${project.groupId}.Plugin</shadedPattern>
 								</relocation>
 							</relocations>
 						</configuration>

@@ -1,148 +1,102 @@
 package company.pluginName.Bukkit.Inventories.Protections.Flags;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.Objects.Flag;
+import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
-import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackUtilities;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Messages.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Events.MessagesListener;
+import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
 
-@Data
-@EqualsAndHashCode(callSuper = false)
-@Setter(lombok.AccessLevel.NONE)
-public class ProtectionFlagsInventory extends PluginChestInventory {
+@Inventory("protections_flags")
+public class ProtectionFlagsInventory extends PagedChestInventoryObject<Flag<?>> {
+
+	private static final String MESSAGES_FLAGSTRINGSPECIFYINFO_PATH = "Messages.Flag-string-specify-info";
+
+	@PandaInject
+	private static MessagesListener messagesListener;
 
 	private Protection protection;
 	private ProtectedRegion protectedRegion;
-	private List<Flag<?>> flags;
-	private int page = 1;
 
 	public ProtectionFlagsInventory(Player player, Protection protection) {
 		super(player);
 
 		this.protection = protection;
 		this.protectedRegion = this.protection.getProtectedRegion();
-		this.flags = Flag.FLAGS;
-
-		setSize(27);
-		setName(MessageBuilder
-				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTION_FLAGS_TITLE.toString())
-						.replacements(new TextReplacement("{protection}", () -> protection.getDisplayName())))
-				.toString());
 	}
 
 	@Override
-	public void updateContent() {
-		clearSlots();
-
-		for (int i = getSize() - 9; i < getSize(); i++) {
-			setSlot(i, GRAY_STAINED_GLASS_PANE);
-		}
-
-		int maxPage = getMaxPage();
-
-		if (page < 1) {
-			page = 1;
-		} else if (page > maxPage) {
-			page = maxPage;
-		}
-
-		if (page > 1) {
-			setSlot(getSize() - 6, new Button(LEFT_ARROW_ITEM) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					page--;
-					updateInventory();
-				}
-			});
-		}
-
-		if (page < maxPage) {
-			setSlot(getSize() - 4, new Button(RIGHT_ARROW_ITEM) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					page++;
-					updateInventory();
-				}
-			});
-		}
-
-		setSlot(getSize() - 9, new Button(CLOSE_ITEM) {
-
-			@Override
-			public void onClick(InventoryClickEvent e) {
-				goToPreviousHolder();
-			}
-		});
-
-		if (flags.size() != 0) {
-			int slot = 0;
-			for (Flag<?> flag : Arrays.copyOfRange(flags.toArray(new Flag<?>[flags.size()]),
-					((page - 1) * (getSize() - 9)), (page * (getSize() - 9)))) {
-				if (flag == null) {
-					break;
-				}
-
-				setSlot(slot++, new Button(ItemStackUtilities.setReplacements(flag.getItemData().getItem().clone(),
-						new TextReplacement("{value}", () -> flag.getFlagValueAsString(protectedRegion)))) {
-
-					@SuppressWarnings("unchecked")
-					@Override
-					public void onClick(InventoryClickEvent e) {
-						if (flag.getWorldGuardFlag() instanceof StateFlag) {
-							Flag<State> stateFlag = (Flag<State>) flag;
-							stateFlag.setFlagValue(protectedRegion,
-									stateFlag.getFlagValue(protectedRegion) == State.ALLOW ? State.DENY : State.ALLOW);
-							updateInventory();
-						} else if (flag.getWorldGuardFlag() instanceof StringFlag) {
-							Flag<String> stringFlag = (Flag<String>) flag;
-							try {
-								MainPluginClass.getPlugin().getMessagesListener()
-										.startListening(e.getWhoClicked().getUniqueId(), (message) -> {
-											if (!message.equalsIgnoreCase("cancel")) {
-												stringFlag.setFlagValue(protectedRegion, message);
-											}
-											openInventory();
-											return true;
-										});
-								closeInventory();
-								MessageBuilder
-										.createMessage(MessageString.applyPrefix(
-												MessageString.INVENTORY_PROTECTION_FLAGS_STRINGSPECIFYINFO.toString()))
-										.sendMessage(e.getWhoClicked());
-							} catch (PlayerAlreadyListeningException ex) {
-								MessageBuilder.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.toString())
-										.sendMessage(e.getWhoClicked());
-								return;
-							}
-						}
-					}
-				});
-			}
-		}
+	protected String getTitle() {
+		return MessageTemplate.inst(super.getTitle()).setReplacements(new Replacement("{protection}",
+				() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getRegionId()))
+				.process().toString();
 	}
 
-	public int getMaxPage() {
-		return (int) ((flags.size() + (getSize() - 10)) / (double) (getSize() - 9));
+	@Override
+	protected List<Flag<?>> getEntityList() {
+		return Flag.FLAGS;
+	}
+
+	@Override
+	protected ItemStack generateEntityItem(Flag<?> entity) {
+		return ItemBuilder.inst().fromItem(entity.getItemData().getItem())
+				.setReplacements(new Replacement("{value}", () -> entity.getFlagValueAsString(protectedRegion)))
+				.build();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected void onEntityClick(InventoryClickEvent e, Flag<?> entity) {
+		if (entity.getWorldGuardFlag() instanceof StateFlag) {
+			Flag<State> stateFlag = (Flag<State>) entity;
+			stateFlag.setFlagValue(protectedRegion,
+					stateFlag.getFlagValue(protectedRegion) == State.ALLOW ? State.DENY : State.ALLOW);
+			updateInventory();
+		} else if (entity.getWorldGuardFlag() instanceof StringFlag) {
+			Flag<String> stringFlag = (Flag<String>) entity;
+			try {
+				messagesListener.startListening(e.getWhoClicked().getUniqueId(), (message) -> {
+					if (!message.equalsIgnoreCase("cancel")) {
+						stringFlag.setFlagValue(protectedRegion, message);
+					}
+					openInventory();
+					return true;
+				});
+				closeInventory();
+				MessageTemplate
+						.inst(PandaPrefixedStringField.applyPrefix(getChestInventoryData().getCustomFields()
+								.get(MESSAGES_FLAGSTRINGSPECIFYINFO_PATH).toString()))
+						.process().sendMessage(e.getWhoClicked());
+			} catch (PlayerAlreadyListeningException ex) {
+				MessageTemplate.inst(Messages.ERROR_CHATPROMPT_ALREADYPROMPTED.toString()).process()
+						.sendMessage(e.getWhoClicked());
+				return;
+			}
+		}
+
+	}
+
+	@ItemExecutor("Close-button")
+	private void executeCloseButton() {
+		goToPreviousHolder();
 	}
 
 }

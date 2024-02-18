@@ -11,13 +11,16 @@ import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.APIs.ItemsAdderAPI;
-import company.pluginName.APIs.OraxenAPI;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBlocks.ProtectionBlockAllowedWorlds;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBlocks.ProtectionBlockInformation;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import company.pluginName.APIs.ItemsAdderAPI.ItemsAdderAPI;
+import company.pluginName.APIs.ItemsAdderAPI.Hook.ItemsAdderHook;
+import company.pluginName.APIs.OraxenAPI.OraxenAPI;
+import company.pluginName.APIs.OraxenAPI.Hook.OraxenHook;
+import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockAllowedWorlds;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.Getter;
@@ -27,6 +30,15 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 @Data
 @Getter(lombok.AccessLevel.NONE)
 public class ProtectionBlocksUtils {
+
+	@PandaInject
+	private static ProtectionBlocksService protectionBlocksService;
+
+	@PandaInject
+	private static ItemsAdderAPI itemsAdderApi;
+
+	@PandaInject
+	private static OraxenAPI oraxenApi;
 
 	private static final String BLOCKSX_SECTION = "Blocks-x";
 	private static final String BLOCKSY_SECTION = "Blocks-y";
@@ -45,9 +57,9 @@ public class ProtectionBlocksUtils {
 	}
 
 	public static ItemType getItemType(ItemStack item) {
-		if (MainPluginClass.getItemsAdderAPI().isCustomBlock(item) == ItemsAdderAPI.CheckingResult.IS_CUSTOM_ITEM) {
+		if (itemsAdderApi.getHook().isCustomBlock(item) == ItemsAdderHook.CheckingResult.IS_CUSTOM_ITEM) {
 			return ItemType.ITEMS_ADDER;
-		} else if (MainPluginClass.getOraxenAPI().isCustomBlock(item) == OraxenAPI.CheckingResult.IS_CUSTOM_ITEM) {
+		} else if (oraxenApi.getHook().isCustomBlock(item) == OraxenHook.CheckingResult.IS_CUSTOM_ITEM) {
 			return ItemType.ORAXEN;
 		} else {
 			return ItemType.VANILLA;
@@ -57,10 +69,9 @@ public class ProtectionBlocksUtils {
 	public static boolean isSameType(ItemStack protectionBlock, ItemStack item) {
 		switch (getItemType(protectionBlock)) {
 		case ITEMS_ADDER:
-			return MainPluginClass.getItemsAdderAPI().isSame(item,
-					protectionBlock) == ItemsAdderAPI.ComparativeResult.SAME;
+			return itemsAdderApi.getHook().isSame(item, protectionBlock) == ItemsAdderHook.ComparativeResult.SAME;
 		case ORAXEN:
-			return MainPluginClass.getOraxenAPI().isSame(item, protectionBlock) == OraxenAPI.ComparativeResult.SAME;
+			return oraxenApi.getHook().isSame(item, protectionBlock) == OraxenHook.ComparativeResult.SAME;
 		case VANILLA:
 			if (item.getType() == protectionBlock.getType()) {
 				return true;
@@ -72,10 +83,9 @@ public class ProtectionBlocksUtils {
 	public static boolean isSameType(ItemStack protectionBlock, Block block) {
 		switch (getItemType(protectionBlock)) {
 		case ITEMS_ADDER:
-			return MainPluginClass.getItemsAdderAPI().isSame(block,
-					protectionBlock) == ItemsAdderAPI.ComparativeResult.SAME;
+			return itemsAdderApi.getHook().isSame(block, protectionBlock) == ItemsAdderHook.ComparativeResult.SAME;
 		case ORAXEN:
-			return MainPluginClass.getOraxenAPI().isSame(block, protectionBlock) == OraxenAPI.ComparativeResult.SAME;
+			return oraxenApi.getHook().isSame(block, protectionBlock) == OraxenHook.ComparativeResult.SAME;
 		case VANILLA:
 			if (block.getType() == protectionBlock.getType()) {
 				return true;
@@ -95,7 +105,7 @@ public class ProtectionBlocksUtils {
 		Material material = Material.getByBukkitMaterial(protectionBlock.getInformation().getItem().getType());
 		ItemMeta im = protectionBlock.getInformation().getItem().getItemMeta();
 		String skin = material == Material.PLAYER_HEAD
-				? ItemStacksUtils.getSkin(protectionBlock.getInformation().getItem())
+				? SkinUtilities.NMS.getSkinAsBase64(protectionBlock.getInformation().getItem())
 				: null;
 
 		values.put(BLOCKSX_SECTION, protectionBlock.getInformation().getBlocksX());
@@ -206,7 +216,7 @@ public class ProtectionBlocksUtils {
 					"The value '%s' is currently not a string list.".formatted(map.get(ALLOWEDWORLDS_SECTION)));
 		}
 
-		ProtectionBlock protectionBlock = MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlockById(id);
+		ProtectionBlock protectionBlock = protectionBlocksService.getProtectionBlockById(id);
 
 		if (protectionBlock != null) {
 			protectionBlock = new ProtectionBlock(protectionBlock);
@@ -241,11 +251,11 @@ public class ProtectionBlocksUtils {
 			ItemMeta im = item.getItemMeta();
 
 			if (map.containsKey(ITEM_NAME_SECTION) && name != null) {
-				im.setDisplayName(MessageBuilder.createMessage(name).toString());
+				im.setDisplayName(MessageTemplate.inst(name).toString());
 			}
 
 			if (map.containsKey(ITEM_LORE_SECTION) && lore != null) {
-				im.setLore(MessageBuilder.createMessage(lore).getStrings());
+				im.setLore(MessageTemplate.inst(lore).getStrings());
 			}
 
 			item.setItemMeta(im);
@@ -255,8 +265,8 @@ public class ProtectionBlocksUtils {
 			return protectionBlock;
 		} else {
 			ItemStack item = ItemStacksUtils.createItemStack(material,
-					name != null ? MessageBuilder.createMessage(name).toString() : null,
-					lore != null ? MessageBuilder.createMessage(lore).getStrings() : null);
+					name != null ? MessageTemplate.inst(name).toString() : null,
+					lore != null ? MessageTemplate.inst(lore).getStrings() : null);
 
 			if (skin != null && !skin.isEmpty() && item.getType() == Material.PLAYER_HEAD.getMaterial()) {
 				item = SkinUtilities.NMS.setSkinSafe(item, skin);

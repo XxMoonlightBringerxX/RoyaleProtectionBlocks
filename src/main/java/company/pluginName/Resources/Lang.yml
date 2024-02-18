@@ -22,230 +22,173 @@
 #
 #---
 
-Version: 1
+Version: 2
 
-Prefix: '&d&lRoyale&fProtectionBlocks >>&r&7 '
+Prefix: "&d&lRoyale&fProtectionBlocks >>&r&7 "
 
 Message: 
-  Reload: '&aThe plugin has been reloaded successfully.'
-  Protections: 
-    Created-successfully: '&aThe protection has been created successfully!'
-    Removed-successfully: '&aThe protection has been removed successfully!'
-    Home-set-successfully: '&aThe protection\'s home has been set successfully!'
-    Renamed-successfully: '&aThe protection\'s name has been changed successfully!'
-    Members: 
-      Added-successfully: '&aThe new member has been added to the protection successfully!'
-      Removed-successfully: '&aThe member has been removed to the protection successfully!'
-    Owners: 
-      Added-successfully: '&aThe new owner has been added to the protection successfully!'
-      Removed-successfully: '&aThe owner has been removed to the protection successfully!'
-    Blocks: 
-      Created-successfully: '&aThe protection block has been created successfully!'
-      Removed-successfully: '&aThe protection block has been removed successfully!'
-      Saved-successfully: '&aThe protection block changes has been saved successfully!'
-    Hidden-successfully: '&aThe protection block has been hidden successfully!'
-    Shown-successfully: '&aThe protection block has been shown successfully!'
-  Helper: 
-    Available-left-arrow: '&e«'
-    Unavailable-left-arrow: '&r«'
-    Available-right-arrow: '&e»'
-    Unavailable-right-arrow: '&r»'
-    Header: 
-    - ' '
-    - '&c・。・。・。・。・。・。・。%left_arrow%&r %current_page%/%max_page% %right_arrow%&c。・。・。・。・。・。・。・'
-    - ' '
-    Body: 
-    - '&6%command_usage%'
-    - '  &8%command_description%'
-    Footer: 
-    - ' '
-    - '&c・。・。・。・。・。・。・。・。・。・。・。・。・。・。・。・。・'
-    - ' '
-
-Inventory: 
+  
+  Reload: "&aThe plugin has been reloaded successfully."
+  Set-spawn-successfully: "&aA new spawn has ben set successfully."
+  
   General: 
-    Close-name: '&cClose'
-    Previous-name: '&ePrevious'
-    Next-name: '&eNext'
-    Confirm-name: '&aConfirm'
-    Cancel-name: '&cCancel'
-  Confirm: 
-    Title: 'Are you sure?'
-    Yes-name: '&aYes'
-    No-name: '&cNo'
-  Search-players: 
-    Title: 'Search a player'
-    Player-name: '&e{player}'
-    Search-specific-player-name: '&eSearch an specific player'
-    Search-specific-player-Info: '&7Type the name of the player you\'re looking for. Type \'cancel\' to
-      cancel this action.'
-  Protection: 
-    Title: '{protection}'
-    Owners-name: '&eOwners'
-    Members-name: '&eMembers'
-    Flags-name: '&eFlags'
-    Rename-name: '&eRename protection'
-    Type-new-name-Info: '&7Type the new name for the protection. Type \'cancel\' to cancel this
-      action.'
-    List: 
-      Title: 'Protections'
-      Protection-name: '&e{protection}'
-      Protection-lore: 
-      - '&0'
-      - '&a&oWorld: &e{world}'
-      - '&a&oLocation: &ex={location_x},y={location_y},z={location_z}'
-      Protection-teleport-no-home-lore-line: ' &8- &a&mLeft click&r&a: &7No home set yet'
-      Protection-teleport-lore-line: ' &8- &aLeft click: &eTeleport to protection home'
-      Protection-edit-lore-line: ' &8- &aRight click: &eManage protection'
+    No-limit: "No limit"
+  
+  Protections: 
+    Created-successfully: "&aThe protection has been created successfully!"
+    Removed-successfully: "&aThe protection has been removed successfully!"
+    Home-set-successfully: "&aThe protection's home has been set successfully!"
+    ID-set-successfully: "&aThe protection's custom ID has been set successfully!"
+    Renamed-successfully: "&aThe protection's name has been changed successfully!"
+    Hidden-successfully: "&aThe protection block has been hidden successfully!"
+    Shown-successfully: "&aThe protection block has been shown successfully!"
+    Kicked: "&cYou've been kicked from this protection."
+    Banned: "&cYou've been banned from this protection."
+    Player-not-in-protection: "&cThis player is not currently inside this protection."
+    Player-with-kick-bypass: "&cYou can't kick this player due his permissions."
+    Player-kicked: "&aThe player has been kicked from this protection successfully!"
+    Left-successfully: "&aYou have left the protection successfully!"
+    
     Flags: 
-      Title: '{protection} > Flags'
-      Flag-name: '&e{flag} &8[&7{value}&8]'
-      Allow-value-name: '&aAllow'
-      Deny-value-name: '&cDeny'
-      String-value-name: '&b{text}'
-      String-specify-info: '&7Type the text you want to specify in this flag. Type \'cancel\' to
-        cancel this action.'
+      Flag-name: "&e{flag} &8[&7{value}&8]"
+      Allow-value-name: "&aAllow"
+      Deny-value-name: "&cDeny"
+      String-value-name: "&b{text}"
+      Not-defined-name: "&7Not defined"
+    
     Members: 
-      Title: '{protection} > Members'
-      Member-name: '&e{player}'
-      Search-member-name: '&eSearch for a new member'
-      Remove-member-lore-line: '&8[&cClick to remove member&8]'
+      Added-successfully: "&aThe new member has been added to the protection successfully!"
+      Removed-successfully: "&aThe member has been removed to the protection successfully!"
+    
     Owners: 
-      Title: '{protection} > Owners'
-      Owner-name: '&e{player}'
-      Search-owner-name: '&eSearch for a new owner'
-      Remove-owner-lore-line: '&8[&cClick to remove owner&8]'
-  Protection-blocks: 
-    List: 
-      Title: 'Protection Blocks'
-      Block-lore: 
-      - '&0'
-      - '&a&oBlock ID: &e{block_id}'
-      - '&a&oBlock size: &e{blocks_x}x{blocks_y}x{blocks_z}'
-      Block-copy-lore-line: ' &8&o- &aLeft click: &eGet a copy'
-      Block-remove-lore-line: ' &8&o- &aRight click: &eRemove the block'
-      Create-block-item: '&eCreate a new protection block'
-      Block-edit-lore-line: ' &8&o- &aLeft click + Shift: &eEdit the block'
-    Manage: 
-      Title: 'Protection Blocks > {block}'
-      Item-not-set-name: '&7&oNot set yet'
-      Item-lore: 
-      - '&0'
-      - '&8 - &aLeft click with item: &eReplace current item'
-      - '&8 - &aLeft click without item: &eTake current item'
-      Item-not-set-lore: 
-      - '&0'
-      - '&8 - &aLeft click with item: &eSet as current item'
-      Blocks-x-name: '&aCurrent blocks on X: &e{blocks_x}'
-      Blocks-x-lore: 
-      - '&0'
-      - '&8 - &aLeft click: &eIncrease two blocks'
-      - '&8 - &aRight click: &eDecrease two blocks'
-      - '&8 - &aLeft click + Shift: &eSpecify current blocks'
-      Blocks-y-name: '&aCurrent blocks on Y: &e{blocks_y}'
-      Blocks-y-lore: 
-      - '&0'
-      - '&8 - &aLeft click: &eIncrease two blocks'
-      - '&8 - &aRight click: &eDecrease two blocks'
-      - '&8 - &aLeft click + Shift: &eSpecify current blocks'
-      Blocks-z-name: '&aCurrent blocks on Z: &e{blocks_z}'
-      Blocks-z-lore: 
-      - '&0'
-      - '&8 - &aLeft click: &eIncrease two blocks'
-      - '&8 - &aRight click: &eDecrease two blocks'
-      - '&8 - &aLeft click + Shift: &eSpecify current blocks'
-      Blocks-specify-info: '&7Type the amount of blocks you wish to set on your protection block.
-        Type \'cancel\' to cancel this action.'
-      Id-name: '&aCurrent ID: &e{block_id}'
-      Id-not-set-name: '&aCurrent ID: &7&oNot set yet'
-      Id-not-modifiable-name: '&aCurrent ID: &e{block_id} &7&o[Not modifiable]'
-      Id-specify-info: '&7Type the ID you wish to set on your protection block. Type \'cancel\'
-        to cancel this action.'
-      Permission-name: '&aCurrent permission: &e{block_permission}'
-      Permission-not-set-name: '&aCurrent permission: &7&oNot set yet'
-      Permission-specify-info: '&7Type the permission you wish to set on your protection block. Type
-        \'cancel\' to cancel this action.'
+      Added-successfully: "&aThe new owner has been added to the protection successfully!"
+      Removed-successfully: "&aThe owner has been removed to the protection successfully!"
+    
+    Banneds: 
+      Added-successfully: "&aThe player has been banned from the protection successfully!"
+      Removed-successfully: "&aThe player has been unbanned from the protection successfully!"
+    
+    Blocks: 
+      Created-successfully: "&aThe protection block has been created successfully!"
+      Saved-successfully: "&aThe protection block changes has been saved successfully!"
+      Removed-successfully: "&aThe protection block has been removed successfully!"
+  
+  Transfer: 
+    Available-list: "&7Available protection plugins to transfer from: &f{list}"
+    Protection-stones-not-loaded: "&cProtectionStones is not loaded. Please load ProtectionStones to
+      transfer its data."
+    Warning: "&7You're about to transfer all the data from another plugin to RoyaleProtectionBlocks.
+      Once it starts, it's not recomended to stop the server. This process
+      may remove the old regions and lead to losing some in case their
+      transfer fails. Remember to keep a backup of the WorldGuard and desired
+      plugin folder in case something goes wrong. Make sure to remove the
+      plugin you want to transfer from once the transfer finishes, as it
+      can lead to unexpected behaviors if there are two protection plugins.
+      Please, type &e{command} &7to confirm your choice."
+    Start: "&7Starting transfer process..."
+    End: "&7Transfer finished! Remember to check the results and, if everything
+      went okey, remove the old protection plugin."
+    Result: 
+    - ""
+    - "&eTransfer result: "
+    - ""
+    - "&e  - &aTransferred protection blocks: {transferred_protection_blocks}"
+    - "&e  - &cFailed protection blocks: {failed_protection_blocks}"
+    - ""
+    - "&e  - &aTransferred protections: {transferred_protections}"
+    - "&e  - &cFailed protections: {failed_protections}"
+    - ""
+    - "&e  - &aRequired time: {required_time} ms"
+    - "&e  - &cErrors in console: {errors_in_console}"
+    - ""
+  
+  Purge: 
+    Warning: "&7You're about to delete a total amount of &e{amount} &7protection=
+      new PandaPrefixedStringField(s) depending on the player's last playtime,
+      some protections may be lost if any error occurs. If there may be
+      some important protections you want to prevent from being removed,
+      remember to make a backup just in case. Please, type &e{command}
+      &7to confirm your choice."
+    Search: "&7Searching matching protections..."
+    Start: "&7Starting purge process..."
+    End: "&aPurge finished! A total amount of &e{amount} &aprotection(s) has been purged."
+    Error: "&7A total amount of &e{amount} protection(s)
+      couldn't be purged. Check the console to see the related errors."
+    Export-end: "&aExportation finished! A total amount of &e{amount} &aprotection=
+      new PandaPrefixedStringField(s) has been found and exported to a
+      new JSON file called '&e{file}' on your plugin's directory."
+  
+  Files: 
+    Exported-successfully: "All the data has been exported successfully!"
+    Imported-successfully: "All the data has been imported successfully!"
+  
+  Helper: 
+    Available-left-arrow: "&e«"
+    Unavailable-left-arrow: "&r«"
+    Available-right-arrow: "&e»"
+    Unavailable-right-arrow: "&r»"
+    Header: 
+    - " "
+    - "&c・。・。・。・。・。・。・。%left_arrow%&r %current_page%/%max_page% %right_arrow%&c。・。・。・。・。・。・。・"
+    - " "
+    Body: 
+    - "&6%command_usage%"
+    - "  &8%command_description%"
+    Footer: 
+    - " "
+    - "&c・。・。・。・。・。・。・。・。・。・。・。・。・。・。・。・。・"
+    - " "
+    Error: 
+      Not-a-number: "&cYou must specify a valid number!"
 
 Error: 
-  Error: '&cError!'
-  Console-denied: '&cYou can\'t use this commands in console!'
-  Player-not-found: '&cThe specified player couldn\'t be found!'
-  No-item-in-hand: '&cYou must have an item in your hand!'
-  Not-a-block: '&cThe item must be a block!'
-  Invalid-number: '&cYou specify a valid number!'
-  Number-below-zero: '&cYou must specify a number higher than or equal to zero!'
+  
+  Error: "&cError!"
+  Console-denied: "&cYou can't use this commands in console!"
+  Player-not-found: "&cThe specified player couldn't be found!"
+  No-item-in-hand: "&cYou must have an item in your hand!"
+  Not-a-block: "&cThe item must be a block!"
+  Inventory-full: "&cYou don't have enough space on your inventory!"
+  Insufficient-balance: "&cYou don't have enough balance to purchase this!"
+  Invalid-number: "&cYou must specify a valid number!"
+  Number-below-zero: "&cYou must specify a number higher than or equal to zero!"
+  Set-spawn-error: "&cThere was an error trying to specify a new spawn. Check the console!"
+  
   Chat-prompt: 
-    Already-prompted: '&cYou\'ve already a pending type operation!'
+    Already-prompted: "&cYou've already a pending type operation!"
+  
+  Files: 
+    Export: "&cThere was an issue trying to export the data! Check the console
+      for more information."
+    Import: "&cThere was an issue trying to import the data! Check the console
+      for more information."
+  
+  Purge: 
+    Invalid-parameter: "&cYou must specify a valid parameter! (Available:
+      --days, --hours, --minutes, --config, --show-ignored-players, --export-only)"
+    No-value-for-parameter: "&cYou must specify a value for the parameter!"
+  
   Protections: 
-    Not-inside-protection: '&cYou\'re not inside any protection!'
-    Banned-world: '&cYou can\'t use protection blocks in this world!'
-    Not-main-owner: '&cYou\'re not the main owner of this protection!'
+    Not-found: "&cThe specified protection could not be found!"
+    Not-inside-protection: "&cYou're not inside any protection!"
+    Banned-world: "&cYou can't use protection blocks in this world!"
+    Not-allowed-world: "&cYou can't use this protection block in this world!"
+    Not-main-owner: "&cYou're not the main owner of this protection!"
+    Not-owner: "&cYou're not an owner of this protection!"
+    Not-member: "&cYou're not a member of this protection!"
+    Permission-denied: "&cYou don't have permissions to use this protection block!"
+    Block-already-hidden: "&cThe protection block is already hidden!"
+    Block-already-shown: "&cThe protection block is already shown!"
+    Blocked-by-block: "&cThere's another block where the protection block should be placed!"
+    Same-item-as-protection: "&cYou can't place items of the same type as the protection block
+      where the protection block is originally placed!"
+    Leave-denied-to-main-owner: "&cYou can't leave your own protection!"
     Blocks: 
-      Not-found: '&cThere\'s no protection block with this ID!'
-      Item-type-swap-not-allowed: '&cYou can\'t switch the item type of a registered protection block!'
-    Permission-denied: '&cYou don\'t have permissions to use this protection block!'
-    Block-already-hidden: '&cThe protection block is already hidden!'
-    Block-already-shown: '&cThe protection block is already shown!'
-    Blocked-by-block: '&cThere\'s another block where the protection block should be placed!'
-    Oraxen-incompatibility: '&cYou can\'t do this with this kind of protection blocks!'
-  Exception: 
-    protection: 
-      delete: 
-        PermissionDenied: '&cYou aren\'t allowed to delete this protection!'
-        SQL: '&cThere was an error trying to delete this protection in the database.
-          Please contact with an administrator!'
-        Unknown: '&cAn unknown error happened while trying to delete this protection.
-          Please contact with an administrator!'
-      save: 
-        PermissionDenied: '&cYou aren\'t allowed to save this protection!'
-        MaxReached: '&cYou\'ve reached the maximum amount of protections allowed!'
-        NameInUse: '&cThere\'s already a protection using this name!'
-        Overlaps: '&cYou can\'t put protections inside other existing ones!'
-        RenamePermissionDenied: '&cYou aren\'t allowed to rename this protection!'
-        SQL: '&cThere was an error trying to save this protection in the database.
-          Please contact with an administrator!'
-        Unknown: '&cAn unknown error happened while trying to save this protection.
-          Please contact with an administrator!'
-        AlreadyOccupied: '&cThere\'s already a protection placed on this location!'
-        NoVisibleText: '&cThe text you\'re typing must be visible!'
-      members: 
-        delete: 
-          PermissionDenied: '&cYou aren\'t allowed to remove this member!'
-          Unknown: '&cAn unknown error happened while trying to remove this member. Please
-            contact with an administrator!'
-        save: 
-          CannotAddProtectionOwner: '&cYou can\'t add the owner of this protection as a member!'
-          CannotAddYourself: '&cYou can\'t add yourself as a member!'
-          PermissionDenied: '&cYou aren\'t allowed to add members in this protection!'
-          Unknown: '&cAn unknown error happened while trying to add this member. Please
-            contact with an administrator!'
-      owners: 
-        delete: 
-          CannotDeleteProtectionOwner: '&cYou can\'t remove the owner of this protection from the owners list!'
-          PermissionDenied: '&cYou aren\'t allowed to remove this owner!'
-          Unknown: '&cAn unknown error happened while trying to remove this owner. Please
-            contact with an administrator!'
-        save: 
-          CannotAddProtectionOwner: '&cYou can\'t add the owner of this protection as an owner!'
-          CannotAddYourself: '&cYou can\'t add yourself as an owner!'
-          PermissionDenied: '&cYou aren\'t allowed to add owners in this protection!'
-          Unknown: '&cAn unknown error happened while trying to add this owner. Please
-            contact with an administrator!'
-      blocks: 
-        delete: 
-          PermissionDenied: '&cYou aren\'t allowed to remove this protection block!'
-          SQL: '&cThere was an error trying to delete this protection block from
-            the database. Please contact with an administrator!'
-          Unknown: '&cAn unknown error happened while trying to remove this protection
-            block. Please contact with an administrator!'
-        save: 
-          PermissionDenied: '&cYou aren\'t allowed to save this protection block!'
-          NameInUse: '&cThere\'s already a protection block using this name!'
-          SQL: '&cThere was an error trying to save this protection block in the
-            database. Please contact with an administrator!'
-          Unknown: '&cAn unknown error happened while trying to save this protection
-            block. Please contact with an administrator!'
-          IdInUse: '&cThere\'s already a protection block using this ID!'
-          IdNull: '&cThere\'s no ID specified for this protection block!'
-          ItemNull: '&cThere\'s no item specified for this protection block!'
-          ItemNotAllowed: '&cYou can\'t use this kind of items as a protection block!'
+      Not-found: "&cThere's no protection block with this ID!"
+      Not-for-sale: "&cThis protection block is currently not for sale!"
+  
+  Commands: 
+    Permission-denied: "&cYou don't have permissions to use this command!"
+    Pending-command: "&cYou have a command still executing!"
+    Cooldown-active: "&cYou have to wait for the next &e%seconds% seconds &cto execute
+      this command again!"

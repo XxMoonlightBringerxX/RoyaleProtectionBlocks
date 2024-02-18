@@ -7,30 +7,55 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.MainPluginClass;
+import company.pluginName.APIs.VaultAPI.VaultAPI;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlocksShopInventory;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 
-public class BuySubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "buy",
+		pathName = "Buy",
+		defaultName = "buy",
+		defaultDescription = "Purchase protection blocks which are on sale",
+		defaultUsage = "[protection block]")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class BuySubCommand extends PandaSubCommand {
 
-	public BuySubCommand(Command command) {
-		super(command, "buy", SettingString.COMMANDS_PROTECTIONBLOCKS_BUY_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BUY_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BUY_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BUY_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_BUY_ALIASES.getContent());
+	@PandaInject
+	private static ProtectionBlocksService protectionBlocksService;
+
+	@PandaInject
+	private static VaultAPI vaultApi;
+
+	public BuySubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
+	public boolean precondition() {
+		return vaultApi.getHook() != null && vaultApi.getHook().isHooked();
+	}
+
+	@Override
+	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
 		if (args.length == 1) {
-			return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().entrySet().stream()
+			return protectionBlocksService.getProtectionBlocks().entrySet().stream()
 					.filter(entry -> entry.getValue().getInformation().isForSale()).map(Entry::getKey)
 					.collect(Collectors.toList());
 		}
@@ -38,33 +63,29 @@ public class BuySubCommand extends SubCommand {
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			if (args.length > 1) {
-				ProtectionBlock block = MainPluginClass.getPlugin().getProtectionsModule()
-						.getProtectionBlockById(args[1]);
+				ProtectionBlock block = protectionBlocksService.getProtectionBlockById(args[1]);
 				if (block != null) {
 					if (block.getInformation().isForSale()) {
 						block.purchase(pl);
 					} else {
-						MessageBuilder
-								.createMessage(
-										MessageString.applyPrefix(MessageString.ERROR_PROTECTIONS_BLOCKS_NOTFORSALE))
+						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_BLOCKS_NOTFORSALE.applyPrefix()).process()
 								.sendMessage(sender);
 					}
 				} else {
-					MessageBuilder
-							.createMessage(MessageString.applyPrefix(MessageString.ERROR_PROTECTIONS_BLOCKS_NOTFOUND))
+					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_BLOCKS_NOTFOUND.applyPrefix()).process()
 							.sendMessage(sender);
 				}
 			} else {
 				new ProtectionBlocksShopInventory(pl).openInventory();
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.applyPrefix(MessageString.ERROR_CONSOLEDENIED))
-					.sendMessage(sender);
+			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 		}
-		return true;
+		return new TrueResponse();
 	}
 }

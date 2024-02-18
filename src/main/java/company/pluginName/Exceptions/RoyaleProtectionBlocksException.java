@@ -1,38 +1,45 @@
 package company.pluginName.Exceptions;
 
-import java.util.Arrays;
-
 import org.bukkit.command.CommandSender;
 
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaThrowableField;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
 
 @Data
 @Setter(lombok.AccessLevel.NONE)
 @EqualsAndHashCode(callSuper = false)
-public abstract class RoyaleProtectionBlocksException extends Exception {
+public class RoyaleProtectionBlocksException extends Exception {
 
 	private static final long serialVersionUID = 7457666443050515225L;
-	private MessageString messageString;
 
-	public RoyaleProtectionBlocksException(String string) {
-		super(string);
+	private PandaThrowableField<RoyaleProtectionBlocksException> exceptionType;
+
+	private Replacement[] replacements;
+
+	public RoyaleProtectionBlocksException(PandaThrowableField<RoyaleProtectionBlocksException> exceptionType) {
+		super(exceptionType.getContent());
+		this.exceptionType = exceptionType;
 	}
 
-	public RoyaleProtectionBlocksException(String string, Exception exception) {
-		super(string, exception);
+	public RoyaleProtectionBlocksException(PandaThrowableField<RoyaleProtectionBlocksException> exceptionType,
+			Exception exception) {
+		super(exceptionType.getContent(), exception);
+		this.exceptionType = exceptionType;
+	}
+
+	public RoyaleProtectionBlocksException setReplacements(Replacement... textReplacements) {
+		this.replacements = textReplacements;
+		return this;
 	}
 
 	public void sendError(CommandSender dest) {
-		if (messageString == null) {
-			messageString = Arrays.stream(MessageString.values())
-					.filter(msg -> msg.getPath().equals("Error.Exception." + this.getMessage())).findFirst()
-					.orElse(MessageString.ERROR_ERROR);
-		}
-		MessageBuilder.createMessage(messageString.applyPrefix()).sendMessage(dest);
+		MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(exceptionType.getContent()))
+				.setReplacements(replacements).process().sendMessage(dest);
 		if (this.getCause() != null) {
 			this.printStackTrace();
 		}

@@ -8,29 +8,46 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.ProtectionMembers.Save.ProtectionMembersSaveException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import company.pluginName.Utils.OfflinePlayerUtils;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
-public class AddMemberSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "addmember",
+		pathName = "Add-member",
+		defaultName = "addmember",
+		defaultDescription = "Add a member on your current protection",
+		defaultUsage = "<username>",
+		defaultAliases = "am")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class AddMemberSubCommand extends PandaSubCommand {
 
-	public AddMemberSubCommand(Command command) {
-		super(command, "addmember", SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_ADDMEMBER_ALIASES.getContent());
+	@PandaInject
+	private static ProtectionsService protectionsService;
+
+	public AddMemberSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
+	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
 		if (args.length == 1) {
 			return Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
 		}
@@ -38,39 +55,40 @@ public class AddMemberSubCommand extends SubCommand {
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
-		Player pl = sender instanceof Player ? (Player) sender : null;
-		if (pl != null) {
-			if (args.length > 1) {
-				Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-						.getProtectionByLocation(pl.getLocation());
-				if (protection != null) {
-					OfflinePlayer member = OfflinePlayerUtils.getOfflinePlayer(args[1]);
-					if (member != null) {
-						try {
-							protection.getMembers().add(pl, member.getUniqueId());
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
+		return CommandResponse.queuedAsync(() -> {
+			Player pl = sender instanceof Player ? (Player) sender : null;
+			if (pl != null) {
+				if (args.length > 1) {
+					Protection protection = protectionsService.getProtectionByLocation(pl.getLocation());
+					if (protection != null) {
+						OfflinePlayer member = OfflinePlayerUtilities.getOfflinePlayer(args[1]);
+						if (member != null) {
+							try {
+								protection.getMembers().add(pl, member.getUniqueId());
 
-							MessageBuilder
-									.createMessage(
-											MessageString.MESSAGE_PROTECTIONS_MEMBERS_ADDEDSUCCESSFULLY.applyPrefix())
+								MessageTemplate
+										.inst(Messages.MESSAGE_PROTECTIONS_MEMBERS_ADDEDSUCCESSFULLY.applyPrefix())
+										.process().sendMessage(sender);
+							} catch (RoyaleProtectionBlocksException e) {
+								e.sendError(pl);
+							}
+						} else {
+							MessageTemplate.inst(Messages.ERROR_PLAYERNOTFOUND.applyPrefix()).process()
 									.sendMessage(sender);
-						} catch (ProtectionMembersSaveException e) {
-							e.sendError(pl);
 						}
 					} else {
-						MessageBuilder.createMessage(MessageString.ERROR_PLAYERNOTFOUND.applyPrefix())
+						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
 								.sendMessage(sender);
 					}
 				} else {
-					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix())
-							.sendMessage(sender);
+					MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process()
+							.sendMessage(pl);
 				}
 			} else {
-				MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(pl);
+				MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 			}
-		} else {
-			MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix()).sendMessage(sender);
-		}
-		return true;
+		});
 	}
 }

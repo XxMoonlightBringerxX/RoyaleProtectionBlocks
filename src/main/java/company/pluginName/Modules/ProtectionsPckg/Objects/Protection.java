@@ -30,36 +30,73 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
-import company.pluginName.APIs.ItemsAdderAPI;
-import company.pluginName.APIs.OraxenAPI;
-import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteException;
-import company.pluginName.Exceptions.Protection.Delete.ProtectionDeleteUnknownException;
-import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
-import company.pluginName.Exceptions.Protection.Save.ProtectionSaveOverlapsException;
-import company.pluginName.Exceptions.Protection.Save.ProtectionSaveUnknownException;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionActions;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionBanneds;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionMembers;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Protections.ProtectionOwners;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingBoolean;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingInt;
+import company.pluginName.APIs.ItemsAdderAPI.ItemsAdderAPI;
+import company.pluginName.APIs.ItemsAdderAPI.Hook.ItemsAdderHook;
+import company.pluginName.APIs.OraxenAPI.OraxenAPI;
+import company.pluginName.APIs.OraxenAPI.Hook.OraxenHook;
+import company.pluginName.APIs.PlaceholderAPI.PlaceholderAPI;
+import company.pluginName.APIs.VaultAPI.VaultAPI;
+import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
+import company.pluginName.Exceptions.Exceptions;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.FilePckg.Settings;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
+import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBanneds;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionMembers;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionOwners;
+import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
+import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Utils.BlockVectorUtils;
-import company.pluginName.Utils.OfflinePlayerUtils;
 import company.pluginName.Utils.ReflectUtils;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
+import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.BlockUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.WorldUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
-import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
 @Data
 public class Protection {
+
+	@PandaInject
+	private static ProtectionSettingsService protectionSettingsService;
+
+	@PandaInject
+	private static ProtectionsService protectionsService;
+
+	@PandaInject
+	private static SQLService sqlService;
+
+	@PandaInject
+	private static PlaceholderAPI placeholderApi;
+
+	@PandaInject
+	private static ItemsAdderAPI itemsAdderApi;
+
+	@PandaInject
+	private static OraxenAPI oraxenApi;
+
+	@PandaInject
+	private static WorldGuardAPI worldGuardApi;
+
+	@PandaInject
+	private static VaultAPI vaultApi;
+
+	@PandaInject
+	private static PlayerDataService playerDataService;
 
 	private static String generateDefaultName(Location location) {
 		return location.getWorld().getName() + "_" + location.getBlockX() + "_" + location.getBlockY() + "_"
@@ -71,7 +108,6 @@ public class Protection {
 	private String ownerName;
 	private ReferencedProtectionBlock protectionBlock;
 	private String worldName;
-	private String displayName;
 	private ProtectedRegion protectedRegion;
 	private Location protectionBlockLocation;
 	private BukkitTask protectionViewTask;
@@ -104,12 +140,64 @@ public class Protection {
 	}
 
 	/*
+	 * Display name
+	 */
+
+	private @Setter(lombok.AccessLevel.NONE) String displayName;
+	private @Setter(lombok.AccessLevel.NONE) String displayNameWithoutFormat;
+
+	public void setDisplayName(String displayName) throws RoyaleProtectionBlocksException {
+		setDisplayName(null, displayName);
+	}
+
+	public void setDisplayName(Player pl, String displayName) throws RoyaleProtectionBlocksException {
+		if (pl != null) {
+			if (!getOwners().list().contains(pl.getUniqueId())
+					&& !pl.hasPermission(Permissions.PROTECTION_RENAME_OTHERS)) {
+				throw Exceptions.Protections.Save.RENAMEDENIED.generateException();
+			}
+		}
+
+		String displayNameWithoutFormat = MessageTemplate.inst(displayName).setColor(false).process().toString();
+
+		if (displayNameWithoutFormat.isEmpty()) {
+			throw Exceptions.Protections.Save.NOVISIBLETEXT.generateException();
+		}
+
+		if (protectionsService.getProtectionsByOwner().get(ownerUuid).stream().anyMatch(prot -> {
+			return !prot.getRegionId().equals(getRegionId())
+					&& (displayNameWithoutFormat.equalsIgnoreCase(prot.getRegionId())
+							|| displayNameWithoutFormat.equalsIgnoreCase(prot.getDisplayNameWithoutFormat()));
+		})) {
+			throw Exceptions.Protections.Save.NAMEINUSE.generateException();
+		}
+
+		this.displayName = displayName;
+		this.displayNameWithoutFormat = MessageTemplate.inst(displayName).setColor(false).process().toString();
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.saveProtection(this);
+			} catch (RoyaleProtectionBlocksException e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	public String getDisplayNameWithoutFormat() {
+		if (this.displayName != null && this.displayNameWithoutFormat == null) {
+			this.displayNameWithoutFormat = MessageTemplate.inst(this.displayName).setColor(false).process().toString();
+		}
+		return this.displayNameWithoutFormat;
+	}
+
+	/*
 	 * Data methods
 	 */
 
 	public String getOwnerName() {
 		if (ownerName == null) {
-			OfflinePlayer owner = OfflinePlayerUtils.getOfflinePlayer(ownerUuid);
+			OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(ownerUuid);
 			this.ownerName = owner != null ? owner.getName() : "";
 		}
 		return this.ownerName;
@@ -130,7 +218,7 @@ public class Protection {
 	public void setHome(Location location) throws Exception {
 		ProtectedRegion region = getProtectedRegion();
 		Map<Flag<?>, Object> flags = region.getFlags();
-		flags.put(Flags.TELE_LOC, MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(location));
+		flags.put(Flags.TELE_LOC, worldGuardApi.getHook().getInternalWorldGuard().adapt(location));
 		region.setFlags(flags);
 	}
 
@@ -147,34 +235,31 @@ public class Protection {
 				protectionViewEntity = null;
 			}
 		} else {
-			protectionViewTask = Bukkit.getScheduler().runTaskAsynchronously(MainPluginClass.getPlugin(), () -> {
+			protectionViewTask = TasksUtils.executeOnAsync(() -> {
 				List<Location> locationsForParticles = getParticleCubeLocations();
 
 				if (isProtectionViewActive()) {
-					protectionViewTask = Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
+					protectionViewTask = TasksUtils.execute(() -> {
 						AtomicInteger seconds = new AtomicInteger(0);
 						protectionViewEntity = BlockUtils.setLocationGlowing(getProtectionBlockLocation());
-						protectionViewTask = Bukkit.getScheduler()
-								.runTaskTimerAsynchronously(MainPluginClass.getPlugin(), () -> {
-									locationsForParticles.forEach((loc) -> {
-										DustOptions dustOptions = new DustOptions(
-												Color.fromRGB((int) (Math.random() * 256), (int) (Math.random() * 256),
-														(int) (Math.random() * 256)),
-												1.0F);
-										loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 1, dustOptions);
-									});
+						protectionViewTask = TasksUtils.executeOnAsyncWithTimer(() -> {
+							locationsForParticles.forEach((loc) -> {
+								DustOptions dustOptions = new DustOptions(Color.fromRGB((int) (Math.random() * 256),
+										(int) (Math.random() * 256), (int) (Math.random() * 256)), 1.0F);
+								loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 1, dustOptions);
+							});
 
-									seconds.set(seconds.get() + 1);
-									if (seconds.get() >= SettingInt.SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS
-											.getContent()) {
-										Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
-											protectionViewTask.cancel();
-											protectionViewTask = null;
-											protectionViewEntity.remove();
-											protectionViewEntity = null;
-										});
-									}
-								}, 0, 20);
+							seconds.set(seconds.get() + 1);
+							if (seconds.get() >= Settings.SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS
+									.getContent()) {
+								TasksUtils.execute(() -> {
+									protectionViewTask.cancel();
+									protectionViewTask = null;
+									protectionViewEntity.remove();
+									protectionViewEntity = null;
+								});
+							}
+						}, 0, 20);
 					});
 				}
 			});
@@ -193,7 +278,7 @@ public class Protection {
 
 	@SuppressWarnings("unchecked")
 	public void create(Player creator, Location location, ProtectionBlock protectionBlock)
-			throws ProtectionSaveException {
+			throws RoyaleProtectionBlocksException {
 		this.protectionBlock = new ReferencedProtectionBlock(protectionBlock.getInformation().getId());
 		this.worldName = location.getWorld().getName();
 		this.regionId = generateDefaultName(location).toLowerCase();
@@ -218,36 +303,34 @@ public class Protection {
 		RegionManager regionManager = getRegionManager(location.getWorld());
 
 		if (regionManager == null) {
-			throw new ProtectionSaveUnknownException(new Exception("Region Manager is null"));
+			throw Exceptions.Protections.Save.UNKNOWN.generateException(new Exception("Region Manager is"));
 		}
 
 		List<ProtectedRegion> overlaps = protectedRegion.getIntersectingRegions(regionManager.getRegions().values());
 
 		if (creator != null && !creator.hasPermission(Permissions.PROTECTION_OVERLAP_BYPASS) && overlaps.size() > 0
-				&& (!SettingBoolean.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent()
+				&& (!Settings.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent()
 						|| overlaps.stream().anyMatch(prot -> prot.getOwners().size() == 0
 								|| !prot.getOwners().getUniqueIds().iterator().next().equals(ownerUuid)))) {
-			throw new ProtectionSaveOverlapsException();
+			throw Exceptions.Protections.Save.OVERLAPS.generateException();
 		}
 
 		try {
-			OfflinePlayer player = OfflinePlayerUtils.getOfflinePlayer(this.ownerUuid);
+			OfflinePlayer player = OfflinePlayerUtilities.getOfflinePlayer(this.ownerUuid);
 
 			HashMap<com.sk89q.worldguard.protection.flags.Flag<?>, Object> flags = new HashMap<>();
-			MainPluginClass.getPlugin().getProtectionSettingsModule().getDefaultFlags().forEach(defaultFlag -> {
-				if (MainPluginClass.getPlaceholderAPI().isHooked()) {
+			protectionSettingsService.getDefaultFlags().forEach(defaultFlag -> {
+				if (placeholderApi.getHook().isHooked()) {
 					if (defaultFlag.getValue() instanceof String) {
 						flags.put(defaultFlag.getFlag(),
-								MessageBuilder.createMessage(MainPluginClass.getPlaceholderAPI()
+								MessageTemplate.inst(placeholderApi.getHook()
 										.applyPlaceholders((String) defaultFlag.getValue(), player)
-										.replaceAll("\\\\%", "%")).toString());
+										.replaceAll("\\\\%", "%")).process().toString());
 					} else if (defaultFlag.getValue() instanceof Set) {
 						Set<String> set = new HashSet<>();
-						((Set<String>) defaultFlag.getValue())
-								.forEach(string -> set.add(MessageBuilder
-										.createMessage(MainPluginClass.getPlaceholderAPI()
-												.applyPlaceholders(string, player).replaceAll("\\\\%", "%"))
-										.toString()));
+						((Set<String>) defaultFlag.getValue()).forEach(string -> set.add(MessageTemplate.inst(
+								placeholderApi.getHook().applyPlaceholders(string, player).replaceAll("\\\\%", "%"))
+								.process().toString()));
 						flags.put(defaultFlag.getFlag(), set);
 					} else {
 						flags.put(defaultFlag.getFlag(), defaultFlag.getValue());
@@ -261,13 +344,13 @@ public class Protection {
 					flags.put(defaultFlag.getFlag().getRegionGroupFlag(), defaultFlag.getRegionGroup());
 				}
 			});
-			flags.put(MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().getWorldGuardFlag(),
-					MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().adapt(location));
+			flags.put(worldGuardApi.getHook().getProtectionBlockLocationFlag().getWorldGuardFlag(),
+					worldGuardApi.getHook().getInternalWorldGuard().adapt(location));
 
-			if (SettingBoolean.SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION.getContent() && player != null
+			if (Settings.SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION.getContent() && player != null
 					&& player.isOnline()) {
-				flags.put(Flags.TELE_LOC, MainPluginClass.getWorldGuardAPI().getInternalWorldGuard()
-						.adapt(player.getPlayer().getLocation()));
+				flags.put(Flags.TELE_LOC,
+						worldGuardApi.getHook().getInternalWorldGuard().adapt(player.getPlayer().getLocation()));
 			}
 
 			protectedRegion.setFlags(flags);
@@ -276,30 +359,14 @@ public class Protection {
 			this.protectedRegion = protectedRegion;
 			this.createdDate = System.currentTimeMillis();
 
-			MainPluginClass.getPlugin().getSqlModule().saveProtection(this);
+			sqlService.saveProtection(this);
 		} catch (Exception e) {
 			if (regionManager.hasRegion(protectedRegion.getId())) {
 				regionManager.removeRegion(protectedRegion.getId());
 			}
-			throw e instanceof ProtectionSaveException ? (ProtectionSaveException) e
-					: new ProtectionSaveUnknownException(e);
+			throw e instanceof RoyaleProtectionBlocksException ? (RoyaleProtectionBlocksException) e
+					: Exceptions.Protections.Save.UNKNOWN.generateException(e);
 		}
-	}
-
-	public void delete() throws ProtectionDeleteException {
-		RegionManager regionManager = getRegionManager();
-
-		if (regionManager == null) {
-			throw new ProtectionDeleteUnknownException();
-		}
-
-		if (regionManager.hasRegion(regionId)) {
-			regionManager.removeRegion(regionId);
-
-			this.protectedRegion = null;
-		}
-
-		MainPluginClass.getPlugin().getSqlModule().deleteProtection(this);
 	}
 
 	public ProtectedRegion getProtectedRegion() {
@@ -321,8 +388,7 @@ public class Protection {
 				ProtectedRegion region = getProtectedRegion();
 
 				if (region != null) {
-					Location loc = MainPluginClass.getWorldGuardAPI().getProtectionBlockLocationFlag().flagState(world,
-							region);
+					Location loc = worldGuardApi.getHook().getProtectionBlockLocationFlag().flagState(world, region);
 
 					if (loc != null) {
 						this.protectionBlockLocation = loc;
@@ -338,21 +404,6 @@ public class Protection {
 		}
 
 		return this.protectionBlockLocation;
-	}
-
-	public boolean isMainOwner(UUID playerUuid) {
-		return this.ownerUuid.equals(playerUuid);
-	}
-
-	public void setDisplayName(String displayName) throws ProtectionSaveException {
-		String oldDisplayName = this.displayName;
-		try {
-			this.displayName = displayName;
-			MainPluginClass.getPlugin().getSqlModule().saveProtection(this);
-		} catch (ProtectionSaveException e) {
-			this.displayName = oldDisplayName;
-			throw e;
-		}
 	}
 
 	/**
@@ -386,6 +437,7 @@ public class Protection {
 	 * 
 	 * @return If the protection block is shown or not.
 	 */
+
 	// TODO: Use a flag for the show and hide to prevent this cases instead of using
 	// a checking, this will optimize the checkings.
 	public boolean isProtectionBlockShown() {
@@ -393,20 +445,19 @@ public class Protection {
 	}
 
 	public void hideProtectionBlock() {
-		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(null,
+		ItemsAdderHook.PlaceResult itemsAdderResult = itemsAdderApi.getHook().setBlock(null,
 				getProtectionBlockLocation());
 
-		if (itemsAdderResult != ItemsAdderAPI.PlaceResult.NOT_HOOKED) {
-			if (itemsAdderResult == ItemsAdderAPI.PlaceResult.PLACED) {
+		if (itemsAdderResult != ItemsAdderHook.PlaceResult.NOT_HOOKED) {
+			if (itemsAdderResult == ItemsAdderHook.PlaceResult.PLACED) {
 				return;
 			}
 		}
 
-		OraxenAPI.PlaceResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(null,
-				getProtectionBlockLocation());
+		OraxenHook.PlaceResult oraxenResult = oraxenApi.getHook().setBlock(null, getProtectionBlockLocation());
 
-		if (oraxenResult != OraxenAPI.PlaceResult.NOT_HOOKED) {
-			if (oraxenResult == OraxenAPI.PlaceResult.PLACED) {
+		if (oraxenResult != OraxenHook.PlaceResult.NOT_HOOKED) {
+			if (oraxenResult == OraxenHook.PlaceResult.PLACED) {
 				return;
 			}
 		}
@@ -418,26 +469,25 @@ public class Protection {
 		Block bBlock = getProtectionBlockLocation().getBlock();
 		ItemStack item = getProtectionBlock().getObject().getInformation().getItem();
 
-		ItemsAdderAPI.PlaceResult itemsAdderResult = MainPluginClass.getItemsAdderAPI().setBlock(item,
-				bBlock.getLocation());
+		ItemsAdderHook.PlaceResult itemsAdderResult = itemsAdderApi.getHook().setBlock(item, bBlock.getLocation());
 
-		if (itemsAdderResult != ItemsAdderAPI.PlaceResult.NOT_HOOKED) {
-			if (itemsAdderResult == ItemsAdderAPI.PlaceResult.PLACED) {
+		if (itemsAdderResult != ItemsAdderHook.PlaceResult.NOT_HOOKED) {
+			if (itemsAdderResult == ItemsAdderHook.PlaceResult.PLACED) {
 				return;
 			}
 		}
 
-		OraxenAPI.PlaceResult oraxenResult = MainPluginClass.getOraxenAPI().setBlock(item, bBlock.getLocation());
+		OraxenHook.PlaceResult oraxenResult = oraxenApi.getHook().setBlock(item, bBlock.getLocation());
 
-		if (oraxenResult != OraxenAPI.PlaceResult.NOT_HOOKED) {
-			if (oraxenResult == OraxenAPI.PlaceResult.PLACED) {
+		if (oraxenResult != OraxenHook.PlaceResult.NOT_HOOKED) {
+			if (oraxenResult == OraxenHook.PlaceResult.PLACED) {
 				return;
 			}
 		}
 
 		bBlock.setType(item.getType());
 		if (item.getType() == Material.PLAYER_HEAD.getMaterial()) {
-			BlockUtils.setSkin(bBlock, ItemStacksUtils.getSkin(item));
+			BlockUtils.setSkin(bBlock, SkinUtilities.NMS.getSkinAsBase64(item));
 		}
 	}
 
@@ -453,7 +503,7 @@ public class Protection {
 
 	private RegionManager getRegionManager(World world) {
 		try {
-			return MainPluginClass.getWorldGuardAPI().getInternalWorldGuard().getRegionManager(world);
+			return worldGuardApi.getHook().getInternalWorldGuard().getRegionManager(world);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -499,33 +549,109 @@ public class Protection {
 	}
 
 	/*
+	 * Action methods
+	 */
+
+	public void sendHome(Player pl) throws RoyaleProtectionBlocksException {
+		if (getHome() == null) {
+			throw Exceptions.Protections.Teleport.NOHOMESET.generateException();
+		}
+
+		if (vaultApi.getHook() != null && Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent() > 0D) {
+			if (!pl.hasPermission(Permissions.PROTECTION_ECONOMY_BYPASS)
+					&& !vaultApi.getHook().withdraw(pl, Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent())) {
+				throw Exceptions.Protections.PROTECTION_NOTENOUGHBALANCE.generateException();
+			}
+		}
+
+		PlayerData playerData = playerDataService.getPlayerData(pl);
+
+		if (playerData == null) {
+			throw Exceptions.Protections.Teleport.UNKNOWN
+					.generateException(new NullPointerException("Player data is null"));
+		}
+
+		if (Settings.SETTINGS_PROTECTION_TELEPORTCOOLDOWN.getContent() > 0) {
+			if (playerData.getLastTeleport() != null && (Settings.SETTINGS_PROTECTION_TELEPORTCOOLDOWN.getContent()
+					* 1000) >= (System.currentTimeMillis() - playerData.getLastTeleport().getSecond())) {
+				throw Exceptions.Protections.Teleport.COOLDOWNACTIVE.generateException()
+						.setReplacements(new Replacement("%seconds%",
+								() -> String.valueOf((int) Math.max(((playerData.getLastTeleport().getSecond()
+										+ (Settings.SETTINGS_PROTECTION_TELEPORTCOOLDOWN.getContent() * 1000))
+										- System.currentTimeMillis()) / 1000, 0))));
+			}
+		}
+
+		playerData.teleport(this);
+	}
+
+	/*
 	 * Authority methods
 	 */
 
-	public boolean canDelete(Player pl) {
-		return this.isMainOwner(pl.getUniqueId()) || pl.hasPermission(Permissions.PROTECTION_DELETE_OTHERS);
+	public boolean isMainOwner(UUID playerUuid) {
+		return this.ownerUuid.equals(playerUuid);
 	}
 
-	public boolean canManage(Player pl) {
-		return this.getOwners().list().contains(pl.getUniqueId())
-				|| pl.hasPermission(Permissions.PROTECTION_MANAGE_OTHERS);
+	public boolean isOwner(UUID playerUuid) {
+		return this.getOwners().list().contains(playerUuid);
 	}
 
-	public boolean canToggleBlock(Player pl) {
-		return this.getOwners().list().contains(pl.getUniqueId())
-				|| pl.hasPermission(Permissions.PROTECTION_TOGGLEBLOCK_OTHERS);
+	public boolean isMember(UUID playerUuid) {
+		return this.getMembers().list().contains(playerUuid);
 	}
 
-	public boolean canViewBoundaries(Player pl) {
-		return this.getOwners().list().contains(pl.getUniqueId())
-				|| pl.hasPermission(Permissions.PROTECTION_VIEW_OTHERS);
+	public boolean isBanned(UUID playerUuid) {
+		return this.getBanneds().list().contains(playerUuid.toString());
 	}
 
-	public boolean canTeleport(Player pl) {
-		return (this.getOwners().list().contains(pl.getUniqueId())
-				|| this.getMembers().list().contains(pl.getUniqueId())
-						&& pl.hasPermission(Permissions.PROTECTION_TELEPORT))
-				|| pl.hasPermission(Permissions.PROTECTION_TELEPORT_OTHERS);
+	/*
+	 * Save methods
+	 */
+
+	/*
+	 * Delete methods
+	 */
+
+	public void delete() throws RoyaleProtectionBlocksException {
+		delete(null, false);
+	}
+
+	public void delete(boolean removeBlock) throws RoyaleProtectionBlocksException {
+		delete(null, removeBlock);
+	}
+
+	public void delete(Player pl, boolean removeBlock) throws RoyaleProtectionBlocksException {
+		if (pl != null) {
+			if (!ProtectionUtilities.canDelete(this, pl)) {
+				throw Exceptions.Protections.Delete.PERMISSIONDENIED.generateException();
+			}
+		}
+
+		RegionManager regionManager = getRegionManager();
+
+		if (regionManager == null) {
+			throw Exceptions.Protections.Delete.UNKNOWN.generateException(new Exception("Region Manager is null"));
+		}
+
+		if (!regionManager.hasRegion(regionId)) {
+			throw Exceptions.Protections.Delete.NOTFOUND.generateException();
+		}
+
+		if (isProtectionViewActive()) {
+			toggleProtectionView();
+		}
+
+		if (removeBlock && isProtectionBlockShown()) {
+			hideProtectionBlock();
+		}
+
+		regionManager.removeRegion(regionId);
+
+		this.protectedRegion = null;
+
+		sqlService.deleteProtection(this);
+		protectionsService.unregisterProtection(this);
 	}
 
 }

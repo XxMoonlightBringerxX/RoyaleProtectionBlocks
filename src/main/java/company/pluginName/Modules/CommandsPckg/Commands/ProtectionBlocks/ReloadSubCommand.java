@@ -2,29 +2,47 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
 import org.bukkit.command.CommandSender;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import company.pluginName.Modules.FilePckg.Messages;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 
-public class ReloadSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "reload",
+		pathName = "Reload",
+		defaultName = "reload",
+		defaultDescription = "Reload the plugin",
+		defaultAliases = "p",
+		defaultPermission = "protectionblocks.reload")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class ReloadSubCommand extends PandaSubCommand {
 
-	public ReloadSubCommand(Command command) {
-		super(command, "reload", SettingString.COMMANDS_PROTECTIONBLOCKS_RELOAD_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_RELOAD_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_RELOAD_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_RELOAD_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_RELOAD_ALIASES.getContent());
+	@PandaInject
+	private static PandaPluginClass plugin;
+
+	public ReloadSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
-		MainPluginClass.getPlugin().reloadPlugin();
-		MessageBuilder.createMessage(MessageString.MESSAGE_RELOAD.applyPrefix()).sendMessage(sender);
-		return true;
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
+		plugin.reloadPlugin();
+		MessageTemplate.inst(Messages.MESSAGE_RELOAD.applyPrefix()).process().sendMessage(sender);
+		return new TrueResponse();
 	}
 
 }

@@ -1,42 +1,44 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>0.0.27 Alpha</version>
+	<version>0.1.2.1 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
-        <project.author>DarkPanda73</project.author>
-        <project.package>royale</project.package>
-    </properties>
-    <repositories>
-	    <repository>
-		    <id>spigot-repo</id>
-        	<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+		<project.author>DarkPanda73</project.author>
+		<project.package>royale</project.package>
+	</properties>
+	<repositories>
+		<repository>
+			<id>spigot-repo</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
 		</repository>
 		<repository>
-		    <id>jitpack-repo</id>
-		    <url>https://jitpack.io</url>
+			<id>jitpack-repo</id>
+			<url>https://jitpack.io</url>
 		</repository>
-    </repositories>
+	</repositories>
 	<dependencies>
 		<dependency>
-		   <groupId>dev.espi</groupId>
-		   <artifactId>protectionstones</artifactId>
-		   <version>2.10.2</version>
-		   <scope>provided</scope>
+			<groupId>dev.espi</groupId>
+			<artifactId>protectionstones</artifactId>
+			<version>2.10.2</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
-           <groupId>org.spigotmc</groupId>
-           <artifactId>spigot-api</artifactId>
-           <version>1.13-R0.1-SNAPSHOT</version>
-           <scope>provided</scope>
-    	</dependency>
-    	<dependency>
-		    <groupId>com.github.LoneDev6</groupId>
-		    <artifactId>api-itemsadder</artifactId>
-		    <version>3.5.0b</version>
-		    <scope>provided</scope>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot-api</artifactId>
+			<version>1.14-R0.1-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.LoneDev6</groupId>
+			<artifactId>api-itemsadder</artifactId>
+			<version>3.5.0b</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -45,24 +47,15 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+	        <groupId>com.github.relampagorojo93</groupId>
+	        <artifactId>RoyaleProtectionBlocksAPI</artifactId>
+	        <version>0.0.1-Alpha</version>
+	        <scope>compile</scope>
+	    </dependency>
+		<dependency>
 			<groupId>RelaUtils</groupId>
 			<artifactId>RelaUtils</artifactId>
 			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>SpigotDebug</groupId>
-			<artifactId>SpigotDebug</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>SpigotCommands</groupId>
-			<artifactId>SpigotCommands</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>PandaUtils</groupId>
-			<artifactId>PandaColors</artifactId>
-			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
 			<groupId>SpigotPlugin</groupId>
@@ -71,13 +64,33 @@
 		</dependency>
 		<dependency>
 			<groupId>PandaUtils</groupId>
+			<artifactId>PandaPlugin</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaAPIs</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaCommandsModule</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaColors</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
 			<artifactId>PandaUtilities</artifactId>
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
-			<groupId>PandaSQL</groupId>
-			<artifactId>PandaSQL</artifactId>
-			<version>1.0</version>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaSQLModule</artifactId>
+			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
 			<groupId>PandaUtils</groupId>
@@ -87,6 +100,41 @@
 		<dependency>
 			<groupId>PandaUtils</groupId>
 			<artifactId>PandaYaml</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaFilesModule</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaInventories</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaPlayerDataModule</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaJavaUtilities</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaUpdateChecker</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaBStats</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaDiscordWebhook</artifactId>
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
@@ -101,32 +149,32 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-		    <groupId>com.github.oraxen</groupId>
-		    <artifactId>oraxen</artifactId>
-		    <version>1.159.0</version>
-		    <scope>provided</scope>
-		    <exclusions>
-		        <exclusion>
-		            <groupId>gs.mclo</groupId>
-		            <artifactId>mclogs</artifactId>
-		        </exclusion>
-		        <exclusion>
-		            <groupId>com.ticxo</groupId>
-		            <artifactId>PlayerAnimator</artifactId>
-		        </exclusion>
-		        <exclusion>
-		            <groupId>me.gabytm.util</groupId>
-		            <artifactId>actions-spigot</artifactId>
-		        </exclusion>
-		        <exclusion>
-		            <groupId>net.kyori</groupId>
-		            <artifactId>*</artifactId>
-		        </exclusion>
-		        <exclusion>
-		            <groupId>com.jeff_media</groupId>
-		            <artifactId>*</artifactId>
-		        </exclusion>
-		    </exclusions>
+			<groupId>com.github.oraxen</groupId>
+			<artifactId>oraxen</artifactId>
+			<version>1.159.0</version>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>gs.mclo</groupId>
+					<artifactId>mclogs</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ticxo</groupId>
+					<artifactId>PlayerAnimator</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>me.gabytm.util</groupId>
+					<artifactId>actions-spigot</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>net.kyori</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.jeff_media</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 	<build>
@@ -151,7 +199,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.2.0</version>
 				<configuration>
-					<outputDirectory>D:/Eclipse/Exports</outputDirectory>
+					<outputDirectory>E:/Eclipse/Exports</outputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -167,20 +215,49 @@
 						<configuration>
 							<relocations>
 								<relocation>
+									<pattern>org.bstats</pattern>
+									<shadedPattern>
+										${project.package}.${project.groupId}.PandaUtils.bStats</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>javax.annotation</pattern>
+									<shadedPattern>
+										${project.package}.${project.groupId}.PandaUtils.ExternalLibs.javax.annotation</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>javassist</pattern>
+									<shadedPattern>
+										${project.package}.${project.groupId}.PandaUtils.ExternalLibs.javassist</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.reflections</pattern>
+									<shadedPattern>
+										${project.package}.${project.groupId}.PandaUtils.ExternalLibs.org.reflections</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.slf4j</pattern>
+									<shadedPattern>
+										${project.package}.${project.groupId}.PandaUtils.ExternalLibs.org.slf4j</shadedPattern>
+								</relocation>
+								<relocation>
 									<pattern>relampagorojo93.LibsCollection</pattern>
-									<shadedPattern>${project.package}.${project.groupId}.LibsCollection</shadedPattern>
+									<shadedPattern>
+										${project.package}.${project.groupId}.LibsCollection</shadedPattern>
 								</relocation>
 								<relocation>
 									<pattern>darkpanda73.LibsCollection</pattern>
-									<shadedPattern>${project.package}.${project.groupId}.LibsCollection</shadedPattern>
+									<shadedPattern>
+										${project.package}.${project.groupId}.LibsCollection</shadedPattern>
 								</relocation>
 								<relocation>
 									<pattern>darkpanda73.PandaUtils</pattern>
-									<shadedPattern>${project.package}.${project.groupId}.PandaUtils</shadedPattern>
+									<shadedPattern>
+										${project.package}.${project.groupId}.PandaUtils</shadedPattern>
 								</relocation>
 								<relocation>
 									<pattern>company.pluginName</pattern>
-									<shadedPattern>${project.package}.${project.groupId}</shadedPattern>
+									<shadedPattern>
+										${project.package}.${project.groupId}.Plugin</shadedPattern>
 								</relocation>
 							</relocations>
 						</configuration>

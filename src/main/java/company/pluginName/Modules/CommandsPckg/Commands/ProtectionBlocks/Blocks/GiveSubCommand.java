@@ -7,32 +7,50 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
-public class GiveSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = BlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "give",
+		pathName = "Give",
+		defaultName = "give",
+		defaultDescription = "Give an existing block to yourself or a player",
+		defaultUsage = "<id> [player]",
+		defaultPermission = "protectionblocks.blocks.give",
+		defaultAliases = "g")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class GiveSubCommand extends PandaSubCommand {
 
-	public GiveSubCommand(Command command) {
-		super(command, "give", SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_BLOCKS_GIVE_ALIASES.getContent());
+	@PandaInject
+	private static ProtectionBlocksService protectionBlocksService;
+
+	public GiveSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
+	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
 		switch (args.length) {
 		case 1:
-			return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().keySet().stream()
-					.collect(Collectors.toList());
+			return protectionBlocksService.getProtectionBlocks().keySet().stream().collect(Collectors.toList());
 		case 2:
 			return Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
 		default:
@@ -41,10 +59,11 @@ public class GiveSubCommand extends SubCommand {
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (args.length > 1) {
-			ProtectionBlock block = MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlockById(args[1]);
+			ProtectionBlock block = protectionBlocksService.getProtectionBlockById(args[1]);
 			if (block != null) {
 				Player toGive = pl;
 
@@ -54,27 +73,25 @@ public class GiveSubCommand extends SubCommand {
 
 				if (toGive == null) {
 					if (pl == null) {
-						MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix())
-								.sendMessage(sender);
+						MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 					} else {
-						MessageBuilder.createMessage(MessageString.ERROR_PLAYERNOTFOUND.applyPrefix())
-								.sendMessage(sender);
+						MessageTemplate.inst(Messages.ERROR_PLAYERNOTFOUND.applyPrefix()).process().sendMessage(sender);
 					}
-					return true;
+					return new TrueResponse();
 				}
 
 				try {
 					toGive.getInventory().addItem(block.getInformation().generateItem());
-				} catch (ProtectionBlocksGenerateItemException e) {
+				} catch (RoyaleProtectionBlocksException e) {
 					e.sendError(sender);
 				}
 			} else {
-				MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKS_NOTFOUND.applyPrefix())
+				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_BLOCKS_NOTFOUND.applyPrefix()).process()
 						.sendMessage(sender);
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(sender);
+			MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process().sendMessage(sender);
 		}
-		return true;
+		return new TrueResponse();
 	}
 }

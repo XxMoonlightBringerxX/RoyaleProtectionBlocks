@@ -3,98 +3,126 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-import company.pluginName.MainPluginClass;
+import company.pluginName.Exceptions.Exceptions;
+import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Objects.PurgeConfiguration;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import company.pluginName.Modules.ProtectionsPurgePckg.ProtectionsPurgeService;
+import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration;
+import company.pluginName.Utils.DiscordUtilities;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
-public class PurgeSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "purge",
+		pathName = "Purge",
+		defaultName = "purge",
+		defaultDescription = "Delete protections older than the specified time, based on the last connection of the owner or their creation date",
+		defaultUsage = "[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--config] [--show-ignored-players] [--export-only] [confirm]",
+		defaultAliases = "p",
+		defaultPermission = "protectionblocks.purge")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class PurgeSubCommand extends PandaSubCommand {
 
-	public PurgeSubCommand(Command command) {
-		super(command, "purge", SettingString.COMMANDS_PROTECTIONBLOCKS_PURGE_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_PURGE_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_PURGE_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_PURGE_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_PURGE_ALIASES.getContent());
+	@PandaInject
+	private static ProtectionsPurgeService protectionsPurgeService;
+
+	public PurgeSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
 		if (args.length > 1) {
 			PurgeConfiguration purgeConfiguration = new PurgeConfiguration();
 			for (int i = 1; i < args.length; i++) {
 				switch (args[i].toLowerCase()) {
 				case "--export-only":
-					Bukkit.getScheduler().runTaskAsynchronously(MainPluginClass.getPlugin(), () -> {
-						MessageBuilder.createMessage(MessageString.MESSAGE_PURGE_SEARCH.applyPrefix())
-								.sendMessage(sender);
+					TasksUtils.executeOnAsync(() -> {
+						MessageTemplate.inst(Messages.MESSAGE_PURGE_SEARCH.applyPrefix()).process().sendMessage(sender);
 
-						List<Protection> protectionsToPurge = MainPluginClass.getPlugin().getProtectionsRemoverModule()
+						List<Protection> protectionsToPurge = protectionsPurgeService
 								.retrieveProtectionsToPurge(purgeConfiguration);
 
 						try {
-							File file = MainPluginClass.getPlugin().getProtectionsRemoverModule()
-									.exportProtections(purgeConfiguration, protectionsToPurge);
+							File file = protectionsPurgeService.exportProtections(purgeConfiguration,
+									protectionsToPurge);
 
-							MessageBuilder
-									.createMessage(TextInput.inst()
-											.text(MessageString.MESSAGE_PURGE_EXPORTEND.applyPrefix()).replacements(
-													new TextReplacement("{amount}",
-															() -> String.valueOf(protectionsToPurge.size())),
-													new TextReplacement("{file}", () -> file.getName())))
-									.sendMessage(sender);
+							MessageTemplate.inst(Messages.MESSAGE_PURGE_EXPORTEND.applyPrefix())
+									.setReplacements(
+											new Replacement("{amount}",
+													() -> String.valueOf(protectionsToPurge.size())),
+											new Replacement("{file}", () -> file.getName()))
+									.process().sendMessage(sender);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
 					});
-					return true;
+					return new TrueResponse();
 				case "confirm":
-					Bukkit.getScheduler().runTaskAsynchronously(MainPluginClass.getPlugin(), () -> {
-						MessageBuilder.createMessage(MessageString.MESSAGE_PURGE_START.applyPrefix())
-								.sendMessage(sender);
+					TasksUtils.executeOnAsync(() -> {
+						MessageTemplate.inst(Messages.MESSAGE_PURGE_START.applyPrefix()).process().sendMessage(sender);
 
-						List<Protection> protectionsToPurge = MainPluginClass.getPlugin().getProtectionsRemoverModule()
+						List<Protection> protectionsToPurge = protectionsPurgeService
 								.retrieveProtectionsToPurge(purgeConfiguration);
 
-						Bukkit.getScheduler().runTask(MainPluginClass.getPlugin(), () -> {
-							List<Protection> removedProtections = MainPluginClass.getPlugin()
-									.getProtectionsRemoverModule().purgeProtections(protectionsToPurge);
+						TasksUtils.executeOnAsync(() -> {
+							try {
+								FutureTask<List<Protection>> removedProtectionsTask = protectionsPurgeService
+										.purgeProtections(protectionsToPurge);
 
-							MessageBuilder
-									.createMessage(TextInput.inst().text(MessageString.MESSAGE_PURGE_END.applyPrefix())
-											.replacements(new TextReplacement("{amount}",
-													() -> String.valueOf(removedProtections.size()))))
-									.sendMessage(sender);
+								List<Protection> removedProtections = removedProtectionsTask.get();
 
-							if (protectionsToPurge.size() != 0) {
-								MessageBuilder
-										.createMessage(
-												TextInput.inst().text(MessageString.MESSAGE_PURGE_ERROR.applyPrefix())
-														.replacements(new TextReplacement("{amount}",
-																() -> String.valueOf(protectionsToPurge.size()))))
-										.sendMessage(sender);
+								DiscordUtilities.sendPurgeSummaryMessage(
+										sender instanceof Player ? (Player) sender : null, purgeConfiguration,
+										removedProtections);
+
+								MessageTemplate.inst(Messages.MESSAGE_PURGE_END.applyPrefix())
+										.setReplacements(new Replacement("{amount}",
+												() -> String.valueOf(removedProtections.size())))
+										.process().sendMessage(sender);
+
+								if (protectionsToPurge.size() != 0) {
+									MessageTemplate.inst(Messages.MESSAGE_PURGE_ERROR.applyPrefix())
+											.setReplacements(new Replacement("{amount}",
+													() -> String.valueOf(protectionsToPurge.size())))
+											.process().sendMessage(sender);
+								}
+							} catch (InterruptedException | ExecutionException e) {
+								Exceptions.Protections.Delete.UNKNOWN.generateException(e).sendError(sender);
 							}
 						});
 					});
-					return true;
+
+					return new TrueResponse();
 				case "--show-ignored-players":
 					purgeConfiguration.setShowIgnoredPlayers(true);
 					break;
 				case "--config":
-					purgeConfiguration.copy(MainPluginClass.getPlugin().getProtectionsRemoverModule()
-							.getConfiguredPurgeConfiguration());
+					purgeConfiguration.copy(protectionsPurgeService.getConfiguredPurgeConfiguration());
 					break;
 				case "--days":
 				case "--hours":
@@ -104,9 +132,9 @@ public class PurgeSubCommand extends SubCommand {
 							Integer number = Integer.parseInt(args[i + 1]);
 
 							if (number < 0) {
-								MessageBuilder.createMessage(MessageString.ERROR_NUMBERBELOWZERO.applyPrefix())
+								MessageTemplate.inst(Messages.ERROR_NUMBERBELOWZERO.applyPrefix()).process()
 										.sendMessage(sender);
-								return true;
+								return new TrueResponse();
 							}
 
 							if (args[i].toLowerCase().equals("--days")) {
@@ -119,42 +147,39 @@ public class PurgeSubCommand extends SubCommand {
 
 							i++;
 						} catch (NumberFormatException e) {
-							MessageBuilder.createMessage(MessageString.ERROR_INVALIDNUMBER.applyPrefix())
+							MessageTemplate.inst(Messages.ERROR_INVALIDNUMBER.applyPrefix()).process()
 									.sendMessage(sender);
-							return true;
+							return new TrueResponse();
 						}
 					} else {
-						MessageBuilder.createMessage(MessageString.ERROR_PURGE_NOVALUEFORPARAMETER.applyPrefix())
+						MessageTemplate.inst(Messages.ERROR_PURGE_NOVALUEFORPARAMETER.applyPrefix()).process()
 								.sendMessage(sender);
 					}
 					break;
 				default:
-					MessageBuilder.createMessage(MessageString.ERROR_PURGE_INVALIDPARAMETER.applyPrefix())
+					MessageTemplate.inst(Messages.ERROR_PURGE_INVALIDPARAMETER.applyPrefix()).process()
 							.sendMessage(sender);
-					return true;
+					return new TrueResponse();
 				}
 			}
 
-			Bukkit.getScheduler().runTaskAsynchronously(MainPluginClass.getPlugin(), () -> {
-				MessageBuilder.createMessage(MessageString.MESSAGE_PURGE_SEARCH.applyPrefix()).sendMessage(sender);
+			TasksUtils.executeOnAsync(() -> {
+				MessageTemplate.inst(Messages.MESSAGE_PURGE_SEARCH.applyPrefix()).process().sendMessage(sender);
 
-				List<Protection> protectionsToPurge = MainPluginClass.getPlugin().getProtectionsRemoverModule()
+				List<Protection> protectionsToPurge = protectionsPurgeService
 						.retrieveProtectionsToPurge(purgeConfiguration);
-				MessageBuilder
-						.createMessage(
-								TextInput.inst().text(MessageString.MESSAGE_PURGE_WARNING.applyPrefix()).replacements(
-										new TextReplacement("{amount}",
-												() -> String.valueOf(protectionsToPurge.size())),
-										new TextReplacement("{command}",
-												() -> String.format("/%s %s confirm", getCommandPath(),
-														Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
-																.collect(Collectors.joining(" "))))))
-						.sendMessage(sender);
+				MessageTemplate.inst(Messages.MESSAGE_PURGE_WARNING.applyPrefix())
+						.setReplacements(new Replacement("{amount}", () -> String.valueOf(protectionsToPurge.size())),
+								new Replacement("{command}",
+										() -> String.format("/%s %s confirm", getCommandPath(),
+												Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
+														.collect(Collectors.joining(" ")))))
+						.process().sendMessage(sender);
 			});
 		} else {
-			MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(sender);
+			MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process().sendMessage(sender);
 		}
-		return true;
+		return new TrueResponse();
 	}
 
 }

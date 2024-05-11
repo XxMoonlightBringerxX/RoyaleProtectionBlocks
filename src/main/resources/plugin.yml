@@ -1,4 +1,4 @@
-main: ${project.package}.${project.groupId}.MainPluginClass
+main: ${project.package}.${project.groupId}.Plugin.MainPluginClass
 name: ${project.name}
 author: ${project.author}
 version: ${project.version}

@@ -6,35 +6,52 @@ import java.util.stream.Collectors;
 
 import org.bukkit.command.CommandSender;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.APIs.ProtectionStonesAPI.TransferResult;
+import company.pluginName.APIs.ProtectionStonesAPI.ProtectionStonesAPI;
+import company.pluginName.APIs.ProtectionStonesAPI.Hook.ProtectionStonesHook.TransferResult;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageList;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
-public class TransferSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "transfer",
+		pathName = "Transfer",
+		defaultName = "transfer",
+		defaultDescription = "Transfer data from a plugin to RoyaleProtectionBlocks",
+		defaultAliases = "t",
+		defaultUsage = "[plugin to transfer] <confirm>",
+		defaultPermission = "protectionblocks.transfer")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class TransferSubCommand extends PandaSubCommand {
+
+	@PandaInject
+	private static ProtectionStonesAPI protectionStonesApi;
 
 	private static final List<String> PROTECTION_PLUGINS = Arrays.asList("ProtectionStones");
 	private static final List<String> SECOND_ARG = Arrays.asList("confirm");
 
-	public TransferSubCommand(Command command) {
-		super(command, "transfer", SettingString.COMMANDS_PROTECTIONBLOCKS_TRANSFER_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_TRANSFER_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_TRANSFER_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_TRANSFER_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_TRANSFER_ALIASES.getContent());
+	public TransferSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
+	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
 		if (args.length == 1) {
 			return PROTECTION_PLUGINS;
 		} else if (args.length == 2) {
@@ -44,59 +61,61 @@ public class TransferSubCommand extends SubCommand {
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
 		if (args.length > 1) {
 			switch (args[1].toLowerCase()) {
 			case "protectionstones":
-				if (MainPluginClass.getProtectionStonesAPI().isHooked()) {
+				if (protectionStonesApi.getHook().isHooked()) {
 					if (args.length > 2 && args[2].equalsIgnoreCase("confirm")) {
 						long start = System.currentTimeMillis();
 
-						MessageBuilder.createMessage(MessageString.MESSAGE_TRANSFER_START.applyPrefix()).sendMessage(sender);
+						MessageTemplate.inst(Messages.MESSAGE_TRANSFER_START.applyPrefix()).process()
+								.sendMessage(sender);
 
-						TransferResult<ProtectionBlock> protectionBlocksResult = MainPluginClass.getProtectionStonesAPI()
+						TransferResult<ProtectionBlock> protectionBlocksResult = protectionStonesApi.getHook()
 								.transferProtectionBlocks();
-						TransferResult<Protection> protectionsResult = MainPluginClass.getProtectionStonesAPI().transferProtections();
+						TransferResult<Protection> protectionsResult = protectionStonesApi.getHook()
+								.transferProtections();
 
-						MessageBuilder
-								.createMessage(TextInput.inst().text(MessageList.MESSAGE_TRANSFER_RESULT.toArray()).replacements(
-										new TextReplacement("{transferred_protection_blocks}",
-												() -> String.valueOf(protectionBlocksResult.getSuccessList().size())),
-										new TextReplacement("{failed_protection_blocks}",
-												() -> String.valueOf(protectionBlocksResult.getExceptionsList().size())),
-										new TextReplacement(
-												"{transferred_protections}",
-												() -> String.valueOf(protectionsResult.getSuccessList().size())),
-										new TextReplacement("{failed_protections}",
-												() -> String.valueOf(protectionsResult.getExceptionsList().size())),
-										new TextReplacement("{errors_in_console}",
-												() -> String.valueOf(protectionBlocksResult.isErrorsInConsole()
-														|| protectionsResult.isErrorsInConsole())),
-										new TextReplacement("{required_time}", () -> String.valueOf(System.currentTimeMillis() - start))))
-								.sendMessage(sender);
+						MessageTemplate.inst(Messages.MESSAGE_TRANSFER_RESULT.toArray()).setReplacements(
+								new Replacement("{transferred_protection_blocks}",
+										() -> String.valueOf(protectionBlocksResult.getSuccessList().size())),
+								new Replacement("{failed_protection_blocks}",
+										() -> String.valueOf(protectionBlocksResult.getExceptionsList().size())),
+								new Replacement("{transferred_protections}",
+										() -> String.valueOf(protectionsResult.getSuccessList().size())),
+								new Replacement("{failed_protections}",
+										() -> String.valueOf(protectionsResult.getExceptionsList().size())),
+								new Replacement("{errors_in_console}",
+										() -> String.valueOf(protectionBlocksResult.isErrorsInConsole()
+												|| protectionsResult.isErrorsInConsole())),
+								new Replacement("{required_time}",
+										() -> String.valueOf(System.currentTimeMillis() - start)))
+								.process().sendMessage(sender);
 
-						MessageBuilder.createMessage(MessageString.MESSAGE_TRANSFER_END.applyPrefix()).sendMessage(sender);
+						MessageTemplate.inst(Messages.MESSAGE_TRANSFER_END.applyPrefix()).process().sendMessage(sender);
 					} else {
-						MessageBuilder
-								.createMessage(TextInput.inst().text(MessageString.MESSAGE_TRANSFER_WARNING.applyPrefix()).replacements(
-										new TextReplacement("{command}", () -> String.format("/%s %s confirm", getCommandPath(), args[1]))))
-								.sendMessage(sender);
+						MessageTemplate.inst(Messages.MESSAGE_TRANSFER_WARNING.applyPrefix())
+								.setReplacements(new Replacement("{command}",
+										() -> String.format("/%s %s confirm", getCommandPath(), args[1])))
+								.process().sendMessage(sender);
 					}
 				} else {
-					MessageBuilder.createMessage(MessageString.MESSAGE_TRANSFER_PROTECTIONSTONESNOTLOADED.applyPrefix())
+					MessageTemplate.inst(Messages.MESSAGE_TRANSFER_PROTECTIONSTONESNOTLOADED.applyPrefix()).process()
 							.sendMessage(sender);
 				}
 				break;
 			default:
-				MessageBuilder
-						.createMessage(TextInput.inst().text(MessageString.MESSAGE_TRANSFER_AVAILABLELIST.applyPrefix()).replacements(
-								new TextReplacement("{list}", () -> PROTECTION_PLUGINS.stream().collect(Collectors.joining(", ")))))
-						.sendMessage(sender);
+				MessageTemplate.inst(Messages.MESSAGE_TRANSFER_AVAILABLELIST.applyPrefix())
+						.setReplacements(new Replacement("{list}",
+								() -> PROTECTION_PLUGINS.stream().collect(Collectors.joining(", "))))
+						.process().sendMessage(sender);
 				break;
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(sender);
+			MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process().sendMessage(sender);
 		}
-		return true;
+		return new TrueResponse();
 	}
 }

@@ -1,185 +1,128 @@
 package company.pluginName.Bukkit.Inventories.Protections.Banneds;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.Permissions;
-import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
-import company.pluginName.Bukkit.Inventories.Shared.SearchPlayersInventory;
-import company.pluginName.Exceptions.ProtectionBanneds.Delete.ProtectionBannedsDeleteException;
-import company.pluginName.Exceptions.ProtectionBanneds.Save.ProtectionBannedsSaveException;
+import company.pluginName.Bukkit.Inventories.Shared.SearchPlayerInventory;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.Utils.OfflinePlayerUtils;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
-import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
-import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
+import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryData;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
 
-@Data
-@EqualsAndHashCode(callSuper = false)
-@Setter(lombok.AccessLevel.NONE)
-public class ProtectionBannedsInventory extends PluginChestInventory {
+@Inventory("protections_banneds")
+public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> {
 
-	public static ItemStack SEARCH_PLAYER_BUTTON;
-
-	public static void initItems() {
-		SEARCH_PLAYER_BUTTON = ItemStacksUtils
-				.createItemStack(SkinUtilities.NMS.setSkinSafe(Material.PLAYER_HEAD.getItemStack(), SEARCH_SKIN),
-						MessageBuilder
-								.createMessage(MessageString.INVENTORY_PROTECTION_BANNEDS_SEARCHBANNEDNAME.toString())
-								.toString());
-	}
+	private static final String ENTITY_DELETELORELINE_PATH = "Entity.Delete-lore-line";
 
 	private Protection protection;
-	private List<UUID> banneds;
-	private int page = 1;
 
 	public ProtectionBannedsInventory(Player player, Protection protection) {
 		super(player);
-
-		setSize(27);
-		setName(MessageBuilder
-				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTION_BANNEDS_TITLE.toString())
-						.replacements(new TextReplacement("{protection}", () -> protection.getDisplayName())))
-				.toString());
 
 		this.protection = protection;
 	}
 
 	@Override
-	public void updateContent() {
-		clearSlots();
-
-		banneds = getList();
-
-		for (int i = getSize() - 9; i < getSize(); i++) {
-			setSlot(i, GRAY_STAINED_GLASS_PANE);
-		}
-
-		setSlot(18, new Button(CLOSE_ITEM) {
-			@Override
-			public void onClick(InventoryClickEvent e) {
-				goToPreviousHolder();
-			}
-		});
-
-		setSlot(22, new Button(SEARCH_PLAYER_BUTTON) {
-			@Override
-			public void onClick(InventoryClickEvent e) {
-				closeInventory();
-				new SearchPlayersInventory(getPlayer(), player -> {
-					if (player != null) {
-						try {
-							protection.getBanneds().add(getPlayer(), player.getUniqueId());
-						} catch (ProtectionBannedsSaveException e1) {
-							e1.sendError(getPlayer());
-						}
-						openInventory();
-					} else {
-						openInventory();
-					}
-				}).setPreviousHolder(getHolder()).openInventory(MainPluginClass.getPlugin());
-			}
-		});
-
-		int maxPage = getMaxPage();
-
-		if (page < 1) {
-			page = 1;
-		} else if (page > maxPage) {
-			page = maxPage;
-		}
-
-		if (page > 1) {
-			setSlot(getSize() - 6, new Button(LEFT_ARROW_ITEM) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					page--;
-					updateInventory();
-				}
-			});
-		}
-
-		if (page < maxPage) {
-			setSlot(getSize() - 4, new Button(RIGHT_ARROW_ITEM) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					page++;
-					updateInventory();
-				}
-			});
-		}
-
-		if (banneds.size() != 0) {
-			int slot = 0;
-			for (UUID banned : Arrays.copyOfRange(banneds.toArray(new UUID[banneds.size()]), ((page - 1) * 18),
-					(page * 18))) {
-				if (banned == null) {
-					break;
-				}
-
-				OfflinePlayer pl = OfflinePlayerUtils.getOfflinePlayer(banned);
-
-				setSlot(slot++,
-						new Button(
-								ItemStacksUtils.createItemStack(ItemStacksUtils.getPlayerHead(pl),
-										MessageBuilder
-												.createMessage(TextInput.inst()
-														.text(MessageString.INVENTORY_PROTECTION_BANNEDS_BANNEDNAME
-																.toString())
-														.replacements(
-																new TextReplacement("{player}", () -> pl.getName())))
-												.toString(),
-										MessageBuilder.createMessage(
-												MessageString.INVENTORY_PROTECTION_BANNEDS_REMOVEBANNEDLORELINE
-														.toString())
-												.getStrings())) {
-							@Override
-							public void onClick(InventoryClickEvent e) {
-								if (protection.getOwners().list().contains(getPlayer().getUniqueId())
-										|| getPlayer().hasPermission(Permissions.PROTECTION_BANNEDS_REMOVE_OTHERS)) {
-									new ConfirmationInventory(getPlayer(), () -> {
-										try {
-											protection.getBanneds().remove(getPlayer(), banned);
-										} catch (ProtectionBannedsDeleteException e1) {
-											e1.sendError(getPlayer());
-										}
-										openInventory();
-									}).openInventory();
-								}
-							}
-						});
-			}
-		}
+	protected String getTitle() {
+		return MessageTemplate.inst(super.getTitle()).setReplacements(new Replacement("{protection}",
+				() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getRegionId()))
+				.process().toString();
 	}
 
-	public int getMaxPage() {
-		return (int) ((banneds.size() + 17) / 18D);
-	}
-
-	private List<UUID> getList() {
+	@Override
+	protected List<UUID> getEntityList() {
 		try {
 			return protection.getBanneds().list().stream().map(string -> UUID.fromString(string))
 					.collect(Collectors.toList());
 		} catch (Exception e) {
 			return new LinkedList<>();
+		}
+	}
+
+	@ItemGenerator("Search-button")
+	private ItemStack generateSearchButton(Item item) {
+		return ProtectionUtilities.canAddBanned(protection, getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY)
+				: null;
+	}
+
+	@ItemExecutor("Close-button")
+	private void executeCloseButton() {
+		goToPreviousHolder();
+	}
+
+	@ItemExecutor("Search-button")
+	private void executeSearchButton() {
+		closeInventory();
+		new SearchPlayerInventory(getPlayer(), player -> {
+			if (player != null) {
+				try {
+					protection.getBanneds().add(getPlayer(), player.getUniqueId());
+				} catch (RoyaleProtectionBlocksException e1) {
+					e1.sendError(getPlayer());
+				}
+				openInventory();
+			} else {
+				openInventory();
+			}
+		}).openInventory();
+	}
+
+	@Override
+	protected ItemStack generateEntityItem(UUID entity) {
+		OfflinePlayer pl = OfflinePlayerUtilities.getOfflinePlayer(entity);
+
+		final boolean canRemove = ProtectionUtilities.canRemoveMember(protection, getPlayer());
+
+		ItemBuilder builder = ItemBuilder.inst().setMaterial(Material.PLAYER_HEAD)
+				.fromMap(getChestInventoryData().getCustomFields(), PagedChestInventoryData.ENTITY_PATH)
+				.setReplacements(new Replacement("{player}", () -> pl.getName()));
+
+		List<String> lore = new ArrayList<>(Arrays.asList(builder.getLore()));
+		if (canRemove) {
+			lore.add(" ");
+			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_DELETELORELINE_PATH).toString());
+		}
+		builder.setLore(lore);
+
+		return processPlayerHead(builder, entity);
+	}
+
+	@Override
+	protected void onEntityClick(InventoryClickEvent e, UUID entity) {
+		final boolean canRemove = ProtectionUtilities.canRemoveBanned(protection, getPlayer());
+
+		if (canRemove) {
+			new ConfirmationInventory(getPlayer(), () -> {
+				try {
+					protection.getBanneds().remove(getPlayer(), entity);
+				} catch (RoyaleProtectionBlocksException e1) {
+					e1.sendError(getPlayer());
+				}
+
+				if (!entity.equals(getPlayer().getUniqueId())) {
+					openInventory();
+				}
+			}).setPreviousInventory(null).openInventory();
 		}
 	}
 

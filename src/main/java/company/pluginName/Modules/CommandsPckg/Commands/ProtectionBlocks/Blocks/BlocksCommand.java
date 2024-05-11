@@ -4,37 +4,40 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlocksListInventory;
-import company.pluginName.Modules.CommandsPckg.Base.HelpSubCommand;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
+import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.ProtectionBlocksCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.FalseResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 
-public class BlocksCommand extends Command {
+@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "blocks",
+		pathName = "Blocks",
+		defaultName = "blocks",
+		defaultDescription = "Open a list with all the blocks",
+		defaultUsage = "[help|subcommand]",
+		defaultPermission = "protectionblocks.blocks",
+		defaultAliases = "b")
+@PandaCommandAnnotation.Customizable(aliases = true, description = true, name = true, permission = true, usage = true)
+public class BlocksCommand extends PandaCommand {
 
-	public BlocksCommand(Command command) {
-		super(command, "blocks", SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_BLOCKS_ALIASES.getContent());
-		addCommand(new AddSubCommand(this));
-		addCommand(new RemoveSubCommand(this));
-		addCommand(new GiveSubCommand(this));
-		sortCommands();
-		addCommand(new HelpSubCommand(this), 0);
+	public BlocksCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean userids) {
-		if (!getPermission().isEmpty() && !sender.hasPermission(getPermission())) {
-			return false;
-		}
-
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean userids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
+
 		if (pl != null && args.length == 0) {
 			new ProtectionBlocksListInventory(pl).openInventory();
-			return true;
+			return new TrueResponse();
 		}
-		return super.execute(cmd, sender, args, userids);
+
+		return new FalseResponse();
 	}
 }

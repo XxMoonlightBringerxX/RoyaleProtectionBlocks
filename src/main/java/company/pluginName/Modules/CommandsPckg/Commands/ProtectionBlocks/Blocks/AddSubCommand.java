@@ -8,34 +8,55 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.APIs.ItemsAdderAPI;
-import company.pluginName.APIs.OraxenAPI;
-import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
-import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveException;
-import company.pluginName.Exceptions.ProtectionBlocks.Save.ProtectionBlocksSaveUnknownException;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBlocks.ProtectionBlockInformation;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import company.pluginName.APIs.ItemsAdderAPI.ItemsAdderAPI;
+import company.pluginName.APIs.ItemsAdderAPI.Hook.ItemsAdderHook;
+import company.pluginName.APIs.OraxenAPI.OraxenAPI;
+import company.pluginName.APIs.OraxenAPI.Hook.OraxenHook;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
-public class AddSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = BlocksCommand.class)
+@PandaCommandAnnotation(
+		id = "add",
+		pathName = "Add",
+		defaultName = "add",
+		defaultDescription = "Create a new block",
+		defaultUsage = "<id> <x> <y> <z> [permission]",
+		defaultPermission = "protectionblocks.blocks.create",
+		defaultAliases = "a")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class AddSubCommand extends PandaSubCommand {
 
-	public AddSubCommand(Command command) {
-		super(command, "add", SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_ADD_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_ADD_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_ADD_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_BLOCKS_ADD_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_BLOCKS_ADD_ALIASES.getContent());
+	@PandaInject
+	private static ItemsAdderAPI itemsAdderApi;
+
+	@PandaInject
+	private static OraxenAPI oraxenApi;
+
+	public AddSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
+	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
 		switch (args.length) {
 		case 1:
 			return Arrays.asList("<id>");
@@ -53,17 +74,16 @@ public class AddSubCommand extends SubCommand {
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			if (args.length > 4) {
 				ItemStack i = ItemStacksUtils.getItemInMainHand(pl);
 				if (i != null && i.getType() != Material.AIR) {
 					if (i.getType().isBlock()
-							|| MainPluginClass.getItemsAdderAPI()
-									.isCustomBlock(i) == ItemsAdderAPI.CheckingResult.IS_CUSTOM_ITEM
-							|| MainPluginClass.getOraxenAPI()
-									.isCustomBlock(i) == OraxenAPI.CheckingResult.IS_CUSTOM_ITEM) {
+							|| itemsAdderApi.getHook().isCustomBlock(i) == ItemsAdderHook.CheckingResult.IS_CUSTOM_ITEM
+							|| oraxenApi.getHook().isCustomBlock(i) == OraxenHook.CheckingResult.IS_CUSTOM_ITEM) {
 						ItemStack protectionBlockItemstack = i.clone();
 						protectionBlockItemstack.setAmount(1);
 						try {
@@ -73,9 +93,9 @@ public class AddSubCommand extends SubCommand {
 								int z = Integer.parseInt(args[4]);
 
 								if (x < 0 || y < -1 || z < 0) {
-									MessageBuilder.createMessage(MessageString.ERROR_NUMBERBELOWZERO.applyPrefix())
+									MessageTemplate.inst(Messages.ERROR_NUMBERBELOWZERO.applyPrefix()).process()
 											.sendMessage(pl);
-									return true;
+									return new TrueResponse();
 								}
 
 								String permission = args.length > 5 ? args[5] : null;
@@ -83,38 +103,34 @@ public class AddSubCommand extends SubCommand {
 										new ProtectionBlockInformation(args[1].toLowerCase(), protectionBlockItemstack,
 												x / 2, (y == -1 ? y : y / 2), z / 2, permission, null));
 
-								try {
-									protectionBlockItemstack = protectionBlock.getInformation().generateItem();
-								} catch (ProtectionBlocksGenerateItemException e) {
-									throw new ProtectionBlocksSaveUnknownException(e);
-								}
+								protectionBlockItemstack = protectionBlock.getInformation().generateItem();
 
 								protectionBlock.save(pl);
 								protectionBlockItemstack.setAmount(i.getAmount());
 
 								ItemStacksUtils.setItemInMainHand(pl, protectionBlockItemstack);
-								MessageBuilder.createMessage(
-										MessageString.MESSAGE_PROTECTIONS_BLOCKS_CREATEDSUCCESSFULLY.applyPrefix())
-										.sendMessage(pl);
+								MessageTemplate
+										.inst(Messages.MESSAGE_PROTECTIONS_BLOCKS_CREATEDSUCCESSFULLY.applyPrefix())
+										.process().sendMessage(pl);
 							} catch (NumberFormatException e) {
-								MessageBuilder.createMessage(MessageString.ERROR_INVALIDNUMBER.applyPrefix())
+								MessageTemplate.inst(Messages.ERROR_INVALIDNUMBER.applyPrefix()).process()
 										.sendMessage(pl);
 							}
-						} catch (ProtectionBlocksSaveException e) {
+						} catch (RoyaleProtectionBlocksException e) {
 							e.sendError(pl);
 						}
 					} else {
-						MessageBuilder.createMessage(MessageString.ERROR_NOTABLOCK.applyPrefix()).sendMessage(pl);
+						MessageTemplate.inst(Messages.ERROR_NOTABLOCK.applyPrefix()).process().sendMessage(pl);
 					}
 				} else {
-					MessageBuilder.createMessage(MessageString.ERROR_NOITEMINHAND.applyPrefix()).sendMessage(pl);
+					MessageTemplate.inst(Messages.ERROR_NOITEMINHAND.applyPrefix()).process().sendMessage(pl);
 				}
 			} else {
-				MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(pl);
+				MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process().sendMessage(pl);
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix()).sendMessage(sender);
+			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 		}
-		return true;
+		return new TrueResponse();
 	}
 }

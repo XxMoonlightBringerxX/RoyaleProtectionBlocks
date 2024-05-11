@@ -7,18 +7,45 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
+import company.pluginName.Modules.FilePckg.FilesService;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Utils.ProtectionBlocksUtils;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
-public class ImportSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = FilesCommand.class)
+@PandaCommandAnnotation(
+		id = "import",
+		pathName = "Import",
+		defaultName = "import",
+		defaultDescription = "Import all the information of an specific type of data from its respective file",
+		defaultUsage = "<blocks>",
+		defaultPermission = "protectionblocks.files.import",
+		defaultAliases = "i")
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true)
+public class ImportSubCommand extends PandaSubCommand {
+
+	@PandaInject
+	private static ProtectionBlocksService protectionBlocksService;
+
+	@PandaInject
+	private static FilesService filesService;
 
 	private static final List<String> DATA_TO_IMPORT_NAMES = Arrays.stream(DataToExport.values())
 			.map(value -> value.name().toLowerCase()).collect(Collectors.toList());
@@ -27,16 +54,12 @@ public class ImportSubCommand extends SubCommand {
 		BLOCKS
 	}
 
-	public ImportSubCommand(Command command) {
-		super(command, "export", SettingString.COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_FILES_IMPORT_ALIASES.getContent());
+	public ImportSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public List<String> tabComplete(Command cmd, CommandSender sender, String[] args) {
+	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
 		switch (args.length) {
 		case 1:
 			return DATA_TO_IMPORT_NAMES;
@@ -46,15 +69,15 @@ public class ImportSubCommand extends SubCommand {
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (args.length > 1) {
 			try {
 				switch (DataToExport.valueOf(args[1].toUpperCase())) {
 				case BLOCKS:
 					try {
-						PandaYaml yaml = new PandaYaml(
-								MainPluginClass.getPlugin().getFileModule().BLOCKS_FILE.getFile());
+						PandaYaml yaml = new PandaYaml(filesService.getBlocksFile().getFile());
 
 						yaml.getRoot().getNamedChilds().forEach(child -> {
 							if (child.isYamlSection()) {
@@ -62,7 +85,7 @@ public class ImportSubCommand extends SubCommand {
 								try {
 									block = ProtectionBlocksUtils.mapToProtectionBlock(child.getName(),
 											child.asYamlSection().toMap());
-									ProtectionBlock originalBlock = MainPluginClass.getPlugin().getProtectionsModule()
+									ProtectionBlock originalBlock = protectionBlocksService
 											.getProtectionBlockById(child.getName());
 
 									if (originalBlock != null) {
@@ -78,23 +101,24 @@ public class ImportSubCommand extends SubCommand {
 							}
 						});
 
-						MessageBuilder.createMessage(MessageString.MESSAGE_FILES_IMPORTEDSUCCESSFULLY.applyPrefix())
+						MessageTemplate.inst(Messages.MESSAGE_FILES_IMPORTEDSUCCESSFULLY.applyPrefix()).process()
 								.sendMessage(sender);
 					} catch (Exception e) {
-						MessageBuilder.createMessage(MessageString.ERROR_FILES_IMPORT.applyPrefix())
-								.sendMessage(sender);
+						MessageTemplate.inst(Messages.ERROR_FILES_IMPORT.applyPrefix()).process().sendMessage(sender);
 						e.printStackTrace();
 					}
 					break;
 				default:
-					MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(sender);
+					MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process()
+							.sendMessage(sender);
 				}
 			} catch (IllegalArgumentException e) {
-				MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(sender);
+				MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process()
+						.sendMessage(sender);
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(sender);
+			MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process().sendMessage(sender);
 		}
-		return true;
+		return new TrueResponse();
 	}
 }

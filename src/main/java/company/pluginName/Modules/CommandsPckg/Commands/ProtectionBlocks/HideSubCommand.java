@@ -3,53 +3,59 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.MainPluginClass;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
+import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 
-public class HideSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaCommandAnnotation(id = "hide", pathName = "Hide", defaultName = "hide", defaultDescription = "Hide the protection block on your current protection", defaultAliases = "h")
+@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true)
+public class HideSubCommand extends PandaSubCommand {
 
-	public HideSubCommand(Command command) {
-		super(command, "hide", SettingString.COMMANDS_PROTECTIONBLOCKS_HIDE_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_HIDE_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_HIDE_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_HIDE_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_HIDE_ALIASES.getContent());
+	@PandaInject
+	private static ProtectionsService protectionsService;
+
+	public HideSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-					.getProtectionByLocation(pl.getLocation());
+			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 			if (protection != null) {
-				if (protection.canToggleBlock(pl)) {
-					if (protection.isProtectionBlock()) {
-						protection.hideProtectionBlock();
-						MessageBuilder.createMessage(MessageString.MESSAGE_PROTECTIONS_HIDDENSUCCESSFULLY.applyPrefix())
+				if (ProtectionUtilities.canToggleBlock(protection, pl)) {
+					if (protection.getUtils().isProtectionBlock()) {
+						protection.getUtils().hideProtectionBlock();
+						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_HIDDENSUCCESSFULLY.applyPrefix()).process()
 								.sendMessage(sender);
 					} else {
-						MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_BLOCKALREADYHIDDEN.applyPrefix())
+						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_BLOCKALREADYHIDDEN.applyPrefix()).process()
 								.sendMessage(sender);
 					}
 				} else {
-					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTOWNER.applyPrefix())
+					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTOWNER.applyPrefix()).process()
 							.sendMessage(sender);
 				}
 			} else {
-				MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix())
+				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
 						.sendMessage(sender);
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix()).sendMessage(sender);
+			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 		}
-		return true;
+		return new TrueResponse();
 	}
 
 }

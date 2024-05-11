@@ -1,5 +1,6 @@
 package company.pluginName.Bukkit.Inventories.ProtectionBlocks;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import org.bukkit.entity.Player;
@@ -7,125 +8,148 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ReferencedObjects.ReferencedProtectionBlock;
-import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Modifiable;
-import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Messages.Exceptions.PlayerAlreadyListeningException;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Events.MessagesListener;
+import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
+import darkpanda73.PandaUtils.PandaUtilities.Java.JavaHelper;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item.ClickResult;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Utils.ItemUtilities;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public class ProtectionBlockRecipeInventory extends PluginChestInventory {
+@Inventory("protectionblocks_recipe")
+public class ProtectionBlockRecipeInventory extends ChestInventoryObject {
 
-	private Recipe originalRecipe;
-	private Recipe newRecipe;
+	private static final Item RECIPE_ITEM = new Item("Recipe-item", Collections.emptyMap())
+			.setOnClickItemMethod(JavaHelper.getMethod(ProtectionBlockRecipeInventory.class, "onEntityClick"))
+			.setDefaultClickResult(ClickResult.IGNORE);
+	public static final String RECIPESLOTS_PATH = "Recipe-slots";
+	public static final String MESSAGES_PERMISSIONSPECIFYINFO_PATH = "Messages.Permission-specify-info";
+	public static final String PERMISSION_NOTSETITEM_PATH = "Not-set-item";
 
-	public ProtectionBlockRecipeInventory(Player pl, ProtectionBlock protectionBlock, Consumer<Recipe> onRecipeUpdate) {
+	@PandaInject
+	private static MessagesListener messagesListener;
+
+	public int[] recipeSlots;
+
+	private ProtectionBlock protectionBlock;
+	private SimpleRecipe newRecipe;
+	private Consumer<SimpleRecipe> onRecipeUpdate;
+
+	public ProtectionBlockRecipeInventory(Player pl, ProtectionBlock protectionBlock, SimpleRecipe recipe,
+			Consumer<SimpleRecipe> onRecipeUpdate) {
 		super(pl);
 
-		this.originalRecipe = MainPluginClass.getPlugin().getRecipesModule()
-				.findRecipeByProtectionBlock(protectionBlock);
-		this.newRecipe = new Recipe(new ReferencedProtectionBlock(protectionBlock.getInformation().getId()));
-
-		if (this.originalRecipe != null) {
-			this.newRecipe.copy(this.originalRecipe);
-		}
-
-		setName(MessageBuilder.createMessage(
-				TextInput.inst().text(MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_TITLE.toString())
-						.replacements(new TextReplacement("{block}",
-								() -> protectionBlock.getInformation().getId() != null
-										? protectionBlock.getInformation().getId()
-										: "???")))
-				.toString());
-		setSize(45);
-
-		for (int i = 0; i < getSize(); i++) {
-			setSlot(i, GRAY_STAINED_GLASS_PANE);
-		}
-
-		for (int i = 0; i < 9; i++) {
-			ItemStack it = null;
-
-			if (this.newRecipe.getRecipe() != null) {
-				it = newRecipe.getRecipe()[i];
+		this.protectionBlock = protectionBlock;
+		this.newRecipe = new SimpleRecipe();
+		if (recipe != null) {
+			for (int i = 0; i < 9; i++) {
+				this.newRecipe.getRecipe()[i] = recipe.getRecipe()[i] != null ? recipe.getRecipe()[i].clone() : null;
 			}
-
-			setSlot(11 + i + i / 3 * 6, new Modifiable(it) {
-				@Override
-				public void onModify(InventoryClickEvent e) {
-				}
-			});
+			this.newRecipe.setPermission(recipe.getPermission());
 		}
-
-		setSlot(36, new Button(CANCEL_ITEM) {
-			@Override
-			public void onClick(InventoryClickEvent e) {
-				goToPreviousHolder();
-			}
-		});
-
-		setSlot(44, new Button(CONFIRM_ITEM) {
-			@Override
-			public void onClick(InventoryClickEvent e) {
-				for (int j = 0; j < 9; j++) {
-					newRecipe.getRecipe()[j] = e.getInventory().getItem(11 + j + j / 3 * 6);
-				}
-
-				onRecipeUpdate.accept(newRecipe);
-
-				goToPreviousHolder();
-			}
-		});
+		this.onRecipeUpdate = onRecipeUpdate;
 	}
 
 	@Override
-	public void updateContent() {
-		MessageString permissionName = newRecipe.getPermission() != null
-				? MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONNAME
-				: MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONNOTSETNAME;
+	protected String getTitle() {
+		return MessageTemplate.inst(super.getTitle())
+				.setReplacements(new Replacement("{block}",
+						() -> protectionBlock.getInformation().getId() != null
+								? protectionBlock.getInformation().getId()
+								: "???"))
+				.process().toString();
+	}
 
-		setSlot(24,
-				new Button(ItemStacksUtils.createItemStack(Material.PAPER, MessageBuilder
-						.createMessage(TextInput.inst().text(permissionName.toString())
-								.replacements(new TextReplacement("{block_permission}",
-										() -> newRecipe.getPermission() != null ? newRecipe.getPermission() : "")))
-						.toString())) {
-					@Override
-					public void onClick(InventoryClickEvent e) {
-						if (e.getClick() == ClickType.LEFT) {
-							try {
-								MainPluginClass.getPlugin().getMessagesListener()
-										.startListening(getPlayer().getUniqueId(), (message) -> {
-											if (!message.equalsIgnoreCase("cancel")) {
-												newRecipe.setPermission(!message.isEmpty() ? message : null);
-											}
-											openInventory();
-											return true;
-										});
-								closeInventory();
-								MessageBuilder.createMessage(
-										MessageString.INVENTORY_PROTECTIONBLOCKS_MANAGE_RECIPE_PERMISSIONSPECIFYINFO
-												.applyPrefix())
-										.sendMessage(e.getWhoClicked());
-							} catch (PlayerAlreadyListeningException e1) {
-								MessageBuilder
-										.createMessage(MessageString.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix())
-										.sendMessage(e.getWhoClicked());
-							}
-						} else if (e.getClick() == ClickType.RIGHT && newRecipe.getPermission() != null) {
-							newRecipe.setPermission(null);
-							updateInventory();
-						}
+	@Override
+	protected void onPreUpdate() {
+		this.recipeSlots = ItemUtilities
+				.stringToSlots(this.getChestInventoryData().getCustomFields().get(RECIPESLOTS_PATH).toString());
+	}
+
+	@Override
+	protected void onPostUpdate() {
+		for (int i = 0; i < 9 && i < this.recipeSlots.length; i++) {
+			this.setSlot(this.recipeSlots[i], new GeneratedItem(RECIPE_ITEM, newRecipe.getRecipe()[i]));
+		}
+	}
+
+	@ItemGenerator("Permission-button")
+	private ItemStack generatePermissionButton(Item item) {
+		return ItemBuilder.inst()
+				.fromMap(item.getData(),
+						this.newRecipe.getPermission() != null ? Item.DISPLAYITEM_KEY : PERMISSION_NOTSETITEM_PATH)
+				.setReplacements(new Replacement("{block_permission}",
+						() -> newRecipe.getPermission() != null ? newRecipe.getPermission() : ""))
+				.build();
+	}
+
+	@ItemExecutor("Cancel-button")
+	private void executeCancelButton() {
+		goToPreviousHolder();
+	}
+
+	@ItemExecutor("Confirm-button")
+	private void executeConfirmButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
+		for (int i = 0; i < 9 && i < recipeSlots.length; i++) {
+			newRecipe.getRecipe()[i] = e.getInventory().getItem(recipeSlots[i]);
+		}
+
+		onRecipeUpdate.accept(newRecipe);
+
+		goToPreviousHolder();
+	}
+
+	@ItemExecutor("Permission-button")
+	private void executePermissionButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
+		for (int i = 0; i < 9 && i < recipeSlots.length; i++) {
+			newRecipe.getRecipe()[i] = e.getInventory().getItem(recipeSlots[i]);
+		}
+
+		if (e.getClick() == ClickType.LEFT) {
+			try {
+				messagesListener.startListening(getPlayer().getUniqueId(), (message) -> {
+					if (!message.equalsIgnoreCase("cancel")) {
+						newRecipe.setPermission(!message.isEmpty() ? message : null);
 					}
+					openInventory();
+					return true;
 				});
+				closeInventory();
+				MessageTemplate
+						.inst(PandaPrefixedStringField.applyPrefix(this.getChestInventoryData().getCustomFields()
+								.get(MESSAGES_PERMISSIONSPECIFYINFO_PATH).toString()))
+						.process().sendMessage(getPlayer());
+			} catch (PlayerAlreadyListeningException e1) {
+				MessageTemplate.inst(Messages.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix()).process()
+						.sendMessage(getPlayer());
+			}
+		} else if (e.getClick() == ClickType.RIGHT && newRecipe.getPermission() != null) {
+			newRecipe.setPermission(null);
+			updateInventory();
+		}
+	}
+
+	@NoArgsConstructor
+	@Getter
+	public static class SimpleRecipe {
+
+		private ItemStack[] recipe = new ItemStack[9];
+		private @Setter String permission = null;
+
 	}
 
 }

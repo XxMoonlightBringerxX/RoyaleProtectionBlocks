@@ -2,210 +2,157 @@ package company.pluginName.Bukkit.Inventories.ProtectionBlocks;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import company.pluginName.MainPluginClass;
 import company.pluginName.Permissions;
-import company.pluginName.Bukkit.Inventories.Abstracts.PluginChestInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
-import company.pluginName.Exceptions.ProtectionBlocks.ProtectionBlocksGenerateItemException;
-import company.pluginName.Exceptions.ProtectionBlocks.Delete.ProtectionBlocksDeleteException;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionBlock;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageList;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
-import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Objects.Button;
-import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
+import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
 
-@Data
-@EqualsAndHashCode(callSuper = false)
-@Setter(lombok.AccessLevel.NONE)
-public class ProtectionBlocksListInventory extends PluginChestInventory {
+@Inventory("protectionblocks_list")
+public class ProtectionBlocksListInventory extends PagedChestInventoryObject<ProtectionBlock> {
 
-	private int page = 1;
+	private static final String ENTITY_COPYLORELINE_PATH = "Entity.Copy-lore-line";
+	private static final String ENTITY_EDITLORELINE_PATH = "Entity.Edit-lore-line";
+	private static final String ENTITY_REMOVELORELINE_PATH = "Entity.Remove-lore-line";
+
+	@PandaInject
+	private static ProtectionBlocksService protectionBlocksService;
+
+	private boolean canGet;
+	private boolean canEdit;
+	private boolean canCreate;
+	private boolean canDelete;
 
 	public ProtectionBlocksListInventory(Player player) {
 		super(player);
-
-		setSize(27);
-		setName(MessageBuilder
-				.createMessage(TextInput.inst().text(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_TITLE.toString()))
-				.toString());
 	}
 
 	@Override
-	public void updateContent() {
+	protected String getTitle() {
+		return MessageTemplate.inst(super.getTitle()).process().toString();
+	}
+
+	@Override
+	protected List<ProtectionBlock> getEntityList() {
+		return new ArrayList<>(protectionBlocksService.getProtectionBlocks().values());
+	}
+
+	@Override
+	protected ItemStack generateEntityItem(ProtectionBlock entity) {
+		Replacement[] replacements = {
+				new Replacement("{blocks_x}", () -> String.valueOf((entity.getInformation().getBlocksX() * 2) + 1)),
+				new Replacement("{blocks_y}",
+						() -> entity.getInformation().getBlocksY() == -1 ? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
+								: String.valueOf((entity.getInformation().getBlocksY() * 2) + 1)),
+				new Replacement("{blocks_z}", () -> String.valueOf((entity.getInformation().getBlocksZ() * 2) + 1)),
+				new Replacement("{block_id}", () -> entity.getInformation().getId()),
+				new Replacement("{block_permission}",
+						() -> entity.getInformation().getPermission() != null ? entity.getInformation().getPermission()
+								: "&7&o---"),
+				new Replacement("{block_allowed_worlds}",
+						() -> entity.getAllowedWorlds().get().size() > 0
+								? entity.getAllowedWorlds().get().stream().collect(Collectors.joining(", "))
+								: "&7&oAll"),
+				new Replacement("{block_price}",
+						() -> entity.getInformation().getPrice() != null
+								? StringsHelper.toCurrency(entity.getInformation().getPrice())
+								: "&7&o---") };
+
+		ItemBuilder itemBuilder = ItemBuilder.inst().fromMap(getChestInventoryData().getCustomFields(), "Entity")
+				.setReplacements(replacements);
+
+		if (entity != null) {
+			itemBuilder.fromItem(entity.getInformation().getItem());
+		} else {
+			itemBuilder.setMaterial(Material.PLAYER_HEAD).setAmount(1).setSkin(
+					"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=");
+		}
+
+		List<String> lore = itemBuilder.getLore().length > 0 ? new ArrayList<>(Arrays.asList(itemBuilder.getLore()))
+				: new ArrayList<>();
+		lore.addAll(getChestInventoryData().getEntityLore());
+		lore.add("&0");
+
+		if (canGet) {
+			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_COPYLORELINE_PATH).toString());
+		}
+
+		if (canEdit) {
+			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_EDITLORELINE_PATH).toString());
+		}
+
+		if (canDelete) {
+			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_REMOVELORELINE_PATH).toString());
+		}
+
+		return itemBuilder.setLore(lore).apply(entity.getInformation().getItem().clone());
+	}
+
+	@Override
+	protected void onEntityClick(InventoryClickEvent e, ProtectionBlock entity) {
 		boolean canGet = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_GIVE);
 		boolean canEdit = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_EDIT);
-		boolean canCreate = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_CREATE);
 		boolean canDelete = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_DELETE);
 
-		clearSlots();
-
-		Collection<ProtectionBlock> blocks = getList();
-
-		for (int i = getSize() - 9; i < getSize(); i++) {
-			setSlot(i, GRAY_STAINED_GLASS_PANE);
-		}
-
-		int maxPage = getMaxPage();
-
-		if (page < 1) {
-			page = 1;
-		} else if (page > maxPage) {
-			page = maxPage;
-		}
-
-		if (page > 1) {
-			setSlot(getSize() - 9, new Button(LEFT_ARROW_ITEM) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					page--;
-					updateInventory();
-				}
-			});
-		}
-
-		if (page < maxPage) {
-			setSlot(getSize() - 1, new Button(RIGHT_ARROW_ITEM) {
-				@Override
-				public void onClick(InventoryClickEvent e) {
-					page++;
-					updateInventory();
-				}
-			});
-		}
-
-		if (canCreate) {
-			setSlot(getSize() - 5,
-					new Button(
-							SkinUtilities.NMS.setSkinSafe(ItemStacksUtils.createItemStack(Material.PLAYER_HEAD,
-									MessageBuilder.createMessage(
-											MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_CREATEBLOCKITEM.toString())
-											.toString()),
-									PLUS_SKIN)) {
-
-						@Override
-						public void onClick(InventoryClickEvent e) {
-							new ProtectionBlockManagerInventory(getPlayer()).setPreviousHolder(getHolder())
-									.openInventory(MainPluginClass.getPlugin());
-						}
-					});
-		}
-
-		if (blocks.size() != 0) {
-			int slot = 0;
-			for (ProtectionBlock block : Arrays.copyOfRange(blocks.toArray(new ProtectionBlock[blocks.size()]),
-					((page - 1) * 18), (page * 18))) {
-				if (block == null) {
-					break;
-				}
-
-				ItemStack item = block.getInformation().getItem().clone();
-				ItemMeta im = item.getItemMeta();
-
-				List<String> lore = new ArrayList<>();
-				if (im.hasLore()) {
-					lore.addAll(im.getLore());
-				}
-				lore.addAll(MessageList.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKLORE.getContent());
-
-				if (canGet || canDelete) {
-					lore.add("&0");
-
-					if (canGet) {
-						lore.add(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKCOPYLORELINE.toString());
-					}
-
-					if (canEdit) {
-						lore.add(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKEDITLORELINE.toString());
-					}
-
-					if (canDelete) {
-						lore.add(MessageString.INVENTORY_PROTECTIONBLOCKS_LIST_BLOCKREMOVELORELINE.toString());
-					}
-				}
-
-				setSlot(slot++,
-						new Button(
-								ItemStacksUtils.createItemStack(item,
-										im.hasDisplayName() ? MessageBuilder.createMessage(im.getDisplayName())
-												.toString() : null,
-										MessageBuilder
-												.createMessage(TextInput.inst()
-														.text(lore.toArray(new String[lore.size()]))
-														.replacements(new TextReplacement("{blocks_x}", () -> String
-																.valueOf(
-																		(block.getInformation().getBlocksX() * 2) + 1)),
-																new TextReplacement("{blocks_y}",
-																		() -> block.getInformation().getBlocksY() == -1
-																				? MessageString.MESSAGE_GENERAL_NOLIMIT
-																						.toString()
-																				: String.valueOf((block.getInformation()
-																						.getBlocksY() * 2) + 1)),
-																new TextReplacement("{blocks_z}", () -> String.valueOf(
-																		(block.getInformation().getBlocksZ() * 2) + 1)),
-																new TextReplacement("{block_id}",
-																		() -> block.getInformation().getId()),
-																new TextReplacement("{block_permission}",
-																		() -> block.getInformation().getPermission()),
-																new TextReplacement("{block_allowed_worlds}",
-																		() -> block.getAllowedWorlds().get().stream()
-																				.collect(Collectors.joining(", ")))))
-												.getStrings())) {
-							@Override
-							public void onClick(InventoryClickEvent e) {
-								if (e.getClick() == ClickType.LEFT && !e.isShiftClick() && canGet) {
-									try {
-										e.getWhoClicked().getOpenInventory()
-												.setCursor(block.getInformation().generateItem());
-									} catch (ProtectionBlocksGenerateItemException e1) {
-										e1.sendError(getPlayer());
-										return;
-									}
-								} else if (e.getClick() == ClickType.SHIFT_LEFT && canEdit) {
-									new ProtectionBlockManagerInventory(getPlayer(), block)
-											.setPreviousHolder(getHolder()).openInventory(MainPluginClass.getPlugin());
-								} else if (e.getClick() == ClickType.RIGHT && canDelete) {
-									new ConfirmationInventory(getPlayer(), () -> {
-										try {
-											block.delete(getPlayer());
-											MessageBuilder.createMessage(
-													MessageString.MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY
-															.applyPrefix())
-													.sendMessage(getPlayer());
-										} catch (ProtectionBlocksDeleteException e1) {
-											e1.sendError(getPlayer());
-										}
-									}).openInventory();
-								}
-							}
-						});
+		if (e.getClick() == ClickType.LEFT && !e.isShiftClick() && canGet) {
+			try {
+				e.getWhoClicked().getOpenInventory().setCursor(entity.getInformation().generateItem());
+			} catch (RoyaleProtectionBlocksException e1) {
+				e1.sendError(getPlayer());
+				return;
 			}
+		} else if (e.getClick() == ClickType.SHIFT_LEFT && canEdit) {
+			new ProtectionBlockManagerInventory(getPlayer(), entity).openInventory();
+		} else if (e.getClick() == ClickType.RIGHT && canDelete) {
+			new ConfirmationInventory(getPlayer(), () -> {
+				try {
+					entity.delete(getPlayer());
+					MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY.applyPrefix())
+							.process().sendMessage(getPlayer());
+				} catch (RoyaleProtectionBlocksException e1) {
+					e1.sendError(getPlayer());
+				}
+			}).openInventory();
 		}
 	}
 
-	public int getMaxPage() {
-		return (int) ((getList().size() + 17) / 18D);
+	@Override
+	protected void onPreUpdate() {
+		canGet = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_GIVE);
+		canEdit = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_EDIT);
+		canCreate = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_CREATE);
+		canDelete = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_DELETE);
 	}
 
-	private Collection<ProtectionBlock> getList() {
-		return MainPluginClass.getPlugin().getProtectionsModule().getProtectionBlocks().values();
+	@ItemGenerator("Create-block-button")
+	private ItemStack generateCreateBlockButton(Item item) {
+		return canCreate ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+	}
+
+	@ItemExecutor("Create-block-button")
+	private void executeCreateBlockButton(Item item) {
+		new ProtectionBlockManagerInventory(getPlayer()).openInventory();
+
 	}
 
 }

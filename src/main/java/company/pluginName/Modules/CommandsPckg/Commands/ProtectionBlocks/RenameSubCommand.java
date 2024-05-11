@@ -6,59 +6,59 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.Protection.Save.ProtectionSaveException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingList;
-import company.pluginName.TemporaryModules.FilePckg.Settings.SettingString;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.Command;
-import relampagorojo93.LibsCollection.SpigotCommands.Objects.SubCommand;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
-public class RenameSubCommand extends SubCommand {
+@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaCommandAnnotation(id = "rename", pathName = "Rename", defaultName = "rename", defaultDescription = "Rename your current protection name", defaultUsage = "<new name>", defaultAliases = "rn")
+@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true, usage = true)
+public class RenameSubCommand extends PandaSubCommand {
 
-	public RenameSubCommand(Command command) {
-		super(command, "rename", SettingString.COMMANDS_PROTECTIONBLOCKS_RENAME_NAME.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_RENAME_PERMISSION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_RENAME_DESCRIPTION.toString(),
-				SettingString.COMMANDS_PROTECTIONBLOCKS_RENAME_USAGE.toString(),
-				SettingList.COMMANDS_PROTECTIONBLOCKS_RENAME_ALIASES.getContent());
+	@PandaInject
+	private static ProtectionsService protectionsService;
+
+	public RenameSubCommand() throws InstantiationException {
+		super();
 	}
 
 	@Override
-	public boolean execute(Command cmd, CommandSender sender, String[] args, boolean useids) {
+	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
+			boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			if (args.length > 1) {
-				Protection protection = MainPluginClass.getPlugin().getProtectionsModule()
-						.getProtectionByLocation(pl.getLocation());
+				Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 				if (protection != null) {
-					if (protection.isMainOwner(pl.getUniqueId())) {
-						try {
-							protection.setDisplayName(Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
-									.collect(Collectors.joining(" ")));
-							MessageBuilder
-									.createMessage(MessageString.MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY.applyPrefix())
-									.sendMessage(sender);
-						} catch (ProtectionSaveException e) {
-							e.sendError(pl);
-						}
-					} else {
-						MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTMAINOWNER.applyPrefix())
+					try {
+						protection.setDisplayName(pl, Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
+								.collect(Collectors.joining(" ")));
+						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY.applyPrefix()).process()
 								.sendMessage(sender);
+					} catch (RoyaleProtectionBlocksException e) {
+						e.sendError(pl);
 					}
 				} else {
-					MessageBuilder.createMessage(MessageString.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix())
+					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
 							.sendMessage(sender);
 				}
 			} else {
-				MessageBuilder.createMessage(MessageString.applyPrefix(getUsage())).sendMessage(pl);
+				MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process().sendMessage(pl);
 			}
 		} else {
-			MessageBuilder.createMessage(MessageString.ERROR_CONSOLEDENIED.applyPrefix()).sendMessage(sender);
+			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 		}
-		return true;
+		return new TrueResponse();
 	}
 
 }

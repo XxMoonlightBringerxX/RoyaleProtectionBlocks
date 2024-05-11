@@ -1,12 +1,12 @@
 package company.pluginName.APIs.WorldGuard.Flags;
 
+import darkpanda73.PandaUtils.PandaAPIs.Defaults.WorldGuard.Hook.PandaAbstractWorldGuardHook;
+import darkpanda73.PandaUtils.PandaAPIs.Defaults.WorldGuard.Objects.AbstractStringSetFlag;
 import lombok.NonNull;
-import relampagorojo93.LibsCollection.Utils.Bukkit.APIs.WorldGuard.WorldGuardAPI;
-import relampagorojo93.LibsCollection.Utils.Bukkit.APIs.WorldGuard.Objects.AbstractStringSetFlag;
 
 public class BannedPlayersFlag extends AbstractStringSetFlag {
 
-	public BannedPlayersFlag(@NonNull WorldGuardAPI worldGuardApi) {
+	public BannedPlayersFlag(@NonNull PandaAbstractWorldGuardHook worldGuardApi) {
 		super(worldGuardApi);
 	}
 

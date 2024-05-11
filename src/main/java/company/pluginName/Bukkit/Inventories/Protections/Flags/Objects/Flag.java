@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.sk89q.worldguard.protection.flags.RegionGroup;
@@ -15,12 +16,16 @@ import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.MainPluginClass;
-import company.pluginName.TemporaryModules.FilePckg.Messages.MessageString;
-import darkpanda73.PandaUtils.PandaColors.NMS.MessageBuilder;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextInput;
-import darkpanda73.PandaUtils.PandaColors.Objects.TextReplacement;
-import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackUtilities;
+import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
+import company.pluginName.Modules.FilePckg.FilesService;
+import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Utils.DiscordUtilities;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder.ColorMode;
 import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
 import darkpanda73.PandaUtils.PandaYaml.Objects.YamlObject;
 import darkpanda73.PandaUtils.PandaYaml.Objects.YamlSection;
@@ -35,22 +40,29 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class Flag<T> {
 
+	@PandaInject
+	private static FilesService filesService;
+
+	@PandaInject
+	private static WorldGuardAPI worldGuardApi;
+
 	public static List<Flag<?>> FLAGS;
 
 	public static void initFlags() {
 		HashMap<String, FlagItemData> itemDatas = new HashMap<>();
 
 		try {
-			PandaYaml yaml = new PandaYaml(MainPluginClass.getPlugin().getFileModule().CONFIG_FILE.getFile());
+			PandaYaml yaml = new PandaYaml(filesService.getConfigFile().getFile());
 
-			YamlSection section = yaml.getRoot().getSection("Settings.Flags");
+			YamlSection section = yaml.getRoot().getSection("Settings.Protection.Flags");
 			if (section != null) {
 				section.getChilds().stream().filter(YamlObject::isYamlSection).map(YamlObject::asYamlSection)
 						.forEach(childSection -> {
 							try {
 								YamlData<?> group = childSection.getData("Group");
 								itemDatas.put(childSection.getName(), new FlagItemData(
-										ItemStackUtilities.mapToItem(childSection.toMap()),
+										ItemBuilder.inst().fromMap(childSection.toMap())
+												.setColorMode(ColorMode.IGNORE_COLOR).build(),
 										group != null ? RegionGroup.valueOf(group.getString().toUpperCase()) : null));
 							} catch (Exception e) {
 								e.printStackTrace();
@@ -63,7 +75,7 @@ public class Flag<T> {
 
 		List<Flag<?>> list = new ArrayList<>();
 		try {
-			List<com.sk89q.worldguard.protection.flags.Flag<?>> worldGuardFlags = MainPluginClass.getWorldGuardAPI()
+			List<com.sk89q.worldguard.protection.flags.Flag<?>> worldGuardFlags = worldGuardApi.getHook()
 					.getInternalWorldGuard().getAllFlags();
 
 			list = itemDatas.keySet().stream()
@@ -81,10 +93,13 @@ public class Flag<T> {
 	private com.sk89q.worldguard.protection.flags.Flag<T> worldGuardFlag;
 	private FlagItemData itemData;
 
-	public void setFlagValue(ProtectedRegion protectedRegion, T value) {
-		Flag.setFlagValue(worldGuardFlag, protectedRegion,
+	public void setFlagValue(Player player, Protection protection, T value) {
+		T previousValue = Flag.getFlagValue(worldGuardFlag, protection.getProtectedRegion());
+		Flag.setFlagValue(worldGuardFlag, protection.getProtectedRegion(),
 				(itemData.getRegionGroup() != null ? itemData.getRegionGroup()
 						: worldGuardFlag.getRegionGroupFlag().getDefault()),
+				value);
+		DiscordUtilities.sendFlagModificationMessage(player, protection, worldGuardFlag.getName(), previousValue,
 				value);
 	}
 
@@ -122,19 +137,16 @@ public class Flag<T> {
 			ProtectedRegion protectedRegion) {
 		Object value = getFlagValue(flag, protectedRegion);
 		if (value == null) {
-			return MessageString.INVENTORY_PROTECTION_FLAGS_NOTDEFINEDNAME.toString();
+			return Messages.MESSAGE_PROTECTIONS_FLAGS_NOTDEFINEDNAME.toString();
 		}
 
 		if (flag instanceof StateFlag) {
-			return ((State) value == State.ALLOW ? MessageString.INVENTORY_PROTECTION_FLAGS_ALLOWVALUENAME
-					: MessageString.INVENTORY_PROTECTION_FLAGS_DENYVALUENAME).toString();
+			return ((State) value == State.ALLOW ? Messages.MESSAGE_PROTECTIONS_FLAGS_ALLOWVALUENAME
+					: Messages.MESSAGE_PROTECTIONS_FLAGS_DENYVALUENAME).toString();
 		} else if (flag instanceof StringFlag) {
 			String text = (String) value;
-			return MessageBuilder
-					.createMessage(
-							TextInput.inst().text(MessageString.INVENTORY_PROTECTION_FLAGS_STRINGVALUENAME.toString())
-									.replacements(new TextReplacement("{text}", () -> text != null ? text : "---")))
-					.toString();
+			return MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_FLAGS_STRINGVALUENAME.toString())
+					.setReplacements(new Replacement("{text}", () -> text != null ? text : "---")).process().toString();
 		}
 
 		return "&7???";

@@ -1,0 +1,158 @@
+package company.pluginName.Modules.ProtectionsPckg;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
+
+import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.SQLPckg.SQLService;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.UnloadMethod;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import lombok.Getter;
+
+@PandaService
+public class ProtectionsService {
+
+	@PandaInject
+	private SQLService sqlService;
+
+	@PandaInject
+	private ProtectionBlocksService protectionBlocksService;
+
+	private @Getter HashMap<UUID, List<Protection>> protectionsByOwner = new HashMap<>();
+	private @Getter HashMap<String, List<Protection>> protectionsByWorld = new HashMap<>();
+	private @Getter HashMap<String, Protection> protectionByRegion = new HashMap<>();
+
+	@LoadMethod
+	private void load() {
+		sqlService.getProtections().stream().filter(protection -> {
+			if (Bukkit.getWorld(protection.getWorldName()) != null && protection.getProtectedRegion() == null) {
+				try {
+					MessageTemplate
+							.inst(PandaPrefixedStringField
+									.applyPrefix("&7Removing protection '" + protection.getRegionId()
+											+ "' as it couldn't be found on '" + protection.getWorldName() + "'"))
+							.process().sendMessage(Bukkit.getConsoleSender());
+
+					if (protection.getUtils().isProtectionBlockShown()) {
+						protection.getUtils().hideProtectionBlock();
+					}
+
+					if (protection.getBoundaries().isProtectionViewActive()) {
+						protection.getBoundaries().toggleProtectionView();
+					}
+
+					protection.delete().subscribe();
+				} catch (RoyaleProtectionBlocksException e) {
+					e.sendError(Bukkit.getConsoleSender());
+				}
+				return false;
+			}
+			return true;
+		}).forEach(protection -> {
+			protectionsByOwner.putIfAbsent(protection.getOwnerUuid(), new ArrayList<>());
+			protectionsByOwner.get(protection.getOwnerUuid()).add(protection);
+			protectionsByWorld.putIfAbsent(protection.getWorldName(), new ArrayList<>());
+			protectionsByWorld.get(protection.getWorldName()).add(protection);
+			protectionByRegion.put(protection.getRegionId(), protection);
+		});
+	}
+
+	@UnloadMethod
+	private void unload() {
+		this.protectionsByWorld.values().forEach(list -> list.forEach(protection -> {
+			if (protection.getBoundaries().isProtectionViewActive()) {
+				protection.getBoundaries().toggleProtectionView();
+			}
+		}));
+		this.protectionsByOwner.clear();
+		this.protectionsByWorld.clear();
+		this.protectionByRegion.clear();
+	}
+
+	/*
+	 * Register/Unregister methods
+	 */
+
+	public synchronized void registerProtection(Protection protection) {
+		protectionByRegion.put(protection.getRegionId(), protection);
+		protectionsByOwner.putIfAbsent(protection.getOwnerUuid(), new ArrayList<>());
+		protectionsByOwner.get(protection.getOwnerUuid()).add(protection);
+		protectionsByWorld.putIfAbsent(protection.getLocation().getWorld().getName(), new ArrayList<>());
+		protectionsByWorld.get(protection.getLocation().getWorld().getName()).add(protection);
+	}
+
+	public synchronized void unregisterProtection(Protection protection) {
+		protectionByRegion.remove(protection.getRegionId());
+		if (protectionsByOwner.containsKey(protection.getOwnerUuid())) {
+			protectionsByOwner.get(protection.getOwnerUuid()).remove(protection);
+		}
+		if (protectionsByWorld.containsKey(protection.getWorldName())) {
+			protectionsByWorld.get(protection.getWorldName()).remove(protection);
+		}
+	}
+
+	/*
+	 * Search methods
+	 */
+
+	public Protection findProtectionById(String id) {
+		return this.protectionByRegion.get(id);
+	}
+
+	public Protection findProtectionByLocation(Location location) {
+		return findProtectionsByLocation(location, true).stream().findFirst().orElse(null);
+	}
+
+	public List<Protection> findProtectionsByLocation(Location location) {
+		return findProtectionsByLocation(location, true);
+	}
+
+	public List<Protection> findProtectionsByLocation(Location location, boolean includeBorder) {
+		return protectionsByWorld.getOrDefault(location.getWorld().getName(), Collections.emptyList()).stream()
+				.filter((prot) -> prot.getUtils().isInside(location, includeBorder))
+				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority())).collect(Collectors.toList());
+	}
+
+	public List<Protection> findProtectionsByArea(Location location1, Location location2) {
+		return findProtectionsByArea(location1, location2, true);
+	}
+
+	public List<Protection> findProtectionsByArea(Location location1, Location location2, boolean includeBorder) {
+		return protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList()).stream()
+				.filter((prot) -> prot.getUtils().isInside(location1, location2, includeBorder))
+				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority())).collect(Collectors.toList());
+	}
+
+	public List<Protection> getAllowedProtections(OfflinePlayer pl) {
+		return protectionByRegion.values().stream().filter(prot -> prot.getOwners().list().contains(pl.getUniqueId())
+				|| prot.getMembers().list().contains(pl.getUniqueId())).collect(Collectors.toList());
+	}
+
+	public Protection findProtectionBySourceLocation(Location sourceLocation) {
+		return protectionByRegion.values().stream()
+				.filter(prot -> prot.getWorldName().equals(sourceLocation.getWorld().getName())
+						&& prot.getLocation().distance(sourceLocation) < 1D)
+				.findFirst().orElse(null);
+	}
+
+	public Protection findProtectionBySourceBlock(Block sourceBlock) {
+		return protectionByRegion.values().stream().filter(prot -> prot.getUtils().isProtectionBlock(sourceBlock))
+				.findFirst().orElse(null);
+	}
+
+}

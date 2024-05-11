@@ -49,7 +49,8 @@ public class BuySubCommand extends PandaSubCommand {
 
 	@Override
 	public boolean precondition() {
-		return vaultApi.getHook() != null && vaultApi.getHook().isHooked();
+		return vaultApi.getHook() != null && vaultApi.getHook().isHooked() && protectionBlocksService
+				.getProtectionBlocks().values().stream().anyMatch(block -> block.getInformation().isForSale());
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchPlayerInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
@@ -55,7 +56,8 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 
 	@ItemGenerator("Search-button")
 	private ItemStack generateSearchButton(Item item) {
-		return protection.canAddOwner(getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+		return ProtectionUtilities.canAddOwner(protection, getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY)
+				: null;
 	}
 
 	@ItemExecutor("Close-button")
@@ -84,7 +86,7 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 	protected ItemStack generateEntityItem(UUID entity) {
 		OfflinePlayer pl = OfflinePlayerUtilities.getOfflinePlayer(entity);
 
-		final boolean canRemove = protection.canRemoveOwner(getPlayer());
+		final boolean canRemove = ProtectionUtilities.canRemoveOwner(protection, getPlayer());
 
 		ItemBuilder builder = ItemBuilder.inst().setMaterial(Material.PLAYER_HEAD)
 				.fromMap(getChestInventoryData().getCustomFields(), PagedChestInventoryData.ENTITY_PATH)
@@ -102,7 +104,7 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 
 	@Override
 	protected void onEntityClick(InventoryClickEvent e, UUID entity) {
-		final boolean canRemove = protection.canRemoveOwner(getPlayer());
+		final boolean canRemove = ProtectionUtilities.canRemoveOwner(protection, getPlayer());
 
 		if (canRemove) {
 			new ConfirmationInventory(getPlayer(), () -> {

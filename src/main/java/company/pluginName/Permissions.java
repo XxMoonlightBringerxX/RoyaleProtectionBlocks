@@ -15,10 +15,6 @@ public class Permissions {
 	public static final String PROTECTION_LIST_OTHERS = "protectionblocks.list.others";
 	public static final String PROTECTION_DELETE_OTHERS = "protectionblocks.delete.others";
 	public static final String PROTECTION_MANAGE_OTHERS = "protectionblocks.manage.others";
-	public static final String PROTECTION_ID_OTHERS = "protectionblocks.id.others";
-	public static final String PROTECTION_RENAME_OTHERS = "protectionblocks.rename.others";
-	public static final String PROTECTION_VIEW_OTHERS = "protectionblocks.view.others";
-	public static final String PROTECTION_TOGGLEBLOCK_OTHERS = "protectionblocks.toggleblock.others";
 	public static final String PROTECTION_MEMBERS_ADD_OTHERS = "protectionblocks.members.add.others";
 	public static final String PROTECTION_MEMBERS_REMOVE_OTHERS = "protectionblocks.members.remove.others";
 	public static final String PROTECTION_BANNEDS_ADD_OTHERS = "protectionblocks.banneds.add.others";
@@ -28,6 +24,7 @@ public class Permissions {
 	public static final String PROTECTION_KICK_BYPASS = "protectionblocks.kick.bypass";
 	public static final String PROTECTION_OWNERS_ADD_OTHERS = "protectionblocks.owners.add.others";
 	public static final String PROTECTION_OWNERS_REMOVE_OTHERS = "protectionblocks.owners.remove.others";
+	public static final String PROTECTION_INFO_OTHERS = "protectionblocks.info.others";
 	public static final String PROTECTION_OVERLAP_BYPASS = "protectionblocks.overlap.bypass";
 	public static final String PROTECTION_MAX_BYPASS = "protectionblocks.max.bypass";
 	public static final String PROTECTION_ECONOMY_BYPASS = "protectionblocks.economy.bypass";
@@ -37,7 +34,6 @@ public class Permissions {
 	public static final String PROTECTION_TRANSFER = "protectionblocks.transfer";
 	public static final String PROTECTION_PURGE = "protectionblocks.purge";
 	public static final String PROTECTION_SPAWN = "protectionblocks.setspawn";
-	public static final String PROTECTION_SETSPAWN = "protectionblocks.setspawn";
 
 	public static final String PROTECTION_BLOCKS = "protectionblocks.blocks";
 	public static final String PROTECTION_BLOCKS_CREATE = "protectionblocks.blocks.create";
@@ -48,6 +44,10 @@ public class Permissions {
 	public static final String PROTECTION_FILES = "protectionblocks.files";
 	public static final String PROTECTION_FILES_EXPORT = "protectionblocks.files.export";
 	public static final String PROTECTION_FILES_IMPORT = "protectionblocks.files.import";
+
+	public static final String PROTECTION_ADMIN = "protectionblocks.admin";
+	public static final String PROTECTION_ADMIN_SETSPAWN = "protectionblocks.admin.setspawn";
+	public static final String PROTECTION_ADMIN_RESETFLAGS = "protectionblocks.admin.resetflags";
 
 	private static final String PROTECTION_MAX_PREFIX = "protectionblocks.max.";
 

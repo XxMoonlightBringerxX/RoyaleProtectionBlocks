@@ -67,7 +67,7 @@ public class ProtectionFlagsInventory extends PagedChestInventoryObject<Flag<?>>
 	protected void onEntityClick(InventoryClickEvent e, Flag<?> entity) {
 		if (entity.getWorldGuardFlag() instanceof StateFlag) {
 			Flag<State> stateFlag = (Flag<State>) entity;
-			stateFlag.setFlagValue(protectedRegion,
+			stateFlag.setFlagValue(getPlayer(), protection,
 					stateFlag.getFlagValue(protectedRegion) == State.ALLOW ? State.DENY : State.ALLOW);
 			updateInventory();
 		} else if (entity.getWorldGuardFlag() instanceof StringFlag) {
@@ -75,7 +75,7 @@ public class ProtectionFlagsInventory extends PagedChestInventoryObject<Flag<?>>
 			try {
 				messagesListener.startListening(e.getWhoClicked().getUniqueId(), (message) -> {
 					if (!message.equalsIgnoreCase("cancel")) {
-						stringFlag.setFlagValue(protectedRegion, message);
+						stringFlag.setFlagValue(getPlayer(), protection, message);
 					}
 					openInventory();
 					return true;

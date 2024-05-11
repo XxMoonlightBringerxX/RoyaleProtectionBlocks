@@ -1,4 +1,4 @@
-package company.pluginName.Bukkit.Events;
+package company.pluginName.Bukkit.Events.Listeners;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +15,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
@@ -33,7 +34,7 @@ import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackData.ItemStackDa
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
 @PandaListener
-public class ProtectionBlockEvents implements Listener {
+public class ProtectionBlockListener implements Listener {
 
 	@PandaInject
 	private MainPluginClass plugin;
@@ -61,6 +62,7 @@ public class ProtectionBlockEvents implements Listener {
 
 		if (!e.isCancelled() && e.canBuild()) {
 			switch (EventsUtils.onVanillaBlockPlaceEvent(e.getPlayer(), e.getBlock(), e.getHand(), e.getItemInHand())) {
+			case SUCCESS:
 			case CANCEL:
 				e.setBuild(false);
 				e.setCancelled(true);
@@ -91,9 +93,6 @@ public class ProtectionBlockEvents implements Listener {
 		if (!e.isCancelled()) {
 			switch (EventsUtils.onVanillaBlockBreakEvent(e.getPlayer(), e.getBlock())) {
 			case SUCCESS:
-				e.setDropItems(false);
-				e.setExpToDrop(0);
-				break;
 			case CANCEL:
 				e.setCancelled(true);
 				break;
@@ -117,7 +116,7 @@ public class ProtectionBlockEvents implements Listener {
 		if (e.getHand() != null && e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
 			switch (e.getHand().name()) {
 			case "HAND":
-				Protection protection = protectionsService.getProtectionByBlock(e.getClickedBlock().getLocation());
+				Protection protection = protectionsService.findProtectionBySourceBlock(e.getClickedBlock());
 				if (protection != null) {
 					e.setCancelled(true);
 					EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
@@ -158,7 +157,7 @@ public class ProtectionBlockEvents implements Listener {
 		List<Protection> protections = protectionsService.getProtectionsByWorld()
 				.getOrDefault(e.getRightClicked().getWorld().getName(), new ArrayList<>());
 		for (Protection protection : protections) {
-			if (protection.isProtectionViewEntity(e.getRightClicked())) {
+			if (protection.getBoundaries().isProtectionViewEntity(e.getRightClicked())) {
 				e.setCancelled(true);
 				EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
 				break;
@@ -170,49 +169,55 @@ public class ProtectionBlockEvents implements Listener {
 	 * Protection block external removal prevention events
 	 */
 
-	@EventHandler(ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onExplodeEntity(EntityExplodeEvent e) {
-		e.blockList().removeIf(block -> protectionsService.getProtectionByBlock(block.getLocation()) != null);
+		e.blockList().removeIf(block -> protectionsService.findProtectionBySourceBlock(block) != null);
 	}
 
-	@EventHandler(ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onExplodeBlock(BlockExplodeEvent e) {
-		e.blockList().removeIf(block -> protectionsService.getProtectionByBlock(block.getLocation()) != null);
+		e.blockList().removeIf(block -> protectionsService.findProtectionBySourceBlock(block) != null);
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onMobGrief(EntityChangeBlockEvent e) {
-		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getBlock());
 		if (protection != null) {
 			e.setCancelled(true);
 		}
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onBlockFromTo(BlockFromToEvent e) {
-		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getToBlock());
 		if (protection != null) {
 			e.setCancelled(true);
 		}
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPistonExtend(BlockPistonExtendEvent e) {
-		if (e.getBlocks().stream()
-				.anyMatch(block -> protectionsService.getProtectionByBlock(block.getLocation()) != null)) {
+		if (e.getBlocks().stream().anyMatch(block -> protectionsService.findProtectionBySourceBlock(block) != null)) {
 			e.setCancelled(true);
 		}
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onDamageEntity(EntityDamageEvent e) {
 		List<Protection> protections = protectionsService.getProtectionsByWorld()
 				.getOrDefault(e.getEntity().getWorld().getName(), new ArrayList<>());
 		for (Protection protection : protections) {
-			if (protection.isProtectionViewEntity(e.getEntity())) {
+			if (protection.getBoundaries().isProtectionViewEntity(e.getEntity())) {
 				e.setCancelled(true);
 				break;
 			}
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public void onBucketFill(PlayerBucketEmptyEvent e) {
+		if (protectionsService.findProtectionBySourceBlock(e.getBlockClicked().getRelative(e.getBlockFace())) != null) {
+			e.setCancelled(true);
 		}
 	}
 

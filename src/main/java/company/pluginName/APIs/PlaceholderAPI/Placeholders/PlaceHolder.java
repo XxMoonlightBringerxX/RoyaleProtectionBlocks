@@ -1,16 +1,18 @@
 package company.pluginName.APIs.PlaceholderAPI.Placeholders;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import org.bukkit.entity.Player;
 
 import com.sk89q.worldguard.protection.flags.Flag;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.Permissions;
 import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
@@ -32,6 +34,9 @@ public class PlaceHolder extends PlaceholderExpansion {
 
 	@PandaInject
 	private static ProtectionBlocksService protectionBlocksService;
+
+	@PandaInject
+	private static PlayerDataService playerDataService;
 
 	@Override
 	public String getAuthor() {
@@ -57,15 +62,15 @@ public class PlaceHolder extends PlaceholderExpansion {
 	public String onPlaceholderRequest(Player player, String identifier) {
 		if (player != null) {
 			if (identifier.toLowerCase().startsWith(PROTECTION_FLAG_PREFIX)) {
-				ProtectedRegion region = getRegionIn(player);
-				if (region != null) {
+				Protection protection = getProtectionIn(player);
+				if (protection != null) {
 					String flagName = identifier.substring(PROTECTION_FLAG_PREFIX.length());
 					try {
 						Optional<Flag<?>> foundFlag = worldGuardApi.getHook().getInternalWorldGuard().getAllFlags()
 								.stream().filter(flag -> flag.getName().equals(flagName)).findFirst();
 						if (foundFlag.isPresent()) {
 							String flagValue = company.pluginName.Bukkit.Inventories.Protections.Flags.Objects.Flag
-									.getFlagValueAsString(foundFlag.get(), region);
+									.getFlagValueAsString(foundFlag.get(), protection.getProtectedRegion());
 							return flagValue != null ? flagValue : "";
 						}
 					} catch (Exception e) {
@@ -140,29 +145,16 @@ public class PlaceHolder extends PlaceholderExpansion {
 		return "";
 	}
 
-	private ProtectedRegion getRegionIn(Player player) {
-		try {
-			return worldGuardApi.getHook().getInternalWorldGuard().getApplicableRegions(player.getLocation())
-					.getRegions().stream()
-					.filter(region -> protectionsService.getProtectionByRegion().get(region.getId()) != null)
-					.findFirst().orElse(null);
-		} catch (Exception e) {
+	private List<Protection> getProtectionsIn(Player player) {
+		PlayerData playerData = playerDataService.getPlayerData(player);
+		if (playerData != null) {
+			return playerData.getCurrentProtections();
 		}
-		return null;
+		return Collections.emptyList();
 	}
 
 	private Protection getProtectionIn(Player player) {
-		try {
-			Optional<ProtectedRegion> foundRegion = worldGuardApi.getHook().getInternalWorldGuard()
-					.getApplicableRegions(player.getLocation()).getRegions().stream()
-					.filter(region -> protectionsService.getProtectionByRegion().get(region.getId()) != null)
-					.findFirst();
-
-			if (foundRegion.isPresent()) {
-				return protectionsService.getProtectionByRegion().get(foundRegion.get().getId());
-			}
-		} catch (Exception e) {
-		}
-		return null;
+		return getProtectionsIn(player).stream().findFirst().orElse(null);
 	}
+
 }

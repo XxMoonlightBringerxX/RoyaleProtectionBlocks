@@ -8,12 +8,14 @@ import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.ProtectionsPurgeService;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration;
+import company.pluginName.Utils.DiscordUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -93,6 +95,10 @@ public class PurgeSubCommand extends PandaSubCommand {
 										.purgeProtections(protectionsToPurge);
 
 								List<Protection> removedProtections = removedProtectionsTask.get();
+
+								DiscordUtilities.sendPurgeSummaryMessage(
+										sender instanceof Player ? (Player) sender : null, purgeConfiguration,
+										removedProtections);
 
 								MessageTemplate.inst(Messages.MESSAGE_PURGE_END.applyPrefix())
 										.setReplacements(new Replacement("{amount}",

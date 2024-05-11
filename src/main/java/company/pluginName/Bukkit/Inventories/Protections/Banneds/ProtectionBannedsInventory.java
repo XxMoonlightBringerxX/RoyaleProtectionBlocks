@@ -17,6 +17,7 @@ import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchPlayerInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
@@ -60,7 +61,8 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 
 	@ItemGenerator("Search-button")
 	private ItemStack generateSearchButton(Item item) {
-		return protection.canAddBanned(getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+		return ProtectionUtilities.canAddBanned(protection, getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY)
+				: null;
 	}
 
 	@ItemExecutor("Close-button")
@@ -89,7 +91,7 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 	protected ItemStack generateEntityItem(UUID entity) {
 		OfflinePlayer pl = OfflinePlayerUtilities.getOfflinePlayer(entity);
 
-		final boolean canRemove = protection.canRemoveMember(getPlayer());
+		final boolean canRemove = ProtectionUtilities.canRemoveMember(protection, getPlayer());
 
 		ItemBuilder builder = ItemBuilder.inst().setMaterial(Material.PLAYER_HEAD)
 				.fromMap(getChestInventoryData().getCustomFields(), PagedChestInventoryData.ENTITY_PATH)
@@ -107,7 +109,7 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 
 	@Override
 	protected void onEntityClick(InventoryClickEvent e, UUID entity) {
-		final boolean canRemove = protection.canRemoveBanned(getPlayer());
+		final boolean canRemove = ProtectionUtilities.canRemoveBanned(protection, getPlayer());
 
 		if (canRemove) {
 			new ConfirmationInventory(getPlayer(), () -> {

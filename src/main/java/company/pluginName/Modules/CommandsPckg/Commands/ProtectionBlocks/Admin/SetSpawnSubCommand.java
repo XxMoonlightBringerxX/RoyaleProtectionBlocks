@@ -1,10 +1,11 @@
-package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
+package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin;
 
 import java.io.IOException;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.Permissions;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -17,13 +18,14 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubComma
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 
-@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaSubCommandAnnotation(parentCommand = AdminCommand.class)
 @PandaCommandAnnotation(
 		id = "setspawn",
 		pathName = "Set-spawn",
 		defaultName = "setspawn",
 		defaultDescription = "Specify the spawn configured for the plugin. This one is mostly used to send players after being kicked or banned from a protection",
-		defaultAliases = "ss")
+		defaultAliases = "ss",
+		defaultPermission = Permissions.PROTECTION_ADMIN_SETSPAWN)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,

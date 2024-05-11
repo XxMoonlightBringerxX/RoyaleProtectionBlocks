@@ -16,18 +16,8 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
-@PandaCommandAnnotation(
-		id = "sethome",
-		pathName = "Set-home",
-		defaultName = "sethome",
-		defaultDescription = "Set the home on your current protection",
-		defaultAliases = "sh")
-@PandaCommandAnnotation.Customizable(
-		cooldown = true,
-		aliases = true,
-		description = true,
-		name = true,
-		permission = true)
+@PandaCommandAnnotation(id = "sethome", pathName = "Set-home", defaultName = "sethome", defaultDescription = "Set the home on your current protection", defaultAliases = "sh")
+@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true)
 public class SetHomeSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -42,7 +32,7 @@ public class SetHomeSubCommand extends PandaSubCommand {
 			boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			Protection protection = protectionsService.getProtectionByLocation(pl.getLocation());
+			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 			if (protection != null) {
 				if (protection.isMainOwner(pl.getUniqueId())) {
 					try {

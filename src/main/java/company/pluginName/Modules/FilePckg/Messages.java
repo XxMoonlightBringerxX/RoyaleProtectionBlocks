@@ -28,6 +28,9 @@ public class Messages {
 			"Message.Protections.ID-set-successfully", "&aThe protection's custom ID has been set successfully!");
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Renamed-successfully", "&aThe protection's name has been changed successfully!");
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_DISPLAYITEMCHANGEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Display-item-changed-successfully",
+			"&aThe protection's display item has been changed successfully!");
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_HIDDENSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Hidden-successfully", "&aThe protection block has been hidden successfully!");
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY = new PandaPrefixedStringField(

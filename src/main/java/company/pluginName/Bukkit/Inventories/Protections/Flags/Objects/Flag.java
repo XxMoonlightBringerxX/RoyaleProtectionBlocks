@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.sk89q.worldguard.protection.flags.RegionGroup;
@@ -18,6 +19,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Utils.DiscordUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -90,10 +93,13 @@ public class Flag<T> {
 	private com.sk89q.worldguard.protection.flags.Flag<T> worldGuardFlag;
 	private FlagItemData itemData;
 
-	public void setFlagValue(ProtectedRegion protectedRegion, T value) {
-		Flag.setFlagValue(worldGuardFlag, protectedRegion,
+	public void setFlagValue(Player player, Protection protection, T value) {
+		T previousValue = Flag.getFlagValue(worldGuardFlag, protection.getProtectedRegion());
+		Flag.setFlagValue(worldGuardFlag, protection.getProtectedRegion(),
 				(itemData.getRegionGroup() != null ? itemData.getRegionGroup()
 						: worldGuardFlag.getRegionGroupFlag().getDefault()),
+				value);
+		DiscordUtilities.sendFlagModificationMessage(player, protection, worldGuardFlag.getName(), previousValue,
 				value);
 	}
 

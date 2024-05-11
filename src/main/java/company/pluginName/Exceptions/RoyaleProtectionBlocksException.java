@@ -27,7 +27,7 @@ public class RoyaleProtectionBlocksException extends Exception {
 	}
 
 	public RoyaleProtectionBlocksException(PandaThrowableField<RoyaleProtectionBlocksException> exceptionType,
-			Exception exception) {
+			Throwable exception) {
 		super(exceptionType.getContent(), exception);
 		this.exceptionType = exceptionType;
 	}

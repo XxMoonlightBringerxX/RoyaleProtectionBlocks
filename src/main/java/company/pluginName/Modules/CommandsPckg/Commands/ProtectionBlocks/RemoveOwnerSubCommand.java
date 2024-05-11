@@ -23,20 +23,8 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
-@PandaCommandAnnotation(
-		id = "removeowner",
-		pathName = "Remove-owner",
-		defaultName = "removeowner",
-		defaultDescription = "Remove an owner on your current protection",
-		defaultUsage = "<username>",
-		defaultAliases = "ro")
-@PandaCommandAnnotation.Customizable(
-		cooldown = true,
-		aliases = true,
-		description = true,
-		name = true,
-		permission = true,
-		usage = true)
+@PandaCommandAnnotation(id = "removeowner", pathName = "Remove-owner", defaultName = "removeowner", defaultDescription = "Remove an owner on your current protection", defaultUsage = "<username>", defaultAliases = "ro")
+@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true, usage = true)
 public class RemoveOwnerSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -61,7 +49,7 @@ public class RemoveOwnerSubCommand extends PandaSubCommand {
 			Player pl = sender instanceof Player ? (Player) sender : null;
 			if (pl != null) {
 				if (args.length > 1) {
-					Protection protection = protectionsService.getProtectionByLocation(pl.getLocation());
+					Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 					if (protection != null) {
 						OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(args[1]);
 						if (owner != null) {

@@ -1,4 +1,4 @@
-package company.pluginName.Bukkit.Events;
+package company.pluginName.Bukkit.Events.Listeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,7 +19,7 @@ import dev.lone.itemsadder.api.Events.CustomBlockInteractEvent;
 import dev.lone.itemsadder.api.Events.CustomBlockPlaceEvent;
 
 @PandaListener(optional = true)
-public class ItemsAdderEvents implements Listener {
+public class ItemsAdderListener implements Listener {
 
 	@PandaInject
 	private MainPluginClass plugin;
@@ -55,6 +55,7 @@ public class ItemsAdderEvents implements Listener {
 
 			if (!e.isCancelled()) {
 				switch (EventsUtils.onItemsAdderBlockPlaceEvent(e.getPlayer(), e.getBlock(), null, item)) {
+				case SUCCESS:
 				case CANCEL:
 					e.setCancelled(true);
 					break;
@@ -69,7 +70,7 @@ public class ItemsAdderEvents implements Listener {
 
 	@EventHandler
 	public void onCustomBlockInteractEvent(CustomBlockInteractEvent e) {
-		Protection protection = protectionsService.getProtectionByBlock(e.getBlockClicked().getLocation());
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getBlockClicked());
 		if (protection != null) {
 			e.setCancelled(true);
 			EventsUtils.onItemsAdderBlockInteractEvent(e.getPlayer(), protection);

@@ -1,4 +1,4 @@
-package company.pluginName.Bukkit.Events;
+package company.pluginName.Bukkit.Events.Listeners;
 
 import org.bukkit.entity.Player;
 
@@ -10,7 +10,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 
 @PandaListener
-public class RecipeEvents extends CustomRecipesListener<Recipe> {
+public class RecipeListener extends CustomRecipesListener<Recipe> {
 
 	@PandaInject
 	private RecipesService recipesService;

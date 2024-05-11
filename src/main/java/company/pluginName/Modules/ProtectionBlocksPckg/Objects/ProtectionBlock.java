@@ -2,7 +2,6 @@ package company.pluginName.Modules.ProtectionBlocksPckg.Objects;
 
 import java.util.ArrayList;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -140,23 +139,31 @@ public class ProtectionBlock {
 		this.delete(null);
 	}
 
-	public void delete(Player pl) throws RoyaleProtectionBlocksException {
-		if (pl != null) {
-			if (!pl.hasPermission(Permissions.PROTECTION_BLOCKS_DELETE)) {
+	public void delete(Player player) throws RoyaleProtectionBlocksException {
+		if (player != null) {
+			if (!player.hasPermission(Permissions.PROTECTION_BLOCKS_DELETE)) {
 				throw Exceptions.Protections.Blocks.Delete.PERMISSIONDENIED.generateException();
 			}
 		}
 
-		sqlService.deleteProtectionBlock(this);
-		protectionBlocksService.unregisterProtectionBlock(this);
 		protectionsService.getProtectionsByWorld().values()
 				.forEach(protections -> new ArrayList<>(protections).forEach(protection -> {
+					if (protection.getUtils().isProtectionBlockShown()) {
+						protection.getUtils().hideProtectionBlock();
+					}
+
+					if (protection.getBoundaries().isProtectionViewActive()) {
+						protection.getBoundaries().toggleProtectionView();
+					}
+
 					try {
-						protectionsService.removeProtection(protection, true);
-					} catch (RoyaleProtectionBlocksException e) {
-						e.sendError(Bukkit.getConsoleSender());
+						protection.delete().subscribe();
+					} catch (RoyaleProtectionBlocksException e1) {
+						e1.printStackTrace();
 					}
 				}));
+		sqlService.deleteProtectionBlock(this);
+		protectionBlocksService.unregisterProtectionBlock(this);
 	}
 
 	public void copy(ProtectionBlock protectionBlock) {

@@ -1,4 +1,4 @@
-package company.pluginName.Bukkit.Events;
+package company.pluginName.Bukkit.Events.Listeners;
 
 import java.util.ArrayList;
 
@@ -9,6 +9,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 
+import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Settings;
@@ -16,6 +17,7 @@ import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -23,16 +25,22 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
 @PandaListener
-public class BukkitEvents implements Listener {
+public class BukkitListener implements Listener {
 
 	@PandaInject
 	private ProtectionBlocksService protectionBlocksService;
+
+	@PandaInject
+	private ProtectionSettingsService protectionSettingsService;
 
 	@PandaInject
 	private ProtectionsService protectionsService;
 
 	@PandaInject
 	private PlayerDataService playerDataService;
+
+	@PandaInject
+	private WorldGuardAPI worldGuardApi;
 
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent e) {
@@ -44,7 +52,6 @@ public class BukkitEvents implements Listener {
 					e.getPlayer().getInventory().addItem(block.getInformation().generateItem());
 				} catch (RoyaleProtectionBlocksException e1) {
 					e1.sendError(Bukkit.getConsoleSender());
-					return;
 				}
 			}
 		}
@@ -54,17 +61,24 @@ public class BukkitEvents implements Listener {
 	public void onWorldLoad(WorldLoadEvent e) {
 		protectionsService.getProtectionsByWorld().getOrDefault(e.getWorld().getName(), new ArrayList<>())
 				.forEach(protection -> {
-					if (protection.getProtectedRegion() == null) {
-						try {
-							MessageTemplate
-									.inst(PandaPrefixedStringField.applyPrefix("&7Removing protection '"
-											+ protection.getRegionId() + "' as it couldn't be found on '"
-											+ protection.getWorldName() + "'"))
-									.process().sendMessage(Bukkit.getConsoleSender());
-							protectionsService.removeProtection(protection);
-						} catch (RoyaleProtectionBlocksException e1) {
-							e1.sendError(Bukkit.getConsoleSender());
-						}
+					MessageTemplate
+							.inst(PandaPrefixedStringField
+									.applyPrefix("&7Removing protection '" + protection.getRegionId()
+											+ "' as it couldn't be found on '" + protection.getWorldName() + "'"))
+							.process().sendMessage(Bukkit.getConsoleSender());
+
+					if (protection.getUtils().isProtectionBlockShown()) {
+						protection.getUtils().hideProtectionBlock();
+					}
+
+					if (protection.getBoundaries().isProtectionViewActive()) {
+						protection.getBoundaries().toggleProtectionView();
+					}
+
+					try {
+						protection.delete().subscribe();
+					} catch (RoyaleProtectionBlocksException e1) {
+						e1.printStackTrace();
 					}
 				});
 	}

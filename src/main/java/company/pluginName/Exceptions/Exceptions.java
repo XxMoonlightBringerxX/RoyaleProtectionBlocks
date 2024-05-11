@@ -17,13 +17,21 @@ public class Exceptions {
 		}
 
 		@Override
-		public RoyaleProtectionBlocksException generateException(Exception e) {
+		public RoyaleProtectionBlocksException generateException(Throwable e) {
 			return new RoyaleProtectionBlocksException(this, e);
 		}
 
 	}
 
 	public static class Protections {
+
+		public static class General {
+
+			public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
+					"Error.Exception.protection.delete.PermissionDenied",
+					"&cYou aren't allowed to do this in this protection!");
+
+		}
 
 		public static class Delete {
 
@@ -37,6 +45,18 @@ public class Exceptions {
 					"&cThere was an error trying to delete this protection in the database. Please contact with an administrator!");
 			public static final ThrowableField UNKNOWN = new ThrowableField("Error.Exception.protection.delete.Unknown",
 					"&cAn unknown error happened while trying to delete this protection. Please contact with an administrator!");
+			public static final ThrowableField INPROGRESS = new ThrowableField(
+					"Error.Exception.protection.delete.InProgress",
+					"&cThere's already a removal of a protection in this location in progress!");
+			public static final ThrowableField VIEWACTIVE = new ThrowableField(
+					"Error.Exception.protection.delete.ViewActive",
+					"&cTo remove the protection, first turn off the view!");
+			public static final ThrowableField BLOCKSHOWN = new ThrowableField(
+					"Error.Exception.protection.delete.BlockShown",
+					"&cTo remove the protection, first hide the block!");
+			public static final ThrowableField CANCELLED = new ThrowableField(
+					"Error.Exception.protection.delete.Cancelled",
+					"&cAnother plugin has cancelled the removal of this protection!");
 
 		}
 
@@ -52,6 +72,9 @@ public class Exceptions {
 					"Error.Exception.protection.save.NameInUse", "&cThere's already a protection using this name!");
 			public static final ThrowableField OVERLAPS = new ThrowableField("Error.Exception.protection.save.Overlaps",
 					"&cYou can't put protections inside other existing ones!");
+			public static final ThrowableField OVERLAPSOFFSET = new ThrowableField(
+					"Error.Exception.protection.save.OverlapsOffset",
+					"&cYou can't put protections close to other protections which are &e%offset% blocks&c from here!");
 			public static final ThrowableField ALREADYOCCUPIED = new ThrowableField(
 					"Error.Exception.protection.save.AlreadyOccupied",
 					"&cThere's already a protection placed on this location!");
@@ -64,6 +87,12 @@ public class Exceptions {
 					"&cAn unknown error happened while trying to save this protection. Please contact with an administrator!");
 			public static final ThrowableField NOVISIBLETEXT = new ThrowableField(
 					"Error.Exception.protection.save.NoVisibleText", "&cThe text you're typing must be visible!");
+			public static final ThrowableField INPROGRESS = new ThrowableField(
+					"Error.Exception.protection.save.InProgress",
+					"&cThere's already a creation of a protection in this location in progress!");
+			public static final ThrowableField CANCELLED = new ThrowableField(
+					"Error.Exception.protection.save.Cancelled",
+					"&cAnother plugin has cancelled the creation of this protection!");
 
 		}
 

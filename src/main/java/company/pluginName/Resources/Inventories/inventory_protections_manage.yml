@@ -18,6 +18,15 @@ Items:
       - "&a&oLocation: &ex={location_x},y={location_y},z={location_z}"
       - "&a&oSize: &e{size_x}x{size_y}x{size_z}"
     Slots: "11"
+  Change-display-item-button:
+    Display-item:
+      Name: "&eChange display item"
+      Lore:
+      - "&0"
+      - " &8&o- &aLeft click (Item in hand): &eChange display item"
+      - " &8&o- &aLeft click (Empty hand): &eReset display item"
+    Slots: "20"
+    Version: 3
   Close-button:
     Display-item:
       Type: "PLAYER_HEAD"

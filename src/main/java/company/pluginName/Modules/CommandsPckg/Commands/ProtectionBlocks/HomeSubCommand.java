@@ -73,7 +73,7 @@ public class HomeSubCommand extends PandaSubCommand {
 						.findFirst();
 				if (protection.isPresent()) {
 					try {
-						protection.get().sendHome(pl);
+						protection.get().getActions().teleportToHome(pl);
 						return new TrueResponse();
 					} catch (RoyaleProtectionBlocksException e) {
 						e.sendError(pl);

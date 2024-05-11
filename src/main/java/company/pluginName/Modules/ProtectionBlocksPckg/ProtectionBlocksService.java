@@ -40,16 +40,24 @@ public class ProtectionBlocksService {
 		load();
 	}
 
-	public ProtectionBlock getProtectionBlockById(String id) {
-		return protectionBlocks.get(id.toLowerCase());
-	}
+	/*
+	 * Register/Unregister methods
+	 */
 
-	public void registerProtectionBlock(ProtectionBlock protectionBlock) {
+	public synchronized void registerProtectionBlock(ProtectionBlock protectionBlock) {
 		protectionBlocks.putIfAbsent(protectionBlock.getInformation().getId().toLowerCase(), protectionBlock);
 	}
 
-	public void unregisterProtectionBlock(ProtectionBlock protectionBlock) {
+	public synchronized void unregisterProtectionBlock(ProtectionBlock protectionBlock) {
 		protectionBlocks.remove(protectionBlock.getInformation().getId());
+	}
+
+	/*
+	 * Search methods
+	 */
+
+	public ProtectionBlock getProtectionBlockById(String id) {
+		return protectionBlocks.get(id.toLowerCase());
 	}
 
 }

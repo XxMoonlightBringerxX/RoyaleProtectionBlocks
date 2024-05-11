@@ -21,20 +21,8 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
-@PandaCommandAnnotation(
-		id = "rename",
-		pathName = "Rename",
-		defaultName = "rename",
-		defaultDescription = "Rename your current protection name",
-		defaultUsage = "<new name>",
-		defaultAliases = "rn")
-@PandaCommandAnnotation.Customizable(
-		cooldown = true,
-		aliases = true,
-		description = true,
-		name = true,
-		permission = true,
-		usage = true)
+@PandaCommandAnnotation(id = "rename", pathName = "Rename", defaultName = "rename", defaultDescription = "Rename your current protection name", defaultUsage = "<new name>", defaultAliases = "rn")
+@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true, usage = true)
 public class RenameSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -50,20 +38,15 @@ public class RenameSubCommand extends PandaSubCommand {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			if (args.length > 1) {
-				Protection protection = protectionsService.getProtectionByLocation(pl.getLocation());
+				Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 				if (protection != null) {
-					if (protection.isMainOwner(pl.getUniqueId())) {
-						try {
-							protection.setDisplayName(pl, Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
-									.collect(Collectors.joining(" ")));
-							MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY.applyPrefix())
-									.process().sendMessage(sender);
-						} catch (RoyaleProtectionBlocksException e) {
-							e.sendError(pl);
-						}
-					} else {
-						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTMAINOWNER.applyPrefix()).process()
+					try {
+						protection.setDisplayName(pl, Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
+								.collect(Collectors.joining(" ")));
+						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY.applyPrefix()).process()
 								.sendMessage(sender);
+					} catch (RoyaleProtectionBlocksException e) {
+						e.sendError(pl);
 					}
 				} else {
 					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()

@@ -30,9 +30,10 @@ import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Column;
 import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Table;
 import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Constraints.ForeignConstraint;
 import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Constraints.UniqueConstraint;
+import darkpanda73.PandaUtils.PandaUtilities.Location.LocationReference;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
-@PandaSQLConfig(allowMySQL = true, version = 5)
+@PandaSQLConfig(allowMySQL = true, version = 7)
 public class SQLService extends PandaSQLService {
 
 	@Override
@@ -46,9 +47,13 @@ public class SQLService extends PandaSQLService {
 								new Column(t, "CustomRegionId", "VARCHAR(256)", Types.VARCHAR),
 								new Column(t, "OwnerUuid", "CHAR(36)", Types.CHAR).setNotNull(true),
 								new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
+								new Column(t, "DisplayItem", "BLOB", Types.BLOB).setNotNull(false),
 								new Column(t, "WorldName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
 								new Column(t, "DisplayName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "CreatedDate", "BIGINT", Types.BIGINT).setNotNull(false))
+								new Column(t, "CreatedDate", "BIGINT", Types.BIGINT).setNotNull(false),
+								new Column(t, "LocationX", "INTEGER", Types.INTEGER).setNotNull(false),
+								new Column(t, "LocationY", "INTEGER", Types.INTEGER).setNotNull(false),
+								new Column(t, "LocationZ", "INTEGER", Types.INTEGER).setNotNull(false))
 						.addUniqueConstraint(
 								new UniqueConstraint(t.getColumn("CustomRegionId"), t.getColumn("OwnerUuid"))))
 				.addTable(
@@ -87,20 +92,31 @@ public class SQLService extends PandaSQLService {
 		List<Protection> protections = new ArrayList<>();
 		try (ResultSet set = this.getDatabase().select(Arrays.asList(this.getDatabase().getTable("Protections")))) {
 			while (set.next()) {
+				Protection protection;
+
 				long createdDate = set.getLong("CreatedDate");
 
+				protection = new Protection(set.getString("RegionId"), UUID.fromString(set.getString("ownerUuid")),
+						new ReferencedProtectionBlock(set.getString("ProtectionBlockId")), set.getString("WorldName"),
+						set.getString("DisplayName"), createdDate > 0 ? createdDate : System.currentTimeMillis());
+
+				if (set.getString("DisplayItem") != null) {
+					try {
+						protection.getDisplayItem().set(ItemStacksUtils.itemsParse(set.getBytes("DisplayItem"))[0]);
+					} catch (IllegalArgumentException e) {
+					}
+				}
+
+				if (set.getObject("LocationX") != null && set.getObject("LocationY") != null
+						&& set.getObject("LocationZ") != null) {
+					protection.setLocation(new LocationReference(set.getString("WorldName"), set.getInt("LocationX"),
+							set.getInt("LocationY"), set.getInt("LocationZ")));
+				}
+
+				protections.add(protection);
+
 				if (createdDate == 0) {
-					Protection protection = new Protection(set.getString("RegionId"),
-							UUID.fromString(set.getString("ownerUuid")),
-							new ReferencedProtectionBlock(set.getString("ProtectionBlockId")),
-							set.getString("WorldName"), set.getString("DisplayName"), System.currentTimeMillis());
 					saveProtection(protection);
-					protections.add(protection);
-				} else {
-					protections
-							.add(new Protection(set.getString("RegionId"), UUID.fromString(set.getString("ownerUuid")),
-									new ReferencedProtectionBlock(set.getString("ProtectionBlockId")),
-									set.getString("WorldName"), set.getString("DisplayName"), createdDate));
 				}
 			}
 		} catch (SQLException e) {
@@ -179,9 +195,17 @@ public class SQLService extends PandaSQLService {
 		values.put(t.getColumn("OwnerUuid"), new Data(Types.CHAR, protection.getOwnerUuid().toString()));
 		values.put(t.getColumn("ProtectionBlockId"),
 				new Data(Types.VARCHAR, protection.getProtectionBlock().getIdentifier()));
+		values.put(t.getColumn("DisplayItem"),
+				protection.getDisplayItem() != null
+						? new Data(Types.BLOB,
+								ItemStacksUtils.itemsParse(new ItemStack[] { protection.getDisplayItem().get() }))
+						: new Data(Types.NULL, null));
 		values.put(t.getColumn("WorldName"), new Data(Types.VARCHAR, protection.getWorldName()));
 		values.put(t.getColumn("DisplayName"), new Data(Types.VARCHAR, protection.getDisplayName()));
 		values.put(t.getColumn("CreatedDate"), new Data(Types.BIGINT, protection.getCreatedDate()));
+		values.put(t.getColumn("LocationX"), new Data(Types.INTEGER, protection.getLocation().getBlockX()));
+		values.put(t.getColumn("LocationY"), new Data(Types.INTEGER, protection.getLocation().getBlockY()));
+		values.put(t.getColumn("LocationZ"), new Data(Types.INTEGER, protection.getLocation().getBlockZ()));
 		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("RegionId"),
 				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
 			throw Exceptions.Protections.Save.SQL.generateException();

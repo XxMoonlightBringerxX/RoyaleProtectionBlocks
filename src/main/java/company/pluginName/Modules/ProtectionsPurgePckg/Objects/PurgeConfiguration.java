@@ -1,5 +1,6 @@
 package company.pluginName.Modules.ProtectionsPurgePckg.Objects;
 
+import company.pluginName.Utils.TimeUtils;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -20,6 +21,10 @@ public class PurgeConfiguration {
 		this.days = configuration.days;
 		this.millis = configuration.millis;
 		this.basedOn = configuration.basedOn;
+	}
+
+	public String toString() {
+		return TimeUtils.secondsToString((long) (millis / 1000) + (minutes * 60L) + (hours * 3600L) + (days * 86400L));
 	}
 
 	public static enum BasedOn {

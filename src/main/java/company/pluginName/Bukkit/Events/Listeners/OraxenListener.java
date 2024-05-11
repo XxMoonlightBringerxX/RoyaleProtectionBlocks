@@ -1,4 +1,4 @@
-package company.pluginName.Bukkit.Events;
+package company.pluginName.Bukkit.Events.Listeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,7 +21,7 @@ import io.th0rgal.oraxen.api.events.stringblock.OraxenStringBlockInteractEvent;
 import io.th0rgal.oraxen.api.events.stringblock.OraxenStringBlockPlaceEvent;
 
 @PandaListener(optional = true)
-public class OraxenEvents implements Listener {
+public class OraxenListener implements Listener {
 
 	@PandaInject
 	private ProtectionsService protectionsService;
@@ -38,6 +38,7 @@ public class OraxenEvents implements Listener {
 
 		if (!e.isCancelled()) {
 			switch (EventsUtils.onOraxenBlockPlaceEvent(e.getPlayer(), e.getBlock(), null, e.getItemInHand())) {
+			case SUCCESS:
 			case CANCEL:
 				e.setCancelled(true);
 				break;
@@ -51,7 +52,7 @@ public class OraxenEvents implements Listener {
 
 	@EventHandler
 	public void onNoteBlockInteract(OraxenNoteBlockInteractEvent e) {
-		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getBlock());
 		if (protection != null) {
 			e.setCancelled(true);
 			EventsUtils.onOraxenBlockInteractEvent(e.getPlayer(), protection);
@@ -60,7 +61,7 @@ public class OraxenEvents implements Listener {
 
 	@EventHandler
 	public void onNoteBlockDamage(OraxenNoteBlockDamageEvent e) {
-		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getBlock());
 		if (protection != null) {
 			e.setCancelled(true);
 		}
@@ -111,7 +112,7 @@ public class OraxenEvents implements Listener {
 
 	@EventHandler
 	public void onStringBlockInteract(OraxenStringBlockInteractEvent e) {
-		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getBlock());
 		if (protection != null) {
 			e.setCancelled(true);
 			EventsUtils.onOraxenBlockInteractEvent(e.getPlayer(), protection);
@@ -120,7 +121,7 @@ public class OraxenEvents implements Listener {
 
 	@EventHandler
 	public void onStringBlockDamage(OraxenStringBlockDamageEvent e) {
-		Protection protection = protectionsService.getProtectionByBlock(e.getBlock().getLocation());
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getBlock());
 		if (protection != null) {
 			e.setCancelled(true);
 		}

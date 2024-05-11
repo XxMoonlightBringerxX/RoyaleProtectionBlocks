@@ -17,18 +17,8 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
-@PandaCommandAnnotation(
-		id = "leave",
-		pathName = "Leave",
-		defaultName = "leave",
-		defaultDescription = "Leave a protection, stop being an owner or a member",
-		defaultAliases = "l")
-@PandaCommandAnnotation.Customizable(
-		cooldown = true,
-		aliases = true,
-		description = true,
-		name = true,
-		permission = true)
+@PandaCommandAnnotation(id = "leave", pathName = "Leave", defaultName = "leave", defaultDescription = "Leave a protection, stop being an owner or a member", defaultAliases = "l")
+@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true)
 public class LeaveSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -43,7 +33,7 @@ public class LeaveSubCommand extends PandaSubCommand {
 			boolean useids) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			Protection protection = protectionsService.getProtectionByLocation(pl.getLocation());
+			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 			if (protection != null) {
 				if (!protection.isMainOwner(pl.getUniqueId())) {
 					try {

@@ -1,5 +1,7 @@
 package company.pluginName.Modules.PlayersDataPckg.Objects;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -14,7 +16,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoubleField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
-import darkpanda73.PandaUtils.Utilities.Java.Fields.Objects.Pair;
+import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,6 +40,7 @@ public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataM
 
 	private @Setter(AccessLevel.NONE) Pair<Protection, Long> lastTeleport;
 	private @Setter(AccessLevel.NONE) @Getter(AccessLevel.NONE) BukkitTask task;
+	private List<Protection> currentProtections = new ArrayList<>();
 
 	public PlayerData(UUID uuid) {
 		super(uuid);

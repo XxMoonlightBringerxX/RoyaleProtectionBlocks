@@ -1,5 +1,9 @@
 package company.pluginName.Utils;
 
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 public class TimeUtils {
 
 	private static final char[] TIME_UNITS = { 's', 'm', 'h', 'd', 'w', 'M', 'y' };
@@ -25,6 +29,19 @@ public class TimeUtils {
 			}
 		}
 		return seconds;
+	}
+
+	public static String secondsToString(long seconds) throws NumberFormatException {
+		int[] fragments = new int[TIME_UNITS.length];
+		for (int i = 0; i < TIME_UNITS.length; i++) {
+			fragments[i] = (int) (seconds / TIME_UNITS_TO_SECONDS[TIME_UNITS_TO_SECONDS.length - i - 1]);
+			seconds = seconds % TIME_UNITS_TO_SECONDS[TIME_UNITS_TO_SECONDS.length - i - 1];
+		}
+		return IntStream.range(0, fragments.length)
+				.mapToObj(index -> fragments[index] > 0
+						? String.format("%d%s", fragments[index], TIME_UNITS[TIME_UNITS.length - index - 1])
+						: null)
+				.filter(Objects::nonNull).collect(Collectors.joining(" "));
 	}
 
 }

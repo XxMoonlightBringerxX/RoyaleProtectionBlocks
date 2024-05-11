@@ -23,20 +23,8 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
-@PandaCommandAnnotation(
-		id = "unban",
-		pathName = "Unban",
-		defaultName = "unban",
-		defaultDescription = "Unban a player from your current protection",
-		defaultAliases = "ubn",
-		defaultUsage = "<username>")
-@PandaCommandAnnotation.Customizable(
-		cooldown = true,
-		aliases = true,
-		description = true,
-		name = true,
-		permission = true,
-		usage = true)
+@PandaCommandAnnotation(id = "unban", pathName = "Unban", defaultName = "unban", defaultDescription = "Unban a player from your current protection", defaultAliases = "ubn", defaultUsage = "<username>")
+@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true, usage = true)
 public class UnbanSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -61,7 +49,7 @@ public class UnbanSubCommand extends PandaSubCommand {
 			Player pl = sender instanceof Player ? (Player) sender : null;
 			if (pl != null) {
 				if (args.length > 1) {
-					Protection protection = protectionsService.getProtectionByLocation(pl.getLocation());
+					Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 					if (protection != null) {
 						OfflinePlayer banned = OfflinePlayerUtilities.getOfflinePlayer(args[1]);
 						if (banned != null) {

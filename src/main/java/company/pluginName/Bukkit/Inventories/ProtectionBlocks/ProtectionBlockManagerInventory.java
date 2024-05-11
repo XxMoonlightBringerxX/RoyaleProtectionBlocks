@@ -193,22 +193,17 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 
 	@ItemExecutor("Confirm-button")
 	private void executeConfirmButton() {
+		List<Protection> relatedProtections = new ArrayList<>();
 		try {
 			if (originalProtectionBlock != null) {
+				protectionsService.getProtectionsByWorld().values().forEach(protections -> protections.stream()
+						.filter(protection -> protection.getProtectionBlock().getIdentifier()
+								.equals(originalProtectionBlock.getInformation().getId())
+								&& protection.getUtils().isProtectionBlockShown())
+						.forEach(relatedProtections::add));
 
-				List<Protection> relatedProtections = new ArrayList<>();
-				protectionsService.getProtectionsByWorld().values()
-						.forEach(protections -> protections.stream()
-								.filter(protection -> protection.getProtectionBlock().getIdentifier()
-										.equals(originalProtectionBlock.getInformation().getId())
-										&& protection.isProtectionBlockShown())
-								.forEach(relatedProtections::add));
+				relatedProtections.forEach(prot -> prot.getUtils().hideProtectionBlock());
 
-				relatedProtections.forEach(Protection::hideProtectionBlock);
-				try {
-				} finally {
-					relatedProtections.forEach(Protection::showProtectionBlock);
-				}
 				originalProtectionBlock.copy(newProtectionBlock);
 				originalProtectionBlock.save(getPlayer());
 			} else {
@@ -241,6 +236,8 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 				originalProtectionBlock.copy(copyOriginalProtectionBlock);
 			}
 			ex.sendError(getPlayer());
+		} finally {
+			relatedProtections.forEach(prot -> prot.getUtils().showProtectionBlock());
 		}
 
 	}

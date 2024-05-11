@@ -35,6 +35,7 @@ import dev.espi.protectionstones.PSRegion;
 import dev.espi.protectionstones.ProtectionStones;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionCreationAttemptEvent;
 
 public class ProtectionStonesHook extends PandaAbstractHook {
 
@@ -171,72 +172,91 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 				if (protectionBlock != null) {
 					try {
-						Protection protection = protectionsService.createProtection(owners.get(0), null,
-								protectionBlock, region.getProtectBlock().getLocation());
+						Protection protection = new Protection(owners.get(0), region.getProtectBlock().getLocation(),
+								protectionBlock);
 
-						protection.getProtectedRegion().getFlags().forEach((flag, value) -> {
-							if (worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag() == flag
-									|| worldGuardApi.getHook().getProtectionBlockLocationFlag()
-											.getWorldGuardFlag() == flag) {
-								flags.put(flag, value);
-							}
-						});
+						ProtectionCreationAttemptEvent attemptEvent = new ProtectionCreationAttemptEvent(null,
+								protection);
+						Bukkit.getPluginManager().callEvent(attemptEvent);
 
-						protection.getProtectedRegion().setFlags(flags);
-
-						if (displayName != null) {
-							protection.setDisplayName(displayName);
+						if (attemptEvent.isCancelled()) {
+							throw Exceptions.Protections.Save.CANCELLED.generateException();
 						}
 
-						if (!(protectionStonesRegion instanceof PSMergedRegion)) {
+						protection.create().subscribe((createdProtection) -> {
 							try {
-								protection.setHome(home);
-							} catch (Exception e) {
+								createdProtection.getProtectedRegion().getFlags().forEach((flag, value) -> {
+									if (worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag() == flag) {
+										flags.put(flag, value);
+									}
+								});
+
+								createdProtection.getProtectedRegion().setFlags(flags);
+
+								if (displayName != null) {
+									createdProtection.setDisplayName(displayName);
+								}
+
+								if (!(protectionStonesRegion instanceof PSMergedRegion)) {
+									try {
+										createdProtection.setHome(home);
+									} catch (Exception e) {
+										MessageTemplate
+												.inst(PandaPrefixedStringField.applyPrefix(
+														String.format("&cUnable to set home for protection '%s': %s",
+																createdProtection.getRegionId(), e.getMessage())))
+												.process().sendMessage(Bukkit.getConsoleSender());
+										e.printStackTrace();
+										errorsInConsole.set(true);
+									}
+								}
+
+								owners.forEach(owner -> {
+									try {
+										createdProtection.getOwners().add(owner);
+									} catch (RoyaleProtectionBlocksException e) {
+										if (e.getExceptionType() != Exceptions.Protections.Owners.Save.CANNOTADDPROTECTIONOWNER) {
+											MessageTemplate
+													.inst(PandaPrefixedStringField.applyPrefix(String.format(
+															"&cUnable to add owner on protection '%s': %s",
+															createdProtection.getRegionId(), e.getMessage())))
+													.process().sendMessage(Bukkit.getConsoleSender());
+											e.sendError(Bukkit.getConsoleSender());
+											e.printStackTrace();
+											errorsInConsole.set(true);
+										}
+									}
+								});
+
+								members.forEach(member -> {
+									try {
+										createdProtection.getMembers().add(member);
+									} catch (RoyaleProtectionBlocksException e) {
+										if (e.getExceptionType() != Exceptions.Protections.Members.Save.CANNOTADDPROTECTIONOWNER) {
+											MessageTemplate
+													.inst(PandaPrefixedStringField.applyPrefix(String.format(
+															"&cUnable to add member on protection '%s': %s",
+															createdProtection.getRegionId(), e.getMessage())))
+													.process().sendMessage(Bukkit.getConsoleSender());
+											e.sendError(Bukkit.getConsoleSender());
+											e.printStackTrace();
+											errorsInConsole.set(true);
+										}
+									}
+								});
+
+								successList.add(createdProtection);
+							} catch (RoyaleProtectionBlocksException e) {
 								MessageTemplate
 										.inst(PandaPrefixedStringField.applyPrefix(
-												String.format("&cUnable to set home for protection '%s': %s",
-														protection.getRegionId(), e.getMessage())))
+												String.format("&cUnable to save information for protection '%s': %s",
+														region.getId(), e.getMessage())))
 										.process().sendMessage(Bukkit.getConsoleSender());
-								e.printStackTrace();
+								e.sendError(Bukkit.getConsoleSender());
+								exceptionsList.add(e);
 								errorsInConsole.set(true);
 							}
-						}
-
-						owners.forEach(owner -> {
-							try {
-								protection.getOwners().add(owner);
-							} catch (RoyaleProtectionBlocksException e) {
-								if (e.getExceptionType() != Exceptions.Protections.Owners.Save.CANNOTADDPROTECTIONOWNER) {
-									MessageTemplate
-											.inst(PandaPrefixedStringField.applyPrefix(
-													String.format("&cUnable to add owner on protection '%s': %s",
-															protection.getRegionId(), e.getMessage())))
-											.process().sendMessage(Bukkit.getConsoleSender());
-									e.sendError(Bukkit.getConsoleSender());
-									e.printStackTrace();
-									errorsInConsole.set(true);
-								}
-							}
 						});
-
-						members.forEach(member -> {
-							try {
-								protection.getMembers().add(member);
-							} catch (RoyaleProtectionBlocksException e) {
-								if (e.getExceptionType() != Exceptions.Protections.Members.Save.CANNOTADDPROTECTIONOWNER) {
-									MessageTemplate
-											.inst(PandaPrefixedStringField.applyPrefix(
-													String.format("&cUnable to add member on protection '%s': %s",
-															protection.getRegionId(), e.getMessage())))
-											.process().sendMessage(Bukkit.getConsoleSender());
-									e.sendError(Bukkit.getConsoleSender());
-									e.printStackTrace();
-									errorsInConsole.set(true);
-								}
-							}
-						});
-
-						successList.add(protection);
 					} catch (RoyaleProtectionBlocksException e) {
 						MessageTemplate
 								.inst(PandaPrefixedStringField.applyPrefix(

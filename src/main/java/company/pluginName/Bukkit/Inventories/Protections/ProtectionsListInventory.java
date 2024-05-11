@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -13,9 +12,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
-import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -77,9 +76,9 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 			case ALL:
 				return true;
 			case OWN:
-				return protection.isMainOwner(getPlayer().getUniqueId());
+				return protection.isMainOwner(owner.getUniqueId());
 			case OTHERS:
-				return !protection.isMainOwner(getPlayer().getUniqueId());
+				return !protection.isMainOwner(owner.getUniqueId());
 			default:
 				return false;
 			}
@@ -89,12 +88,11 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 
 	@Override
 	protected ItemStack generateEntityItem(Protection protection) {
-		final boolean canTeleport = protection.canTeleport(getPlayer());
-		final boolean canManage = protection.canManage(getPlayer());
+		final boolean canTeleport = ProtectionUtilities.canTeleport(protection, getPlayer());
+		final boolean canManage = ProtectionUtilities.canManage(protection, getPlayer());
 
 		Location homeLocation = protection.getHome();
-		Location loc = protection.getProtectionBlockLocation();
-		ProtectionBlock block = protection.getProtectionBlock().getObject();
+		Location loc = protection.getLocation();
 		Replacement[] replacements = {
 				new Replacement("{protection}",
 						() -> protection.getDisplayName() != null ? protection.getDisplayName()
@@ -106,13 +104,6 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 
 		ItemBuilder itemBuilder = ItemBuilder.inst().fromMap(getChestInventoryData().getCustomFields(), "Entity")
 				.setReplacements(replacements);
-
-		if (block != null) {
-			itemBuilder.setMaterial(block.getInformation().getItem().getType());
-		} else {
-			itemBuilder.setMaterial(Material.PLAYER_HEAD).setAmount(1).setSkin(
-					"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=");
-		}
 
 		List<String> lore = new ArrayList<>(getChestInventoryData().getEntityLore());
 		lore.add("&0");
@@ -127,24 +118,24 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_EDITLORELINE_PATH).toString());
 		}
 
-		return itemBuilder.setLore(lore).apply(block.getInformation().getItem().clone());
+		return itemBuilder.setLore(lore).apply(protection.getDisplayItem().getOrDefault().clone());
 	}
 
 	@Override
-	protected void onEntityClick(InventoryClickEvent e, Protection entity) {
-		Location homeLocation = entity.getHome();
+	protected void onEntityClick(InventoryClickEvent e, Protection protection) {
+		Location homeLocation = protection.getHome();
 
 		if (e.getClick() == ClickType.LEFT) {
-			if (homeLocation != null && entity.canTeleport(getPlayer())) {
+			if (homeLocation != null && ProtectionUtilities.canTeleport(protection, getPlayer())) {
 				try {
-					entity.sendHome(getPlayer());
+					protection.getActions().teleportToHome(getPlayer());
 				} catch (RoyaleProtectionBlocksException e1) {
 					e1.sendError(getPlayer());
 				}
 			}
 		} else {
-			if (entity.canManage(getPlayer())) {
-				new ProtectionsManageInventory(getPlayer(), entity).openInventory();
+			if (ProtectionUtilities.canManage(protection, getPlayer())) {
+				new ProtectionsManageInventory(getPlayer(), protection).openInventory();
 			}
 		}
 

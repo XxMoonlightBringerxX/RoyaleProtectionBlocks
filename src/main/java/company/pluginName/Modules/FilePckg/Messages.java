@@ -47,6 +47,10 @@ public class Messages {
 			"Message.Protections.Player-kicked", "&aThe player has been kicked from this protection successfully!");
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_LEFTSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Left-successfully", "&aYou have left the protection successfully!");
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_FLIGHT_ENABLED = new PandaPrefixedStringField(
+			"Message.Protections.Flight.Enabled", "&eFlight ability set to: &aEnabled");
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_FLIGHT_DISABLED = new PandaPrefixedStringField(
+			"Message.Protections.Flight.Disabled", "&eFlight ability set to: &cDisabled");
 
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_MEMBERS_ADDEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Members.Added-successfully",
@@ -177,6 +181,8 @@ public class Messages {
 			"Error.Protections.Not-main-owner", "&cYou're not the main owner of this protection!");
 	public static final PandaPrefixedStringField ERROR_PROTECTIONS_NOTOWNER = new PandaPrefixedStringField(
 			"Error.Protections.Not-owner", "&cYou're not an owner of this protection!");
+	public static final PandaPrefixedStringField ERROR_PROTECTIONS_NOTOWNERANYPROTECTION = new PandaPrefixedStringField(
+			"Error.Protections.Not-owner-any-protection", "&cYou're not an owner in any of the current protections!");
 	public static final PandaPrefixedStringField ERROR_PROTECTIONS_NOTMEMBER = new PandaPrefixedStringField(
 			"Error.Protections.Not-member", "&cYou're not a member of this protection!");
 	public static final PandaPrefixedStringField ERROR_PROTECTIONS_PERMISSIONDENIED = new PandaPrefixedStringField(

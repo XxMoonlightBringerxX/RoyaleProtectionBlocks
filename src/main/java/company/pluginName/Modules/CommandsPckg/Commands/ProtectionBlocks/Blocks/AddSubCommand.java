@@ -21,6 +21,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
@@ -35,14 +36,16 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 		defaultDescription = "Create a new block",
 		defaultUsage = "<id> <x> <y> <z> [permission]",
 		defaultPermission = "protectionblocks.blocks.create",
-		defaultAliases = "a")
+		defaultAliases = "a"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = true
+)
 public class AddSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -69,16 +72,15 @@ public class AddSubCommand extends PandaSubCommand {
 		case 5:
 			return Arrays.asList("[permission]");
 		default:
-			return EMPTY_LIST;
+			return super.tabComplete(cmd, sender, args);
 		}
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			if (args.length > 4) {
+			if (parameters.getParameters().size() > 3) {
 				ItemStack i = ItemStacksUtils.getItemInMainHand(pl);
 				if (i != null && i.getType() != Material.AIR) {
 					if (i.getType().isBlock()
@@ -88,9 +90,9 @@ public class AddSubCommand extends PandaSubCommand {
 						protectionBlockItemstack.setAmount(1);
 						try {
 							try {
-								int x = Integer.parseInt(args[2]);
-								int y = Integer.parseInt(args[3]);
-								int z = Integer.parseInt(args[4]);
+								int x = Integer.parseInt(parameters.getParameters().get(1));
+								int y = Integer.parseInt(parameters.getParameters().get(2));
+								int z = Integer.parseInt(parameters.getParameters().get(3));
 
 								if (x < 0 || y < -1 || z < 0) {
 									MessageTemplate.inst(Messages.ERROR_NUMBERBELOWZERO.applyPrefix()).process()
@@ -98,10 +100,12 @@ public class AddSubCommand extends PandaSubCommand {
 									return new TrueResponse();
 								}
 
-								String permission = args.length > 5 ? args[5] : null;
-								ProtectionBlock protectionBlock = new ProtectionBlock(
-										new ProtectionBlockInformation(args[1].toLowerCase(), protectionBlockItemstack,
-												x / 2, (y == -1 ? y : y / 2), z / 2, permission, null));
+								String permission = parameters.getParameters().size() > 4
+										? parameters.getParameters().get(4)
+										: null;
+								ProtectionBlock protectionBlock = new ProtectionBlock(new ProtectionBlockInformation(
+										parameters.getParameters().get(0).toLowerCase(), protectionBlockItemstack,
+										x / 2, (y == -1 ? y : y / 2), z / 2, permission, null));
 
 								protectionBlockItemstack = protectionBlock.getInformation().generateItem();
 

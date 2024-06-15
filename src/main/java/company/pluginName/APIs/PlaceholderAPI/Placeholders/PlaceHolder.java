@@ -8,9 +8,9 @@ import org.bukkit.entity.Player;
 
 import com.sk89q.worldguard.protection.flags.Flag;
 
-import company.pluginName.Permissions;
 import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
@@ -82,7 +82,7 @@ public class PlaceHolder extends PlaceholderExpansion {
 				if (!blockId.isEmpty()) {
 					ProtectionBlock protectionBlock = protectionBlocksService.getProtectionBlockById(blockId);
 					if (protectionBlock != null) {
-						Integer blockCapacity = Permissions.getPerBlockMaxCapacity(player, protectionBlock);
+						Integer blockCapacity = PermissionsService.getPerBlockMaxCapacity(player, protectionBlock);
 						if (blockCapacity != null) {
 							return blockCapacity.toString();
 						}
@@ -137,7 +137,7 @@ public class PlaceHolder extends PlaceholderExpansion {
 					return String.valueOf(protectionsService.getProtectionsByOwner()
 							.getOrDefault(player.getUniqueId(), Collections.emptyList()).size());
 				case "player_max":
-					Integer maxAmount = Permissions.getGeneralMaxCapacity(player);
+					Integer maxAmount = PermissionsService.getGeneralMaxCapacity(player);
 					return maxAmount != null ? String.valueOf(maxAmount) : "---";
 				}
 			}

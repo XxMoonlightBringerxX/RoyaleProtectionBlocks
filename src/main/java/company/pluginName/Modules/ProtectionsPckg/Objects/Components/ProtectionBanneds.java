@@ -6,11 +6,11 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Permissions;
 import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -37,7 +37,7 @@ public class ProtectionBanneds {
 
 	public void add(Player pl, UUID banned) throws RoyaleProtectionBlocksException {
 		if (pl != null) {
-			if (!pl.hasPermission(Permissions.PROTECTION_BANNEDS_ADD_OTHERS)) {
+			if (!PermissionsService.BANNEDS_ADD_OTHERS.hasPermission(pl)) {
 				if (!this.protection.getOwners().list().contains(pl.getUniqueId())) {
 					throw Exceptions.Protections.Banneds.Save.PERMISSIONDENIED.generateException();
 				}
@@ -64,7 +64,7 @@ public class ProtectionBanneds {
 			Player bannedPlayer = Bukkit.getPlayer(banned);
 
 			if (bannedPlayer != null) {
-				if (bannedPlayer.hasPermission(Permissions.PROTECTION_BANNEDS_BYPASS)
+				if (PermissionsService.BANNEDS_BYPASS.hasPermission(pl)
 						|| protection.getActions().kickPlayer(bannedPlayer)) {
 					MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BANNED.applyPrefix()).process()
 							.sendMessage(bannedPlayer);
@@ -80,7 +80,7 @@ public class ProtectionBanneds {
 	public void remove(Player pl, UUID banned) throws RoyaleProtectionBlocksException {
 		if (pl != null) {
 			if (!this.protection.getOwners().list().contains(pl.getUniqueId())
-					&& !pl.hasPermission(Permissions.PROTECTION_BANNEDS_REMOVE_OTHERS)) {
+					&& !PermissionsService.BANNEDS_REMOVE_OTHERS.hasPermission(pl)) {
 				throw Exceptions.Protections.Banneds.Delete.PERMISSIONDENIED.generateException();
 			}
 		}

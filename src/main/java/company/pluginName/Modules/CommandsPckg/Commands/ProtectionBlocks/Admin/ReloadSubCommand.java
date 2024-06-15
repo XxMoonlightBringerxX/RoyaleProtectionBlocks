@@ -1,4 +1,4 @@
-package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
+package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin;
 
 import org.bukkit.command.CommandSender;
 
@@ -8,26 +8,28 @@ import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 
-@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaSubCommandAnnotation(parentCommand = AdminCommand.class)
 @PandaCommandAnnotation(
 		id = "reload",
 		pathName = "Reload",
 		defaultName = "reload",
 		defaultDescription = "Reload the plugin",
-		defaultAliases = "p",
-		defaultPermission = "protectionblocks.reload")
+		defaultAliases = "r",
+		defaultPermission = "protectionblocks.admin.reload"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = false
+)
 public class ReloadSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -38,8 +40,7 @@ public class ReloadSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		plugin.reloadPlugin();
 		MessageTemplate.inst(Messages.MESSAGE_RELOAD.applyPrefix()).process().sendMessage(sender);
 		return new TrueResponse();

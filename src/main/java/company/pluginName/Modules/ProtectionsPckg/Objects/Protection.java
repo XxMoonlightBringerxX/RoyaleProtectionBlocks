@@ -16,13 +16,14 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldguard.domains.DefaultDomain;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.Permissions;
 import company.pluginName.APIs.ItemsAdderAPI.ItemsAdderAPI;
 import company.pluginName.APIs.OraxenAPI.OraxenAPI;
 import company.pluginName.APIs.PlaceholderAPI.PlaceholderAPI;
@@ -31,6 +32,7 @@ import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Settings;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
@@ -56,6 +58,7 @@ import darkpanda73.PandaUtils.PandaUtilities.WorldUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.Location.LocationReference;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
+import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaParametizedPermission.Parameter;
 import darkpanda73.PandaUtils.Utilities.Java.Observable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -269,7 +272,7 @@ public class Protection implements IProtection {
 	public String getOwnerName() {
 		if (ownerName == null) {
 			OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(ownerUuid);
-			this.ownerName = owner != null ? owner.getName() : "";
+			this.ownerName = owner != null && owner.getName() != null ? owner.getName() : "???";
 		}
 		return this.ownerName;
 	}
@@ -423,37 +426,43 @@ public class Protection implements IProtection {
 
 		// Check if can create new protections
 		if (player != null) {
-			if (!player.hasPermission(Permissions.PROTECTION_MAX_BYPASS)) {
-				ProtectionBlock protectionBlock = this.protectionBlock.getObject();
-				Integer perBlockMaxCapacity = Permissions.getPerBlockMaxCapacity(player, protectionBlock);
+			if (!PermissionsService.MAX_BYPASS.hasPermission(player)) {
+				Integer generalMaxCapacity = PermissionsService.getGeneralMaxCapacity(player);
 
-				if (perBlockMaxCapacity != null) {
-					// Checks the limit per protection block
-					if (perBlockMaxCapacity <= protectionsService.getProtectionsByOwner()
-							.getOrDefault(player.getUniqueId(), Collections.emptyList()).stream()
-							.filter(protection -> protection.getProtectionBlock().getIdentifier()
-									.equals(protectionBlock.getInformation().getId()))
-							.count()) {
+				if (generalMaxCapacity != null) {
+					Integer ownedProtections = protectionsService.getProtectionsByOwner()
+							.getOrDefault(player.getUniqueId(), new ArrayList<>()).size();
+
+					if (generalMaxCapacity <= ownedProtections) {
 						throw Exceptions.Protections.Save.MAXREACHED.generateException();
 					}
 				} else {
-					// Checks the general limit
-					Integer generalMaxCapacity = Permissions.getGeneralMaxCapacity(player);
-					if (generalMaxCapacity != null) {
-						if (generalMaxCapacity <= protectionsService.getProtectionsByOwner()
-								.getOrDefault(player.getUniqueId(), new ArrayList<>()).size()) {
-							throw Exceptions.Protections.Save.MAXREACHED.generateException();
-						}
-					} else {
-						throw Exceptions.Protections.Save.MAXREACHED.generateException();
+					throw Exceptions.Protections.Save.MAXREACHED.generateException();
+				}
+			}
+
+			ProtectionBlock protectionBlock = this.protectionBlock.getObject();
+			if (protectionBlock != null && !PermissionsService.BLOCK_MAX_BYPASS.hasPermission(player,
+					Parameter.of("block", protectionBlock.getInformation().getId()))) {
+				Integer blockMaxCapacity = PermissionsService.getPerBlockMaxCapacity(player, protectionBlock);
+
+				if (blockMaxCapacity != null) {
+					Long blockOwnedProtections = protectionsService.getProtectionsByOwner()
+							.getOrDefault(player.getUniqueId(), Collections.emptyList()).stream()
+							.filter(protection -> protection.getProtectionBlock().getIdentifier()
+									.equals(protectionBlock.getInformation().getId()))
+							.count();
+
+					if (blockMaxCapacity != null && blockMaxCapacity <= blockOwnedProtections) {
+						throw Exceptions.Protections.Save.BLOCKMAXREACHED.generateException();
 					}
 				}
 			}
 		}
+		int offset = SETTINGS_PROTECTION_MINIMUMDISTANCEBETWEENPROTECTIONS.getContent();
 
 		// Checks if there's other protections overlapping this region
-		if (player != null && !player.hasPermission(Permissions.PROTECTION_OVERLAP_BYPASS)) {
-			int offset = SETTINGS_PROTECTION_MINIMUMDISTANCEBETWEENPROTECTIONS.getContent();
+		if (player != null && !PermissionsService.OVERLAP_BYPASS.hasPermission(player)) {
 			List<Protection> overlaps = protectionsService.findProtectionsByArea(
 					offset > 0 ? getMinLocation().clone().add(-offset, -offset, -offset) : getMinLocation(),
 					offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation());
@@ -472,6 +481,22 @@ public class Protection implements IProtection {
 
 		if (regionManager == null) {
 			throw Exceptions.Protections.Save.UNKNOWN.generateException(new Exception("Region Manager is"));
+		}
+
+		// Gets the min and max coords for the region
+		Location minLocation = offset > 0 ? getMinLocation().clone().add(-offset, -offset, -offset) : getMinLocation();
+		Location maxLocation = offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation();
+
+		// Creates a region from WorldGuard which contains the min and max coords
+		// calculated previously
+		ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
+				BlockVector3.at(minLocation.getBlockX(), minLocation.getBlockY(), minLocation.getBlockZ()),
+				BlockVector3.at(maxLocation.getBlockX(), maxLocation.getBlockY(), maxLocation.getBlockZ()));
+
+		ApplicableRegionSet set = regionManager.getApplicableRegions(protectedRegion);
+
+		if (set.getRegions().stream().anyMatch(pr -> protectionsService.findProtectionById(pr.getId()) == null)) {
+			throw Exceptions.Protections.Save.OVERLAPSWORLDGUARD.generateException();
 		}
 	}
 
@@ -601,6 +626,39 @@ public class Protection implements IProtection {
 		}
 
 		this.protectedRegion = null;
+	}
+
+	/*
+	 * Regenerate methods
+	 */
+
+	public void regenerateProtectedRegion() throws RoyaleProtectionBlocksException {
+		Map<Flag<?>, Object> flags = getProtectedRegion().getFlags();
+		DefaultDomain owners = getProtectedRegion().getOwners();
+		DefaultDomain members = getProtectedRegion().getMembers();
+		Set<String> banneds = getBanneds().list();
+
+		deleteProtectedRegion();
+
+		createProtectedRegion();
+
+		getProtectedRegion().setFlags(flags);
+		getProtectedRegion().setOwners(owners);
+		getProtectedRegion().setMembers(members);
+		try {
+			banneds.stream().map(UUID::fromString).forEach(uuid -> {
+				try {
+					getBanneds().add(uuid);
+				} catch (RoyaleProtectionBlocksException e) {
+					throw new RuntimeException(e);
+				}
+			});
+		} catch (RuntimeException e) {
+			if (e.getCause() instanceof RoyaleProtectionBlocksException) {
+				throw (RoyaleProtectionBlocksException) e.getCause();
+			}
+			throw e;
+		}
 	}
 
 	/*

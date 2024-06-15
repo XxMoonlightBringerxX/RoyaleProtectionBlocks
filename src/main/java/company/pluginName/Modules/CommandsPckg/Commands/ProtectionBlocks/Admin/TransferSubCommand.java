@@ -1,6 +1,7 @@
-package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
+package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,12 +18,13 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
-@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaSubCommandAnnotation(parentCommand = AdminCommand.class)
 @PandaCommandAnnotation(
 		id = "transfer",
 		pathName = "Transfer",
@@ -30,14 +32,16 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		defaultDescription = "Transfer data from a plugin to RoyaleProtectionBlocks",
 		defaultAliases = "t",
 		defaultUsage = "[plugin to transfer] <confirm>",
-		defaultPermission = "protectionblocks.transfer")
+		defaultPermission = "protectionblocks.admin.transfer"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = true
+)
 public class TransferSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -57,17 +61,17 @@ public class TransferSubCommand extends PandaSubCommand {
 		} else if (args.length == 2) {
 			return SECOND_ARG;
 		}
-		return EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
-		if (args.length > 1) {
-			switch (args[1].toLowerCase()) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
+		if (parameters.getParameters().size() > 0) {
+			switch (parameters.getParameters().get(0).toLowerCase()) {
 			case "protectionstones":
 				if (protectionStonesApi.getHook().isHooked()) {
-					if (args.length > 2 && args[2].equalsIgnoreCase("confirm")) {
+					if (parameters.getParameters().size() > 1
+							&& parameters.getParameters().get(1).equalsIgnoreCase("confirm")) {
 						long start = System.currentTimeMillis();
 
 						MessageTemplate.inst(Messages.MESSAGE_TRANSFER_START.applyPrefix()).process()
@@ -97,8 +101,10 @@ public class TransferSubCommand extends PandaSubCommand {
 						MessageTemplate.inst(Messages.MESSAGE_TRANSFER_END.applyPrefix()).process().sendMessage(sender);
 					} else {
 						MessageTemplate.inst(Messages.MESSAGE_TRANSFER_WARNING.applyPrefix())
-								.setReplacements(new Replacement("{command}",
-										() -> String.format("/%s %s confirm", getCommandPath(), args[1])))
+								.setReplacements(
+										new Replacement("{command}",
+												() -> String.format("/%s %s confirm", getCommandPath(),
+														parameters.getParameters().get(0))))
 								.process().sendMessage(sender);
 					}
 				} else {

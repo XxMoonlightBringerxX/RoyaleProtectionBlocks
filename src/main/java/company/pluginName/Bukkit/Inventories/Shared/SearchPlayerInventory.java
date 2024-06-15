@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Defaults.DefaultSearchPlayerInventory;
 
@@ -13,6 +14,11 @@ public class SearchPlayerInventory extends DefaultSearchPlayerInventory {
 
 	public SearchPlayerInventory(Player player, Consumer<OfflinePlayer> action) {
 		super(player, action);
+	}
+
+	@Override
+	protected String getTitle() {
+		return MessageTemplate.inst(super.getTitle()).process().toString();
 	}
 
 }

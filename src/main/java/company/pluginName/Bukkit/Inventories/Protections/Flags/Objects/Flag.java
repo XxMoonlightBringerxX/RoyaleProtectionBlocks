@@ -21,11 +21,11 @@ import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Utils.DiscordUtilities;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment.ColorMode;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
-import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder.ColorMode;
 import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
 import darkpanda73.PandaUtils.PandaYaml.Objects.YamlObject;
 import darkpanda73.PandaUtils.PandaYaml.Objects.YamlSection;
@@ -61,8 +61,8 @@ public class Flag<T> {
 							try {
 								YamlData<?> group = childSection.getData("Group");
 								itemDatas.put(childSection.getName(), new FlagItemData(
-										ItemBuilder.inst().fromMap(childSection.toMap())
-												.setColorMode(ColorMode.IGNORE_COLOR).build(),
+										ItemBuilder.inst().fromMap(childSection.toMap()).setColorMode(ColorMode.IGNORE)
+												.build(),
 										group != null ? RegionGroup.valueOf(group.getString().toUpperCase()) : null));
 							} catch (Exception e) {
 								e.printStackTrace();

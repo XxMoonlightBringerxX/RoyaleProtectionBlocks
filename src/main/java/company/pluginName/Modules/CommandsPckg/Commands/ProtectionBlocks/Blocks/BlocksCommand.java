@@ -8,6 +8,7 @@ import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Protect
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.FalseResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
@@ -20,7 +21,8 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 		defaultDescription = "Open a list with all the blocks",
 		defaultUsage = "[help|subcommand]",
 		defaultPermission = "protectionblocks.blocks",
-		defaultAliases = "b")
+		defaultAliases = "b"
+)
 @PandaCommandAnnotation.Customizable(aliases = true, description = true, name = true, permission = true, usage = true)
 public class BlocksCommand extends PandaCommand {
 
@@ -29,11 +31,10 @@ public class BlocksCommand extends PandaCommand {
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean userids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 
-		if (pl != null && args.length == 0) {
+		if (pl != null && parameters.getParameters().size() == 0) {
 			new ProtectionBlocksListInventory(pl).openInventory();
 			return new TrueResponse();
 		}

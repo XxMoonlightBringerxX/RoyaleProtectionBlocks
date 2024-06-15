@@ -1,7 +1,6 @@
 package company.pluginName.Bukkit.Inventories.ProtectionBlocks;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,10 +10,10 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Permissions;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -38,7 +37,6 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 	@PandaInject
 	private static ProtectionBlocksService protectionBlocksService;
 
-	private boolean canGet;
 	private boolean canEdit;
 	private boolean canCreate;
 	private boolean canDelete;
@@ -80,6 +78,7 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 
 		ItemBuilder itemBuilder = ItemBuilder.inst().fromMap(getChestInventoryData().getCustomFields(), "Entity")
 				.setReplacements(replacements);
+		itemBuilder.getLore().clear();
 
 		if (entity != null) {
 			itemBuilder.fromItem(entity.getInformation().getItem());
@@ -88,14 +87,10 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 					"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=");
 		}
 
-		List<String> lore = itemBuilder.getLore().length > 0 ? new ArrayList<>(Arrays.asList(itemBuilder.getLore()))
-				: new ArrayList<>();
+		List<String> lore = itemBuilder.getLore().size() > 0 ? itemBuilder.getLore() : new ArrayList<>();
 		lore.addAll(getChestInventoryData().getEntityLore());
 		lore.add("&0");
-
-		if (canGet) {
-			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_COPYLORELINE_PATH).toString());
-		}
+		lore.add(getChestInventoryData().getCustomFields().get(ENTITY_COPYLORELINE_PATH).toString());
 
 		if (canEdit) {
 			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_EDITLORELINE_PATH).toString());
@@ -110,11 +105,7 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 
 	@Override
 	protected void onEntityClick(InventoryClickEvent e, ProtectionBlock entity) {
-		boolean canGet = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_GIVE);
-		boolean canEdit = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_EDIT);
-		boolean canDelete = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_DELETE);
-
-		if (e.getClick() == ClickType.LEFT && !e.isShiftClick() && canGet) {
+		if (e.getClick() == ClickType.LEFT && !e.isShiftClick()) {
 			try {
 				e.getWhoClicked().getOpenInventory().setCursor(entity.getInformation().generateItem());
 			} catch (RoyaleProtectionBlocksException e1) {
@@ -138,10 +129,9 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 
 	@Override
 	protected void onPreUpdate() {
-		canGet = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_GIVE);
-		canEdit = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_EDIT);
-		canCreate = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_CREATE);
-		canDelete = getPlayer().hasPermission(Permissions.PROTECTION_BLOCKS_DELETE);
+		canEdit = PermissionsService.BLOCKS_EDIT.hasPermission(getPlayer());
+		canCreate = PermissionsService.BLOCKS_CREATE.hasPermission(getPlayer());
+		canDelete = PermissionsService.BLOCKS_DELETE.hasPermission(getPlayer());
 	}
 
 	@ItemGenerator("Create-block-button")

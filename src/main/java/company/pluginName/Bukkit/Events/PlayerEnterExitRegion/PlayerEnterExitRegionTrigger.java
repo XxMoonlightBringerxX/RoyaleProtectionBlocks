@@ -41,7 +41,7 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 		processMovement(e, e.getPlayer(), e.getTo());
 	}
 
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
 	public void onPlayerJoin(PlayerJoinEvent e) {
 		processMovement(e, e.getPlayer(), e.getPlayer().getLocation());
 	}

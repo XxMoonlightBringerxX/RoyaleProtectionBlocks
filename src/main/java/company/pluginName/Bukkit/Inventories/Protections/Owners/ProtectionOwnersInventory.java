@@ -1,7 +1,5 @@
 package company.pluginName.Bukkit.Inventories.Protections.Owners;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -92,7 +90,7 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 				.fromMap(getChestInventoryData().getCustomFields(), PagedChestInventoryData.ENTITY_PATH)
 				.setReplacements(new Replacement("{player}", () -> pl.getName()));
 
-		List<String> lore = new ArrayList<>(Arrays.asList(builder.getLore()));
+		List<String> lore = builder.getLore();
 		if (canRemove) {
 			lore.add(" ");
 			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_DELETELORELINE_PATH).toString());

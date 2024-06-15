@@ -1,4 +1,4 @@
-package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
+package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -9,25 +9,27 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 
-@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaSubCommandAnnotation(parentCommand = AdminCommand.class)
 @PandaCommandAnnotation(
 		id = "spawn",
 		pathName = "Spawn",
 		defaultName = "spawn",
 		defaultDescription = "Use this command to check whether the spawn has been set properly or not",
 		defaultAliases = "s",
-		defaultPermission = "protectionblocks.setspawn")
+		defaultPermission = "protectionblocks.admin.spawn"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true)
+		permission = true
+)
 public class SpawnSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -38,8 +40,7 @@ public class SpawnSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			pl.teleport(protectionSettingService.getSpawn());

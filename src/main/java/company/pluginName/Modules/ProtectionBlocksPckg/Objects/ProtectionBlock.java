@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Permissions;
 import company.pluginName.APIs.VaultAPI.VaultAPI;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockAllowedWorlds;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
@@ -85,7 +85,7 @@ public class ProtectionBlock {
 			}
 
 			if (hasAvailableSpace) {
-				if (pl.hasPermission(Permissions.PROTECTION_ECONOMY_BYPASS)) {
+				if (PermissionsService.ECONOMY_BYPASS.hasPermission(pl)) {
 					pl.getInventory().addItem(item);
 				} else {
 					EconomyResponse response = vaultApi.getHook().getEconomy().withdrawPlayer(pl,
@@ -111,7 +111,7 @@ public class ProtectionBlock {
 
 	public void save(Player player) throws RoyaleProtectionBlocksException {
 		if (player != null) {
-			if (!player.hasPermission(Permissions.PROTECTION_BLOCKS_CREATE)) {
+			if (!PermissionsService.BLOCKS_CREATE.hasPermission(player)) {
 				throw Exceptions.Protections.Blocks.Save.PERMISSIONDENIED.generateException();
 			}
 		}
@@ -141,25 +141,27 @@ public class ProtectionBlock {
 
 	public void delete(Player player) throws RoyaleProtectionBlocksException {
 		if (player != null) {
-			if (!player.hasPermission(Permissions.PROTECTION_BLOCKS_DELETE)) {
+			if (!PermissionsService.BLOCKS_DELETE.hasPermission(player)) {
 				throw Exceptions.Protections.Blocks.Delete.PERMISSIONDENIED.generateException();
 			}
 		}
 
 		protectionsService.getProtectionsByWorld().values()
 				.forEach(protections -> new ArrayList<>(protections).forEach(protection -> {
-					if (protection.getUtils().isProtectionBlockShown()) {
-						protection.getUtils().hideProtectionBlock();
-					}
+					if (protection.getProtectionBlock().getIdentifier().equals(this.getInformation().getId())) {
+						if (protection.getUtils().isProtectionBlockShown()) {
+							protection.getUtils().hideProtectionBlock();
+						}
 
-					if (protection.getBoundaries().isProtectionViewActive()) {
-						protection.getBoundaries().toggleProtectionView();
-					}
+						if (protection.getBoundaries().isProtectionViewActive()) {
+							protection.getBoundaries().toggleProtectionView();
+						}
 
-					try {
-						protection.delete().subscribe();
-					} catch (RoyaleProtectionBlocksException e1) {
-						e1.printStackTrace();
+						try {
+							protection.delete().subscribe();
+						} catch (RoyaleProtectionBlocksException e1) {
+							e1.printStackTrace();
+						}
 					}
 				}));
 		sqlService.deleteProtectionBlock(this);

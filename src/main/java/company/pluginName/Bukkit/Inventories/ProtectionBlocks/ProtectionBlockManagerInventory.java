@@ -1,7 +1,6 @@
 package company.pluginName.Bukkit.Inventories.ProtectionBlocks;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
@@ -11,6 +10,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlockRecipeInventory.SimpleRecipe;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.BannedWorlds.ProtectionBlockAllowedWorldsInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
@@ -62,6 +62,9 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	@PandaInject
 	private static ProtectionsService protectionsService;
 
+	@PandaInject
+	private static WorldGuardAPI worldGuardApi;
+
 	private ProtectionBlock originalProtectionBlock;
 	private ProtectionBlock copyOriginalProtectionBlock;
 	private ProtectionBlock newProtectionBlock;
@@ -109,7 +112,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 		if (newProtectionBlock.getInformation().getItem() != null) {
 			ItemBuilder builder = ItemBuilder.inst().fromItem(newProtectionBlock.getInformation().getItem());
 
-			List<String> lore = new ArrayList<>(Arrays.asList(builder.getLore()));
+			List<String> lore = builder.getLore();
 			lore.add("&0");
 			lore.add(item.getData().get(PROTECTIONBLOCKITEM_REPLACEITEMLORELINE_PATH).toString());
 			lore.add(item.getData().get(PROTECTIONBLOCKITEM_TAKEITEMLORELINE_PATH).toString());
@@ -237,7 +240,22 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 			}
 			ex.sendError(getPlayer());
 		} finally {
-			relatedProtections.forEach(prot -> prot.getUtils().showProtectionBlock());
+			relatedProtections.forEach(prot -> {
+				prot.getUtils().showProtectionBlock();
+
+				try {
+					prot.setMinLocation(null);
+					prot.setMaxLocation(null);
+					if (!prot.getProtectedRegion().getMinimumPoint().equals(
+							worldGuardApi.getHook().getInternalWorldGuard().asBlockVector(prot.getMinLocation()))
+							|| !prot.getProtectedRegion().getMaximumPoint().equals(worldGuardApi.getHook()
+									.getInternalWorldGuard().asBlockVector(prot.getMaxLocation()))) {
+						prot.regenerateProtectedRegion();
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
 		}
 
 	}

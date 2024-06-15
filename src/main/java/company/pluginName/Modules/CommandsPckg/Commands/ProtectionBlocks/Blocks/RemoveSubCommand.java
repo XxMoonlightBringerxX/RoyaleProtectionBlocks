@@ -1,5 +1,6 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Blocks;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
@@ -28,14 +30,16 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		defaultDescription = "Remove an existing block",
 		defaultUsage = "<id>",
 		defaultPermission = "protectionblocks.blocks.remove",
-		defaultAliases = "r")
+		defaultAliases = "r"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = true
+)
 public class RemoveSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -51,17 +55,17 @@ public class RemoveSubCommand extends PandaSubCommand {
 		case 1:
 			return protectionBlocksService.getProtectionBlocks().keySet().stream().collect(Collectors.toList());
 		default:
-			return EMPTY_LIST;
+			return Collections.emptyList();
 		}
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			if (args.length > 1) {
-				ProtectionBlock block = protectionBlocksService.getProtectionBlockById(args[1]);
+			if (parameters.getParameters().size() > 0) {
+				ProtectionBlock block = protectionBlocksService
+						.getProtectionBlockById(parameters.getParameters().get(0));
 				if (block != null) {
 					try {
 						block.delete(pl);

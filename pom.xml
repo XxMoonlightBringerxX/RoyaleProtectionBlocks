@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>0.1.2.1 Alpha</version>
+	<version>0.1.3 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -134,7 +134,17 @@
 		</dependency>
 		<dependency>
 			<groupId>PandaUtils</groupId>
+			<artifactId>PandaEventCustomizer</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
 			<artifactId>PandaDiscordWebhook</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaPermissionsModule</artifactId>
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
@@ -147,6 +157,12 @@
 			<artifactId>VaultAPI</artifactId>
 			<version>1.7.1</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+		  <groupId>com.github.timderspieler</groupId>
+		  <artifactId>DeluxeCombat-API</artifactId>
+		  <version>1.5.0</version>
+		  <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.github.oraxen</groupId>

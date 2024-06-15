@@ -68,6 +68,9 @@ public class Exceptions {
 			public static final ThrowableField MAXREACHED = new ThrowableField(
 					"Error.Exception.protection.save.MaxReached",
 					"&cYou've reached the maximum amount of protections allowed!");
+			public static final ThrowableField BLOCKMAXREACHED = new ThrowableField(
+					"Error.Exception.protection.save.BlockMaxReached",
+					"&cYou've reached the maximum amount of protections allowed with this protection block!");
 			public static final ThrowableField NAMEINUSE = new ThrowableField(
 					"Error.Exception.protection.save.NameInUse", "&cThere's already a protection using this name!");
 			public static final ThrowableField OVERLAPS = new ThrowableField("Error.Exception.protection.save.Overlaps",
@@ -75,6 +78,9 @@ public class Exceptions {
 			public static final ThrowableField OVERLAPSOFFSET = new ThrowableField(
 					"Error.Exception.protection.save.OverlapsOffset",
 					"&cYou can't put protections close to other protections which are &e%offset% blocks&c from here!");
+			public static final ThrowableField OVERLAPSWORLDGUARD = new ThrowableField(
+					"Error.Exception.protection.save.OverlapsWorldguard",
+					"&cYou can't put protections on protected areas!");
 			public static final ThrowableField ALREADYOCCUPIED = new ThrowableField(
 					"Error.Exception.protection.save.AlreadyOccupied",
 					"&cThere's already a protection placed on this location!");

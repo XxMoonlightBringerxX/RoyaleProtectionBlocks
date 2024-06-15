@@ -1,14 +1,13 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import java.util.stream.Collectors;
-
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
+import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
@@ -17,31 +16,29 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
-import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
-		id = "rename",
-		pathName = "Rename",
-		defaultName = "rename",
-		defaultDescription = "Rename your current protection name",
-		defaultUsage = "<new name>",
-		defaultAliases = "rn"
+		id = "fly",
+		pathName = "Fly",
+		defaultName = "fly",
+		defaultDescription = "Allows to fly around your protections",
+		defaultAliases = "f",
+		defaultPermission = "protectionblocks.fly"
 )
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true,
-		usage = true
+		permission = true
 )
-public class RenameSubCommand extends PandaSubCommand {
+public class FlySubCommand extends PandaSubCommand {
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static PlayerDataService playerDataService;
 
-	public RenameSubCommand() throws InstantiationException {
+	public FlySubCommand() throws InstantiationException {
 		super();
 	}
 
@@ -49,28 +46,27 @@ public class RenameSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			if (parameters.getParameters().size() > 0) {
-				Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
-				if (protection != null) {
-					try {
-						protection.setDisplayName(pl,
-								parameters.getParameters().stream().collect(Collectors.joining(" ")));
-						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY.applyPrefix()).process()
-								.sendMessage(sender);
-					} catch (RoyaleProtectionBlocksException e) {
-						e.sendError(pl);
-					}
+			PlayerData playerData = playerDataService.getPlayerData(pl);
+			if (!playerData.getCurrentProtections().isEmpty()) {
+				if (pl.getAllowFlight() || PermissionsService.FLY_BYPASS.hasPermission(pl)
+						|| playerData.getCurrentProtections().stream()
+								.anyMatch(protection -> ProtectionUtilities.canFly(protection, pl))) {
+					pl.setAllowFlight(!pl.getAllowFlight());
+					MessageTemplate
+							.inst((pl.getAllowFlight() ? Messages.MESSAGE_PROTECTIONS_FLIGHT_ENABLED
+									: Messages.MESSAGE_PROTECTIONS_FLIGHT_DISABLED).applyPrefix())
+							.process().sendMessage(sender);
 				} else {
-					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
+					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTOWNERANYPROTECTION.applyPrefix()).process()
 							.sendMessage(sender);
 				}
 			} else {
-				MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process().sendMessage(pl);
+				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
+						.sendMessage(sender);
 			}
 		} else {
 			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 		}
 		return new TrueResponse();
 	}
-
 }

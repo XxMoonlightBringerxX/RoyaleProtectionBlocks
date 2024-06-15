@@ -1,7 +1,6 @@
 package company.pluginName.Bukkit.Inventories.ProtectionBlocks;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -78,8 +77,7 @@ public class ProtectionBlocksShopInventory extends PagedChestInventoryObject<Pro
 					"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=");
 		}
 
-		List<String> lore = itemBuilder.getLore().length > 0 ? new ArrayList<>(Arrays.asList(itemBuilder.getLore()))
-				: new ArrayList<>();
+		List<String> lore = itemBuilder.getLore().size() > 0 ? itemBuilder.getLore() : new ArrayList<>();
 		lore.addAll(getChestInventoryData().getEntityLore());
 
 		return itemBuilder.setLore(lore).apply(entity.getInformation().getItem().clone());

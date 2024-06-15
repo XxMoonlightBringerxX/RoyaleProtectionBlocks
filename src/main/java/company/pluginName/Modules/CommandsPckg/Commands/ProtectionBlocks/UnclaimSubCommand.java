@@ -6,6 +6,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
+import company.pluginName.Debugger;
+import company.pluginName.Debugger.MessageType;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
@@ -18,15 +20,27 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionRemovalAttemptEvent;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
-@PandaCommandAnnotation(id = "unclaim", pathName = "Unclaim", defaultName = "unclaim", defaultDescription = "Remove the protection you're currently in", defaultAliases = "uc")
-@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true)
+@PandaCommandAnnotation(
+		id = "unclaim",
+		pathName = "Unclaim",
+		defaultName = "unclaim",
+		defaultDescription = "Remove the protection you're currently in",
+		defaultAliases = "uc"
+)
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true
+)
 public class UnclaimSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -37,8 +51,7 @@ public class UnclaimSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player player = sender instanceof Player ? (Player) sender : null;
 		if (player != null) {
 			Protection protection = protectionsService.findProtectionByLocation(player.getLocation());
@@ -98,7 +111,12 @@ public class UnclaimSubCommand extends PandaSubCommand {
 							}
 						});
 					} catch (RoyaleProtectionBlocksException e) {
-						e.sendError(player);
+						if (e.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
+							Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
+									() -> new Object[] { protection.getRegionId() });
+						} else {
+							e.sendError(player);
+						}
 					}
 				} else {
 					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_LEAVEDENIEDTOMAINOWNER.applyPrefix()).process()

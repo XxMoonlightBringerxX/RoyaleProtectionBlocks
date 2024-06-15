@@ -1,5 +1,6 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,13 +19,28 @@ import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
-@PandaCommandAnnotation(id = "addowner", pathName = "Add-owner", defaultName = "addowner", defaultDescription = "Add an owner on your current protection", defaultUsage = "<username>", defaultAliases = "ao")
-@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true, usage = true)
+@PandaCommandAnnotation(
+		id = "addowner",
+		pathName = "Add-owner",
+		defaultName = "addowner",
+		defaultDescription = "Add an owner on your current protection",
+		defaultUsage = "<username>",
+		defaultAliases = "ao"
+)
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true
+)
 public class AddOwnerSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -39,19 +55,19 @@ public class AddOwnerSubCommand extends PandaSubCommand {
 		if (args.length == 1) {
 			return Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
 		}
-		return EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		return CommandResponse.queuedAsync(() -> {
 			Player pl = sender instanceof Player ? (Player) sender : null;
 			if (pl != null) {
-				if (args.length > 1) {
+				if (parameters.getParameters().size() > 0) {
 					Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 					if (protection != null) {
-						OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(args[1]);
+						OfflinePlayer owner = OfflinePlayerUtilities
+								.getOfflinePlayer(parameters.getParameters().get(0));
 						if (owner != null) {
 							try {
 								protection.getOwners().add(pl, owner.getUniqueId());

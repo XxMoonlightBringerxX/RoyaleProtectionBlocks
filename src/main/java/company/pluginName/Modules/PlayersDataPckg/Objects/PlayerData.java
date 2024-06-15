@@ -8,7 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
-import company.pluginName.Permissions;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -63,7 +63,7 @@ public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataM
 		};
 
 		if (SETTINGS_PROTECTION_TELEPORTSTAYSTILLFORSECONDS.getContent() > 0D
-				&& !pl.hasPermission(Permissions.PROTECTION_TELEPORT_BYPASS)) {
+				&& !PermissionsService.TELEPORT_BYPASS.hasPermission(pl)) {
 			this.task = TasksUtils.executeWithDelay(teleport,
 					SETTINGS_PROTECTION_TELEPORTSTAYSTILLFORSECONDS.getContent().longValue() * 20L);
 			MessageTemplate.inst(MESSAGE_TELEPORT_STAYONSITE.applyPrefix()).setReplacements(new Replacement("%seconds%",

@@ -1,5 +1,6 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
@@ -27,14 +29,16 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 		pathName = "Buy",
 		defaultName = "buy",
 		defaultDescription = "Purchase protection blocks which are on sale",
-		defaultUsage = "[protection block]")
+		defaultUsage = "[protection block]"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = true
+)
 public class BuySubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -60,16 +64,16 @@ public class BuySubCommand extends PandaSubCommand {
 					.filter(entry -> entry.getValue().getInformation().isForSale()).map(Entry::getKey)
 					.collect(Collectors.toList());
 		}
-		return EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			if (args.length > 1) {
-				ProtectionBlock block = protectionBlocksService.getProtectionBlockById(args[1]);
+			if (parameters.getParameters().size() > 0) {
+				ProtectionBlock block = protectionBlocksService
+						.getProtectionBlockById(parameters.getParameters().get(0));
 				if (block != null) {
 					if (block.getInformation().isForSale()) {
 						block.purchase(pl);

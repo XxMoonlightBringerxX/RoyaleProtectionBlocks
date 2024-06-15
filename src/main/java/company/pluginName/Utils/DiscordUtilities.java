@@ -102,7 +102,8 @@ public class DiscordUtilities {
 					.setDescription("A flag on a protection has been modified")
 					.addField("Protection ID", intoCodeString(protection.getRegionId()))
 					.addField("Flag ID", intoCodeString(flagId))
-					.addField("Previous value", intoCodeString(previousValue.toString()))
+					.addField("Previous value",
+							intoCodeString(previousValue != null ? previousValue.toString() : "null"))
 					.addField("New value", intoCodeString(newValue.toString())));
 
 			if (player != null) {

@@ -64,7 +64,8 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 
 	@Override
 	protected String getTitle() {
-		return this.owner.getUniqueId().equals(getPlayer().getUniqueId()) ? super.getTitle()
+		return this.owner.getUniqueId().equals(getPlayer().getUniqueId())
+				? MessageTemplate.inst(super.getTitle()).toString()
 				: MessageTemplate.inst(getChestInventoryData().getCustomFields().get(TITLE_OTHER_PATH).toString())
 						.setReplacements(new Replacement("{playername}", () -> owner.getName())).process().toString();
 	}
@@ -97,6 +98,8 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 				new Replacement("{protection}",
 						() -> protection.getDisplayName() != null ? protection.getDisplayName()
 								: protection.getRegionId()),
+				new Replacement("{protection_owner}",
+						() -> protection.getOwnerName() != null ? protection.getOwnerName() : "???"),
 				new Replacement("{world}", () -> protection.getWorldName()),
 				new Replacement("{location_x}", () -> loc != null ? String.valueOf(loc.getBlockX()) : "???"),
 				new Replacement("{location_y}", () -> loc != null ? String.valueOf(loc.getBlockY()) : "???"),

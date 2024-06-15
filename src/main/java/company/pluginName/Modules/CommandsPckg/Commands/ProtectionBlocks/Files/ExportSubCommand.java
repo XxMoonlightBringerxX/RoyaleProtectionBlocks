@@ -2,6 +2,7 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Files;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,7 @@ import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
@@ -30,14 +32,16 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		defaultDescription = "Export all the information of an specific type of data to its respective file",
 		defaultUsage = "<blocks>",
 		defaultPermission = "protectionblocks.files.export",
-		defaultAliases = "e")
+		defaultAliases = "e"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = true
+)
 public class ExportSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -63,16 +67,15 @@ public class ExportSubCommand extends PandaSubCommand {
 		case 1:
 			return DATA_TO_EXPORT_NAMES;
 		default:
-			return EMPTY_LIST;
+			return Collections.emptyList();
 		}
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
-		if (args.length > 1) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
+		if (parameters.getParameters().size() > 0) {
 			try {
-				switch (DataToExport.valueOf(args[1].toUpperCase())) {
+				switch (DataToExport.valueOf(parameters.getParameters().get(0).toUpperCase())) {
 				case BLOCKS:
 					PandaYaml yaml = new PandaYaml();
 

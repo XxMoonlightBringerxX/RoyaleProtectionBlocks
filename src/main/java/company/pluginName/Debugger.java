@@ -38,10 +38,15 @@ public class Debugger {
 	}
 
 	public static void log(MessageType messageType, Supplier<Object[]> argsSupplier) {
-		if (SETTINGS_DEBUG_ENABLED.getContent() && messageType.getField().getContent()) {
-			MessageTemplate
-					.inst(PandaPrefixedStringField.applyPrefix(messageType.getMessage().formatted(argsSupplier.get())))
-					.process().sendMessage(Bukkit.getConsoleSender());
+		try {
+			if (SETTINGS_DEBUG_ENABLED.getContent() && messageType.getField().getContent()) {
+				MessageTemplate
+						.inst(PandaPrefixedStringField
+								.applyPrefix(String.format(messageType.getMessage(), argsSupplier.get())))
+						.process().sendMessage(Bukkit.getConsoleSender());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -81,12 +86,24 @@ public class Debugger {
 		PROTECTION_CREATION_ATTEMPT("Protection-creation-attempt",
 				"Player %s is attempting to create protection from location x(%s) y(%s) z(%s)"),
 
+		PROTECTION_CREATION_ATTEMPT_CANCELLED("Protection-creation-attempt-cancelled",
+				"The creation attempt for protection in x(%s) y(%s) z(%s) has been cancelled by another plugin"),
+
 		PROTECTION_CREATION("Protection-creation", "Player %s created protection '%s' from location x(%s) y(%s) z(%s)"),
 
 		PROTECTION_REMOVAL_ATTEMPT("Protection-removal-attempt",
 				"Player %s is attempting to remove '%s' from location x(%s) y(%s) z(%s)"),
 
-		PROTECTION_REMOVAL("Protection-removal", "Player %s removed protection '%s' from location x(%s) y(%s) z(%s)");
+		PROTECTION_REMOVAL_ATTEMPT_CANCELLED("Protection-removal-attempt-cancelled",
+				"The removal attempt for protection '%s' has been cancelled by another plugin"),
+
+		PROTECTION_REMOVAL("Protection-removal", "Player %s removed protection '%s' from location x(%s) y(%s) z(%s)"),
+
+		PLAYER_TELEPORT_TO_PROTECTION_ATTEMPT("Player-teleport-to-protection-attempt",
+				"Player '%s' is attempting to teleport to protection '%s'"),
+
+		PLAYER_TELEPORT_TO_PROTECTION_ATTEMPT_CANCELLED("Player-teleport-to-protection-attempt-cancelled",
+				"The teleport attempt from '%s' to '%s' has been cancelled by another plugin");
 
 		private String id;
 		private String message;

@@ -1,7 +1,6 @@
-package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
+package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -22,13 +21,13 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
-@PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
+@PandaSubCommandAnnotation(parentCommand = AdminCommand.class)
 @PandaCommandAnnotation(
 		id = "purge",
 		pathName = "Purge",
@@ -36,14 +35,16 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		defaultDescription = "Delete protections older than the specified time, based on the last connection of the owner or their creation date",
 		defaultUsage = "[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--config] [--show-ignored-players] [--export-only] [confirm]",
 		defaultAliases = "p",
-		defaultPermission = "protectionblocks.purge")
+		defaultPermission = "protectionblocks.admin.purge"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = true
+)
 public class PurgeSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -54,12 +55,11 @@ public class PurgeSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
-		if (args.length > 1) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
+		if (parameters.getParameters().size() > 1) {
 			PurgeConfiguration purgeConfiguration = new PurgeConfiguration();
-			for (int i = 1; i < args.length; i++) {
-				switch (args[i].toLowerCase()) {
+			for (int i = 0; i < parameters.getParameters().size(); i++) {
+				switch (parameters.getParameters().get(i).toLowerCase()) {
 				case "--export-only":
 					TasksUtils.executeOnAsync(() -> {
 						MessageTemplate.inst(Messages.MESSAGE_PURGE_SEARCH.applyPrefix()).process().sendMessage(sender);
@@ -127,9 +127,9 @@ public class PurgeSubCommand extends PandaSubCommand {
 				case "--days":
 				case "--hours":
 				case "--minutes":
-					if (args.length > i + 1) {
+					if (parameters.getParameters().size() > i + 1) {
 						try {
-							Integer number = Integer.parseInt(args[i + 1]);
+							Integer number = Integer.parseInt(parameters.getParameters().get(i + 1));
 
 							if (number < 0) {
 								MessageTemplate.inst(Messages.ERROR_NUMBERBELOWZERO.applyPrefix()).process()
@@ -137,9 +137,9 @@ public class PurgeSubCommand extends PandaSubCommand {
 								return new TrueResponse();
 							}
 
-							if (args[i].toLowerCase().equals("--days")) {
+							if (parameters.getParameters().get(i).toLowerCase().equals("--days")) {
 								purgeConfiguration.setDays(number);
-							} else if (args[i].toLowerCase().equals("--hours")) {
+							} else if (parameters.getParameters().get(i).toLowerCase().equals("--hours")) {
 								purgeConfiguration.setHours(number);
 							} else {
 								purgeConfiguration.setMinutes(number);
@@ -172,8 +172,7 @@ public class PurgeSubCommand extends PandaSubCommand {
 						.setReplacements(new Replacement("{amount}", () -> String.valueOf(protectionsToPurge.size())),
 								new Replacement("{command}",
 										() -> String.format("/%s %s confirm", getCommandPath(),
-												Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
-														.collect(Collectors.joining(" ")))))
+												parameters.getParameters().stream().collect(Collectors.joining(" ")))))
 						.process().sendMessage(sender);
 			});
 		} else {

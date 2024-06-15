@@ -20,14 +20,29 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
-@PandaCommandAnnotation(id = "info", pathName = "Info", defaultName = "info", defaultDescription = "Show the information of a protection", defaultAliases = "i", defaultUsage = "[members|owners|banneds]")
-@PandaCommandAnnotation.Customizable(cooldown = true, aliases = true, description = true, name = true, permission = true, usage = true)
+@PandaCommandAnnotation(
+		id = "info",
+		pathName = "Info",
+		defaultName = "info",
+		defaultDescription = "Show the information of a protection",
+		defaultAliases = "i",
+		defaultUsage = "[members|owners|banneds]"
+)
+@PandaCommandAnnotation.Customizable(
+		cooldown = true,
+		aliases = true,
+		description = true,
+		name = true,
+		permission = true,
+		usage = true
+)
 public class InfoCommand extends PandaCommand {
 
 	@RegisteredPandaField("lang")
@@ -63,8 +78,7 @@ public class InfoCommand extends PandaCommand {
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
@@ -103,8 +117,7 @@ public class InfoCommand extends PandaCommand {
 						new Replacement("{protection_size_z}",
 								() -> block != null ? String.valueOf((block.getInformation().getBlocksZ() * 2) + 1)
 										: "???"),
-						new Replacement("{protection_owner}",
-								() -> !protection.getOwnerName().isEmpty() ? protection.getOwnerName() : "???"),
+						new Replacement("{protection_owner}", () -> protection.getOwnerName()),
 						new Replacement("{protection_members}",
 								new MessageFragment(() -> "&7[click]",
 										new ClickEvent(ClickEvent.Action.RUN_COMMAND,

@@ -1,13 +1,14 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects.Components;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Permissions;
 import company.pluginName.APIs.VaultAPI.VaultAPI;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Settings;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
@@ -17,6 +18,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Player.PlayerTeleportToProtectionAttemptEvent;
 
 @Data
 @AllArgsConstructor
@@ -43,7 +45,7 @@ public class ProtectionActions {
 
 	public boolean kickPlayer(Player pl, Player playerToKick) throws RoyaleProtectionBlocksException {
 		if (pl != null) {
-			if (!pl.hasPermission(Permissions.PROTECTION_KICK_OTHERS)) {
+			if (!PermissionsService.KICK_OTHERS.hasPermission(pl)) {
 				if (!this.protection.getOwners().list().contains(pl.getUniqueId())) {
 					throw Exceptions.Protections.PROTECTION_KICK_DENIED.generateException();
 				}
@@ -71,7 +73,7 @@ public class ProtectionActions {
 		}
 
 		if (Settings.SETTINGS_PROTECTION_TELEPORTCOOLDOWN.getContent() > 0
-				&& !pl.hasPermission(Permissions.PROTECTION_TELEPORT_BYPASS)) {
+				&& !PermissionsService.TELEPORT_BYPASS.hasPermission(pl)) {
 			if (playerData.getLastTeleport() != null && (Settings.SETTINGS_PROTECTION_TELEPORTCOOLDOWN.getContent()
 					* 1000) >= (System.currentTimeMillis() - playerData.getLastTeleport().getSecond())) {
 				throw Exceptions.Protections.Teleport.COOLDOWNACTIVE.generateException()
@@ -83,10 +85,17 @@ public class ProtectionActions {
 		}
 
 		if (vaultApi.getHook() != null && Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent() > 0D) {
-			if (!pl.hasPermission(Permissions.PROTECTION_ECONOMY_BYPASS)
+			if (!PermissionsService.ECONOMY_BYPASS.hasPermission(pl)
 					&& !vaultApi.getHook().withdraw(pl, Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent())) {
 				throw Exceptions.Protections.PROTECTION_NOTENOUGHBALANCE.generateException();
 			}
+		}
+
+		PlayerTeleportToProtectionAttemptEvent event = new PlayerTeleportToProtectionAttemptEvent(pl, protection);
+		Bukkit.getPluginManager().callEvent(event);
+
+		if (event.isCancelled()) {
+			return;
 		}
 
 		playerData.teleport(this.protection);

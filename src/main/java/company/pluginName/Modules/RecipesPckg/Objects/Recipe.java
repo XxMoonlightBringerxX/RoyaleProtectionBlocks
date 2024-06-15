@@ -7,9 +7,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Permissions;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
 import company.pluginName.Modules.RecipesPckg.RecipesService;
 import company.pluginName.Modules.SQLPckg.SQLService;
@@ -78,7 +78,7 @@ public class Recipe extends CustomRecipe {
 
 	public void save(Player player) throws RoyaleProtectionBlocksException, RoyaleProtectionBlocksException {
 		if (player != null) {
-			if (!player.hasPermission(Permissions.PROTECTION_BLOCKS_EDIT)) {
+			if (!PermissionsService.BLOCKS_EDIT.hasPermission(player)) {
 				throw Exceptions.Protections.Blocks.Save.PERMISSIONDENIED.generateException();
 			}
 		}

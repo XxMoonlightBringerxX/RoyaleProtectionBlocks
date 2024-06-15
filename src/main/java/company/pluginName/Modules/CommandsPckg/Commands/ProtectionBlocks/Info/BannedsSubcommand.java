@@ -24,13 +24,20 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 
-@PandaCommandAnnotation(id = "banneds", pathName = "Banneds", defaultName = "banneds", defaultDescription = "Get the banneds from the current protection", defaultUsage = "[page]", defaultAliases = "b")
+@PandaCommandAnnotation(
+		id = "banneds",
+		pathName = "Banneds",
+		defaultName = "banneds",
+		defaultDescription = "Get the banneds from the current protection",
+		defaultUsage = "[page]",
+		defaultAliases = "b"
+)
 @PandaCommandAnnotation.Customizable(usage = true, permission = true, aliases = true)
 @PandaSubCommandAnnotation(parentCommand = InfoCommand.class)
 public class BannedsSubcommand extends PandaSubCommand {
@@ -48,13 +55,7 @@ public class BannedsSubcommand extends PandaSubCommand {
 	}
 
 	@Override
-	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
-		return EMPTY_LIST;
-	}
-
-	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		return CommandResponse.queuedAsync(() -> {
 			Player pl = sender instanceof Player ? (Player) sender : null;
 			if (pl != null) {
@@ -63,9 +64,9 @@ public class BannedsSubcommand extends PandaSubCommand {
 					if (ProtectionUtilities.canSeeInformation(protection, pl)) {
 						int page = 1;
 
-						if (args.length > 1) {
+						if (parameters.getParameters().size() > 0) {
 							try {
-								page = Integer.parseInt(args[1]);
+								page = Integer.parseInt(parameters.getParameters().get(0));
 							} catch (Exception e) {
 							}
 						}

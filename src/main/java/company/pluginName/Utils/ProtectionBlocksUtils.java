@@ -21,6 +21,7 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.Protec
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.CustomModelDataUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import lombok.Data;
 import lombok.Getter;
@@ -117,6 +118,7 @@ public class ProtectionBlocksUtils {
 		values.put(ITEM_NAME_SECTION, im.hasDisplayName() ? im.getDisplayName() : null);
 		values.put(ITEM_LORE_SECTION, im.hasLore() ? im.getLore() : null);
 		values.put(ITEM_SKIN_SECTION, skin);
+		values.put(ITEM_CUSTOMMODELDATA_SECTION, CustomModelDataUtilities.getCustomModelData(im));
 		values.put(ALLOWEDWORLDS_SECTION, new ArrayList<>(protectionBlock.getAllowedWorlds().get()));
 
 		return values;

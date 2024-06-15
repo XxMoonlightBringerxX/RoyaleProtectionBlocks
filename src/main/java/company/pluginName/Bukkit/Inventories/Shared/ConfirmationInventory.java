@@ -2,6 +2,7 @@ package company.pluginName.Bukkit.Inventories.Shared;
 
 import org.bukkit.entity.Player;
 
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Defaults.DefaultConfirmationInventory;
 
@@ -14,6 +15,11 @@ public class ConfirmationInventory extends DefaultConfirmationInventory {
 
 	public ConfirmationInventory(Player player, Runnable action, boolean previousOnAction) {
 		super(player, action, previousOnAction);
+	}
+
+	@Override
+	protected String getTitle() {
+		return MessageTemplate.inst(super.getTitle()).process().toString();
 	}
 
 }

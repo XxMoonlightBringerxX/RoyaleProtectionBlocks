@@ -5,7 +5,6 @@ import java.io.IOException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Permissions;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -13,7 +12,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaYaml.Exceptions.YamlException;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
@@ -25,13 +24,15 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 		defaultName = "setspawn",
 		defaultDescription = "Specify the spawn configured for the plugin. This one is mostly used to send players after being kicked or banned from a protection",
 		defaultAliases = "ss",
-		defaultPermission = Permissions.PROTECTION_ADMIN_SETSPAWN)
+		defaultPermission = "protectionblocks.admin.setspawn"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true)
+		permission = true
+)
 public class SetSpawnSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -42,8 +43,7 @@ public class SetSpawnSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			try {

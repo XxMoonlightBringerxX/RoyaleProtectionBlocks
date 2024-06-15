@@ -34,7 +34,7 @@ public class ProtectionCreationRemovalListener implements Listener {
 		DiscordUtilities.sendProtectionRegisteredMessage(e.getPlayer(), (Protection) e.getProtection());
 
 		TasksUtils.execute(() -> {
-			Settings.SETTINGS_COMMANDSONCREATION.getContent()
+			Settings.SETTINGS_COMMANDSONCREATION.getContent().stream().filter(command -> !command.trim().isEmpty())
 					.forEach(command -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
 							placeholderApi.getHook().isHooked()
 									? placeholderApi.getHook().applyPlaceholders(command, e.getPlayer())
@@ -54,7 +54,7 @@ public class ProtectionCreationRemovalListener implements Listener {
 		DiscordUtilities.sendProtectionUnregisteredMessage(e.getPlayer(), (Protection) e.getProtection());
 
 		TasksUtils.execute(() -> {
-			Settings.SETTINGS_COMMANDSONREMOVAL.getContent()
+			Settings.SETTINGS_COMMANDSONREMOVAL.getContent().stream().filter(command -> !command.trim().isEmpty())
 					.forEach(command -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
 							placeholderApi.getHook().isHooked()
 									? placeholderApi.getHook().applyPlaceholders(command, e.getPlayer())

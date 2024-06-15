@@ -10,8 +10,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.scheduler.BukkitTask;
 
-import company.pluginName.Permissions;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -33,7 +33,7 @@ public class PlayerEnterExitRegionBanListener implements Listener {
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onPlayerEnterExitRegion(PlayerEnterExitProtectionEvent e) {
-		if (!e.getPlayer().hasPermission(Permissions.PROTECTION_BANNEDS_BYPASS) && e.getEnteredProtections().stream()
+		if (!PermissionsService.BANNEDS_BYPASS.hasPermission(e.getPlayer()) && e.getEnteredProtections().stream()
 				.anyMatch(protection -> ((Protection) protection).isBanned(e.getPlayer().getUniqueId()))) {
 			e.setCancelled(true);
 

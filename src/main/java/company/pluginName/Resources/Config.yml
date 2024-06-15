@@ -22,16 +22,16 @@
 #
 #---
 
-Version: 6
+Version: 7
+
+#---
+# MySQL database
+# If MySQL is active, SQLite is automatically disabled.
+# WARNING
+# Currently the information is NOT automatically transferred from SQLite to MySQL
+#---
 
 MySQL: 
-  
-  #---
-  # MySQL database
-  # If MySQL is active, SQLite is automatically disabled.
-  # WARNING
-  # Currently the information is NOT automatically transferred from SQLite to MySQL
-  #---
   Enable: false
   Protocol: "jdbc:mysql:"
   Hostname: "localhost"
@@ -42,12 +42,41 @@ MySQL:
   Parameters: "sslMode=DISABLED&connectionTimeout=3000&socketTimeout=3000"
   Table-prefix: ""
   
-Settings:
+#---
+# Enable the Discord logging system. In order to be able to send the information
+# to your Discord server, you'll have to generate a valid webhook in order
+# to use this feature. Check on Discord documentation for more information.
+#---
+
+Discord: 
+  Enable: false
+  Webhook-url: ""
+  Logs: 
+    Protection-register: true
+    Protection-unregister: true
+    Purge-summary: true
+    Flags-modification: 
+    - "pvp"
+    - "tnt"
+    - "chest-access"
+    
+Settings: 
   
+  #---
+  # Enable if you wish to get a notification on the console if there's a new update
+  # available. Also you can enable if you wish to get the notification in-game.
+  # Only you'll receive the notification if you have OP.
+  #---
+  
+  Update-checker: 
+    Enabled: true
+    Join-message: true
+    
   #---
   # If enabled, the plugin will start showing the enabled debug messages. On the
   # section below, you can allow the log of some specific messages in console.
   #---
+  
   Debug: 
     Enabled: false
     Messages: 
@@ -66,12 +95,50 @@ Settings:
       Protection-creation: true
       Protection-removal-attempt: true
       Protection-removal: true
+      
+      Protection-creation-attempt-cancelled: true
+      Protection-removal-attempt-cancelled: true
+      Player-teleport-to-protection-attempt: true
+      Player-teleport-to-protection-attempt-cancelled: true
+  #---
+  # Specify if the right click should open the management inventory.
+  #---
   
   Protection: 
     
     #---
+    # Define a minimum distance between protections. If set to '-1', it'll be disabled.
+    #---
+    
+    Minimum-distance-between-protections: -1
+    
+    #---
+    # Define a default message to show up in chat after entering or exiting a protection.
+    #---
+    
+    Message-on-enter-region: "&eWelcome &7{player_name} &eto &a{protection_name}&e!"
+    Message-on-exit-region: "&eSee you later! :D"
+    
+    #---
+    # Define a default message to show up on the action bar after entering or exiting a protection.
+    #---
+    
+    Actionbar-message-on-enter-region: ""
+    Actionbar-message-on-exit-region: ""
+    
+    #---
+    # Define a default message to show up on screen after entering or exiting a protection.
+    #---
+    
+    Title-on-enter-region: ""
+    Subtitle-on-enter-region: ""
+    Title-on-exit-region: ""
+    Subtitle-on-exit-region: ""
+    
+    #---
     # Add here all the worlds you don't wish people to be able to use protection blocks
     #---
+    
     Banned-worlds: 
     - "World1"
     - "World2"
@@ -81,93 +148,96 @@ Settings:
     # Define which commands should be executed when a protection is created
     # or removed.
     #---
+    
     Commands-on-creation: []
     Commands-on-removal: []
     
     #---
-    # Add here all the flags you wish to allow people to be editable on their protection
-    # blocks. To get a list of the available flags, use /rg flags inside a region. The
-    # structure of the configuration is the following one:
-    #   <Flag name>:
-    #     Type: <Material name>
-    #     Amount: <Item amount>
-    #     Name: <Name of the item> [Optional]
-    #     Lore: [Optional]
-    #     - <Lore>
-    #     - <Of the item>
-    #     Skin: <Skin of the item> [Optional]
-    #     Group: <WorldGuard group where it should work> (Available: all, members, owners, non_members, non_owners) [Optional]
-    #---
-    Flags: 
-      tnt: 
-        Type: "PLAYER_HEAD"
-        Amount: 1
-        Name: "&eCan TnT explode?"
-        Lore: 
-        - "&0"
-        - "&7Value: &8[{value}&8]"
-        Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWU0MzUyNjgwZDBiYjI5YjkxMzhhZjc4MzMwMWEzOTFiMzQwOTBjYjQ5NDFkNTJjMDg3Y2E3M2M4MDM2Y2I1MSJ9fX0="
-        Group: all
-      chest-access: 
-        Type: "PLAYER_HEAD"
-        Amount: 1
-        Name: "&eCan chests be opened by others?"
-        Lore: 
-        - "&0"
-        - "&7Value: &8[{value}&8]"
-        Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWRjMzZjOWNiNTBhNTI3YWE1NTYwN2EwZGY3MTg1YWQyMGFhYmFhOTAzZThkOWFiZmM3ODI2MDcwNTU0MGRlZiJ9fX0="
-        Group: "non_members"
-      pvp: 
-        Type: "PLAYER_HEAD"
-        Amount: 1
-        Name: "&eIs PvP allowed?"
-        Lore: 
-        - "&0"
-        - "&7Value: &8[{value}&8]"
-        Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTc2NTM0MTM1M2MwMjllOWI2NTVmNGY1NzkzMWFlNmFkYzJjN2E3M2M2NTc5NDVkOTQ1YTMwNzY0MWQzNzc4In19fQ=="
-        Group: all
-    
-    #---
     # Specify the ID of the block you wish to give people the first time they join the server.
     #---
-    Starter-block: ""
     
-    Auto-purge: 
-      Execute-every: ""
-      Purge-older-than: "7d"
+    Starter-block: ""
     
     #---
     # Specify amount of time in seconds which will last the /pb view command. This command can be
     # cancelled by executing /pb view again, the timer is only made to remove the boundaries
     # after a while.
     #---
+    
     Boundaries-view-duration-in-seconds: 30
     
     #---
     # Specifies the price that will be charged to the user when using the teleportation of their protection.
     #---
+    
     Teleport-cost: 0.0
     
     #---
     # Specifies the time to wait between executions of this command.
     #---
+    
     Teleport-cooldown: 30
+    
+    #---
+    # Define the amount of seconds a player must stay still before getting teleported.
+    #---
+    
+    Teleport-stay-still-for-seconds: 0.0
     
     #---
     # Specify if the home os a protection should be the position of the player after placing it.
     #---
+    
     Set-player-position-as-home-on-creation: true
     
     #---
     # Specify if the right click should open the management inventory.
     #---
+    
     Open-inventory-on-interact: true
     
     #---
     # Specify if an owner can place another proection inside of its own protections.
     #---
+    
     Allow-regions-inside-another-from-same-owner: true
     
+    #---
+    # Set the purge settings to it will start removing the protections older than
+    # a specified amount of time.
+    #---
+    
+    Auto-purge: 
+      
+      #---
+      # Set a certain amount of time which will be used to define a protection as expired.
+      #
+      # - 's': seconds
+      # - 'm': minutes
+      # - 'h': hours
+      # - 'd': days
+      # - 'w': weeks
+      # - 'M': months (30 days)
+      # - 'y': years
+      #---
+      
+      Purge-older-than: "7d"
+      
+      #---
+      # Set a certain amount of time which the plugin will check for expired protections.
+      # Leave empty to disable the auto-purge
+      #
+      # - 's': seconds
+      # - 'm': minutes
+      # - 'h': hours
+      # - 'd': days
+      # - 'w': weeks
+      # - 'M': months (30 days)
+      # - 'y': years
+      #---
+      
+      Execute-every: ""
+      
     #---
     # Add which are the default values for some of the WorldGuard flags. The structure
     # of this configuration is the following one
@@ -175,29 +245,47 @@ Settings:
     #     Value: <Value of the flag>
     #     Group: <WorldGuard group where it should work> (Available: all, members, owners, non_members, non_owners) [Optional]
     #---
-    Default-flags: 
-      greeting: 
-        Value: "&7Entering protection from &a%player_name%"
-        Group: "ALL"
-      farewell: 
-        Value: "&7Leaving protection from &a%player_name%"
-        Group: "ALL"
-      console-command-on-entry: 
-        Value: "/title \%username\% actionbar {\"text\":\"&7Entering protection from
-          &a%player_name%\"}"
-        Group: "ALL"
-      console-command-on-exit: 
-        Value: "/title \%username\% actionbar {\"text\":\"&7Leaving protection from
-          &a%player_name%\"}"
-        Group: "ALL"
     
+    Default-flags: 
+      pvp: 
+        Value: "DENY"
+        Group: "ALL"
+      tnt: 
+        Value: "DENY"
+        Group: "ALL"
+      interact: 
+        Value: "DENY"
+        Group: "NON_MEMBERS"
+        
   Protection-block: 
     
     #---
-    # Specify if you want to have a purchase confirmation before carrying out the operation
+    # Define if the shop should open even if there aren't protection blocks on sale.
     #---
-    Request-confirmation-on-purchase-through-gui: false
     
+    Open-shop-on-empty-list: false
+    
+    #---
+    # Define if the shop inventory should through a confirmation before purchasing, to ensure
+    # the player really wants to purchase it.
+    #---
+    
+    Request-confirmation-on-purchase-through-gui: false
+
+  #---
+  # Change the settings of the hook between RoyaleProtectionBlocks and DeluxeCombat.
+  #---
+  
+  Deluxe-combat: 
+
+    #---
+    # Disable or enable certain actions to become available while players are in combat.
+    #---
+
+    Cancel-protection-creation-in-combat: true
+    Cancel-protection-removal-in-combat: true
+    Cancel-protection-teleport-in-combat: true
+
 Commands: 
   Protection-blocks: 
     Name: "protectionblocks"
@@ -214,164 +302,43 @@ Commands:
         Usage: "[page]"
         Aliases: 
         - "h"
-      Add-member: 
-        Name: "addmember"
-        Description: "Add a member on your current protection"
+      Info: 
+        Name: "info"
+        Description: "Show the information of a protection"
         Permission: ""
-        Usage: "<username>"
+        Usage: "[members|owners|banneds]"
         Aliases: 
-        - "am"
+        - "i"
         Cooldown: 0
-      Add-owner: 
-        Name: "addowner"
-        Description: "Add an owner on your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "ao"
-        Cooldown: 0
-      Ban: 
-        Name: "ban"
-        Description: "Ban a player from your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "bn"
-        Cooldown: 0
-      Hide: 
-        Name: "hide"
-        Description: "Hide the protection block on your current protection"
-        Permission: ""
-        Aliases: 
-        - "h"
-        Cooldown: 0
-      Home: 
-        Name: "home"
-        Description: "Teleport to the home of the specified protection."
-        Permission: ""
-        Usage: "[region id]"
-        Aliases: 
-        - "l"
-        Cooldown: 0
-      Kick: 
-        Name: "kick"
-        Description: "Kick a player from your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "k"
-        Cooldown: 0
-      Leave: 
-        Name: "leave"
-        Description: "Leave a protection, stop being an owner or a member"
-        Permission: ""
-        Aliases: 
-        - "l"
-        Cooldown: 0
-      List: 
-        Name: "list"
-        Description: "Open a list with all your protections"
-        Permission: ""
-        Usage: "[username]"
-        Aliases: 
-        - "l"
-        Cooldown: 0
-      Purge: 
-        Name: "purge"
-        Description: "Delete protections older than the specified time, based on the last
-          connection of the owner or their creation date"
-        Permission: "protectionblocks.purge"
-        Usage: "[--days <amount of days>] [--hours <amount of hours>] [--minutes
-          <amount of minutes>] [--config] [--show-ignored-players] [--export-only]
-          [confirm]"
-        Aliases: 
-        - "p"
-        Cooldown: 0
-      Reload: 
-        Name: "reload"
-        Description: "Reload the plugin"
-        Permission: "protectionblocks.reload"
-        Usage: ""
-        Aliases: 
-        - "p"
-        Cooldown: 0
-      Remove-member: 
-        Name: "removemember"
-        Description: "Remove a member on your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "rm"
-        Cooldown: 0
-      Remove-owner: 
-        Name: "removeowner"
-        Description: "Remove an owner on your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "ro"
-        Cooldown: 0
-      Rename: 
-        Name: "rename"
-        Description: "Rename your current protection name"
-        Permission: ""
-        Usage: "<new name>"
-        Aliases: 
-        - "rn"
-        Cooldown: 0
-      Set-home: 
-        Name: "sethome"
-        Description: "Set the home on your current protection"
-        Permission: ""
-        Aliases: 
-        - "sh"
-        Cooldown: 0
-      Set-spawn: 
-        Name: "setspawn"
-        Description: "Specify the spawn configured for the plugin. This one is mostly used
-          to send players after being kicked or banned from a protection"
-        Permission: ""
-        Aliases: 
-        - "ss"
-        Cooldown: 0
-      Show: 
-        Name: "show"
-        Description: "Show the protection block on your current protection"
-        Permission: ""
-        Aliases: 
-        - "sw"
-        Cooldown: 0
-      Spawn: 
-        Name: "spawn"
-        Description: "Use this command to check whether the spawn has been set properly
-          or not"
-        Permission: "protectionblocks.setspawn"
-        Aliases: 
-        - "s"
-        Cooldown: 0
-      Transfer: 
-        Name: "transfer"
-        Description: "Transfer data from a plugin to RoyaleProtectionBlocks"
-        Permission: "protectionblocks.transfer"
-        Usage: "[plugin to transfer] <confirm>"
-        Aliases: 
-        - "t"
-        Cooldown: 0
-      Unban: 
-        Name: "unban"
-        Description: "Unban a player from your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "ubn"
-        Cooldown: 0
-      View: 
-        Name: "view"
-        Description: "Show the boundaries of your current protection for a certain time"
-        Permission: ""
-        Aliases: 
-        - "v"
-        Cooldown: 0
+        Subcommands: 
+          Help: 
+            Name: "help"
+            Description: "Get all the commands"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "h"
+          Members: 
+            Name: "members"
+            Description: "Get the members from the current protection"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "m"
+          Owners: 
+            Name: "owners"
+            Description: "Get the owners from the current protection"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "o"
+          Banneds: 
+            Name: "banneds"
+            Description: "Get the banneds from the current protection"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "b"
       Blocks: 
         Name: "blocks"
         Description: "Open a list with all the blocks"
@@ -387,6 +354,14 @@ Commands:
             Usage: "[page]"
             Aliases: 
             - "h"
+          Remove: 
+            Name: "remove"
+            Description: "Remove an existing block"
+            Permission: "protectionblocks.blocks.remove"
+            Usage: "<id>"
+            Aliases: 
+            - "r"
+            Cooldown: 0
           Add: 
             Name: "add"
             Description: "Create a new block"
@@ -403,14 +378,6 @@ Commands:
             Aliases: 
             - "g"
             Cooldown: 0
-          Remove: 
-            Name: "remove"
-            Description: "Remove an existing block"
-            Permission: "protectionblocks.blocks.remove"
-            Usage: "<id>"
-            Aliases: 
-            - "r"
-            Cooldown: 0
       Files: 
         Name: "files"
         Description: "Manage the importation and exportation of data through files"
@@ -426,15 +393,6 @@ Commands:
             Usage: "[page]"
             Aliases: 
             - "h"
-          Export: 
-            Name: "export"
-            Description: "Export all the information of an specific type of data to its respective
-              file"
-            Permission: "protectionblocks.files.export"
-            Usage: "<blocks>"
-            Aliases: 
-            - "e"
-            Cooldown: 0
           Import: 
             Name: "import"
             Description: "Import all the information of an specific type of data from its respective
@@ -444,3 +402,264 @@ Commands:
             Aliases: 
             - "i"
             Cooldown: 0
+          Export: 
+            Name: "export"
+            Description: "Export all the information of an specific type of data to its respective
+              file"
+            Permission: "protectionblocks.files.export"
+            Usage: "<blocks>"
+            Aliases: 
+            - "e"
+            Cooldown: 0
+      Admin: 
+        Name: "admin"
+        Description: "Commands used to manage staff commands"
+        Permission: "protectionblocks.admin"
+        Usage: "[help|subcommand]"
+        Aliases: 
+        - "a"
+        Subcommands: 
+          Help: 
+            Name: "help"
+            Description: "Get all the commands"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "h"
+          Reload: 
+            Name: "reload"
+            Description: "Reload the plugin"
+            Permission: "protectionblocks.admin.reload"
+            Aliases: 
+            - "r"
+            Cooldown: 0
+          Spawn: 
+            Name: "spawn"
+            Description: "Use this command to check whether the spawn has been set properly
+              or not"
+            Permission: "protectionblocks.admin.spawn"
+            Aliases: 
+            - "s"
+            Cooldown: 0
+          Set-spawn: 
+            Name: "setspawn"
+            Description: "Specify the spawn configured for the plugin. This one is mostly used
+              to send players after being kicked or banned from a protection"
+            Permission: "protectionblocks.admin.setspawn"
+            Aliases: 
+            - "ss"
+            Cooldown: 0
+          Purge: 
+            Name: "purge"
+            Description: "Delete protections older than the specified time, based on the last
+              connection of the owner or their creation date"
+            Permission: "protectionblocks.admin.purge"
+            Usage: "[--days <amount of days>] [--hours <amount of hours>] [--minutes
+              <amount of minutes>] [--config] [--show-ignored-players] [--export-only]
+              [confirm]"
+            Aliases: 
+            - "p"
+            Cooldown: 0
+          Reset-flags: 
+            Name: "resetflags"
+            Description: "Reset the flags values to the default ones"
+            Permission: "protectionblocks.admin.resetflags"
+            Aliases: 
+            - "rf"
+            Cooldown: 0
+          Transfer: 
+            Name: "transfer"
+            Description: "Transfer data from a plugin to RoyaleProtectionBlocks"
+            Permission: "protectionblocks.admin.transfer"
+            Usage: "[plugin to transfer] <confirm>"
+            Aliases: 
+            - "t"
+            Cooldown: 0
+      Leave: 
+        Name: "leave"
+        Description: "Leave a protection, stop being an owner or a member"
+        Permission: ""
+        Aliases: 
+        - "l"
+        Cooldown: 0
+      View: 
+        Name: "view"
+        Description: "Show the boundaries of your current protection for a certain time"
+        Permission: ""
+        Aliases: 
+        - "v"
+        Cooldown: 0
+      Hide: 
+        Name: "hide"
+        Description: "Hide the protection block on your current protection"
+        Permission: ""
+        Aliases: 
+        - "h"
+        Cooldown: 0
+      Remove-owner: 
+        Name: "removeowner"
+        Description: "Remove an owner on your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "ro"
+        Cooldown: 0
+      Ban: 
+        Name: "ban"
+        Description: "Ban a player from your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "bn"
+        Cooldown: 0
+      Kick: 
+        Name: "kick"
+        Description: "Kick a player from your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "k"
+        Cooldown: 0
+      List: 
+        Name: "list"
+        Description: "Open a list with all your protections"
+        Permission: ""
+        Usage: "[username]"
+        Aliases: 
+        - "l"
+        Cooldown: 0
+      Remove-member: 
+        Name: "removemember"
+        Description: "Remove a member on your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "rm"
+        Cooldown: 0
+      Unban: 
+        Name: "unban"
+        Description: "Unban a player from your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "ubn"
+        Cooldown: 0
+      Add-owner: 
+        Name: "addowner"
+        Description: "Add an owner on your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "ao"
+        Cooldown: 0
+      Unclaim: 
+        Name: "unclaim"
+        Description: "Remove the protection you're currently in"
+        Permission: ""
+        Aliases: 
+        - "uc"
+        Cooldown: 0
+      Buy: 
+        Name: "buy"
+        Description: "Purchase protection blocks which are on sale"
+        Permission: ""
+        Usage: "[protection block]"
+        Aliases: []
+        Cooldown: 0
+      Set-home: 
+        Name: "sethome"
+        Description: "Set the home on your current protection"
+        Permission: ""
+        Aliases: 
+        - "sh"
+        Cooldown: 0
+      Rename: 
+        Name: "rename"
+        Description: "Rename your current protection name"
+        Permission: ""
+        Usage: "<new name>"
+        Aliases: 
+        - "rn"
+        Cooldown: 0
+      Add-member: 
+        Name: "addmember"
+        Description: "Add a member on your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "am"
+        Cooldown: 0
+      Show: 
+        Name: "show"
+        Description: "Show the protection block on your current protection"
+        Permission: ""
+        Aliases: 
+        - "sw"
+        Cooldown: 0
+      Home: 
+        Name: "home"
+        Description: "Teleport to the home of the specified protection."
+        Permission: ""
+        Usage: "[region id]"
+        Aliases: 
+        - "l"
+        Cooldown: 0
+
+#---
+# Manage the values of the permissions in the plugin. This permissions only
+# affect to internal checkings, which are using the permission defined here.
+# Other features like commands, which have their own permissions, won't use
+# this values.
+# Specify the next prefixes on the permissions to add the permissions to
+# the players without requiring the permission plugin:
+# - '!' -> Add this to set the permission available for OP players.
+# - '+' -> Add this to set the permission available for all the players.
+#---
+
+Permissions: 
+  Teleport: 
+    Others: "protectionblocks.teleport.others"
+    Bypass: "protectionblocks.teleport.bypass"
+  List: 
+    Others: "protectionblocks.list.others"
+  Delete: 
+    Others: "protectionblocks.delete.others"
+  Manage: 
+    Others: "protectionblocks.manage.others"
+  Members: 
+    Add: 
+      Others: "protectionblocks.members.add.others"
+    Remove: 
+      Others: "protectionblocks.members.remove.others"
+  Banneds: 
+    Add: 
+      Others: "protectionblocks.banneds.add.others"
+    Remove: 
+      Others: "protectionblocks.banneds.remove.others"
+    Bypass: "protectionblocks.banneds.bypass"
+  Kick: 
+    Others: "protectionblocks.kick.others"
+    Bypass: "protectionblocks.kick.bypass"
+  Owners: 
+    Add: 
+      Others: "protectionblocks.owners.add.others"
+    Remove: 
+      Others: "protectionblocks.owners.remove.others"
+  Info: 
+    Others: "protectionblocks.info.others"
+  Overlap: 
+    Bypass: "protectionblocks.overlap.bypass"
+  Economy: 
+    Bypass: "protectionblocks.economy.bypass"
+  Blocks: 
+    Create: "protectionblocks.blocks.create"
+    Edit: "protectionblocks.blocks.edit"
+    Delete: "protectionblocks.blocks.delete"
+    Max: 
+      Template: "protectionblocks.{block}.max.{max}"
+      Bypass: "protectionblocks.{block}.max.bypass"
+  World: 
+    Max: 
+      Template: "protectionblocks.max.{max}"
+  Max: 
+    Bypass: "protectionblocks.max.bypass"

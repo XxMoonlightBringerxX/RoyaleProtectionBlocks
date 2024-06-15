@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.Protec
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionMember;
 import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
 import darkpanda73.PandaUtils.PandaSQLModule.PandaSQLService;
 import darkpanda73.PandaUtils.PandaSQLModule.Annotations.PandaSQLConfig;
@@ -33,7 +35,7 @@ import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Constrain
 import darkpanda73.PandaUtils.PandaUtilities.Location.LocationReference;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 
-@PandaSQLConfig(allowMySQL = true, version = 7)
+@PandaSQLConfig(allowMySQL = true, version = 8)
 public class SQLService extends PandaSQLService {
 
 	@Override
@@ -56,6 +58,15 @@ public class SQLService extends PandaSQLService {
 								new Column(t, "LocationZ", "INTEGER", Types.INTEGER).setNotNull(false))
 						.addUniqueConstraint(
 								new UniqueConstraint(t.getColumn("CustomRegionId"), t.getColumn("OwnerUuid"))))
+				.addTable((t = new Table(getDatabase(), "ProtectionMembers"))
+						.addColumns(new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
+								new Column(t, "MemberUuid", "CHAR(36)", Types.VARCHAR).setNotNull(true),
+								new Column(t, "WorldGuardRole", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
+								new Column(t, "CanInteract", "BOOLEAN", Types.BOOLEAN).setNotNull(false),
+								new Column(t, "CanBuild", "BOOLEAN", Types.BOOLEAN).setNotNull(false))
+						.addUniqueConstraint(new UniqueConstraint(t.getColumn("RegionId"), t.getColumn("MemberUuid")))
+						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("RegionId")),
+								Arrays.asList(getDatabase().getTable("Protections").getColumn("RegionId")))))
 				.addTable(
 						(t = new Table(getDatabase(), "ProtectionBlocks")).addColumns(
 								new Column(t, "Id", "VARCHAR(32)", Types.VARCHAR).setPrimary(true).setUnique(true)
@@ -68,17 +79,13 @@ public class SQLService extends PandaSQLService {
 								new Column(t, "Price", "DECIMAL(11,2)", Types.DECIMAL),
 								new Column(t, "Recipe", "BLOB", Types.BLOB), new Column(t, "RecipePermission",
 										"VARCHAR(64)", Types.VARCHAR)))
-				.addTable(
-						(t = new Table(getDatabase(), "Recipes"))
-								.addColumns(
-										new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR)
-												.setPrimary(true).setUnique(true).setNotNull(true),
-										new Column(t, "Recipe", "BLOB", Types.BLOB).setNotNull(true),
-										new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR))
-								.addForeignConstraint(
-										new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
-												Arrays.asList(
-														getDatabase().getTable("ProtectionBlocks").getColumn("Id")))))
+				.addTable((t = new Table(getDatabase(), "Recipes")).addColumns(
+						new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setPrimary(true)
+								.setUnique(true).setNotNull(true),
+						new Column(t, "Recipe", "BLOB", Types.BLOB).setNotNull(true),
+						new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR))
+						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
+								Arrays.asList(getDatabase().getTable("ProtectionBlocks").getColumn("Id")))))
 				.addTable((t = new Table(getDatabase(), "ProtectionBlockAllowedWorlds"))
 						.addColumns(new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
 								new Column(t, "WorldName", "VARCHAR(256)", Types.VARCHAR))
@@ -126,6 +133,10 @@ public class SQLService extends PandaSQLService {
 		}
 
 		return protections;
+	}
+
+	public List<ProtectionMember> getProtectionMembers(String regionId) {
+		return Collections.emptyList();
 	}
 
 	public List<ProtectionBlock> getProtectionBlocks() {

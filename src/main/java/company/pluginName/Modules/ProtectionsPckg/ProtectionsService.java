@@ -12,6 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 
+import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -28,6 +29,9 @@ import lombok.Getter;
 public class ProtectionsService {
 
 	@PandaInject
+	private MainPluginClass plugin;
+
+	@PandaInject
 	private SQLService sqlService;
 
 	@PandaInject
@@ -40,7 +44,11 @@ public class ProtectionsService {
 	@LoadMethod
 	private void load() {
 		sqlService.getProtections().stream().filter(protection -> {
-			if (Bukkit.getWorld(protection.getWorldName()) != null && protection.getProtectedRegion() == null) {
+			if (Bukkit.getWorld(protection.getWorldName()) == null) {
+				return false;
+			}
+
+			if (protection.getProtectedRegion() == null) {
 				try {
 					MessageTemplate
 							.inst(PandaPrefixedStringField
@@ -63,13 +71,10 @@ public class ProtectionsService {
 				return false;
 			}
 			return true;
-		}).forEach(protection -> {
-			protectionsByOwner.putIfAbsent(protection.getOwnerUuid(), new ArrayList<>());
-			protectionsByOwner.get(protection.getOwnerUuid()).add(protection);
-			protectionsByWorld.putIfAbsent(protection.getWorldName(), new ArrayList<>());
-			protectionsByWorld.get(protection.getWorldName()).add(protection);
-			protectionByRegion.put(protection.getRegionId(), protection);
-		});
+		}).forEach(this::registerProtection);
+
+		plugin.sendDebug(getClass(),
+				String.format("Loaded a total amount of '%d' protection(s)", this.protectionByRegion.size()));
 	}
 
 	@UnloadMethod
@@ -90,20 +95,17 @@ public class ProtectionsService {
 
 	public synchronized void registerProtection(Protection protection) {
 		protectionByRegion.put(protection.getRegionId(), protection);
-		protectionsByOwner.putIfAbsent(protection.getOwnerUuid(), new ArrayList<>());
-		protectionsByOwner.get(protection.getOwnerUuid()).add(protection);
-		protectionsByWorld.putIfAbsent(protection.getLocation().getWorld().getName(), new ArrayList<>());
-		protectionsByWorld.get(protection.getLocation().getWorld().getName()).add(protection);
+		protectionsByOwner.computeIfAbsent(protection.getOwnerUuid(), (ownerUuid) -> new ArrayList<>()).add(protection);
+		protectionsByWorld.computeIfAbsent(protection.getWorldName(), (worldName) -> new ArrayList<>()).add(protection);
+		plugin.sendDebug(getClass(), String.format("Loaded protection '%s'", protection.getRegionId()));
 	}
 
 	public synchronized void unregisterProtection(Protection protection) {
 		protectionByRegion.remove(protection.getRegionId());
-		if (protectionsByOwner.containsKey(protection.getOwnerUuid())) {
-			protectionsByOwner.get(protection.getOwnerUuid()).remove(protection);
-		}
-		if (protectionsByWorld.containsKey(protection.getWorldName())) {
-			protectionsByWorld.get(protection.getWorldName()).remove(protection);
-		}
+		protectionsByOwner.computeIfAbsent(protection.getOwnerUuid(), (ownerUuid) -> new ArrayList<>())
+				.remove(protection);
+		protectionsByWorld.computeIfAbsent(protection.getWorldName(), (worldName) -> new ArrayList<>())
+				.remove(protection);
 	}
 
 	/*

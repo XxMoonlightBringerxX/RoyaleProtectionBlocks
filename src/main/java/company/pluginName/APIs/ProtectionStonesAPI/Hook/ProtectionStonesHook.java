@@ -15,6 +15,8 @@ import org.bukkit.World;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
+import company.pluginName.Debugger;
+import company.pluginName.Debugger.MessageType;
 import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
@@ -258,12 +260,20 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 							}
 						});
 					} catch (RoyaleProtectionBlocksException e) {
-						MessageTemplate
-								.inst(PandaPrefixedStringField.applyPrefix(
-										String.format("&cUnable to save information for protection '%s': %s",
-												region.getId(), e.getMessage())))
-								.process().sendMessage(Bukkit.getConsoleSender());
-						e.sendError(Bukkit.getConsoleSender());
+						if (e.getExceptionType() == Exceptions.Protections.Save.CANCELLED) {
+							Debugger.log(MessageType.PROTECTION_CREATION_ATTEMPT_CANCELLED,
+									() -> new Object[] { String.valueOf(region.getProtectBlock().getLocation().getX()),
+											String.valueOf(region.getProtectBlock().getLocation().getY()),
+											String.valueOf(region.getProtectBlock().getLocation().getZ()) });
+						} else {
+							MessageTemplate
+									.inst(PandaPrefixedStringField.applyPrefix(
+											String.format("&cUnable to save information for protection '%s': %s",
+													region.getId(), e.getMessage())))
+									.process().sendMessage(Bukkit.getConsoleSender());
+							e.sendError(Bukkit.getConsoleSender());
+						}
+
 						exceptionsList.add(e);
 						errorsInConsole.set(true);
 					}

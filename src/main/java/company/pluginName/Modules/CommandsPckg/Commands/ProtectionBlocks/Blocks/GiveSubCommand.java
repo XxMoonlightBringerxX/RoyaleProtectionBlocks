@@ -1,5 +1,6 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Blocks;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
@@ -29,14 +31,16 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		defaultDescription = "Give an existing block to yourself or a player",
 		defaultUsage = "<id> [player]",
 		defaultPermission = "protectionblocks.blocks.give",
-		defaultAliases = "g")
+		defaultAliases = "g"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = true
+)
 public class GiveSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -54,21 +58,20 @@ public class GiveSubCommand extends PandaSubCommand {
 		case 2:
 			return Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
 		default:
-			return EMPTY_LIST;
+			return Collections.emptyList();
 		}
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
-		if (args.length > 1) {
-			ProtectionBlock block = protectionBlocksService.getProtectionBlockById(args[1]);
+		if (parameters.getParameters().size() > 0) {
+			ProtectionBlock block = protectionBlocksService.getProtectionBlockById(parameters.getParameters().get(0));
 			if (block != null) {
 				Player toGive = pl;
 
-				if (args.length > 2) {
-					toGive = Bukkit.getPlayer(args[2]);
+				if (parameters.getParameters().size() > 1) {
+					toGive = Bukkit.getPlayer(parameters.getParameters().get(1));
 				}
 
 				if (toGive == null) {

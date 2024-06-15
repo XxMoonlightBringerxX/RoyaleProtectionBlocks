@@ -1,5 +1,6 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,14 +9,15 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Permissions;
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventory;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 
@@ -26,14 +28,16 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 		defaultName = "list",
 		defaultDescription = "Open a list with all your protections",
 		defaultUsage = "[username]",
-		defaultAliases = "l")
+		defaultAliases = "l"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = true
+)
 public class ListSubCommand extends PandaSubCommand {
 
 	public ListSubCommand() throws InstantiationException {
@@ -45,18 +49,16 @@ public class ListSubCommand extends PandaSubCommand {
 		if (args.length == 1) {
 			return Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
 		}
-		return EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		return CommandResponse.queuedAsync(() -> {
-
 			Player pl = sender instanceof Player ? (Player) sender : null;
 			if (pl != null) {
-				if (args.length > 1 && pl.hasPermission(Permissions.PROTECTION_LIST_OTHERS)) {
-					OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(args[1]);
+				if (parameters.getParameters().size() > 0 && PermissionsService.LIST_OTHERS.hasPermission(pl)) {
+					OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(parameters.getParameters().get(0));
 					if (owner != null) {
 						new ProtectionsListInventory(pl, owner).openInventory();
 					} else {

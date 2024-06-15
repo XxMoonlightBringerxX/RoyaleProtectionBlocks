@@ -1,6 +1,9 @@
 package company.pluginName.Bukkit.Events.PlayerEnterExitRegion;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.entity.Player;
@@ -9,6 +12,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import company.pluginName.APIs.PlaceholderAPI.PlaceholderAPI;
+import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -54,6 +59,12 @@ public class PlayerEnterExitRegionMessageListener implements Listener {
 	@PandaInject
 	private ProtectionSettingsService protectionSettingsService;
 
+	@PandaInject
+	private PlaceholdersService placeholdersService;
+
+	@PandaInject
+	private PlaceholderAPI placeholderApi;
+
 	private HashMap<UUID, IProtection> lastProtections = new HashMap<>();
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -88,59 +99,53 @@ public class PlayerEnterExitRegionMessageListener implements Listener {
 	private void sendEnterMessage(Player player, IProtection protection) {
 		Replacement[] replacements = getReplacements(player, protection);
 
-		if (SETTINGS_PROTECTION_MESSAGEONENTERREGION.getContent() != null
-				&& !SETTINGS_PROTECTION_MESSAGEONENTERREGION.getContent().isEmpty()) {
-			MessageTemplate.inst(SETTINGS_PROTECTION_MESSAGEONENTERREGION.getContent()).setReplacements(replacements)
-					.process().sendMessage(player);
-		}
-
-		if (SETTINGS_PROTECTION_ACTIONBARMESSAGEONENTERREGION.getContent() != null
-				&& !SETTINGS_PROTECTION_ACTIONBARMESSAGEONENTERREGION.getContent().isEmpty()) {
-			MessageTemplate.inst(SETTINGS_PROTECTION_ACTIONBARMESSAGEONENTERREGION.getContent())
-					.setReplacements(replacements).process().sendActionBar(player);
-		}
-
-		if ((SETTINGS_PROTECTION_TITLEONENTERREGION.getContent() != null
-				&& !SETTINGS_PROTECTION_TITLEONENTERREGION.getContent().isEmpty())
-				|| (SETTINGS_PROTECTION_SUBTITLEONENTERREGION.getContent() != null
-						&& !SETTINGS_PROTECTION_SUBTITLEONENTERREGION.getContent().isEmpty())) {
-			MessageTemplate
-					.inst(SETTINGS_PROTECTION_TITLEONENTERREGION.getContent(),
-							SETTINGS_PROTECTION_SUBTITLEONENTERREGION.getContent())
-					.setReplacements(replacements).process().sendTitle(player);
-		}
+		sendMessage(player, replacements, SETTINGS_PROTECTION_MESSAGEONENTERREGION.getContent());
+		sendActionBar(player, replacements, SETTINGS_PROTECTION_ACTIONBARMESSAGEONENTERREGION.getContent());
+		sendTitle(player, replacements, SETTINGS_PROTECTION_TITLEONENTERREGION.getContent(),
+				SETTINGS_PROTECTION_SUBTITLEONENTERREGION.getContent());
 	}
 
 	private void sendExitMessage(Player player, IProtection protection) {
 		Replacement[] replacements = getReplacements(player, protection);
 
-		if (SETTINGS_PROTECTION_MESSAGEONEXITREGION.getContent() != null
-				&& !SETTINGS_PROTECTION_MESSAGEONEXITREGION.getContent().isEmpty()) {
-			MessageTemplate.inst(SETTINGS_PROTECTION_MESSAGEONEXITREGION.getContent()).setReplacements(replacements)
-					.process().sendMessage(player);
-		}
+		sendMessage(player, replacements, SETTINGS_PROTECTION_MESSAGEONEXITREGION.getContent());
+		sendActionBar(player, replacements, SETTINGS_PROTECTION_ACTIONBARMESSAGEONEXITREGION.getContent());
+		sendTitle(player, replacements, SETTINGS_PROTECTION_TITLEONEXITREGION.getContent(),
+				SETTINGS_PROTECTION_SUBTITLEONEXITREGION.getContent());
+	}
 
-		if (SETTINGS_PROTECTION_ACTIONBARMESSAGEONEXITREGION.getContent() != null
-				&& !SETTINGS_PROTECTION_ACTIONBARMESSAGEONEXITREGION.getContent().isEmpty()) {
-			MessageTemplate.inst(SETTINGS_PROTECTION_ACTIONBARMESSAGEONEXITREGION.getContent())
-					.setReplacements(replacements).process().sendActionBar(player);
+	private void sendMessage(Player player, Replacement[] replacements, String message) {
+		if (message != null && !message.isEmpty()) {
+			MessageTemplate.inst(
+					placeholderApi.isHooked() ? placeholderApi.getHook().applyPlaceholders(message, player) : message)
+					.setReplacements(replacements).process().sendMessage(player);
 		}
+	}
 
-		if ((SETTINGS_PROTECTION_TITLEONEXITREGION.getContent() != null
-				&& !SETTINGS_PROTECTION_TITLEONEXITREGION.getContent().isEmpty())
-				|| (SETTINGS_PROTECTION_SUBTITLEONEXITREGION.getContent() != null
-						&& !SETTINGS_PROTECTION_SUBTITLEONEXITREGION.getContent().isEmpty())) {
-			MessageTemplate
-					.inst(SETTINGS_PROTECTION_TITLEONEXITREGION.getContent(),
-							SETTINGS_PROTECTION_SUBTITLEONEXITREGION.getContent())
+	private void sendTitle(Player player, Replacement[] replacements, String title, String subtitle) {
+		if ((title != null && !title.isEmpty()) || (subtitle != null && !subtitle.isEmpty())) {
+			MessageTemplate.inst(
+					placeholderApi.isHooked() ? placeholderApi.getHook().applyPlaceholders(title, player) : title,
+					placeholderApi.isHooked() ? placeholderApi.getHook().applyPlaceholders(subtitle, player) : subtitle)
 					.setReplacements(replacements).process().sendTitle(player);
 		}
 	}
 
+	private void sendActionBar(Player player, Replacement[] replacements, String message) {
+		if (message != null && !message.isEmpty()) {
+			MessageTemplate.inst(
+					placeholderApi.isHooked() ? placeholderApi.getHook().applyPlaceholders(message, player) : message)
+					.setReplacements(replacements).process().sendActionBar(player);
+		}
+	}
+
 	public Replacement[] getReplacements(Player player, IProtection protection) {
-		return new Replacement[] { new Replacement("{player_name}", () -> player.getName()),
-				new Replacement("{protection_name}", () -> protection.getDisplayName()),
-				new Replacement("{protection_owner}", () -> protection.getOwnerName()) };
+		List<Replacement> replacements = new ArrayList<>();
+
+		replacements.addAll(Arrays.asList(placeholdersService.getPlayerReplacements(player)));
+		replacements.addAll(Arrays.asList(placeholdersService.getProtectionReplacements(protection)));
+
+		return replacements.toArray(new Replacement[replacements.size()]);
 	}
 
 }

@@ -10,6 +10,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
+import company.pluginName.Debugger;
+import company.pluginName.Debugger.MessageType;
 import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBannedsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
@@ -275,7 +277,13 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 					}
 				});
 			} catch (RoyaleProtectionBlocksException e) {
-				e.sendError(getPlayer());
+				if (e.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
+					Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
+							() -> new Object[] { protection.getRegionId() });
+				} else {
+					e.sendError(getPlayer());
+				}
+
 			}
 		}).setPreviousHolder(getPreviousHolder()).openInventory();
 	}

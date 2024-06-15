@@ -1,6 +1,6 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,6 +17,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
@@ -29,14 +30,16 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		defaultName = "home",
 		defaultDescription = "Teleport to the home of the specified protection.",
 		defaultUsage = "[region id]",
-		defaultAliases = "l")
+		defaultAliases = "l"
+)
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true)
+		usage = true
+)
 public class HomeSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -57,19 +60,17 @@ public class HomeSubCommand extends PandaSubCommand {
 						.collect(Collectors.toList());
 			}
 		}
-		return EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	@Override
-	public CommandResponse executeCommandProcess(PandaCommand cmd, CommandSender sender, String[] args,
-			boolean useids) {
+	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			if (args.length > 1) {
+			if (parameters.getParameters().size() > 0) {
 				Optional<Protection> protection = protectionsService.getAllowedProtections((Player) sender).stream()
 						.filter(p -> (p.getDisplayName() != null ? p.getDisplayNameWithoutFormat() : p.getRegionId())
-								.equalsIgnoreCase(Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
-										.collect(Collectors.joining(" "))))
+								.equalsIgnoreCase(parameters.getParameters().stream().collect(Collectors.joining(" "))))
 						.findFirst();
 				if (protection.isPresent()) {
 					try {

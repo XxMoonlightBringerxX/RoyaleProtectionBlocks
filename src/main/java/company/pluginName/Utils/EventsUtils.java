@@ -1,5 +1,7 @@
 package company.pluginName.Utils;
 
+import java.util.function.Consumer;
+
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -69,7 +71,8 @@ public class EventsUtils {
 		// Gets the item depending on the hand, or by default, the one offered by the
 		// event. This is used to prevent issues with plugins manipulating the items on
 		// this events like ItemsAdder.
-		ItemStack item = ItemStacksUtils.getItemByHand(player, hand, defaultItem);
+		ItemStack item = eventOrigin != EventOrigin.VANILLA ? ItemStacksUtils.getItemByHand(player, hand, defaultItem)
+				: defaultItem;
 
 		if (item != null) {
 			// Checks if the item is a protection block by getting its metadata field
@@ -150,6 +153,36 @@ public class EventsUtils {
 										: null;
 								Location playerLocation = player.getLocation();
 
+								Consumer<Throwable> onError = (throwable) -> {
+									if (!(throwable instanceof RoyaleProtectionBlocksException)) {
+										throwable = Exceptions.Protections.Save.UNKNOWN.generateException(throwable);
+									}
+
+									if (player.isOnline()) {
+										((RoyaleProtectionBlocksException) throwable).sendError(player);
+									}
+
+									TasksUtils.execute(() -> {
+										if (protectionBlockItem != null) {
+											if (player.isOnline()) {
+												if (player.getGameMode() != GameMode.CREATIVE) {
+													player.getInventory().addItem(protectionBlockItem)
+															.forEach((index, missingItem) -> player.getLocation()
+																	.getWorld()
+																	.dropItem(player.getLocation(), missingItem));
+												}
+											} else {
+												try {
+													playerLocation.getWorld().dropItem(playerLocation,
+															protectionBlock.getInformation().generateItem());
+												} catch (RoyaleProtectionBlocksException e) {
+													e.printStackTrace();
+												}
+											}
+										}
+									});
+								};
+
 								TasksUtils.executeOnAsync(() -> {
 									try {
 										protection.create(player).subscribe((createdProtection) -> {
@@ -170,44 +203,22 @@ public class EventsUtils {
 
 											TasksUtils
 													.execute(() -> createdProtection.getUtils().showProtectionBlock());
-										}, (throwable) -> {
-											if (!(throwable instanceof RoyaleProtectionBlocksException)) {
-												throwable = Exceptions.Protections.Save.UNKNOWN
-														.generateException(throwable);
-											}
-
-											if (player.isOnline()) {
-												((RoyaleProtectionBlocksException) throwable).sendError(player);
-											}
-
-											TasksUtils.execute(() -> {
-												if (protectionBlockItem != null) {
-													if (player.isOnline()) {
-														if (player.getGameMode() != GameMode.CREATIVE) {
-															player.getInventory().addItem(protectionBlockItem)
-																	.forEach((index, missingItem) -> player
-																			.getLocation().getWorld().dropItem(
-																					player.getLocation(), missingItem));
-														}
-													} else {
-														try {
-															playerLocation.getWorld().dropItem(playerLocation,
-																	protectionBlock.getInformation().generateItem());
-														} catch (RoyaleProtectionBlocksException e) {
-															e.printStackTrace();
-														}
-													}
-												}
-											});
-										});
+										}, onError);
 									} catch (RoyaleProtectionBlocksException e) {
-										e.sendError(player);
+										onError.accept(e);
 									}
 								});
 
 								return BlockPlaceResult.SUCCESS;
 							} catch (RoyaleProtectionBlocksException e1) {
-								e1.sendError(player);
+								if (e1.getExceptionType() == Exceptions.Protections.Save.CANCELLED) {
+									Debugger.log(MessageType.PROTECTION_CREATION_ATTEMPT_CANCELLED,
+											() -> new Object[] { String.valueOf(block.getLocation().getX()),
+													String.valueOf(block.getLocation().getY()),
+													String.valueOf(block.getLocation().getZ()) });
+								} else {
+									e1.sendError(player);
+								}
 								return BlockPlaceResult.CANCEL;
 							}
 						} else {
@@ -293,6 +304,18 @@ public class EventsUtils {
 								.generateItem()
 						: null;
 
+				Consumer<Throwable> onError = (throwable) -> {
+					if (!protection.getUtils().isProtectionBlockShown()) {
+						TasksUtils.execute(protection.getUtils()::showProtectionBlock);
+					}
+
+					if (!(throwable instanceof RoyaleProtectionBlocksException)) {
+						throwable = Exceptions.Protections.Delete.UNKNOWN.generateException(throwable);
+					}
+
+					((RoyaleProtectionBlocksException) throwable).sendError(player);
+				};
+
 				TasksUtils.executeOnAsync(() -> {
 					try {
 						protection.delete(player).subscribe((deletedProtection) -> {
@@ -309,25 +332,20 @@ public class EventsUtils {
 									player.closeInventory();
 								}
 							});
-						}, (throwable) -> {
-							if (!(throwable instanceof RoyaleProtectionBlocksException)) {
-								throwable = Exceptions.Protections.Delete.UNKNOWN.generateException(throwable);
-							}
-
-							((RoyaleProtectionBlocksException) throwable).sendError(player);
-						});
+						}, onError);
 					} catch (RoyaleProtectionBlocksException e) {
-						if (!protection.getUtils().isProtectionBlockShown()) {
-							protection.getUtils().showProtectionBlock();
-						}
-
-						e.sendError(player);
+						onError.accept(e);
 					}
 				});
 
 				return BlockBreakResult.SUCCESS;
 			} catch (RoyaleProtectionBlocksException e1) {
-				e1.sendError(player);
+				if (e1.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
+					Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
+							() -> new Object[] { protection.getRegionId() });
+				} else {
+					e1.sendError(player);
+				}
 				return BlockBreakResult.CANCEL;
 			}
 		}
@@ -407,7 +425,12 @@ public class EventsUtils {
 						}
 					});
 				} catch (RoyaleProtectionBlocksException e1) {
-					e1.sendError(player);
+					if (e1.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
+						Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
+								() -> new Object[] { protection.getRegionId() });
+					} else {
+						e1.sendError(player);
+					}
 				}
 			}).openInventory();
 

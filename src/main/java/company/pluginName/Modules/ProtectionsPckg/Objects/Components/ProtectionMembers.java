@@ -8,9 +8,9 @@ import org.bukkit.entity.Player;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.Permissions;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,7 +32,7 @@ public class ProtectionMembers {
 
 	public void add(Player pl, UUID member) throws RoyaleProtectionBlocksException {
 		if (pl != null) {
-			if (!pl.hasPermission(Permissions.PROTECTION_MEMBERS_ADD_OTHERS)) {
+			if (!PermissionsService.MEMBERS_ADD_OTHERS.hasPermission(pl)) {
 				if (!this.protection.getOwners().list().contains(pl.getUniqueId())) {
 					throw Exceptions.Protections.Members.Save.PERMISSIONDENIED.generateException();
 				}
@@ -57,7 +57,7 @@ public class ProtectionMembers {
 	public void remove(Player pl, UUID member) throws RoyaleProtectionBlocksException {
 		if (pl != null && !pl.getUniqueId().equals(member)) {
 			if (!this.protection.getOwners().list().contains(pl.getUniqueId())
-					&& !pl.hasPermission(Permissions.PROTECTION_MEMBERS_REMOVE_OTHERS)) {
+					&& !PermissionsService.MEMBERS_REMOVE_OTHERS.hasPermission(pl)) {
 				throw Exceptions.Protections.Members.Delete.PERMISSIONDENIED.generateException();
 			}
 		}

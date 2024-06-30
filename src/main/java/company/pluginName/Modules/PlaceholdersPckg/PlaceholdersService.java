@@ -11,7 +11,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 
 @PandaService
 public class PlaceholdersService {

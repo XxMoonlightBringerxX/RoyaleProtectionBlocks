@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
@@ -36,30 +36,30 @@ public class ProtectionDisplayItem {
 	private @Getter(lombok.AccessLevel.NONE) @Setter(lombok.AccessLevel.NONE) ItemStack displayItem;
 	private @Getter(lombok.AccessLevel.NONE) @Setter(lombok.AccessLevel.NONE) ItemStack protectionBlockDisplayItem;
 
-	public void setAndSave(ItemStack displayItem) throws RoyaleProtectionBlocksException {
+	public void setAndSave(ItemStack displayItem) throws RoyaleProtectionBlocksExceptionImpl {
 		this.setAndSave(null, displayItem);
 	}
 
-	public void setAndSave(Player pl, ItemStack displayItem) throws RoyaleProtectionBlocksException {
+	public void setAndSave(Player pl, ItemStack displayItem) throws RoyaleProtectionBlocksExceptionImpl {
 		this.set(pl, displayItem);
 
 		TasksUtils.executeOnAsync(() -> {
 			try {
 				sqlService.saveProtection(this.protection);
-			} catch (RoyaleProtectionBlocksException e) {
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
 		});
 	}
 
-	public void set(ItemStack displayItem) throws RoyaleProtectionBlocksException {
+	public void set(ItemStack displayItem) throws RoyaleProtectionBlocksExceptionImpl {
 		this.set(null, displayItem);
 	}
 
-	public void set(Player pl, ItemStack displayItem) throws RoyaleProtectionBlocksException {
+	public void set(Player pl, ItemStack displayItem) throws RoyaleProtectionBlocksExceptionImpl {
 		if (pl != null) {
 			if (!ProtectionUtilities.canChangeDisplayItem(this.protection, pl)) {
-				throw Exceptions.Protections.Save.RENAMEDENIED.generateException();
+				throw Exceptions.Protections.Save.PERMISSIONDENIED.generateException();
 			}
 		}
 
@@ -70,25 +70,25 @@ public class ProtectionDisplayItem {
 		}
 	}
 
-	public void reset() throws RoyaleProtectionBlocksException {
+	public void reset() throws RoyaleProtectionBlocksExceptionImpl {
 		this.reset(null);
 	}
 
-	public void reset(Player pl) throws RoyaleProtectionBlocksException {
+	public void reset(Player pl) throws RoyaleProtectionBlocksExceptionImpl {
 		this.set(pl, null);
 	}
 
-	public void resetAndSave() throws RoyaleProtectionBlocksException {
+	public void resetAndSave() throws RoyaleProtectionBlocksExceptionImpl {
 		this.resetAndSave(null);
 	}
 
-	public void resetAndSave(Player pl) throws RoyaleProtectionBlocksException {
+	public void resetAndSave(Player pl) throws RoyaleProtectionBlocksExceptionImpl {
 		this.set(pl, null);
 
 		TasksUtils.executeOnAsync(() -> {
 			try {
 				sqlService.saveProtection(this.protection);
-			} catch (RoyaleProtectionBlocksException e) {
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
 		});

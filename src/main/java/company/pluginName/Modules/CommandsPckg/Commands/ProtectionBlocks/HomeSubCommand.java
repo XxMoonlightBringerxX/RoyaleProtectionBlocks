@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -22,6 +21,9 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubComma
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTeleportHomeRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -45,6 +47,9 @@ public class HomeSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsService protectionsService;
 
+	@PandaInject
+	private static PlayerInteractionsService playerInteractionsService;
+
 	public HomeSubCommand() throws InstantiationException {
 		super();
 	}
@@ -53,7 +58,7 @@ public class HomeSubCommand extends PandaSubCommand {
 	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
 		if (sender instanceof Player) {
 			if (args.length == 1 && args[0].isEmpty()) {
-				return protectionsService.getAllowedProtections((Player) sender).stream()
+				return protectionsService.getAllowedProtections((Player) sender)
 						.map(protection -> protection.getDisplayName() != null
 								? protection.getDisplayNameWithoutFormat()
 								: protection.getRegionId())
@@ -68,13 +73,14 @@ public class HomeSubCommand extends PandaSubCommand {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			if (parameters.getParameters().size() > 0) {
-				Optional<Protection> protection = protectionsService.getAllowedProtections((Player) sender).stream()
+				Optional<Protection> protection = protectionsService.getAllowedProtections((Player) sender)
 						.filter(p -> (p.getDisplayName() != null ? p.getDisplayNameWithoutFormat() : p.getRegionId())
 								.equalsIgnoreCase(parameters.getParameters().stream().collect(Collectors.joining(" "))))
 						.findFirst();
 				if (protection.isPresent()) {
 					try {
-						protection.get().getActions().teleportToHome(pl);
+						playerInteractionsService.protectionTeleportHomeRequest(
+								ProtectionTeleportHomeRequestInput.inst(pl, protection.get()));
 						return new TrueResponse();
 					} catch (RoyaleProtectionBlocksException e) {
 						e.sendError(pl);

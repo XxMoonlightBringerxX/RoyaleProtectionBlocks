@@ -1,6 +1,5 @@
 package company.pluginName;
 
-import company.pluginName.Bukkit.Inventories.Protections.Flags.Objects.Flag;
 import company.pluginName.Modules.BStatsPckg.Objects.ProvidedProtectionsCustomChart;
 import darkpanda73.PandaUtils.PandaBStats.Annotations.EnableBStats;
 import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
@@ -33,18 +32,6 @@ public class MainPluginClass extends PandaPluginClass {
 	@Override
 	public String getPrefix() {
 		return PREFIX.toString();
-	}
-
-	@Override
-	public void onAfterEnablePlugin() {
-		Flag.initFlags();
-		super.onAfterEnablePlugin();
-	}
-
-	@Override
-	public void onAfterReloadPlugin() {
-		Flag.initFlags();
-		super.onAfterReloadPlugin();
 	}
 
 }

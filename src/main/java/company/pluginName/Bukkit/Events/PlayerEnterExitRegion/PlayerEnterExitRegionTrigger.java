@@ -1,6 +1,7 @@
 package company.pluginName.Bukkit.Events.PlayerEnterExitRegion;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -20,7 +21,9 @@ import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Player.PlayerEnterExitProtectionEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerEnterExitProtectionEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalEvent;
 
 @PandaListener
 public class PlayerEnterExitRegionTrigger implements Listener {
@@ -33,35 +36,48 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onPlayerMove(PlayerMoveEvent e) {
-		processMovement(e, e.getPlayer(), e.getTo());
+		processMovement(e, e.getPlayer(), e.getTo(), true);
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onPlayerTeleport(PlayerTeleportEvent e) {
-		processMovement(e, e.getPlayer(), e.getTo());
+		processMovement(e, e.getPlayer(), e.getTo(), true);
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
 	public void onPlayerJoin(PlayerJoinEvent e) {
-		processMovement(e, e.getPlayer(), e.getPlayer().getLocation());
+		processMovement(e, e.getPlayer(), e.getPlayer().getLocation(), true);
 	}
 
-	public void processMovement(Event moveEvent, Player player, Location toLocation) {
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	public void onProtectionCreation(ProtectionCreationEvent e) {
+		Bukkit.getOnlinePlayers().stream().filter(pl -> e.getProtection().isInside(e.getPlayer().getLocation(), true))
+				.forEach(pl -> processMovement(e, pl, e.getPlayer().getLocation(), false));
+	}
+
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	public void onProtectionRemoval(ProtectionRemovalEvent e) {
+		Bukkit.getOnlinePlayers().stream().filter(pl -> e.getProtection().isInside(e.getPlayer().getLocation(), true))
+				.forEach(pl -> processMovement(e, pl, e.getPlayer().getLocation(), false));
+	}
+
+	public void processMovement(Event originEvent, Player player, Location toLocation, boolean cancellable) {
 		PlayerData playerData = (PlayerData) playerDataService.getPlayerData(player.getUniqueId(), false);
 
 		if (playerData != null) {
-			List<Protection> newProtections = this.protectionsService.findProtectionsByLocation(toLocation);
+			List<Protection> newProtections = this.protectionsService.findProtectionsByLocation(toLocation)
+					.collect(Collectors.toList());
 
-			PlayerEnterExitProtectionEvent event = new PlayerEnterExitProtectionEvent(moveEvent, player,
-					playerData.getCurrentProtections(), newProtections);
+			PlayerEnterExitProtectionEvent event = new PlayerEnterExitProtectionEvent(originEvent, player,
+					playerData.getCurrentProtections(), newProtections, cancellable);
 
 			if (event.getEnteredProtections().size() > 0 || event.getExitedProtections().size() > 0) {
 
 				Bukkit.getPluginManager().callEvent(event);
 
-				if (event.isCancelled()) {
+				if (event.isCancellable() && event.isCancelled()) {
 					if (event instanceof Cancellable) {
-						((Cancellable) moveEvent).setCancelled(true);
+						((Cancellable) originEvent).setCancelled(true);
 					}
 				} else {
 					playerData.setCurrentProtections(newProtections);

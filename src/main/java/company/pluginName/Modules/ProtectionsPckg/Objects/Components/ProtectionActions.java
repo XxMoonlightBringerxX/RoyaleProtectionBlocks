@@ -4,21 +4,21 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import company.pluginName.APIs.VaultAPI.VaultAPI;
 import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Utils.EconomyUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Player.PlayerTeleportToProtectionAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerTeleportToProtectionAttemptEvent;
 
 @Data
 @AllArgsConstructor
@@ -28,30 +28,11 @@ public class ProtectionActions {
 	private static ProtectionSettingsService protectionSettingsService;
 
 	@PandaInject
-	private static VaultAPI vaultApi;
-
-	@PandaInject
 	private static PlayerDataService playerDataService;
 
 	private Protection protection;
 
-	public boolean kickPlayer(Player playerToKick) {
-		try {
-			return kickPlayer(null, playerToKick);
-		} catch (RoyaleProtectionBlocksException e) {
-			return false;
-		}
-	}
-
-	public boolean kickPlayer(Player pl, Player playerToKick) throws RoyaleProtectionBlocksException {
-		if (pl != null) {
-			if (!PermissionsService.KICK_OTHERS.hasPermission(pl)) {
-				if (!this.protection.getOwners().list().contains(pl.getUniqueId())) {
-					throw Exceptions.Protections.PROTECTION_KICK_DENIED.generateException();
-				}
-			}
-		}
-
+	public boolean kickPlayer(Player playerToKick) throws RoyaleProtectionBlocksExceptionImpl {
 		Location loc = playerToKick.getLocation();
 		if (protection.getProtectedRegion().contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) {
 			TasksUtils.execute(() -> playerToKick.teleport(protectionSettingsService.getSpawn()));
@@ -60,7 +41,7 @@ public class ProtectionActions {
 		return false;
 	}
 
-	public void teleportToHome(Player pl) throws RoyaleProtectionBlocksException {
+	public void teleportToHome(Player pl) throws RoyaleProtectionBlocksExceptionImpl {
 		if (this.protection.getHome() == null) {
 			throw Exceptions.Protections.Teleport.NOHOMESET.generateException();
 		}
@@ -84,10 +65,10 @@ public class ProtectionActions {
 			}
 		}
 
-		if (vaultApi.getHook() != null && Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent() > 0D) {
+		if (Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent() > 0D) {
 			if (!PermissionsService.ECONOMY_BYPASS.hasPermission(pl)
-					&& !vaultApi.getHook().withdraw(pl, Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent())) {
-				throw Exceptions.Protections.PROTECTION_NOTENOUGHBALANCE.generateException();
+					&& !EconomyUtils.withdraw(pl, Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent())) {
+				throw Exceptions.Protections.NOTENOUGHBALANCE.generateException();
 			}
 		}
 

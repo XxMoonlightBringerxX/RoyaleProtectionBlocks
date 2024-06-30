@@ -3,10 +3,11 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.APIs.VaultAPI.VaultAPI;
+import company.pluginName.API.Services.PlayerInteractionsServiceImpl;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlocksShopInventory;
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventory;
-import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManageInventory;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Hooks.VaultAPI.VaultAPI;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
@@ -19,6 +20,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
 
 @PandaCommandAnnotation(
 		id = "protectionblocks",
@@ -39,6 +41,9 @@ public class ProtectionBlocksCommand extends PandaCommand {
 	private static ProtectionsService protectionsService;
 
 	@PandaInject
+	private static PlayerInteractionsServiceImpl playerInteractionsService;
+
+	@PandaInject
 	private static VaultAPI vaultApi;
 
 	public ProtectionBlocksCommand() throws InstantiationException {
@@ -52,10 +57,15 @@ public class ProtectionBlocksCommand extends PandaCommand {
 		if (pl != null && parameters.getParameters().size() == 0) {
 			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 			if (protection != null && ProtectionUtilities.canManage(protection, pl)) {
-				new ProtectionsManageInventory(pl, protection).openInventory();
+				try {
+					playerInteractionsService.openProtectionManagementInventoryRequest(
+							OpenProtectionManagementInventoryRequestInput.inst(pl, protection));
+				} catch (RoyaleProtectionBlocksExceptionImpl e) {
+					e.sendError(pl);
+				}
 			} else {
 				if (vaultApi.isHooked() && SETTINGS_PROTECTIONBLOCK_OPENSHOPONLISTEMPTY.getContent()
-						&& protectionsService.getAllowedProtections(pl).size() == 0) {
+						&& protectionsService.getAllowedProtections(pl).count() == 0) {
 					new ProtectionBlocksShopInventory(pl).openInventory();
 				} else {
 					new ProtectionsListInventory(pl).openInventory();

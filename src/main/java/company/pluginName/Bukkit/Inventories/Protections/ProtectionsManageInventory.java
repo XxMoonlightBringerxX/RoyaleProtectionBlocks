@@ -1,24 +1,18 @@
 package company.pluginName.Bukkit.Inventories.Protections;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Debugger;
-import company.pluginName.Debugger.MessageType;
 import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBannedsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
-import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
-import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
@@ -29,7 +23,6 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Events.MessagesListener;
 import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Exceptions.PlayerAlreadyListeningException;
-import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
@@ -40,7 +33,10 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemPr
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionRemovalAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRenameRequestInput;
 
 @Inventory("protections_manage")
 public class ProtectionsManageInventory extends ChestInventoryObject {
@@ -58,6 +54,9 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
+
+	@PandaInject
+	private static PlayerInteractionsService playerInteractionsService;
 
 	private Protection protection;
 
@@ -147,7 +146,7 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 				protection.getDisplayItem().resetAndSave(getPlayer());
 				updateInventory();
 			}
-		} catch (RoyaleProtectionBlocksException e1) {
+		} catch (RoyaleProtectionBlocksExceptionImpl e1) {
 			e1.sendError(getPlayer());
 		}
 	}
@@ -178,7 +177,8 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 			messagesListener.startListening(getPlayer().getUniqueId(), (message) -> {
 				if (!message.equalsIgnoreCase("cancel")) {
 					try {
-						protection.setDisplayName(getPlayer(), message);
+						playerInteractionsService.protectionRenameRequest(
+								ProtectionRenameRequestInput.inst(getPlayer(), protection, message));
 						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY.applyPrefix()).process()
 								.sendMessage(getPlayer());
 					} catch (RoyaleProtectionBlocksException e1) {
@@ -224,68 +224,12 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@ItemExecutor("Delete-button")
 	private void executeDeleteButton() {
-		new ConfirmationInventory(getPlayer(), () -> {
-			try {
-				ProtectionRemovalAttemptEvent attemptEvent = new ProtectionRemovalAttemptEvent(getPlayer(), protection);
-				Bukkit.getPluginManager().callEvent(attemptEvent);
-
-				if (attemptEvent.isCancelled()) {
-					throw Exceptions.Protections.Delete.CANCELLED.generateException();
-				}
-
-				if (protection.getUtils().isProtectionBlockShown()) {
-					protection.getUtils().hideProtectionBlock();
-				}
-
-				if (protection.getBoundaries().isProtectionViewActive()) {
-					protection.getBoundaries().toggleProtectionView();
-				}
-
-				ProtectionBlock protectionBlock = protection.getProtectionBlock().getObject();
-				ItemStack protectionBlockItem = (protectionBlock != null)
-						? ((ProtectionBlock) protection.getProtectionBlock().getObject()).getInformation()
-								.generateItem()
-						: null;
-
-				TasksUtils.executeOnAsync(() -> {
-					try {
-						protection.delete(getPlayer()).subscribe((deletedProtection) -> {
-							MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
-									.process().sendMessage(getPlayer());
-
-							TasksUtils.execute(() -> {
-								if (getPlayer().isOnline() && protectionBlockItem != null) {
-									getPlayer().getInventory().addItem(protectionBlockItem)
-											.forEach((index, remainingItem) -> protection.getLocation().getWorld()
-													.dropItem(protection.getLocation(), remainingItem));
-								}
-
-								if (getPlayer().isOnline()
-										&& getPlayer().getOpenInventory().getType() != InventoryType.CRAFTING) {
-									getPlayer().closeInventory();
-								}
-							});
-						}, (throwable) -> {
-							if (!(throwable instanceof RoyaleProtectionBlocksException)) {
-								throwable = Exceptions.Protections.Delete.UNKNOWN.generateException(throwable);
-							}
-
-							((RoyaleProtectionBlocksException) throwable).sendError(getPlayer());
-						});
-					} catch (RoyaleProtectionBlocksException e) {
-						e.sendError(getPlayer());
-					}
-				});
-			} catch (RoyaleProtectionBlocksException e) {
-				if (e.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
-					Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
-							() -> new Object[] { protection.getRegionId() });
-				} else {
-					e.sendError(getPlayer());
-				}
-
-			}
-		}).setPreviousHolder(getPreviousHolder()).openInventory();
+		try {
+			playerInteractionsService.openProtectionRemovalInventoryRequest(
+					OpenProtectionRemovalInventoryRequestInput.inst(getPlayer(), protection));
+		} catch (RoyaleProtectionBlocksException e) {
+			e.sendError(getPlayer());
+		}
 	}
 
 	private Replacement[] availableVariables = null;

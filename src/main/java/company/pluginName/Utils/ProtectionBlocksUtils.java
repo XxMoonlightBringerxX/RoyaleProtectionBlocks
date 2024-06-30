@@ -11,10 +11,10 @@ import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import company.pluginName.APIs.ItemsAdderAPI.ItemsAdderAPI;
-import company.pluginName.APIs.ItemsAdderAPI.Hook.ItemsAdderHook;
-import company.pluginName.APIs.OraxenAPI.OraxenAPI;
-import company.pluginName.APIs.OraxenAPI.Hook.OraxenHook;
+import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
+import company.pluginName.Hooks.ItemsAdderAPI.Hook.ItemsAdderHook;
+import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
+import company.pluginName.Hooks.OraxenAPI.Hook.OraxenHook;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockAllowedWorlds;

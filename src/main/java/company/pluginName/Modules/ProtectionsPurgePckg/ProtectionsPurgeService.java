@@ -20,12 +20,14 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.scheduler.BukkitTask;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPurgePckg.Objects.AutoPurgeLog;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration;
+import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Utils.DiscordUtilities;
 import company.pluginName.Utils.TimeUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -42,15 +44,22 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 import lombok.Getter;
 import relampagorojo93.LibsCollection.JSONLib.JSONArray;
 import relampagorojo93.LibsCollection.JSONLib.JSONObject;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 
 @PandaService
 public class ProtectionsPurgeService {
+
+	@PandaInject
+	private MainPluginClass plugin;
 
 	@PandaInject
 	private ProtectionsService protectionsService;
 
 	@PandaInject
 	private FilesService filesService;
+
+	@PandaInject
+	private SQLService sqlService;
 
 	private static final DateFormat FILE_DATE_FORMAT = new SimpleDateFormat("'/purge.'yyyyMMddHHmmss'.json'");
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -62,6 +71,8 @@ public class ProtectionsPurgeService {
 	private BukkitTask autoRemovalTask;
 	private @Getter PurgeConfiguration configuredPurgeConfiguration;
 
+	private AutoPurgeLog lastLog;
+
 	@LoadMethod
 	public void load() throws ReportError {
 		try {
@@ -72,13 +83,25 @@ public class ProtectionsPurgeService {
 						.stringToSeconds(Settings.SETTINGS_PROTECTION_AUTOPURGE_EXECUTEEVERY.getContent());
 
 				if (executeEvery > 0) {
-					MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(String.format(
+					plugin.sendDebug(getClass(), String.format(
 							"Set auto purge to execute every %d seconds to remove regions older than %d seconds",
-							executeEvery, olderThan))).process().sendMessage(Bukkit.getConsoleSender());
+							executeEvery, olderThan));
 
 					configuredPurgeConfiguration = new PurgeConfiguration().setMillis(olderThan * 1000);
+					lastLog = sqlService.getLastAutoPurgeLog();
+
+					if (lastLog == null) {
+						plugin.sendDebug(getClass(), String.format(
+								"There's no last auto-purge log. Creating a new one with the current millis. Next auto-purge will be executed once the last log is older than '%d' seconds.",
+								executeEvery));
+						lastLog = new AutoPurgeLog(System.currentTimeMillis(),
+								this.configuredPurgeConfiguration.getMillis(), 0);
+						sqlService.saveAutoPurgeLog(lastLog);
+					}
 
 					autoRemovalTask = TasksUtils.executeOnAsyncWithTimer(() -> {
+						lastLog = new AutoPurgeLog(System.currentTimeMillis(),
+								this.configuredPurgeConfiguration.getMillis(), 0);
 						List<Protection> protectionsToPurge = retrieveProtectionsToPurge(configuredPurgeConfiguration);
 						TasksUtils.execute(() -> {
 							FutureTask<List<Protection>> purgedProtections = purgeProtections(protectionsToPurge);
@@ -86,12 +109,19 @@ public class ProtectionsPurgeService {
 								try {
 									DiscordUtilities.sendPurgeSummaryMessage(null, configuredPurgeConfiguration,
 											purgedProtections.get());
+									lastLog = new AutoPurgeLog(System.currentTimeMillis(),
+											this.configuredPurgeConfiguration.getMillis(),
+											purgedProtections.get().size());
+									sqlService.saveAutoPurgeLog(lastLog);
 								} catch (InterruptedException | ExecutionException e) {
 									e.printStackTrace();
 								}
 							});
 						});
-					}, 0, executeEvery * 20);
+
+					}, (long) (Math.max(
+							((executeEvery * 1000) - (System.currentTimeMillis() - lastLog.getExecutionMillis())), 0)
+							/ 50), (long) (executeEvery * 20));
 				}
 			}
 		} catch (NumberFormatException e) {
@@ -105,6 +135,7 @@ public class ProtectionsPurgeService {
 		if (autoRemovalTask != null) {
 			this.autoRemovalTask.cancel();
 		}
+		lastLog = null;
 	}
 
 	@ReloadMethod
@@ -172,11 +203,11 @@ public class ProtectionsPurgeService {
 							protection.getBoundaries().toggleProtectionView();
 						}
 
-						protection.delete().subscribe();
+						protection.delete(RemovalCause.PURGE).subscribe();
 
 						purgedProtections.add(protection);
 						iterator.remove();
-					} catch (RoyaleProtectionBlocksException e) {
+					} catch (RoyaleProtectionBlocksExceptionImpl e) {
 						e.printStackTrace();
 					}
 				}

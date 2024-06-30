@@ -6,15 +6,16 @@ import org.bukkit.event.Listener;
 
 import company.pluginName.Debugger;
 import company.pluginName.Debugger.MessageType;
-import company.pluginName.APIs.PlaceholderAPI.PlaceholderAPI;
+import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Utils.DiscordUtilities;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionCreationEvent;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionRemovalEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalEvent;
 
 @PandaListener
 public class ProtectionCreationRemovalListener implements Listener {
@@ -44,14 +45,16 @@ public class ProtectionCreationRemovalListener implements Listener {
 
 	@EventHandler
 	public void onProtectionRemoval(ProtectionRemovalEvent e) {
-		Debugger.log(MessageType.PROTECTION_REMOVAL, () -> new Object[] { e.getPlayer().getName(),
-				e.getProtection().getDisplayName() != null ? e.getProtection().getDisplayName()
-						: e.getProtection().getRegionId(),
-				String.valueOf(e.getProtection().getLocation().getX()),
-				String.valueOf(e.getProtection().getLocation().getY()),
-				String.valueOf(e.getProtection().getLocation().getZ()) });
+		if (e.getCause() != RemovalCause.PURGE) {
+			Debugger.log(MessageType.PROTECTION_REMOVAL, () -> new Object[] { e.getPlayer().getName(),
+					e.getProtection().getDisplayName() != null ? e.getProtection().getDisplayName()
+							: e.getProtection().getRegionId(),
+					String.valueOf(e.getProtection().getLocation().getX()),
+					String.valueOf(e.getProtection().getLocation().getY()),
+					String.valueOf(e.getProtection().getLocation().getZ()) });
 
-		DiscordUtilities.sendProtectionUnregisteredMessage(e.getPlayer(), (Protection) e.getProtection());
+			DiscordUtilities.sendProtectionUnregisteredMessage(e.getPlayer(), (Protection) e.getProtection());
+		}
 
 		TasksUtils.execute(() -> {
 			Settings.SETTINGS_COMMANDSONREMOVAL.getContent().stream().filter(command -> !command.trim().isEmpty())

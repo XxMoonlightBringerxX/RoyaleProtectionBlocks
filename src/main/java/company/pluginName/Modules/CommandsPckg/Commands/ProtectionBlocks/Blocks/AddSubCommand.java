@@ -8,11 +8,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.APIs.ItemsAdderAPI.ItemsAdderAPI;
-import company.pluginName.APIs.ItemsAdderAPI.Hook.ItemsAdderHook;
-import company.pluginName.APIs.OraxenAPI.OraxenAPI;
-import company.pluginName.APIs.OraxenAPI.Hook.OraxenHook;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
+import company.pluginName.Hooks.ItemsAdderAPI.Hook.ItemsAdderHook;
+import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
+import company.pluginName.Hooks.OraxenAPI.Hook.OraxenHook;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
@@ -120,7 +120,7 @@ public class AddSubCommand extends PandaSubCommand {
 								MessageTemplate.inst(Messages.ERROR_INVALIDNUMBER.applyPrefix()).process()
 										.sendMessage(pl);
 							}
-						} catch (RoyaleProtectionBlocksException e) {
+						} catch (RoyaleProtectionBlocksExceptionImpl e) {
 							e.sendError(pl);
 						}
 					} else {

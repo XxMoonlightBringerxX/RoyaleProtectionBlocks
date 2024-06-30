@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 
 import org.bukkit.command.CommandSender;
 
-import company.pluginName.APIs.ProtectionStonesAPI.ProtectionStonesAPI;
-import company.pluginName.APIs.ProtectionStonesAPI.Hook.ProtectionStonesHook.TransferResult;
+import company.pluginName.Hooks.ProtectionStonesAPI.ProtectionStonesAPI;
+import company.pluginName.Hooks.ProtectionStonesAPI.Hook.ProtectionStonesHook.TransferResult;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;

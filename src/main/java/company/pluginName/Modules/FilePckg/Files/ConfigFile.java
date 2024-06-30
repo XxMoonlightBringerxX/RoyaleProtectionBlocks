@@ -28,7 +28,9 @@ public class ConfigFile extends PandaConfigFile {
 		PandaYaml curYaml = super.updateFileVersion(yaml);
 
 		if (curYaml != this.getDefaultYaml()) {
+			// TODO: Remove on 0.1.5 Alpha
 			YamlSection flags = yaml.getRoot().getSection("Settings.Flags");
+
 			if (flags != null) {
 				flags.toMap()
 						.forEach((k, v) -> yaml.getRoot().set(String.format("Settings.Protection.Flags.%s", k), v));

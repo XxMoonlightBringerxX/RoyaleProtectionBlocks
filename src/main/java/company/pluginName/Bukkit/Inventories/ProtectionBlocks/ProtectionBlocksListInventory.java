@@ -11,7 +11,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
@@ -108,7 +108,7 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 		if (e.getClick() == ClickType.LEFT && !e.isShiftClick()) {
 			try {
 				e.getWhoClicked().getOpenInventory().setCursor(entity.getInformation().generateItem());
-			} catch (RoyaleProtectionBlocksException e1) {
+			} catch (RoyaleProtectionBlocksExceptionImpl e1) {
 				e1.sendError(getPlayer());
 				return;
 			}
@@ -120,7 +120,7 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 					entity.delete(getPlayer());
 					MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY.applyPrefix())
 							.process().sendMessage(getPlayer());
-				} catch (RoyaleProtectionBlocksException e1) {
+				} catch (RoyaleProtectionBlocksExceptionImpl e1) {
 					e1.sendError(getPlayer());
 				}
 			}).openInventory();

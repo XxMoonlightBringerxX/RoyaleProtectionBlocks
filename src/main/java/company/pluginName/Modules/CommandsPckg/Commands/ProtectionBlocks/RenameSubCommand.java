@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -18,6 +17,9 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubComma
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRenameRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -41,6 +43,9 @@ public class RenameSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsService protectionsService;
 
+	@PandaInject
+	private static PlayerInteractionsService playerInteractionsService;
+
 	public RenameSubCommand() throws InstantiationException {
 		super();
 	}
@@ -53,8 +58,8 @@ public class RenameSubCommand extends PandaSubCommand {
 				Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 				if (protection != null) {
 					try {
-						protection.setDisplayName(pl,
-								parameters.getParameters().stream().collect(Collectors.joining(" ")));
+						playerInteractionsService.protectionRenameRequest(ProtectionRenameRequestInput.inst(pl,
+								protection, parameters.getParameters().stream().collect(Collectors.joining(" "))));
 						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY.applyPrefix()).process()
 								.sendMessage(sender);
 					} catch (RoyaleProtectionBlocksException e) {

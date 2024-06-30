@@ -10,10 +10,10 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlockRecipeInventory.SimpleRecipe;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.BannedWorlds.ProtectionBlockAllowedWorldsInventory;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
@@ -234,7 +234,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 						.sendMessage(getPlayer());
 			}
 			goToPreviousHolder();
-		} catch (RoyaleProtectionBlocksException ex) {
+		} catch (RoyaleProtectionBlocksExceptionImpl ex) {
 			if (originalProtectionBlock != null) {
 				originalProtectionBlock.copy(copyOriginalProtectionBlock);
 			}
@@ -274,7 +274,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 					updateInventory();
 				}
 			}
-		} catch (RoyaleProtectionBlocksException ex) {
+		} catch (RoyaleProtectionBlocksExceptionImpl ex) {
 			ex.sendError(getPlayer());
 		}
 	}

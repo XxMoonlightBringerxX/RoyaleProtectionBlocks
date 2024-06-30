@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.FilePckg.Files.ConfigFile;
+import company.pluginName.Modules.FilePckg.Files.FlagsFile;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject.PostInjectMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Exceptions.ReportResult;
@@ -25,6 +26,7 @@ public class FilesService extends PandaFilesService {
 	private @Getter PandaFolder pluginFolder;
 	private @Getter PandaYamlFile langFile;
 	private @Getter PandaYamlFile configFile;
+	private @Getter PandaYamlFile flagsFile;
 	private @Getter PandaYamlFile blocksFile;
 
 	@PostInjectMethod
@@ -34,6 +36,7 @@ public class FilesService extends PandaFilesService {
 		try {
 			addFile(configFile = new ConfigFile(pluginFolder, plugin));
 			addFile(langFile = new PandaLangFile(pluginFolder, plugin));
+			addFile(flagsFile = new FlagsFile(pluginFolder, plugin));
 			addFile(blocksFile = new PandaYamlFile("blocks", pluginFolder.getFile().getPath() + "/blocks.yml",
 					new PandaYaml(plugin.getResource(plugin.getClass().getPackage().getName().replaceAll("\\.", "/")
 							+ "/Resources/Blocks.yml"))));

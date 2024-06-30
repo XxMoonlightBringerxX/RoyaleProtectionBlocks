@@ -26,7 +26,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBool
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Player.PlayerEnterExitProtectionEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerEnterExitProtectionEvent;
 
 @PandaListener
 public class PlayerFlightListener implements Listener {

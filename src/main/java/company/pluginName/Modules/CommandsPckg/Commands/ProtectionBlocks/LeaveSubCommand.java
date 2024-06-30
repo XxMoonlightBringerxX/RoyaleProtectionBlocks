@@ -3,7 +3,6 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -15,6 +14,10 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberRemoveRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerRemoveRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -36,6 +39,9 @@ public class LeaveSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsService protectionsService;
 
+	@PandaInject
+	private static PlayerInteractionsService playerInteractionsService;
+
 	public LeaveSubCommand() throws InstantiationException {
 		super();
 	}
@@ -51,12 +57,14 @@ public class LeaveSubCommand extends PandaSubCommand {
 						boolean left = false;
 
 						if (protection.getOwners().list().contains(pl.getUniqueId())) {
-							protection.getOwners().remove(pl.getUniqueId());
+							playerInteractionsService.protectionOwnerRemoveRequest(
+									ProtectionOwnerRemoveRequestInput.inst(pl, protection, pl.getUniqueId()));
 							left = true;
 						}
 
 						if (protection.getMembers().list().contains(pl.getUniqueId())) {
-							protection.getMembers().remove(pl.getUniqueId());
+							playerInteractionsService.protectionMemberRemoveRequest(
+									ProtectionMemberRemoveRequestInput.inst(pl, protection, pl.getUniqueId()));
 							left = true;
 						}
 
@@ -67,8 +75,6 @@ public class LeaveSubCommand extends PandaSubCommand {
 							MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTMEMBER.applyPrefix()).process()
 									.sendMessage(sender);
 						}
-						protection.getOwners().remove(pl.getUniqueId());
-						protection.getMembers().remove(pl.getUniqueId());
 					} catch (RoyaleProtectionBlocksException e) {
 						e.sendError(pl);
 					}

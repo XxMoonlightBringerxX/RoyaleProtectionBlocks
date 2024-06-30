@@ -14,6 +14,9 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSetHomeRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -35,6 +38,9 @@ public class SetHomeSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsService protectionsService;
 
+	@PandaInject
+	private static PlayerInteractionsService RoyaleProtectionBlocksException;
+
 	public SetHomeSubCommand() throws InstantiationException {
 		super();
 	}
@@ -45,18 +51,17 @@ public class SetHomeSubCommand extends PandaSubCommand {
 		if (pl != null) {
 			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 			if (protection != null) {
-				if (protection.isMainOwner(pl.getUniqueId())) {
-					try {
-						protection.setHome(pl.getLocation());
-						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_HOMESETSUCCESSFULLY.applyPrefix()).process()
-								.sendMessage(sender);
-					} catch (Exception e) {
-						MessageTemplate.inst(Messages.ERROR_ERROR.applyPrefix()).process().sendMessage(sender);
-						e.printStackTrace();
-					}
-				} else {
-					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTMAINOWNER.applyPrefix()).process()
+				try {
+					RoyaleProtectionBlocksException
+							.protectionSetHomeRequest(ProtectionSetHomeRequestInput.inst(pl, protection));
+					protection.setHome(pl.getLocation());
+					MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_HOMESETSUCCESSFULLY.applyPrefix()).process()
 							.sendMessage(sender);
+				} catch (RoyaleProtectionBlocksException e) {
+					e.sendError(sender);
+				} catch (Exception e) {
+					MessageTemplate.inst(Messages.ERROR_ERROR.applyPrefix()).process().sendMessage(sender);
+					e.printStackTrace();
 				}
 			} else {
 				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()

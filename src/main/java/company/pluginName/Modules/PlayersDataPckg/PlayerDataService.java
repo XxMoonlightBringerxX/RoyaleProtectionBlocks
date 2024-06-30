@@ -11,4 +11,5 @@ public class PlayerDataService extends PandaPlayerDataService<PlayerData> {
 	protected PlayerData generatePlayerData(UUID uuid) {
 		return new PlayerData(uuid);
 	}
+
 }

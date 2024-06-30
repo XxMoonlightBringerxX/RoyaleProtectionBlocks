@@ -15,17 +15,19 @@ import java.util.UUID;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockAllowedWorlds;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionMember;
+import company.pluginName.Modules.ProtectionsPurgePckg.Objects.AutoPurgeLog;
 import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
 import darkpanda73.PandaUtils.PandaSQLModule.PandaSQLService;
 import darkpanda73.PandaUtils.PandaSQLModule.Annotations.PandaSQLConfig;
 import darkpanda73.PandaUtils.PandaSQLModule.Objects.Enums.ConditionType;
+import darkpanda73.PandaUtils.PandaSQLModule.Objects.Enums.SQLType;
 import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.Data;
 import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.Conditions.Condition;
 import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Column;
@@ -34,8 +36,9 @@ import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Constrain
 import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Constraints.UniqueConstraint;
 import darkpanda73.PandaUtils.PandaUtilities.Location.LocationReference;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
 
-@PandaSQLConfig(allowMySQL = true, version = 8)
+@PandaSQLConfig(allowMySQL = true, version = 10)
 public class SQLService extends PandaSQLService {
 
 	@Override
@@ -55,7 +58,9 @@ public class SQLService extends PandaSQLService {
 								new Column(t, "CreatedDate", "BIGINT", Types.BIGINT).setNotNull(false),
 								new Column(t, "LocationX", "INTEGER", Types.INTEGER).setNotNull(false),
 								new Column(t, "LocationY", "INTEGER", Types.INTEGER).setNotNull(false),
-								new Column(t, "LocationZ", "INTEGER", Types.INTEGER).setNotNull(false))
+								new Column(t, "LocationZ", "INTEGER", Types.INTEGER).setNotNull(false),
+								new Column(t, "Blocked", "BOOLEAN", Types.BOOLEAN).setNotNull(false),
+								new Column(t, "BlockReason", "VARCHAR(64)", Types.VARCHAR).setNotNull(false))
 						.addUniqueConstraint(
 								new UniqueConstraint(t.getColumn("CustomRegionId"), t.getColumn("OwnerUuid"))))
 				.addTable((t = new Table(getDatabase(), "ProtectionMembers"))
@@ -79,20 +84,28 @@ public class SQLService extends PandaSQLService {
 								new Column(t, "Price", "DECIMAL(11,2)", Types.DECIMAL),
 								new Column(t, "Recipe", "BLOB", Types.BLOB), new Column(t, "RecipePermission",
 										"VARCHAR(64)", Types.VARCHAR)))
-				.addTable((t = new Table(getDatabase(), "Recipes")).addColumns(
-						new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setPrimary(true)
-								.setUnique(true).setNotNull(true),
-						new Column(t, "Recipe", "BLOB", Types.BLOB).setNotNull(true),
-						new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR))
-						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
-								Arrays.asList(getDatabase().getTable("ProtectionBlocks").getColumn("Id")))))
+				.addTable(
+						(t = new Table(getDatabase(), "Recipes"))
+								.addColumns(
+										new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR)
+												.setPrimary(true).setUnique(true).setNotNull(true),
+										new Column(t, "Recipe", "BLOB", Types.BLOB).setNotNull(true),
+										new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR))
+								.addForeignConstraint(
+										new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
+												Arrays.asList(
+														getDatabase().getTable("ProtectionBlocks").getColumn("Id")))))
 				.addTable((t = new Table(getDatabase(), "ProtectionBlockAllowedWorlds"))
 						.addColumns(new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
 								new Column(t, "WorldName", "VARCHAR(256)", Types.VARCHAR))
 						.addUniqueConstraint(
 								new UniqueConstraint(t.getColumn("ProtectionBlockId"), t.getColumn("WorldName")))
 						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
-								Arrays.asList(getDatabase().getTable("ProtectionBlocks").getColumn("Id")))));
+								Arrays.asList(getDatabase().getTable("ProtectionBlocks").getColumn("Id")))))
+				.addTable((t = new Table(getDatabase(), "AutoPurgeLogs")).addColumns(
+						new Column(t, "ExecutionMillis", "BIGINT", Types.BIGINT).setUnique(true).setNotNull(true),
+						new Column(t, "OlderThanMillis", "BIGINT", Types.BIGINT).setNotNull(true),
+						new Column(t, "RemovedProtections", "INTEGER", Types.INTEGER).setNotNull(true)));
 	}
 
 	public List<Protection> getProtections() {
@@ -118,6 +131,15 @@ public class SQLService extends PandaSQLService {
 						&& set.getObject("LocationZ") != null) {
 					protection.setLocation(new LocationReference(set.getString("WorldName"), set.getInt("LocationX"),
 							set.getInt("LocationY"), set.getInt("LocationZ")));
+				}
+
+				if (set.getObject("Blocked") != null && set.getObject("BlockReason") != null) {
+					try {
+						protection.setBlocked(set.getBoolean("Blocked"));
+						protection.setBlockReason(BlockReason.valueOf(set.getString("BlockReason")));
+					} catch (IllegalArgumentException e) {
+						protection.setBlocked(false);
+					}
 				}
 
 				protections.add(protection);
@@ -199,7 +221,7 @@ public class SQLService extends PandaSQLService {
 		return recipes;
 	}
 
-	public void saveProtection(Protection protection) throws RoyaleProtectionBlocksException {
+	public void saveProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		Table t = this.getDatabase().getTable("Protections");
 		HashMap<Column, Data> values = new HashMap<>();
 		values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
@@ -217,13 +239,17 @@ public class SQLService extends PandaSQLService {
 		values.put(t.getColumn("LocationX"), new Data(Types.INTEGER, protection.getLocation().getBlockX()));
 		values.put(t.getColumn("LocationY"), new Data(Types.INTEGER, protection.getLocation().getBlockY()));
 		values.put(t.getColumn("LocationZ"), new Data(Types.INTEGER, protection.getLocation().getBlockZ()));
+		values.put(t.getColumn("Blocked"), new Data(Types.BOOLEAN, protection.isBlocked()));
+		values.put(t.getColumn("BlockReason"),
+				(protection.getBlockReason() != null ? new Data(Types.VARCHAR, protection.getBlockReason().name())
+						: new Data(Types.NULL, null)));
 		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("RegionId"),
 				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
 			throw Exceptions.Protections.Save.SQL.generateException();
 		}
 	}
 
-	public void deleteProtection(Protection protection) throws RoyaleProtectionBlocksException {
+	public void deleteProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		Table t = this.getDatabase().getTable("Protections");
 		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("RegionId"),
 				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL)))) {
@@ -231,7 +257,7 @@ public class SQLService extends PandaSQLService {
 		}
 	}
 
-	public void saveProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksException {
+	public void saveProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksExceptionImpl {
 		Table t = this.getDatabase().getTable("ProtectionBlocks");
 		HashMap<Column, Data> values = new HashMap<>();
 		values.put(t.getColumn("Id"), new Data(Types.VARCHAR, protectionBlock.getInformation().getId()));
@@ -273,7 +299,7 @@ public class SQLService extends PandaSQLService {
 		}
 	}
 
-	public void deleteProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksException {
+	public void deleteProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksExceptionImpl {
 		Table t = this.getDatabase().getTable("ProtectionBlocks");
 		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("Id"),
 				new Data(Types.VARCHAR, protectionBlock.getInformation().getId()), ConditionType.EQUAL)))) {
@@ -287,7 +313,7 @@ public class SQLService extends PandaSQLService {
 		}
 	}
 
-	public void saveRecipe(Recipe recipe) throws RoyaleProtectionBlocksException {
+	public void saveRecipe(Recipe recipe) throws RoyaleProtectionBlocksExceptionImpl {
 		Table t = this.getDatabase().getTable("Recipes");
 		HashMap<Column, Data> values = new HashMap<>();
 		values.put(t.getColumn("ProtectionBlockId"),
@@ -303,7 +329,7 @@ public class SQLService extends PandaSQLService {
 		}
 	}
 
-	public void deleteRecipe(Recipe recipe) throws RoyaleProtectionBlocksException {
+	public void deleteRecipe(Recipe recipe) throws RoyaleProtectionBlocksExceptionImpl {
 		Table t = this.getDatabase().getTable("Recipes");
 		if (!this.getDatabase().delete(t,
 				new Condition(new Condition(t.getColumn("ProtectionBlockId"),
@@ -311,6 +337,38 @@ public class SQLService extends PandaSQLService {
 						ConditionType.EQUAL)))) {
 			throw Exceptions.Protections.Save.SQL.generateException();
 		}
+	}
+
+	/*
+	 * Auto-purge logs methods
+	 */
+
+	public AutoPurgeLog getLastAutoPurgeLog() {
+		try (ResultSet set = this.getDatabase().getSql()
+				.query("SELECT * FROM " + (this.getDatabase().getSql().getConnectionData().getType() == SQLType.MYSQL
+						? this.getDatabase().getPrefix()
+						: "") + "AutoPurgeLogs ORDER BY ExecutionMillis DESC;")) {
+			if (set.next()) {
+				return new AutoPurgeLog(set.getLong("ExecutionMillis"), set.getLong("OlderThanMillis"),
+						set.getInt("RemovedProtections"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public void saveAutoPurgeLog(AutoPurgeLog log) {
+		Table t = this.getDatabase().getTable("AutoPurgeLogs");
+
+		HashMap<Column, Data> values = new HashMap<>();
+		values.put(t.getColumn("ExecutionMillis"), new Data(Types.BIGINT, log.getExecutionMillis()));
+		values.put(t.getColumn("OlderThanMillis"), new Data(Types.BIGINT, log.getOlderThanMillis()));
+		values.put(t.getColumn("RemovedProtections"), new Data(Types.INTEGER, log.getRemovedProtections()));
+
+		this.getDatabase().insert(t, values);
 	}
 
 }

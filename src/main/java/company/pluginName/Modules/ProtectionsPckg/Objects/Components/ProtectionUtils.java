@@ -15,18 +15,18 @@ import lombok.AllArgsConstructor;
 public class ProtectionUtils {
 
 	private static final BiFunction<Location, Location, Boolean> HIGHER_THAN_CHECKING = (loc1,
-			loc2) -> loc1.getBlockX() > loc2.getBlockX() && loc1.getBlockY() > loc2.getBlockY()
-					&& loc1.getBlockZ() > loc2.getBlockZ();
+			loc2) -> (long) loc1.getX() > (long) loc2.getX() && (long) loc1.getY() > (long) loc2.getY()
+					&& (long) loc1.getZ() > (long) loc2.getZ();
 	private static final BiFunction<Location, Location, Boolean> HIGHER_OR_EQUAL_THAN_CHECKING = (loc1,
-			loc2) -> loc1.getBlockX() >= loc2.getBlockX() && loc1.getBlockY() >= loc2.getBlockY()
-					&& loc1.getBlockZ() >= loc2.getBlockZ();
+			loc2) -> (long) loc1.getX() >= (long) loc2.getX() && (long) loc1.getY() >= (long) loc2.getY()
+					&& (long) loc1.getZ() >= (long) loc2.getZ();
 
 	private static final BiFunction<Location, Location, Boolean> LOWER_THAN_CHECKING = (loc1,
-			loc2) -> loc1.getBlockX() > loc2.getBlockX() && loc1.getBlockY() > loc2.getBlockY()
-					&& loc1.getBlockZ() > loc2.getBlockZ();
+			loc2) -> (long) loc1.getX() < (long) loc2.getX() && (long) loc1.getY() < (long) loc2.getY()
+					&& (long) loc1.getZ() < (long) loc2.getZ();
 	private static final BiFunction<Location, Location, Boolean> LOWER_OR_EQUAL_THAN_CHECKING = (loc1,
-			loc2) -> loc1.getBlockX() <= loc2.getBlockX() && loc1.getBlockY() <= loc2.getBlockY()
-					&& loc1.getBlockZ() <= loc2.getBlockZ();
+			loc2) -> (long) loc1.getX() <= (long) loc2.getX() && (long) loc1.getY() <= (long) loc2.getY()
+					&& (long) loc1.getZ() <= (long) loc2.getZ();
 
 	private Protection protection;
 
@@ -43,24 +43,25 @@ public class ProtectionUtils {
 	}
 
 	public boolean isInside(Location location1, Location location2, boolean includeBorder) {
-		if (!location1.getWorld().equals(location2.getWorld())
-				|| !this.protection.getWorldName().equals(location1.getWorld().getName())) {
-			return false;
+		if (location1.getWorld().equals(location2.getWorld())
+				&& this.protection.getLocation().getWorld().equals(location1.getWorld())) {
+			Location minLocation = new Location(location1.getWorld(),
+					(long) Math.min(location1.getX(), location2.getX()),
+					(long) Math.min(location1.getY(), location2.getY()),
+					(long) Math.min(location1.getZ(), location2.getZ()));
+			Location maxLocation = new Location(location1.getWorld(),
+					(long) Math.max(location1.getX(), location2.getX()),
+					(long) Math.max(location1.getY(), location2.getY()),
+					(long) Math.max(location1.getZ(), location2.getZ()));
+
+			return (includeBorder ? HIGHER_OR_EQUAL_THAN_CHECKING.apply(maxLocation, this.protection.getMinLocation())
+					: HIGHER_THAN_CHECKING.apply(maxLocation, this.protection.getMinLocation()))
+					&& (includeBorder
+							? LOWER_OR_EQUAL_THAN_CHECKING.apply(minLocation, this.protection.getMaxLocation())
+							: LOWER_THAN_CHECKING.apply(minLocation, this.protection.getMaxLocation()));
 		}
 
-		Location minLocation = new Location(location1.getWorld(),
-				Math.min(location1.getBlockX(), location2.getBlockX()),
-				Math.min(location1.getBlockY(), location2.getBlockY()),
-				Math.min(location1.getBlockZ(), location2.getBlockZ()));
-		Location maxLocation = new Location(location1.getWorld(),
-				Math.max(location1.getBlockX(), location2.getBlockX()),
-				Math.max(location1.getBlockY(), location2.getBlockY()),
-				Math.max(location1.getBlockZ(), location2.getBlockZ()));
-
-		return (includeBorder ? HIGHER_OR_EQUAL_THAN_CHECKING.apply(maxLocation, this.protection.getMinLocation())
-				: HIGHER_THAN_CHECKING.apply(maxLocation, this.protection.getMinLocation()))
-				&& (includeBorder ? LOWER_OR_EQUAL_THAN_CHECKING.apply(minLocation, this.protection.getMaxLocation())
-						: LOWER_THAN_CHECKING.apply(minLocation, this.protection.getMaxLocation()));
+		return false;
 	}
 
 	public boolean isProtectionBlock() {

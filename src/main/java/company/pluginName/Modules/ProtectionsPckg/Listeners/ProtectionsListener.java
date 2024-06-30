@@ -1,0 +1,257 @@
+package company.pluginName.Modules.ProtectionsPckg.Listeners;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
+
+import company.pluginName.Debugger;
+import company.pluginName.Debugger.MessageType;
+import company.pluginName.MainPluginClass;
+import company.pluginName.Exceptions.Exceptions;
+import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Utils.EventsUtils;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackData.ItemStackDataUtilities;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+
+@PandaListener
+public class ProtectionsListener implements Listener {
+
+	@PandaInject
+	private MainPluginClass plugin;
+
+	@PandaInject
+	private ProtectionsService protectionsService;
+
+	/**
+	 * Event used to check if a block is placed, usually to check if the block is a
+	 * protection block and, in that case, start the creation of protections.
+	 * 
+	 * If the utils for the event returns CANCEL, meaning that wasn't success, the
+	 * event is cancelled.
+	 * 
+	 * @param e
+	 */
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onPlaceBlock(BlockPlaceEvent e) {
+		Debugger.log(MessageType.BLOCK_PLACE,
+				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlockPlaced().getX()),
+						String.valueOf(e.getBlockPlaced().getY()), String.valueOf(e.getBlockPlaced().getZ()) });
+
+		if (!e.isCancelled() && e.canBuild()) {
+			switch (EventsUtils.onVanillaBlockPlaceEvent(e.getPlayer(), e.getBlock(), e.getHand(), e.getItemInHand())) {
+			case SUCCESS:
+			case CANCEL:
+				e.setBuild(false);
+				e.setCancelled(true);
+				return;
+			default:
+				break;
+			}
+
+			Protection protection = protectionsService.findProtectionByLocation(e.getBlockPlaced().getLocation());
+			if (protection != null && protection.isBlocked()) {
+				e.setCancelled(true);
+				Exceptions.Protections.BLOCKED.generateException().sendError(e.getPlayer());
+			}
+		} else {
+			Debugger.log(MessageType.BLOCK_PLACE_CANCELLED);
+		}
+	}
+
+	/**
+	 * Event used to check if a block is broken, usually to check if the block is a
+	 * protection block and, in that case, start the removal of protections.
+	 * 
+	 * If the utils for the event returns false, meaning that wasn't success, the
+	 * event is cancelled.
+	 * 
+	 * @param e
+	 */
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onBreakBlock(BlockBreakEvent e) {
+		Debugger.log(MessageType.BLOCK_BREAK,
+				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
+						String.valueOf(e.getBlock().getY()), String.valueOf(e.getBlock().getZ()) });
+
+		if (!e.isCancelled()) {
+			switch (EventsUtils.onVanillaBlockBreakEvent(e.getPlayer(), e.getBlock())) {
+			case SUCCESS:
+			case CANCEL:
+				e.setCancelled(true);
+				return;
+			default:
+				break;
+			}
+
+			Protection protection = protectionsService.findProtectionByLocation(e.getBlock().getLocation());
+			if (protection != null && protection.isBlocked()) {
+				e.setCancelled(true);
+				Exceptions.Protections.BLOCKED.generateException().sendError(e.getPlayer());
+			}
+		} else {
+			Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
+		}
+	}
+
+	/**
+	 * Event used to control the interactions of the players to the protection
+	 * blocks when the protection is blocked. If the blocked right clicked is a
+	 * protection block, it's ignored to leave the job to the next listener. If it's
+	 * not, and the block is inside the protection, it's cancelled.
+	 * 
+	 * @param e
+	 */
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onPlayerInteractOnBlocked(PlayerInteractEvent e) {
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getClickedBlock());
+		if (protection != null) {
+			return;
+		} else if (!e.isBlockInHand()) {
+			protection = protectionsService.findProtectionByLocation(e.getClickedBlock().getLocation());
+			if (protection != null && protection.isBlocked()) {
+				e.setCancelled(true);
+
+				if (e.getHand() == EquipmentSlot.HAND) {
+					Exceptions.Protections.BLOCKED.generateException().sendError(e.getPlayer());
+				}
+			}
+		}
+	}
+
+	/**
+	 * Event used to control the interactions of the players to the protection
+	 * blocks. If a protection is found by the right-clicked block, then it'll
+	 * execute the interaction behavior for protections.
+	 * 
+	 * @param e
+	 */
+	@EventHandler(ignoreCancelled = true)
+	public void onPlayerInteract(PlayerInteractEvent e) {
+		if (e.getHand() != null && e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+			switch (e.getHand().name()) {
+			case "HAND":
+				Protection protection = protectionsService.findProtectionBySourceBlock(e.getClickedBlock());
+				if (protection != null) {
+					e.setCancelled(true);
+					EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
+					return;
+				}
+				break;
+			case "OFF_HAND":
+				String protectionBlockId = null;
+
+				try {
+					protectionBlockId = ItemStackDataUtilities.getPersistentData(e.getItem(), plugin,
+							ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
+				} catch (Exception e1) {
+					MessageTemplate
+							.inst(PandaPrefixedStringField.applyPrefix(
+									"An error has ocurred trying to retrieve the Protection Block ID from an item: %s"
+											.formatted(e1.getMessage())))
+							.process().sendMessage(Bukkit.getConsoleSender());
+					e1.printStackTrace();
+				}
+
+				if (protectionBlockId != null && !protectionBlockId.isEmpty()) {
+					e.setCancelled(true);
+					return;
+				}
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Event used to check if the player is right-clicking the entity used to show
+	 * the boundaries of the protection. Being the case, this event will proceed
+	 * with the interaction behaviour for protection blocks.
+	 * 
+	 * @param e
+	 */
+	@EventHandler(ignoreCancelled = true)
+	public void onInteractEntity(PlayerInteractAtEntityEvent e) {
+		List<Protection> protections = protectionsService.getProtectionsByWorld()
+				.getOrDefault(e.getRightClicked().getWorld().getName(), new ArrayList<>());
+		for (Protection protection : protections) {
+			if (protection.getBoundaries().isProtectionViewEntity(e.getRightClicked())) {
+				e.setCancelled(true);
+				EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
+				break;
+			}
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onExplodeEntity(EntityExplodeEvent e) {
+		e.blockList().removeIf(block -> protectionsService.findProtectionBySourceBlock(block) != null);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onExplodeBlock(BlockExplodeEvent e) {
+		e.blockList().removeIf(block -> protectionsService.findProtectionBySourceBlock(block) != null);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onMobGrief(EntityChangeBlockEvent e) {
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getBlock());
+		if (protection != null) {
+			e.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onBlockFromTo(BlockFromToEvent e) {
+		Protection protection = protectionsService.findProtectionBySourceBlock(e.getToBlock());
+		if (protection != null) {
+			e.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onPistonExtend(BlockPistonExtendEvent e) {
+		if (e.getBlocks().stream().anyMatch(block -> protectionsService.findProtectionBySourceBlock(block) != null)) {
+			e.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onDamageEntity(EntityDamageEvent e) {
+		List<Protection> protections = protectionsService.getProtectionsByWorld()
+				.getOrDefault(e.getEntity().getWorld().getName(), new ArrayList<>());
+		for (Protection protection : protections) {
+			if (protection.getBoundaries().isProtectionViewEntity(e.getEntity())) {
+				e.setCancelled(true);
+				break;
+			}
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onBucketFill(PlayerBucketEmptyEvent e) {
+		if (protectionsService.findProtectionBySourceBlock(e.getBlockClicked().getRelative(e.getBlockFace())) != null) {
+			e.setCancelled(true);
+		}
+	}
+
+}

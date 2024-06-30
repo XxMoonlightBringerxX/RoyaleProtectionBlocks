@@ -237,25 +237,6 @@ Settings:
       #---
       
       Execute-every: ""
-      
-    #---
-    # Add which are the default values for some of the WorldGuard flags. The structure
-    # of this configuration is the following one
-    #   <Flag name>:
-    #     Value: <Value of the flag>
-    #     Group: <WorldGuard group where it should work> (Available: all, members, owners, non_members, non_owners) [Optional]
-    #---
-    
-    Default-flags: 
-      pvp: 
-        Value: "DENY"
-        Group: "ALL"
-      tnt: 
-        Value: "DENY"
-        Group: "ALL"
-      interact: 
-        Value: "DENY"
-        Group: "NON_MEMBERS"
         
   Protection-block: 
     

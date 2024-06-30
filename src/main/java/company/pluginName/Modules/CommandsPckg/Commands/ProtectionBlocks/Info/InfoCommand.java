@@ -86,7 +86,7 @@ public class InfoCommand extends PandaCommand {
 				if (ProtectionUtilities.canSeeInformation(protection, pl)) {
 					sendInformation(pl, protection);
 				} else {
-					Exceptions.Protections.General.PERMISSIONDENIED.generateException().sendError(pl);
+					Exceptions.Protections.PERMISSIONDENIED.generateException().sendError(pl);
 				}
 			} else {
 				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()

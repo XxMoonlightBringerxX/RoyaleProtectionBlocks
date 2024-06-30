@@ -4,7 +4,7 @@ import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Utils.ProtectionBlocksUtils;
 import company.pluginName.Utils.ProtectionBlocksUtils.ItemType;
@@ -32,7 +32,7 @@ public class ProtectionBlockInformation {
 	private String permission;
 	private Double price;
 
-	public void setItem(ItemStack item) throws RoyaleProtectionBlocksException {
+	public void setItem(ItemStack item) throws RoyaleProtectionBlocksExceptionImpl {
 		if (item != null) {
 			item.setAmount(1);
 			this.item = item;
@@ -41,7 +41,7 @@ public class ProtectionBlockInformation {
 		}
 	}
 
-	public ItemStack generateItem() throws RoyaleProtectionBlocksException {
+	public ItemStack generateItem() throws RoyaleProtectionBlocksExceptionImpl {
 		try {
 			return ItemStackDataUtilities.setPersistentData(item.clone(), plugin,
 					ProtectionBlock.PROTECTION_BLOCK_ID_KEY, id);

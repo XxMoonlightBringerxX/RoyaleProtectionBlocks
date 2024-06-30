@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
@@ -71,7 +71,7 @@ public class RemoveSubCommand extends PandaSubCommand {
 						block.delete(pl);
 						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY.applyPrefix())
 								.process().sendMessage(pl);
-					} catch (RoyaleProtectionBlocksException e) {
+					} catch (RoyaleProtectionBlocksExceptionImpl e) {
 						e.sendError(pl);
 					}
 				} else {

@@ -5,16 +5,16 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.APIs.ItemsAdderAPI.ItemsAdderAPI;
-import company.pluginName.APIs.ItemsAdderAPI.Hook.ItemsAdderHook;
-import company.pluginName.APIs.OraxenAPI.OraxenAPI;
-import company.pluginName.APIs.OraxenAPI.Hook.OraxenHook;
+import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
+import company.pluginName.Hooks.ItemsAdderAPI.Hook.ItemsAdderHook;
+import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
+import company.pluginName.Hooks.OraxenAPI.Hook.OraxenHook;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.Blocks.BlockUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.SkinUtilities;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 
 public class ProtectionUtilities {
 
@@ -72,69 +72,78 @@ public class ProtectionUtilities {
 		block.setType(Material.AIR.getMaterial());
 	}
 
-	public static boolean canDelete(Protection protection, Player pl) {
+	public static boolean canManage(IProtection protection, Player pl) {
+		return protection.isOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
+	}
+
+	public static boolean canDelete(IProtection protection, Player pl) {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.DELETE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canManage(Protection protection, Player pl) {
-		return protection.isOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
-	}
-
-	public static boolean canChangeId(Protection protection, Player pl) {
+	public static boolean canChangeId(IProtection protection, Player pl) {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canRename(Protection protection, Player pl) {
+	public static boolean canRename(IProtection protection, Player pl) {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canChangeDisplayItem(Protection protection, Player pl) {
+	public static boolean canChangeDisplayItem(IProtection protection, Player pl) {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canToggleBlock(Protection protection, Player pl) {
+	public static boolean canToggleBlock(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canViewBoundaries(Protection protection, Player pl) {
+	public static boolean canViewBoundaries(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canTeleport(Protection protection, Player pl) {
+	public static boolean canTeleport(IProtection protection, Player pl) {
 		return (protection.isOwner(pl.getUniqueId())
 				|| protection.isMember(pl.getUniqueId()) && PermissionsService.TELEPORT.hasPermission(pl))
 				|| PermissionsService.TELEPORT_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canAddOwner(Protection protection, Player pl) {
+	public static boolean canAddOwner(IProtection protection, Player pl) {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.OWNERS_ADD_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canRemoveOwner(Protection protection, Player pl) {
+	public static boolean canRemoveOwner(IProtection protection, Player pl) {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.OWNERS_REMOVE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canAddMember(Protection protection, Player pl) {
+	public static boolean canAddMember(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.MEMBERS_ADD_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canRemoveMember(Protection protection, Player pl) {
+	public static boolean canRemoveMember(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.MEMBERS_REMOVE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canAddBanned(Protection protection, Player pl) {
+	public static boolean canAddBanned(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.BANNEDS_ADD_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canRemoveBanned(Protection protection, Player pl) {
+	public static boolean canRemoveBanned(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.BANNEDS_REMOVE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canSeeInformation(Protection protection, Player pl) {
+	public static boolean canSeeInformation(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.INFO_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canFly(Protection protection, Player pl) {
+	public static boolean canKick(IProtection protection, Player pl) {
+		return protection.isOwner(pl.getUniqueId()) || PermissionsService.KICK_OTHERS.hasPermission(pl);
+	}
+
+	public static boolean canFly(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId());
 	}
+
+	public static boolean canSetHome(IProtection protection, Player pl) {
+		return protection.isOwner(pl.getUniqueId());
+	}
+
 }

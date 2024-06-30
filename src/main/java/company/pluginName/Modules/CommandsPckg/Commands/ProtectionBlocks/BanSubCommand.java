@@ -9,7 +9,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -23,6 +22,9 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Banneds.ProtectionBannedAddRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -45,6 +47,9 @@ public class BanSubCommand extends PandaSubCommand {
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
+
+	@PandaInject
+	private static PlayerInteractionsService playerInteractionsService;
 
 	public BanSubCommand() throws InstantiationException {
 		super();
@@ -70,7 +75,8 @@ public class BanSubCommand extends PandaSubCommand {
 								.getOfflinePlayer(parameters.getParameters().get(0));
 						if (banned != null) {
 							try {
-								protection.getBanneds().add(pl, banned.getUniqueId());
+								playerInteractionsService.protectionBannedAddRequest(
+										ProtectionBannedAddRequestInput.inst(pl, protection, banned.getUniqueId()));
 
 								MessageTemplate
 										.inst(Messages.MESSAGE_PROTECTIONS_BANNEDS_ADDEDSUCCESSFULLY.applyPrefix())

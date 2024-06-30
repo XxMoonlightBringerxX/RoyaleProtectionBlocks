@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
 import company.pluginName.Modules.RecipesPckg.RecipesService;
@@ -66,17 +66,17 @@ public class Recipe extends CustomRecipe {
 	public ItemStack getResult() {
 		try {
 			return protectionBlock.getObject().getInformation().generateItem();
-		} catch (RoyaleProtectionBlocksException e) {
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			e.sendError(Bukkit.getConsoleSender());
 			return null;
 		}
 	}
 
-	public void save() throws RoyaleProtectionBlocksException {
+	public void save() throws RoyaleProtectionBlocksExceptionImpl {
 		this.save(null);
 	}
 
-	public void save(Player player) throws RoyaleProtectionBlocksException, RoyaleProtectionBlocksException {
+	public void save(Player player) throws RoyaleProtectionBlocksExceptionImpl, RoyaleProtectionBlocksExceptionImpl {
 		if (player != null) {
 			if (!PermissionsService.BLOCKS_EDIT.hasPermission(player)) {
 				throw Exceptions.Protections.Blocks.Save.PERMISSIONDENIED.generateException();

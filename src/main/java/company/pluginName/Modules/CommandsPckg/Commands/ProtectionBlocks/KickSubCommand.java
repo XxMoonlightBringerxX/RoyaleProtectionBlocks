@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
@@ -23,6 +22,9 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubComma
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionKickRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -45,6 +47,9 @@ public class KickSubCommand extends PandaSubCommand {
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
+
+	@PandaInject
+	private static PlayerInteractionsService playerInteractionsService;
 
 	public KickSubCommand() throws InstantiationException {
 		super();
@@ -69,7 +74,8 @@ public class KickSubCommand extends PandaSubCommand {
 					if (kicked != null) {
 						if (!PermissionsService.KICK_BYPASS.hasPermission(pl)) {
 							try {
-								if (protection.getActions().kickPlayer(pl, kicked)) {
+								if (playerInteractionsService.protectionKickRequest(
+										ProtectionKickRequestInput.inst(pl, protection, kicked))) {
 									MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_KICKED.applyPrefix()).process()
 											.sendMessage(kicked);
 									MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_PLAYERKICKED.applyPrefix())

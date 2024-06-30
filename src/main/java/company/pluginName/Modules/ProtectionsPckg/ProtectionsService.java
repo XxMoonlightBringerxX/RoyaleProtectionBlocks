@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -13,7 +13,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.SQLPckg.SQLService;
@@ -24,6 +24,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.UnloadMethod;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.Getter;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 
 @PandaService
 public class ProtectionsService {
@@ -50,10 +51,13 @@ public class ProtectionsService {
 
 			if (protection.getProtectedRegion() == null) {
 				try {
+					protection.regenerateProtectedRegion();
+				} catch (RoyaleProtectionBlocksExceptionImpl e) {
 					MessageTemplate
 							.inst(PandaPrefixedStringField
 									.applyPrefix("&7Removing protection '" + protection.getRegionId()
-											+ "' as it couldn't be found on '" + protection.getWorldName() + "'"))
+											+ "' as it couldn't be found on '" + protection.getWorldName()
+											+ "' and were problems trying to regenerate the region."))
 							.process().sendMessage(Bukkit.getConsoleSender());
 
 					if (protection.getUtils().isProtectionBlockShown()) {
@@ -64,9 +68,11 @@ public class ProtectionsService {
 						protection.getBoundaries().toggleProtectionView();
 					}
 
-					protection.delete().subscribe();
-				} catch (RoyaleProtectionBlocksException e) {
-					e.sendError(Bukkit.getConsoleSender());
+					try {
+						protection.delete(RemovalCause.REMOVE).subscribe();
+					} catch (RoyaleProtectionBlocksExceptionImpl e1) {
+						e1.sendError(Bukkit.getConsoleSender());
+					}
 				}
 				return false;
 			}
@@ -97,7 +103,6 @@ public class ProtectionsService {
 		protectionByRegion.put(protection.getRegionId(), protection);
 		protectionsByOwner.computeIfAbsent(protection.getOwnerUuid(), (ownerUuid) -> new ArrayList<>()).add(protection);
 		protectionsByWorld.computeIfAbsent(protection.getWorldName(), (worldName) -> new ArrayList<>()).add(protection);
-		plugin.sendDebug(getClass(), String.format("Loaded protection '%s'", protection.getRegionId()));
 	}
 
 	public synchronized void unregisterProtection(Protection protection) {
@@ -117,32 +122,32 @@ public class ProtectionsService {
 	}
 
 	public Protection findProtectionByLocation(Location location) {
-		return findProtectionsByLocation(location, true).stream().findFirst().orElse(null);
+		return findProtectionsByLocation(location, true).findFirst().orElse(null);
 	}
 
-	public List<Protection> findProtectionsByLocation(Location location) {
+	public Stream<Protection> findProtectionsByLocation(Location location) {
 		return findProtectionsByLocation(location, true);
 	}
 
-	public List<Protection> findProtectionsByLocation(Location location, boolean includeBorder) {
+	public Stream<Protection> findProtectionsByLocation(Location location, boolean includeBorder) {
 		return protectionsByWorld.getOrDefault(location.getWorld().getName(), Collections.emptyList()).stream()
 				.filter((prot) -> prot.getUtils().isInside(location, includeBorder))
-				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority())).collect(Collectors.toList());
+				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
 	}
 
-	public List<Protection> findProtectionsByArea(Location location1, Location location2) {
+	public Stream<Protection> findProtectionsByArea(Location location1, Location location2) {
 		return findProtectionsByArea(location1, location2, true);
 	}
 
-	public List<Protection> findProtectionsByArea(Location location1, Location location2, boolean includeBorder) {
+	public Stream<Protection> findProtectionsByArea(Location location1, Location location2, boolean includeBorder) {
 		return protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList()).stream()
 				.filter((prot) -> prot.getUtils().isInside(location1, location2, includeBorder))
-				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority())).collect(Collectors.toList());
+				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
 	}
 
-	public List<Protection> getAllowedProtections(OfflinePlayer pl) {
+	public Stream<Protection> getAllowedProtections(OfflinePlayer pl) {
 		return protectionByRegion.values().stream().filter(prot -> prot.getOwners().list().contains(pl.getUniqueId())
-				|| prot.getMembers().list().contains(pl.getUniqueId())).collect(Collectors.toList());
+				|| prot.getMembers().list().contains(pl.getUniqueId()));
 	}
 
 	public Protection findProtectionBySourceLocation(Location sourceLocation) {
@@ -155,6 +160,10 @@ public class ProtectionsService {
 	public Protection findProtectionBySourceBlock(Block sourceBlock) {
 		return protectionByRegion.values().stream().filter(prot -> prot.getUtils().isProtectionBlock(sourceBlock))
 				.findFirst().orElse(null);
+	}
+
+	public List<Protection> findProtectionsByOwner(UUID owner) {
+		return this.protectionsByOwner.getOrDefault(owner, Collections.emptyList());
 	}
 
 }

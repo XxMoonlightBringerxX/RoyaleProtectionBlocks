@@ -6,8 +6,8 @@ import org.bukkit.event.EventPriority;
 import company.pluginName.Debugger;
 import company.pluginName.Debugger.MessageType;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionCreationAttemptEvent;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionRemovalAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalAttemptEvent;
 
 @PandaListener
 public class ProtectionCreationRemovalAttemptListener {

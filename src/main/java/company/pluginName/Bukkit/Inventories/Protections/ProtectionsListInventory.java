@@ -11,7 +11,8 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.API.Services.PlayerInteractionsServiceImpl;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
@@ -25,6 +26,11 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGe
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
 import lombok.AllArgsConstructor;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException.Type;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTeleportHomeRequestInput;
 
 @Inventory("protections_list")
 public class ProtectionsListInventory extends PagedChestInventoryObject<Protection> {
@@ -33,6 +39,7 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 	public static final String ENTITY_TELEPORTLORELINE_PATH = "Entity.Teleport-lore-line";
 	public static final String ENTITY_TELEPORTNOTSETLORELINE_PATH = "Entity.Teleport-not-set-lore-line";
 	public static final String ENTITY_EDITLORELINE_PATH = "Entity.Edit-lore-line";
+	public static final String ENTITY_DELETELORELINE_PATH = "Entity.Delete-lore-line";
 
 	@AllArgsConstructor
 	public static enum Filter {
@@ -49,6 +56,9 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
+
+	@PandaInject
+	private static PlayerInteractionsServiceImpl playerInteractionsService;
 
 	private OfflinePlayer owner;
 	private Filter filter = Filter.ALL;
@@ -72,7 +82,7 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 
 	@Override
 	protected List<Protection> getEntityList() {
-		return protectionsService.getAllowedProtections(owner).stream().filter(protection -> {
+		return protectionsService.getAllowedProtections(owner).filter(protection -> {
 			switch (filter) {
 			case ALL:
 				return true;
@@ -91,6 +101,7 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 	protected ItemStack generateEntityItem(Protection protection) {
 		final boolean canTeleport = ProtectionUtilities.canTeleport(protection, getPlayer());
 		final boolean canManage = ProtectionUtilities.canManage(protection, getPlayer());
+		final boolean canDelete = ProtectionUtilities.canDelete(protection, getPlayer());
 
 		Location homeLocation = protection.getHome();
 		Location loc = protection.getLocation();
@@ -121,6 +132,10 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_EDITLORELINE_PATH).toString());
 		}
 
+		if (canDelete) {
+			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_DELETELORELINE_PATH).toString());
+		}
+
 		return itemBuilder.setLore(lore).apply(protection.getDisplayItem().getOrDefault().clone());
 	}
 
@@ -131,14 +146,26 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 		if (e.getClick() == ClickType.LEFT) {
 			if (homeLocation != null && ProtectionUtilities.canTeleport(protection, getPlayer())) {
 				try {
-					protection.getActions().teleportToHome(getPlayer());
+					playerInteractionsService.protectionTeleportHomeRequest(
+							ProtectionTeleportHomeRequestInput.inst(getPlayer(), protection));
 				} catch (RoyaleProtectionBlocksException e1) {
 					e1.sendError(getPlayer());
 				}
 			}
-		} else {
-			if (ProtectionUtilities.canManage(protection, getPlayer())) {
-				new ProtectionsManageInventory(getPlayer(), protection).openInventory();
+		} else if (e.getClick() == ClickType.RIGHT) {
+			try {
+				playerInteractionsService.openProtectionManagementInventoryRequest(
+						OpenProtectionManagementInventoryRequestInput.inst(getPlayer(), protection));
+			} catch (RoyaleProtectionBlocksExceptionImpl ex) {
+				if (ex.getType() == Type.PROTECTIONS_BLOCKED) {
+					ex.sendError(getPlayer());
+				}
+			}
+		} else if (e.getClick() == ClickType.SHIFT_RIGHT) {
+			try {
+				playerInteractionsService.openProtectionRemovalInventoryRequest(
+						OpenProtectionRemovalInventoryRequestInput.inst(getPlayer(), protection));
+			} catch (RoyaleProtectionBlocksExceptionImpl ex) {
 			}
 		}
 

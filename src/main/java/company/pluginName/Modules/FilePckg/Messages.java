@@ -2,6 +2,7 @@ package company.pluginName.Modules.FilePckg;
 
 import java.util.Arrays;
 
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.PandaFieldDescription;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaFieldContainer;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
@@ -10,8 +11,11 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStri
 public class Messages {
 
 	// Messages
+	@PandaFieldDescription("Translation which is sent after successfully reloading the plugin")
 	public static final PandaPrefixedStringField MESSAGE_RELOAD = new PandaPrefixedStringField("Message.Reload",
 			"&aThe plugin has been reloaded successfully.");
+
+	@PandaFieldDescription("Translation which is sent after the spawn has been set successfully")
 	public static final PandaPrefixedStringField MESSAGE_SETSPAWNSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Set-spawn-successfully", "&aA new spawn has ben set successfully.");
 
@@ -80,16 +84,6 @@ public class Messages {
 			"&aThe protection block changes has been saved successfully!");
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Blocks.Removed-successfully", "&aThe protection block has been removed successfully!");
-
-	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_FLAGS_ALLOWVALUENAME = new PandaPrefixedStringField(
-			"Message.Protections.Flags.Allow-value-name", "Inventory.Protection.Flags.Allow-value-name", "&aAllow");
-	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_FLAGS_DENYVALUENAME = new PandaPrefixedStringField(
-			"Message.Protections.Flags.Deny-value-name", "Inventory.Protection.Flags.Deny-value-name", "&cDeny");
-	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_FLAGS_STRINGVALUENAME = new PandaPrefixedStringField(
-			"Message.Protections.Flags.String-value-name", "Inventory.Protection.Flags.String-value-name", "&b{text}");
-	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_FLAGS_NOTDEFINEDNAME = new PandaPrefixedStringField(
-			"Message.Protections.Flags.Not-defined-name", "Inventory.Protection.Flags.Not-defined-name",
-			"&7Not defined");
 
 	public static final PandaPrefixedStringField MESSAGE_TRANSFER_AVAILABLELIST = new PandaPrefixedStringField(
 			"Message.Transfer.Available-list", "&7Available protection plugins to transfer from: &f{list}");

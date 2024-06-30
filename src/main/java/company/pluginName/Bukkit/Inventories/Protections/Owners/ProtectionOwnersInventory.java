@@ -12,11 +12,11 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchPlayerInventory;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
@@ -25,11 +25,18 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGe
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryData;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerAddRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerRemoveRequestInput;
 
 @Inventory("protections_owners")
 public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 
 	private static final String ENTITY_DELETELORELINE_PATH = "Entity.Delete-lore-line";
+
+	@PandaInject
+	private static PlayerInteractionsService playerInteractionsService;
 
 	private Protection protection;
 
@@ -69,7 +76,8 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 		new SearchPlayerInventory(getPlayer(), player -> {
 			if (player != null) {
 				try {
-					protection.getOwners().add(getPlayer(), player.getUniqueId());
+					playerInteractionsService.protectionOwnerAddRequest(
+							ProtectionOwnerAddRequestInput.inst(getPlayer(), protection, player.getUniqueId()));
 				} catch (RoyaleProtectionBlocksException e1) {
 					e1.sendError(getPlayer());
 				}
@@ -107,7 +115,8 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 		if (canRemove) {
 			new ConfirmationInventory(getPlayer(), () -> {
 				try {
-					protection.getOwners().remove(getPlayer(), entity);
+					playerInteractionsService.protectionOwnerRemoveRequest(
+							ProtectionOwnerRemoveRequestInput.inst(getPlayer(), protection, entity));
 				} catch (RoyaleProtectionBlocksException e1) {
 					e1.sendError(getPlayer());
 				}

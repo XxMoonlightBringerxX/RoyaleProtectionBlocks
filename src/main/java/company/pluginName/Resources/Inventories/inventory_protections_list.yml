@@ -10,6 +10,7 @@ Entity:
   Teleport-lore-line: " &8- &aLeft click: &eTeleport to protection home"
   Teleport-not-set-lore-line: " &8- &a&mLeft click&r&a: &7No home set yet"
   Edit-lore-line: " &8- &aRight click: &eManage protection"
+  Delete-lore-line: " &8- &aRight click + Shift: &eDelete protection"
   Slots: "0-17"
 Items: 
   Background: 

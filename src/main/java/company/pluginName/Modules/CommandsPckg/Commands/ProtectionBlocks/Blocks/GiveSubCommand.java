@@ -8,7 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
@@ -85,7 +85,7 @@ public class GiveSubCommand extends PandaSubCommand {
 
 				try {
 					toGive.getInventory().addItem(block.getInformation().generateItem());
-				} catch (RoyaleProtectionBlocksException e) {
+				} catch (RoyaleProtectionBlocksExceptionImpl e) {
 					e.sendError(sender);
 				}
 			} else {

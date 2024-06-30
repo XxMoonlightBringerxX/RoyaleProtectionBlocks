@@ -6,9 +6,9 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import company.pluginName.APIs.WorldGuard.WorldGuardAPI;
 import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -17,6 +17,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 
 @Data
 @AllArgsConstructor
@@ -31,23 +32,7 @@ public class ProtectionBanneds {
 		return worldGuardApi.getHook().getBannedPlayersFlag().flagSet(this.protection.getProtectedRegion());
 	}
 
-	public void add(UUID banned) throws RoyaleProtectionBlocksException {
-		add(null, banned);
-	}
-
-	public void add(Player pl, UUID banned) throws RoyaleProtectionBlocksException {
-		if (pl != null) {
-			if (!PermissionsService.BANNEDS_ADD_OTHERS.hasPermission(pl)) {
-				if (!this.protection.getOwners().list().contains(pl.getUniqueId())) {
-					throw Exceptions.Protections.Banneds.Save.PERMISSIONDENIED.generateException();
-				}
-
-				if (banned.equals(pl.getUniqueId())) {
-					throw Exceptions.Protections.Banneds.Save.CANNOTADDYOURSELF.generateException();
-				}
-			}
-		}
-
+	public void add(UUID banned) throws RoyaleProtectionBlocksExceptionImpl {
 		if (this.protection.isMainOwner(banned)) {
 			throw Exceptions.Protections.Banneds.Save.CANNOTADDPROTECTIONOWNER.generateException();
 		}
@@ -64,27 +49,20 @@ public class ProtectionBanneds {
 			Player bannedPlayer = Bukkit.getPlayer(banned);
 
 			if (bannedPlayer != null) {
-				if (PermissionsService.BANNEDS_BYPASS.hasPermission(pl)
-						|| protection.getActions().kickPlayer(bannedPlayer)) {
-					MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BANNED.applyPrefix()).process()
-							.sendMessage(bannedPlayer);
+				try {
+					if (PermissionsService.BANNEDS_BYPASS.hasPermission(bannedPlayer)
+							|| protection.kickPlayer(bannedPlayer)) {
+						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BANNED.applyPrefix()).process()
+								.sendMessage(bannedPlayer);
+					}
+				} catch (RoyaleProtectionBlocksException e) {
+					e.sendError(Bukkit.getConsoleSender());
 				}
 			}
 		});
 	}
 
-	public void remove(UUID banned) throws RoyaleProtectionBlocksException {
-		remove(null, banned);
-	}
-
-	public void remove(Player pl, UUID banned) throws RoyaleProtectionBlocksException {
-		if (pl != null) {
-			if (!this.protection.getOwners().list().contains(pl.getUniqueId())
-					&& !PermissionsService.BANNEDS_REMOVE_OTHERS.hasPermission(pl)) {
-				throw Exceptions.Protections.Banneds.Delete.PERMISSIONDENIED.generateException();
-			}
-		}
-
+	public void remove(UUID banned) throws RoyaleProtectionBlocksExceptionImpl {
 		Set<String> banneds = worldGuardApi.getHook().getBannedPlayersFlag()
 				.flagSet(this.protection.getProtectedRegion());
 

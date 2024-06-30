@@ -1,6 +1,10 @@
 package company.pluginName.Modules.PermissionsPckg;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.bukkit.entity.Player;
 
@@ -70,7 +74,7 @@ public class PermissionsService extends PandaPermissionsService {
 	public static final PandaPermission BLOCKS_DELETE = new PandaCustomizablePermission("Blocks.Delete",
 			"protectionblocks.blocks.delete");
 
-	public static final PandaParametizedPermission MAX_TEMPLATE = new PandaParametizedPermission("World.Max.Template",
+	public static final PandaParametizedPermission MAX_TEMPLATE = new PandaParametizedPermission("Max.Template",
 			"protectionblocks.max.{max}");
 	public static final PandaPermission MAX_BYPASS = new PandaCustomizablePermission("Max.Bypass",
 			"protectionblocks.max.bypass");
@@ -80,17 +84,44 @@ public class PermissionsService extends PandaPermissionsService {
 			"Blocks.Max.Bypass", "protectionblocks.{block}.max.bypass");
 
 	public static Integer getGeneralMaxCapacity(Player pl) {
+		return getGeneralMaxCapacity(pl, null);
+	}
+
+	public static Integer getGeneralMaxCapacity(Player pl, Integer defaultIfNull) {
 		return MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
 				.map(entry -> entry.getValue().containsKey("max") ? stringToInt(entry.getValue().get("max")) : null)
-				.filter(Objects::nonNull).sorted((int1, int2) -> int2.compareTo(int1)).findFirst().orElse(null);
+				.filter(Objects::nonNull).sorted((int1, int2) -> int2.compareTo(int1)).findFirst()
+				.orElse(defaultIfNull);
 	}
 
 	public static Integer getPerBlockMaxCapacity(Player pl, ProtectionBlock block) {
+		return getPerBlockMaxCapacity(pl, block, null);
+	}
+
+	public static Integer getPerBlockMaxCapacity(Player pl, ProtectionBlock block, Integer defaultIfNull) {
 		return BLOCK_MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
 				.filter(entry -> block.getInformation().getId()
 						.equalsIgnoreCase(entry.getValue().getOrDefault("block", null)))
 				.map(entry -> entry.getValue().containsKey("max") ? stringToInt(entry.getValue().get("max")) : null)
-				.filter(Objects::nonNull).sorted((int1, int2) -> int2.compareTo(int1)).findFirst().orElse(null);
+				.filter(Objects::nonNull).sorted((int1, int2) -> int2.compareTo(int1)).findFirst()
+				.orElse(defaultIfNull);
+	}
+
+	public static Map<String, Integer> getAllPerBlockMaxCapacity(Player pl) {
+		return BLOCK_MAX_TEMPLATE.findPermissions(pl).values().stream()
+				.map(map -> map.entrySet().stream().filter(entry -> {
+					try {
+						Integer.parseInt(entry.getValue());
+					} catch (Exception e) {
+						return false;
+					}
+
+					return entry.getKey() != null && entry.getKey().isEmpty();
+				}).collect(Collectors.toMap(Entry::getKey, entry -> Integer.parseInt(entry.getValue()))))
+				.reduce(new HashMap<>(), (fullMap, currentMap) -> {
+					fullMap.putAll(currentMap);
+					return fullMap;
+				});
 	}
 
 	public static Integer stringToInt(String number) {

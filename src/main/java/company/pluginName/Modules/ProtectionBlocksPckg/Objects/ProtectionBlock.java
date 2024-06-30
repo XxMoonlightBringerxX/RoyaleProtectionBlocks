@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.APIs.VaultAPI.VaultAPI;
 import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
@@ -15,21 +14,29 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.Protec
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.SQLPckg.SQLService;
+import company.pluginName.Utils.EconomyUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.milkbowl.vault.economy.EconomyResponse;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 
 @Data
 @Accessors(chain = true)
 @Setter(lombok.AccessLevel.NONE)
 @RequiredArgsConstructor
 public class ProtectionBlock {
+
+	@RegisteredPandaField("lang")
+	private static final PandaPrefixedStringField MESSAGE_PROTECTION_FLAGS_CHARGEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protection.Blocks.Charged-successfully", "&aYou've been charged a total amount of &e{amount}$");
 
 	@PandaInject
 	private static PandaPluginClass plugin;
@@ -42,9 +49,6 @@ public class ProtectionBlock {
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
-
-	@PandaInject
-	private static VaultAPI vaultApi;
 
 	public static final String PROTECTION_BLOCK_ID_KEY = "ProtectionBlockId";
 
@@ -88,10 +92,12 @@ public class ProtectionBlock {
 				if (PermissionsService.ECONOMY_BYPASS.hasPermission(pl)) {
 					pl.getInventory().addItem(item);
 				} else {
-					EconomyResponse response = vaultApi.getHook().getEconomy().withdrawPlayer(pl,
-							getInformation().getPrice());
-					if (response.transactionSuccess()) {
+					if (EconomyUtils.withdraw(pl, getInformation().getPrice())) {
 						pl.getInventory().addItem(item);
+						MessageTemplate.inst(MESSAGE_PROTECTION_FLAGS_CHARGEDSUCCESSFULLY.applyPrefix())
+								.setReplacements(
+										new Replacement("{amount}", () -> String.valueOf(getInformation().getPrice())))
+								.process().sendMessage(pl);
 					} else {
 						MessageTemplate.inst(Messages.ERROR_INSUFFICIENTBALANCE.applyPrefix()).process()
 								.sendMessage(pl);
@@ -100,16 +106,16 @@ public class ProtectionBlock {
 			} else {
 				MessageTemplate.inst(Messages.ERROR_INVENTORYFULL.applyPrefix()).process().sendMessage(pl);
 			}
-		} catch (RoyaleProtectionBlocksException e) {
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			e.sendError(pl);
 		}
 	}
 
-	public void save() throws RoyaleProtectionBlocksException {
+	public void save() throws RoyaleProtectionBlocksExceptionImpl {
 		this.save(null);
 	}
 
-	public void save(Player player) throws RoyaleProtectionBlocksException {
+	public void save(Player player) throws RoyaleProtectionBlocksExceptionImpl {
 		if (player != null) {
 			if (!PermissionsService.BLOCKS_CREATE.hasPermission(player)) {
 				throw Exceptions.Protections.Blocks.Save.PERMISSIONDENIED.generateException();
@@ -135,11 +141,11 @@ public class ProtectionBlock {
 		protectionBlocksService.registerProtectionBlock(this);
 	}
 
-	public void delete() throws RoyaleProtectionBlocksException {
+	public void delete() throws RoyaleProtectionBlocksExceptionImpl {
 		this.delete(null);
 	}
 
-	public void delete(Player player) throws RoyaleProtectionBlocksException {
+	public void delete(Player player) throws RoyaleProtectionBlocksExceptionImpl {
 		if (player != null) {
 			if (!PermissionsService.BLOCKS_DELETE.hasPermission(player)) {
 				throw Exceptions.Protections.Blocks.Delete.PERMISSIONDENIED.generateException();
@@ -158,8 +164,8 @@ public class ProtectionBlock {
 						}
 
 						try {
-							protection.delete().subscribe();
-						} catch (RoyaleProtectionBlocksException e1) {
+							protection.delete(RemovalCause.PURGE).subscribe();
+						} catch (RoyaleProtectionBlocksExceptionImpl e1) {
 							e1.printStackTrace();
 						}
 					}

@@ -73,7 +73,7 @@ public class OwnersSubcommand extends PandaSubCommand {
 
 						sendInformation(pl, protection, page);
 					} else {
-						Exceptions.Protections.General.PERMISSIONDENIED.generateException().sendError(pl);
+						Exceptions.Protections.PERMISSIONDENIED.generateException().sendError(pl);
 					}
 				} else {
 					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()

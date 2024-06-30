@@ -1,30 +1,22 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Debugger;
-import company.pluginName.Debugger.MessageType;
-import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionRemovalAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRemovalRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -46,6 +38,9 @@ public class UnclaimSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsService protectionsService;
 
+	@PandaInject
+	private static PlayerInteractionsService playerInteractionsService;
+
 	public UnclaimSubCommand() throws InstantiationException {
 		super();
 	}
@@ -56,71 +51,11 @@ public class UnclaimSubCommand extends PandaSubCommand {
 		if (player != null) {
 			Protection protection = protectionsService.findProtectionByLocation(player.getLocation());
 			if (protection != null) {
-				if (ProtectionUtilities.canDelete(protection, player)) {
-					try {
-						ProtectionRemovalAttemptEvent attemptEvent = new ProtectionRemovalAttemptEvent(player,
-								protection);
-						Bukkit.getPluginManager().callEvent(attemptEvent);
-
-						if (attemptEvent.isCancelled()) {
-							throw Exceptions.Protections.Delete.CANCELLED.generateException();
-						}
-
-						if (protection.getUtils().isProtectionBlockShown()) {
-							protection.getUtils().hideProtectionBlock();
-						}
-
-						if (protection.getBoundaries().isProtectionViewActive()) {
-							protection.getBoundaries().toggleProtectionView();
-						}
-
-						ProtectionBlock protectionBlock = protection.getProtectionBlock().getObject();
-						ItemStack protectionBlockItem = (protectionBlock != null)
-								? ((ProtectionBlock) protection.getProtectionBlock().getObject()).getInformation()
-										.generateItem()
-								: null;
-
-						TasksUtils.executeOnAsync(() -> {
-							try {
-								protection.delete(player).subscribe((deletedProtection) -> {
-									MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
-											.process().sendMessage(player);
-
-									TasksUtils.execute(() -> {
-										if (player.isOnline() && protectionBlockItem != null) {
-											player.getInventory().addItem(protectionBlockItem)
-													.forEach((index, remainingItem) -> protection.getLocation()
-															.getWorld()
-															.dropItem(protection.getLocation(), remainingItem));
-										}
-
-										if (player.isOnline()
-												&& player.getOpenInventory().getType() != InventoryType.CRAFTING) {
-											player.closeInventory();
-										}
-									});
-								}, (throwable) -> {
-									if (!(throwable instanceof RoyaleProtectionBlocksException)) {
-										throwable = Exceptions.Protections.Delete.UNKNOWN.generateException(throwable);
-									}
-
-									((RoyaleProtectionBlocksException) throwable).sendError(player);
-								});
-							} catch (RoyaleProtectionBlocksException e) {
-								e.sendError(player);
-							}
-						});
-					} catch (RoyaleProtectionBlocksException e) {
-						if (e.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
-							Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
-									() -> new Object[] { protection.getRegionId() });
-						} else {
-							e.sendError(player);
-						}
-					}
-				} else {
-					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_LEAVEDENIEDTOMAINOWNER.applyPrefix()).process()
-							.sendMessage(sender);
+				try {
+					playerInteractionsService
+							.protectionRemovalRequest(ProtectionRemovalRequestInput.inst(player, protection));
+				} catch (RoyaleProtectionBlocksException e) {
+					e.sendError(sender);
 				}
 			} else {
 				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()

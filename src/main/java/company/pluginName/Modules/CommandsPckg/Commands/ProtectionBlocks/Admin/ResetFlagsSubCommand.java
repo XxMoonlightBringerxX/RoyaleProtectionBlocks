@@ -2,25 +2,22 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.APIs.PlaceholderAPI.PlaceholderAPI;
+import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
+import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.ProtectionFlagsPckg.ProtectionFlagsService;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService.DefaultFlag;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
@@ -64,7 +61,13 @@ public class ResetFlagsSubCommand extends PandaSubCommand {
 	private static ProtectionSettingsService protectionSettingsService;
 
 	@PandaInject
+	private static ProtectionFlagsService protectionFlagsService;
+
+	@PandaInject
 	private static PlaceholderAPI placeholderApi;
+
+	@PandaInject
+	private static WorldGuardAPI worldGuardApi;
 
 	private static final String ALL_KEY = "--all";
 	private static final String FLAGS_KEY = "--flags";
@@ -84,66 +87,47 @@ public class ResetFlagsSubCommand extends PandaSubCommand {
 					.findFirst().isPresent();
 			Protection currentProtection = null;
 
-			if (!allRegions && sender instanceof Player) {
-				currentProtection = protectionsService.findProtectionByLocation(((Player) sender).getLocation());
+			if (!allRegions) {
+				if (sender instanceof Player) {
+					currentProtection = protectionsService.findProtectionByLocation(((Player) sender).getLocation());
 
-				if (currentProtection == null) {
-					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
-							.sendMessage(sender);
+					if (currentProtection == null) {
+						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
+								.sendMessage(sender);
+						return;
+					}
+				} else {
+					MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 					return;
 				}
 			}
 
-			List<String> flagsToModify = parameters.getKeyValueParameters().stream()
+			Set<String> flagsToReset = parameters.getKeyValueParameters().stream()
 					.filter(pair -> pair.getFirst().equalsIgnoreCase(FLAGS_KEY))
-					.map(pair -> (List<String>) (pair.getSecond() != null
-							? Arrays.asList(pair.getSecond().toLowerCase().split(";"))
-							: Collections.emptyList()))
+					.map(pair -> (Set<String>) (pair.getSecond() != null
+							? Arrays.stream(pair.getSecond().toLowerCase().split(";")).filter(flagId -> {
+								try {
+									return worldGuardApi.getHook().getInternalWorldGuard().getAllFlags().stream()
+											.anyMatch(flag -> flag.getName().equalsIgnoreCase(flagId));
+								} catch (Exception e) {
+									return false;
+								}
+							}).collect(Collectors.toSet())
+							: Collections.emptySet()))
 					.findFirst().orElse(null);
 
-			List<DefaultFlag> defaultFlags = protectionSettingsService.getDefaultFlags().stream().filter(
-					flag -> flagsToModify == null || flagsToModify.contains(flag.getFlag().getName().toLowerCase()))
-					.collect(Collectors.toList());
-
-			if (defaultFlags.isEmpty()) {
+			if (flagsToReset != null && flagsToReset.isEmpty()) {
 				MessageTemplate.inst(ERROR_RESETFLAGS_NOFLAGSFOUND.applyPrefix()).process().sendMessage(sender);
 				return;
 			}
 
 			(currentProtection != null ? Arrays.asList(currentProtection)
 					: protectionsService.getProtectionByRegion().values()).forEach(protection -> {
-						OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(protection.getOwnerUuid());
-
-						HashMap<com.sk89q.worldguard.protection.flags.Flag<?>, Object> flags = new HashMap<>();
-						protectionSettingsService.getDefaultFlags().forEach(defaultFlag -> {
-							if (placeholderApi.getHook().isHooked()) {
-								if (defaultFlag.getValue() instanceof String) {
-									flags.put(defaultFlag.getFlag(),
-											MessageTemplate.inst(placeholderApi.getHook()
-													.applyPlaceholders((String) defaultFlag.getValue(), owner)
-													.replaceAll("\\\\%", "%")).process().toString());
-								} else if (defaultFlag.getValue() instanceof Set) {
-									Set<String> set = new HashSet<>();
-									((Set<String>) defaultFlag.getValue())
-											.forEach(string -> set.add(MessageTemplate.inst(placeholderApi.getHook()
-													.applyPlaceholders(string, owner).replaceAll("\\\\%", "%"))
-													.process().toString()));
-									flags.put(defaultFlag.getFlag(), set);
-								} else {
-									flags.put(defaultFlag.getFlag(), defaultFlag.getValue());
-								}
-							} else {
-								flags.put(defaultFlag.getFlag(), defaultFlag.getValue());
-							}
-
-							if (defaultFlag.getRegionGroup() != null
-									&& defaultFlag.getFlag().getRegionGroupFlag() != null && defaultFlag.getFlag()
-											.getRegionGroupFlag().getDefault() != defaultFlag.getRegionGroup()) {
-								flags.put(defaultFlag.getFlag().getRegionGroupFlag(), defaultFlag.getRegionGroup());
-							}
-						});
-
-						protection.getProtectedRegion().setFlags(flags);
+						if (flagsToReset != null) {
+							protection.getFlags().resetFlags(flagsToReset);
+						} else {
+							protection.getFlags().resetFlags();
+						}
 					});
 
 			MessageTemplate.inst(MESSAGE_RESETFALGS_FLAGSRESETTODEFAULTSUCCESSFULLY.applyPrefix()).process()

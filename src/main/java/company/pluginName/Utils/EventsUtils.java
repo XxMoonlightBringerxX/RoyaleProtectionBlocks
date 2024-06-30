@@ -7,20 +7,19 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Debugger;
 import company.pluginName.Debugger.MessageType;
 import company.pluginName.MainPluginClass;
-import company.pluginName.APIs.PlaceholderAPI.PlaceholderAPI;
-import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManageInventory;
-import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
+import company.pluginName.API.Services.PlayerInteractionsServiceImpl;
 import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksException;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.FilePckg.Settings;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
@@ -34,8 +33,11 @@ import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackData.ItemStackDa
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.AllArgsConstructor;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionCreationAttemptEvent;
-import royale.RoyaleProtectionBlocks.Plugin.InternalAPI.Events.Protection.ProtectionRemovalAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRemovalRequestInput;
 
 public class EventsUtils {
 
@@ -47,6 +49,12 @@ public class EventsUtils {
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
+
+	@PandaInject
+	private static PlayerInteractionsServiceImpl playerInteractionsService;
+
+	@PandaInject
+	private static PlayerDataService playerDataService;
 
 	@PandaInject
 	private static PlaceholderAPI placeholderApi;
@@ -154,12 +162,12 @@ public class EventsUtils {
 								Location playerLocation = player.getLocation();
 
 								Consumer<Throwable> onError = (throwable) -> {
-									if (!(throwable instanceof RoyaleProtectionBlocksException)) {
+									if (!(throwable instanceof RoyaleProtectionBlocksExceptionImpl)) {
 										throwable = Exceptions.Protections.Save.UNKNOWN.generateException(throwable);
 									}
 
 									if (player.isOnline()) {
-										((RoyaleProtectionBlocksException) throwable).sendError(player);
+										((RoyaleProtectionBlocksExceptionImpl) throwable).sendError(player);
 									}
 
 									TasksUtils.execute(() -> {
@@ -175,7 +183,7 @@ public class EventsUtils {
 												try {
 													playerLocation.getWorld().dropItem(playerLocation,
 															protectionBlock.getInformation().generateItem());
-												} catch (RoyaleProtectionBlocksException e) {
+												} catch (RoyaleProtectionBlocksExceptionImpl e) {
 													e.printStackTrace();
 												}
 											}
@@ -204,13 +212,13 @@ public class EventsUtils {
 											TasksUtils
 													.execute(() -> createdProtection.getUtils().showProtectionBlock());
 										}, onError);
-									} catch (RoyaleProtectionBlocksException e) {
+									} catch (RoyaleProtectionBlocksExceptionImpl e) {
 										onError.accept(e);
 									}
 								});
 
 								return BlockPlaceResult.SUCCESS;
-							} catch (RoyaleProtectionBlocksException e1) {
+							} catch (RoyaleProtectionBlocksExceptionImpl e1) {
 								if (e1.getExceptionType() == Exceptions.Protections.Save.CANCELLED) {
 									Debugger.log(MessageType.PROTECTION_CREATION_ATTEMPT_CANCELLED,
 											() -> new Object[] { String.valueOf(block.getLocation().getX()),
@@ -247,9 +255,7 @@ public class EventsUtils {
 			// doing it as it can cause interferences on the show/hide commands.
 			Protection prot = protectionsService.findProtectionBySourceBlock(block);
 			if (prot != null) {
-				if (prot.getUtils().isProtectionBlockShown()) {
-					return BlockPlaceResult.CANCEL;
-				} else {
+				if (!prot.getUtils().isProtectionBlockShown()) {
 					ProtectionBlock protectionBlock = prot.getProtectionBlock().getObject();
 					if (protectionBlock == null || protectionBlock.getInformation().isSameType(item)) {
 						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_SAMEITEMASPROTECTION.applyPrefix()).process()
@@ -284,67 +290,16 @@ public class EventsUtils {
 			}
 
 			try {
-				ProtectionRemovalAttemptEvent attemptEvent = new ProtectionRemovalAttemptEvent(player, protection);
-				Bukkit.getPluginManager().callEvent(attemptEvent);
-
-				if (attemptEvent.isCancelled()) {
-					throw Exceptions.Protections.Delete.CANCELLED.generateException();
-				}
-
-				if (protection.getUtils().isProtectionBlockShown()) {
-					protection.getUtils().hideProtectionBlock();
-				}
-
-				if (protection.getBoundaries().isProtectionViewActive()) {
-					protection.getBoundaries().toggleProtectionView();
-				}
-
-				ItemStack protectionBlockItem = (protectionBlock != null)
-						? ((ProtectionBlock) protection.getProtectionBlock().getObject()).getInformation()
-								.generateItem()
-						: null;
-
-				Consumer<Throwable> onError = (throwable) -> {
-					if (!protection.getUtils().isProtectionBlockShown()) {
-						TasksUtils.execute(protection.getUtils()::showProtectionBlock);
-					}
-
-					if (!(throwable instanceof RoyaleProtectionBlocksException)) {
-						throwable = Exceptions.Protections.Delete.UNKNOWN.generateException(throwable);
-					}
-
-					((RoyaleProtectionBlocksException) throwable).sendError(player);
-				};
-
-				TasksUtils.executeOnAsync(() -> {
-					try {
-						protection.delete(player).subscribe((deletedProtection) -> {
-							MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
-									.process().sendMessage(player);
-
-							TasksUtils.execute(() -> {
-								if (protectionBlockItem != null) {
-									protection.getLocation().getWorld().dropItem(protection.getLocation(),
-											protectionBlockItem);
-								}
-
-								if (player.getOpenInventory().getType() != InventoryType.CRAFTING) {
-									player.closeInventory();
-								}
-							});
-						}, onError);
-					} catch (RoyaleProtectionBlocksException e) {
-						onError.accept(e);
-					}
-				});
+				playerInteractionsService
+						.protectionRemovalRequest(ProtectionRemovalRequestInput.inst(player, protection));
 
 				return BlockBreakResult.SUCCESS;
-			} catch (RoyaleProtectionBlocksException e1) {
-				if (e1.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				if (e.getType() == RoyaleProtectionBlocksException.Type.PROTECTIONS_DELETE_CANCELLED) {
 					Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
 							() -> new Object[] { protection.getRegionId() });
 				} else {
-					e1.sendError(player);
+					e.sendError(player);
 				}
 				return BlockBreakResult.CANCEL;
 			}
@@ -373,70 +328,20 @@ public class EventsUtils {
 		}
 
 		if (player.isSneaking() && ProtectionUtilities.canDelete(protection, player)) {
-			new ConfirmationInventory(player, () -> {
-				try {
-					ProtectionRemovalAttemptEvent attemptEvent = new ProtectionRemovalAttemptEvent(player, protection);
-					Bukkit.getPluginManager().callEvent(attemptEvent);
-
-					if (attemptEvent.isCancelled()) {
-						throw Exceptions.Protections.Delete.CANCELLED.generateException();
-					}
-
-					if (protection.getUtils().isProtectionBlockShown()) {
-						protection.getUtils().hideProtectionBlock();
-					}
-
-					if (protection.getBoundaries().isProtectionViewActive()) {
-						protection.getBoundaries().toggleProtectionView();
-					}
-
-					ItemStack protectionBlockItem = (protectionBlock != null)
-							? ((ProtectionBlock) protection.getProtectionBlock().getObject()).getInformation()
-									.generateItem()
-							: null;
-
-					TasksUtils.executeOnAsync(() -> {
-						try {
-							protection.delete(player).subscribe((deletedProtection) -> {
-								MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix())
-										.process().sendMessage(player);
-
-								TasksUtils.execute(() -> {
-									if (player.isOnline() && protectionBlockItem != null) {
-										player.getInventory().addItem(protectionBlockItem)
-												.forEach((index, remainingItem) -> protection.getLocation().getWorld()
-														.dropItem(protection.getLocation(), remainingItem));
-									}
-
-									if (player.isOnline()
-											&& player.getOpenInventory().getType() != InventoryType.CRAFTING) {
-										player.closeInventory();
-									}
-								});
-							}, (throwable) -> {
-								if (!(throwable instanceof RoyaleProtectionBlocksException)) {
-									throwable = Exceptions.Protections.Delete.UNKNOWN.generateException(throwable);
-								}
-
-								((RoyaleProtectionBlocksException) throwable).sendError(player);
-							});
-						} catch (RoyaleProtectionBlocksException e) {
-							e.sendError(player);
-						}
-					});
-				} catch (RoyaleProtectionBlocksException e1) {
-					if (e1.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
-						Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
-								() -> new Object[] { protection.getRegionId() });
-					} else {
-						e1.sendError(player);
-					}
-				}
-			}).openInventory();
-
+			try {
+				playerInteractionsService.openProtectionRemovalInventoryRequest(
+						OpenProtectionRemovalInventoryRequestInput.inst(player, protection));
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(player);
+			}
 		} else if (Settings.SETTINGS_PROTECTION_OPENINVENTORYONINTERACT.getContent()
 				&& ProtectionUtilities.canManage(protection, player)) {
-			new ProtectionsManageInventory(player, protection).openInventory();
+			try {
+				playerInteractionsService.openProtectionManagementInventoryRequest(
+						OpenProtectionManagementInventoryRequestInput.inst(player, protection));
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(player);
+			}
 		}
 		return BlockInteractResult.SUCCESS;
 	}

@@ -16,6 +16,7 @@ import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation.SimpleLocationArea;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -140,8 +141,9 @@ public class ProtectionsService {
 	}
 
 	public Stream<Protection> findProtectionsByArea(Location location1, Location location2, boolean includeBorder) {
+		SimpleLocationArea locationArea = SimpleLocationArea.of(location1, location2);
 		return protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList()).stream()
-				.filter((prot) -> prot.getUtils().isInside(location1, location2, includeBorder))
+				.filter((prot) -> prot.getUtils().isInside(locationArea, includeBorder))
 				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
 	}
 

@@ -41,6 +41,7 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionF
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionMembers;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionOwners;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation.SimpleLocationArea;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Utils.ReflectUtils;
@@ -416,11 +417,12 @@ public class Protection implements IProtection {
 
 		// Checks if there's other protections overlapping this region
 		if (player != null && !PermissionsService.OVERLAP_BYPASS.hasPermission(player)) {
-			if (!(Settings.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent() && protectionsService
+			if (protectionsService
 					.findProtectionsByArea(
 							offset > 0 ? getMinLocation().clone().add(-offset, -offset, -offset) : getMinLocation(),
-							offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation())
-					.allMatch(prot -> prot.isMainOwner(player.getUniqueId())))) {
+							offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation(), false)
+					.anyMatch(prot -> !prot.isMainOwner(player.getUniqueId())
+							|| !Settings.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent())) {
 				throw offset < 0 ? Exceptions.Protections.Save.OVERLAPS.generateException()
 						: Exceptions.Protections.Save.OVERLAPSOFFSET.generateException()
 								.setReplacements(new Replacement("%blocks%", () -> String.valueOf(offset)));
@@ -689,7 +691,11 @@ public class Protection implements IProtection {
 
 	@Override
 	public boolean isInside(Location firstLocation, Location secondLocation, boolean includeBorder) {
-		return this.getUtils().isInside(firstLocation, secondLocation, includeBorder);
+		return this.getUtils().isInside(SimpleLocationArea.of(firstLocation, secondLocation), includeBorder);
+	}
+
+	public boolean isInside(SimpleLocationArea locationArea, boolean includeBorder) {
+		return this.getUtils().isInside(locationArea, includeBorder);
 	}
 
 }

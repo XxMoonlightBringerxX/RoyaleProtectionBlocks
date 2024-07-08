@@ -34,10 +34,10 @@ import lombok.Getter;
 		id = "flag",
 		pathName = "Flag",
 		defaultName = "flag",
-		defaultDescription = "Replace the flag value of a protection or all the protections",
+		defaultDescription = "Replace the flag value of a protection or all the protections. Specify no value to clear the flag from the protections.",
 		defaultAliases = "f",
 		defaultPermission = "protectionblocks.admin.flag",
-		defaultUsage = "<flag name> <flag value> [--all] [--group <all|members|owners|non_members|non_owners>]"
+		defaultUsage = "<flag name> [flag value] [--all] [--group <all|members|owners|non_members|non_owners>]"
 )
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
@@ -51,6 +51,10 @@ public class FlagSubCommand extends PandaSubCommand {
 	@RegisteredPandaField("lang")
 	private static final PandaPrefixedStringField MESSAGE_FLAGS_FLAGSETSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Flags.Flag-set-successfully", "&aThe flag value has been replaced successfully.");
+
+	@RegisteredPandaField("lang")
+	private static final PandaPrefixedStringField MESSAGE_FLAGS_FLAGCLEAREDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Flags.Flag-cleared-successfully", "&aThe flag value has been cleared successfully.");
 
 	@RegisteredPandaField("lang")
 	private static final PandaPrefixedStringField ERROR_FLAGS_NOTFOUND = new PandaPrefixedStringField(
@@ -92,7 +96,7 @@ public class FlagSubCommand extends PandaSubCommand {
 	@Override
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		return CommandResponse.queuedAsync(() -> {
-			if (parameters.getUnprocessedParameters().size() > 1) {
+			if (!parameters.getUnprocessedParameters().isEmpty()) {
 				boolean allRegions = parameters.getKeyOnlyParameters().stream()
 						.filter(key -> key.equalsIgnoreCase(ALL_KEY)).findFirst().isPresent();
 				Protection currentProtection = null;
@@ -123,41 +127,52 @@ public class FlagSubCommand extends PandaSubCommand {
 						return;
 					}
 
-					String groupValue = parameters.getKeyValueParameters().stream()
-							.filter(pair -> pair.getFirst().equalsIgnoreCase(GROUP_KEY)).map(pair -> pair.getSecond())
-							.findFirst().orElse(null);
-					final RegionGroup group;
+					if (parameters.getUnprocessedParameters().size() > 1) {
+						String groupValue = parameters.getKeyValueParameters().stream()
+								.filter(pair -> pair.getFirst().equalsIgnoreCase(GROUP_KEY))
+								.map(pair -> pair.getSecond()).findFirst().orElse(null);
+						final RegionGroup group;
 
-					try {
-						group = groupValue != null ? RegionGroup.valueOf(groupValue.toUpperCase()) : null;
-					} catch (IllegalArgumentException e) {
-						MessageTemplate.inst(ERROR_FLAGS_INVALIDGROUP.applyPrefix()).process().sendMessage(sender);
-						return;
+						try {
+							group = groupValue != null ? RegionGroup.valueOf(groupValue.toUpperCase()) : null;
+						} catch (IllegalArgumentException e) {
+							MessageTemplate.inst(ERROR_FLAGS_INVALIDGROUP.applyPrefix()).process().sendMessage(sender);
+							return;
+						}
+
+						Object value;
+
+						try {
+							value = ProtectionFlagUtilities
+									.stringToValue(
+											flag, Arrays
+													.stream(Arrays.copyOfRange(
+															parameters.getUnprocessedParameters()
+																	.toArray(new String[parameters
+																			.getUnprocessedParameters().size()]),
+															1, parameters.getUnprocessedParameters().size()))
+													.collect(Collectors.joining(" ")));
+						} catch (Exception e) {
+							MessageTemplate.inst(ERROR_FLAGS_INVALIDVALUE.applyPrefix()).process().sendMessage(sender);
+							return;
+						}
+
+						(currentProtection != null ? Arrays.asList(currentProtection)
+								: protectionsService.getProtectionByRegion().values())
+								.forEach(protection -> ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
+										flag, value, group));
+
+						MessageTemplate.inst(MESSAGE_FLAGS_FLAGSETSUCCESSFULLY.applyPrefix()).process()
+								.sendMessage(sender);
+					} else {
+						(currentProtection != null ? Arrays.asList(currentProtection)
+								: protectionsService.getProtectionByRegion().values())
+								.forEach(protection -> ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
+										flag, null));
+
+						MessageTemplate.inst(MESSAGE_FLAGS_FLAGCLEAREDSUCCESSFULLY.applyPrefix()).process()
+								.sendMessage(sender);
 					}
-
-					Object value;
-
-					try {
-						value = ProtectionFlagUtilities
-								.stringToValue(
-										flag, Arrays
-												.stream(Arrays.copyOfRange(
-														parameters.getUnprocessedParameters()
-																.toArray(new String[parameters
-																		.getUnprocessedParameters().size()]),
-														1, parameters.getUnprocessedParameters().size()))
-												.collect(Collectors.joining(" ")));
-					} catch (Exception e) {
-						MessageTemplate.inst(ERROR_FLAGS_INVALIDVALUE.applyPrefix()).process().sendMessage(sender);
-						return;
-					}
-
-					(currentProtection != null ? Arrays.asList(currentProtection)
-							: protectionsService.getProtectionByRegion().values())
-							.forEach(protection -> ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
-									flag, value, group));
-
-					MessageTemplate.inst(MESSAGE_FLAGS_FLAGSETSUCCESSFULLY.applyPrefix()).process().sendMessage(sender);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

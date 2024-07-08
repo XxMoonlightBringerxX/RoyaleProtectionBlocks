@@ -71,37 +71,42 @@ public class ProtectionFlagUtilities {
 	@SuppressWarnings("unchecked")
 	public static void setValue(ProtectedRegion protectedRegion, Flag<?> flag, Object value, RegionGroup regionGroup)
 			throws ClassCastException, IllegalStateException {
-		if (isDoubleFlag(flag)) {
-			if (!(value instanceof Double)) {
-				throw new IllegalArgumentException("Value is not compatible with the flag type");
+		if (value != null) {
+			if (isDoubleFlag(flag)) {
+				if (!(value instanceof Double)) {
+					throw new IllegalArgumentException("Value is not compatible with the flag type");
+				}
+				protectedRegion.setFlag((DoubleFlag) flag, (Double) value);
+			} else if (isIntegerFlag(flag)) {
+				if (!(value instanceof Integer)) {
+					throw new IllegalArgumentException("Value is not compatible with the flag type");
+				}
+				protectedRegion.setFlag((IntegerFlag) flag, (Integer) value);
+			} else if (isStateFlag(flag)) {
+				if (!(value instanceof State)) {
+					throw new IllegalArgumentException("Value is not compatible with the flag type");
+				}
+				protectedRegion.setFlag((StateFlag) flag, (State) value);
+			} else if (isStringFlag(flag)) {
+				if (!(value instanceof String)) {
+					throw new IllegalArgumentException("Value is not compatible with the flag type");
+				}
+				protectedRegion.setFlag((StringFlag) flag, (String) value);
+			} else if (isStringSetFlag(flag)) {
+				if (!(value instanceof Set)) {
+					throw new IllegalArgumentException("Value is not compatible with the flag type");
+				}
+				protectedRegion.setFlag((SetFlag<String>) flag, (Set<String>) value);
+			} else {
+				throw new IllegalStateException("Value is not a supported type");
 			}
-			protectedRegion.setFlag((DoubleFlag) flag, (Double) value);
-		} else if (isIntegerFlag(flag)) {
-			if (!(value instanceof Integer)) {
-				throw new IllegalArgumentException("Value is not compatible with the flag type");
-			}
-			protectedRegion.setFlag((IntegerFlag) flag, (Integer) value);
-		} else if (isStateFlag(flag)) {
-			if (!(value instanceof State)) {
-				throw new IllegalArgumentException("Value is not compatible with the flag type");
-			}
-			protectedRegion.setFlag((StateFlag) flag, (State) value);
-		} else if (isStringFlag(flag)) {
-			if (!(value instanceof String)) {
-				throw new IllegalArgumentException("Value is not compatible with the flag type");
-			}
-			protectedRegion.setFlag((StringFlag) flag, (String) value);
-		} else if (isStringSetFlag(flag)) {
-			if (!(value instanceof Set)) {
-				throw new IllegalArgumentException("Value is not compatible with the flag type");
-			}
-			protectedRegion.setFlag((SetFlag<String>) flag, (Set<String>) value);
-		} else {
-			throw new IllegalStateException("Value is not a supported type");
-		}
 
-		if (flag.getRegionGroupFlag() != null && regionGroup != null) {
-			protectedRegion.setFlag(flag.getRegionGroupFlag(), regionGroup);
+			if (flag.getRegionGroupFlag() != null && regionGroup != null) {
+				protectedRegion.setFlag(flag.getRegionGroupFlag(), regionGroup);
+			}
+		} else {
+			protectedRegion.setFlag(flag, null);
+			protectedRegion.setFlag(flag.getRegionGroupFlag(), null);
 		}
 	}
 

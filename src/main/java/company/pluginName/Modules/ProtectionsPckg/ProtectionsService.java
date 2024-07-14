@@ -131,9 +131,7 @@ public class ProtectionsService {
 	}
 
 	public Stream<Protection> findProtectionsByLocation(Location location, boolean includeBorder) {
-		return protectionsByWorld.getOrDefault(location.getWorld().getName(), Collections.emptyList()).stream()
-				.filter((prot) -> prot.getUtils().isInside(location, includeBorder))
-				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
+		return findProtectionsByArea(location, location, includeBorder);
 	}
 
 	public Stream<Protection> findProtectionsByArea(Location location1, Location location2) {
@@ -144,6 +142,7 @@ public class ProtectionsService {
 		SimpleLocationArea locationArea = SimpleLocationArea.of(location1, location2);
 		return protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList()).stream()
 				.filter((prot) -> prot.getUtils().isInside(locationArea, includeBorder))
+				.map(prot -> prot.getParentProtection() != null ? prot.getParentProtection() : prot).distinct()
 				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
 	}
 

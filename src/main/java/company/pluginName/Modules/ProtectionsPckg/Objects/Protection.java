@@ -1,8 +1,11 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -596,13 +599,41 @@ public class Protection implements IProtection {
 	}
 
 	/*
+	 * Merge methods
+	 */
+
+	private Protection parentProtection = null;
+	private List<Protection> childProtections = new ArrayList<>();
+
+	public void setParentProtection(Protection protection) {
+		unsetParentProtection();
+
+		while (protection.getParentProtection() != null) {
+			protection = protection.getParentProtection();
+		}
+
+		this.parentProtection = protection;
+		this.parentProtection.getChildProtections().add(this);
+	}
+
+	public void unsetParentProtection() {
+		if (this.parentProtection != null) {
+			this.parentProtection.getChildProtections().remove(this);
+			this.parentProtection = null;
+		}
+	}
+
+	/*
 	 * Save data methods
 	 */
 
 	public void saveData() {
 		TasksUtils.executeOnAsync(() -> {
 			try {
+				sqlService.clearChilds(regionId);
 				sqlService.saveProtection(this);
+				sqlService.saveChilds(regionId,
+						this.getChildProtections().stream().map(Protection::getRegionId).collect(Collectors.toList()));
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
@@ -612,6 +643,7 @@ public class Protection implements IProtection {
 	public void deleteData() {
 		TasksUtils.executeOnAsync(() -> {
 			try {
+				sqlService.clearChilds(regionId);
 				sqlService.deleteProtection(this);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());

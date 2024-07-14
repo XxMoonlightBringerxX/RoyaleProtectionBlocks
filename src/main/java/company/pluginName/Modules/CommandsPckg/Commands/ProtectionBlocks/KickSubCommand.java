@@ -9,7 +9,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -72,25 +71,19 @@ public class KickSubCommand extends PandaSubCommand {
 				if (protection != null) {
 					Player kicked = Bukkit.getPlayer(parameters.getParameters().get(0));
 					if (kicked != null) {
-						if (!PermissionsService.KICK_BYPASS.hasPermission(pl)) {
-							try {
-								if (playerInteractionsService.protectionKickRequest(
-										ProtectionKickRequestInput.inst(pl, protection, kicked))) {
-									MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_KICKED.applyPrefix()).process()
-											.sendMessage(kicked);
-									MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_PLAYERKICKED.applyPrefix())
-											.process().sendMessage(sender);
-								} else {
-									MessageTemplate
-											.inst(Messages.MESSAGE_PROTECTIONS_PLAYERNOTINPROTECTION.applyPrefix())
-											.process().sendMessage(sender);
-								}
-							} catch (RoyaleProtectionBlocksException e) {
-								e.sendError(pl);
+						try {
+							if (playerInteractionsService
+									.protectionKickRequest(ProtectionKickRequestInput.inst(pl, protection, kicked))) {
+								MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_KICKED.applyPrefix()).process()
+										.sendMessage(kicked);
+								MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_PLAYERKICKED.applyPrefix()).process()
+										.sendMessage(sender);
+							} else {
+								MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_PLAYERNOTINPROTECTION.applyPrefix())
+										.process().sendMessage(sender);
 							}
-						} else {
-							MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_PLAYERWITHKICKBYPASS.applyPrefix())
-									.process().sendMessage(sender);
+						} catch (RoyaleProtectionBlocksException e) {
+							e.sendError(pl);
 						}
 					} else {
 						MessageTemplate.inst(Messages.ERROR_PLAYERNOTFOUND.applyPrefix()).process().sendMessage(sender);

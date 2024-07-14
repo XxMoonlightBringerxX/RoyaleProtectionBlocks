@@ -38,7 +38,7 @@ public class Exceptions {
 
 		public static final ThrowableField KICKDENIEDBYPASS = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_KICKDENIEDBYPASS,
-				"Error.Exception.protection.kick.DeniedBypass	", "&cYou can't kick this player due his permissions!");
+				"Error.Exception.protection.kick.DeniedBypass", "&cYou can't kick this player due his permissions!");
 
 		public static final ThrowableField NOTENOUGHBALANCE = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_NOTENOUGHBALANCE,

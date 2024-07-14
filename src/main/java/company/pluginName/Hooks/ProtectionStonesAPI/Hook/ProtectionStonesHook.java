@@ -71,30 +71,32 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 		if (isHooked()) {
 			ProtectionStones.getInstance().getConfiguredBlocks().forEach(pb -> {
-				try {
-					ProtectionBlock block = new ProtectionBlock(new ProtectionBlockInformation(pb.alias,
-							pb.createItem(), pb.xRadius, pb.yRadius, pb.zRadius,
-							pb.permission != null && !pb.permission.isEmpty() ? pb.permission : null, pb.price));
+				if (protectionBlocksService.getProtectionBlockById(pb.alias) == null) {
+					try {
+						ProtectionBlock block = new ProtectionBlock(new ProtectionBlockInformation(pb.alias,
+								pb.createItem(), pb.xRadius, pb.yRadius, pb.zRadius,
+								pb.permission != null && !pb.permission.isEmpty() ? pb.permission : null, pb.price));
 
-					if (pb.worlds.size() > 0 && pb.worldListType != null && !pb.worldListType.isBlank()) {
-						Bukkit.getWorlds().stream()
-								.filter(world -> pb.worldListType.equalsIgnoreCase("whitelist") == pb.worlds
-										.contains(world.getName()))
-								.map(World::getName).forEach(block.getAllowedWorlds()::add);
+						if (pb.worlds.size() > 0 && pb.worldListType != null && !pb.worldListType.isBlank()) {
+							Bukkit.getWorlds().stream()
+									.filter(world -> pb.worldListType.equalsIgnoreCase("whitelist") == pb.worlds
+											.contains(world.getName()))
+									.map(World::getName).forEach(block.getAllowedWorlds()::add);
+						}
+
+						block.save();
+
+						successList.add(block);
+					} catch (RoyaleProtectionBlocksExceptionImpl e) {
+						MessageTemplate
+								.inst(PandaPrefixedStringField.applyPrefix(
+										String.format("&cUnable to create protection block using config from '%s': %s",
+												pb.alias, e.getMessage())))
+								.process().sendMessage(Bukkit.getConsoleSender());
+						e.printStackTrace();
+						exceptionsList.add(e);
+						errorsInConsole.set(true);
 					}
-
-					block.save();
-
-					successList.add(block);
-				} catch (RoyaleProtectionBlocksExceptionImpl e) {
-					MessageTemplate
-							.inst(PandaPrefixedStringField.applyPrefix(
-									String.format("&cUnable to create protection block using config from '%s': %s",
-											pb.alias, e.getMessage())))
-							.process().sendMessage(Bukkit.getConsoleSender());
-					e.printStackTrace();
-					exceptionsList.add(e);
-					errorsInConsole.set(true);
 				}
 			});
 		}
@@ -117,7 +119,12 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 							.filter((entry) -> ProtectionStones.isPSRegion(entry.getValue())).map((entry) -> {
 								List<PSRegion> regions = ProtectionStones.getPSRegions(world, entry.getKey());
 
-								return regions.size() > 0 ? this.transferRegion(regions.get(0)) : null;
+								if (regions.size() > 0
+										&& protectionsService.findProtectionById(regions.get(0).getId()) == null) {
+									return this.transferRegion(regions.get(0));
+								}
+
+								return null;
 							}).filter(Objects::nonNull).forEach(result -> {
 								successList.addAll(result.getSuccessList());
 								exceptionsList.addAll(result.getExceptionsList());
@@ -131,7 +138,6 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 							.inst(PandaPrefixedStringField.applyPrefix(String.format(
 									"&cUnable to process regions for world '%s': %s", world.getName(), e.getMessage())))
 							.process().sendMessage(Bukkit.getConsoleSender());
-					e.printStackTrace();
 					errorsInConsole.set(true);
 				}
 			});
@@ -143,9 +149,6 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 	private TransferResult<Protection> transferRegion(PSRegion protectionStonesRegion) {
 		Map<Flag<?>, Object> flags = new HashMap<>(protectionStonesRegion.getWGRegion().getFlags());
-
-		World world = protectionStonesRegion.getWorld();
-		String id = protectionStonesRegion.getId();
 
 		List<UUID> owners = protectionStonesRegion.getOwners();
 		List<UUID> members = protectionStonesRegion.getMembers();
@@ -282,8 +285,6 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 				}
 			});
 		}
-
-		ProtectionStones.removePSRegion(world, id);
 
 		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get()) {
 		};

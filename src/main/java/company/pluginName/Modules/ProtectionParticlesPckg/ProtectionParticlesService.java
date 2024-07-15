@@ -183,7 +183,8 @@ public class ProtectionParticlesService {
 									if (currentProtections.stream()
 											.anyMatch(prot -> prot.isInside(diagonalLocation, true))) {
 										Optional<Pair<Protection, Long>> coincidences = currentProtections.stream()
-												.filter(prot -> prot.isInside(diagonalLocation, true))
+												.filter(prot -> !prot.isDeleted()
+														&& prot.isInside(diagonalLocation, true))
 												.map(prot -> Pair.of(prot, Arrays.asList(((diagonalLocation
 														.getY() == currentLocation.getY()
 														|| diagonalLocation.getY() == prot.getLocation().getY())
@@ -247,14 +248,12 @@ public class ProtectionParticlesService {
 
 										SimpleLocation diagonalExtraLocation = SimpleLocation.of(diagonalLocation)
 												.add(0.5D, 0.5D, 0.5D);
-										coincidences = currentProtections
-												.stream().filter(
-														prot -> diagonalLocation.getY() == prot.getLocation().getY()
-																&& prot.isInside(
-																		new SimpleLocationArea(
-																				diagonalLocation.getWorld().getName(),
-																				diagonalLocation, diagonalLocation),
-																		true))
+										coincidences = currentProtections.stream()
+												.filter(prot -> !prot.isDeleted()
+														&& diagonalLocation.getY() == prot.getLocation().getY()
+														&& prot.isInside(new SimpleLocationArea(
+																diagonalLocation.getWorld().getName(), diagonalLocation,
+																diagonalLocation), true))
 												.map(prot -> Pair.of(prot, Arrays
 														.asList((diagonalLocation.getX() == prot.getLocation().getX()),
 																(diagonalLocation.getZ() == prot.getLocation().getZ()))

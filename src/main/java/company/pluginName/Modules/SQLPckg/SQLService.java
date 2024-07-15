@@ -5,14 +5,12 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.bukkit.inventory.ItemStack;
 
@@ -49,8 +47,9 @@ public class SQLService extends PandaSQLService {
 		getDatabase()
 				.addTable((t = new Table(getDatabase(), "Protections"))
 						.addColumns(
-								new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setPrimary(true).setNotNull(
-										true),
+								new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setPrimary(true)
+										.setNotNull(true),
+								new Column(t, "ParentRegionId", "VARCHAR(256)", Types.VARCHAR).setNotNull(false),
 								new Column(t, "CustomRegionId", "VARCHAR(256)", Types.VARCHAR),
 								new Column(t, "OwnerUuid", "CHAR(36)", Types.CHAR).setNotNull(true),
 								new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
@@ -64,18 +63,9 @@ public class SQLService extends PandaSQLService {
 								new Column(t, "Blocked", "BOOLEAN", Types.BOOLEAN).setNotNull(false),
 								new Column(t, "BlockReason", "VARCHAR(64)", Types.VARCHAR).setNotNull(false))
 						.addUniqueConstraint(
-								new UniqueConstraint(t.getColumn("CustomRegionId"), t.getColumn("OwnerUuid"))))
-
-				.addTable((t = new Table(getDatabase(), "ProtectionChilds"))
-						.addColumns(new Column(t, "ParentRegionId", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "ChildRegionId", "VARCHAR(256)", Types.VARCHAR).setNotNull(true))
-						.addUniqueConstraint(
-								new UniqueConstraint(t.getColumn("ParentRegionId"), t.getColumn("ChildRegionId")))
-						.addForeignConstraints(
-								new ForeignConstraint(Arrays.asList(t.getColumn("ParentRegionId")),
-										Arrays.asList(getDatabase().getTable("Protections").getColumn("RegionId"))),
-								new ForeignConstraint(Arrays.asList(t.getColumn("ChildRegionId")),
-										Arrays.asList(getDatabase().getTable("Protections").getColumn("RegionId")))))
+								new UniqueConstraint(t.getColumn("CustomRegionId"), t.getColumn("OwnerUuid")))
+						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ParentRegionId")),
+								Arrays.asList(t.getColumn("RegionId")))))
 
 				.addTable((t = new Table(getDatabase(), "ProtectionMembers"))
 						.addColumns(new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
@@ -127,6 +117,7 @@ public class SQLService extends PandaSQLService {
 
 	public List<Protection> getProtections() {
 		List<Protection> protections = new ArrayList<>();
+		HashMap<String, List<Protection>> parentProtections = new HashMap<>();
 		try (ResultSet set = this.getDatabase().select(Arrays.asList(this.getDatabase().getTable("Protections")))) {
 			while (set.next()) {
 				Protection protection;
@@ -136,6 +127,11 @@ public class SQLService extends PandaSQLService {
 				protection = new Protection(set.getString("RegionId"), UUID.fromString(set.getString("ownerUuid")),
 						new ReferencedProtectionBlock(set.getString("ProtectionBlockId")), set.getString("WorldName"),
 						set.getString("DisplayName"), createdDate > 0 ? createdDate : System.currentTimeMillis());
+
+				if (set.getString("ParentRecordId") != null) {
+					parentProtections.computeIfAbsent(set.getString("ParentRecordId"), (key) -> new ArrayList<>())
+							.add(protection);
+				}
 
 				if (set.getString("DisplayItem") != null) {
 					try {
@@ -170,6 +166,10 @@ public class SQLService extends PandaSQLService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		protections.stream().filter(prot -> parentProtections.containsKey(prot.getRegionId()))
+				.forEach(parentProt -> parentProtections.get(parentProt.getRegionId())
+						.forEach(prot -> prot.setParentProtection(parentProt)));
 
 		return protections;
 	}
@@ -353,32 +353,6 @@ public class SQLService extends PandaSQLService {
 						new Data(Types.VARCHAR, recipe.getProtectionBlock().getObject().getInformation().getId()),
 						ConditionType.EQUAL)))) {
 			throw Exceptions.Protections.Blocks.Delete.SQL.generateException();
-		}
-	}
-
-	/*
-	 * Child methods
-	 */
-
-	public void clearChilds(String parentRegionId) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("ProtectionChilds");
-		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("ParentRegionId"),
-				new Data(Types.VARCHAR, parentRegionId), ConditionType.EQUAL)))) {
-			throw Exceptions.Protections.Delete.SQL.generateException();
-		}
-	}
-
-	public void saveChilds(String parentRegionId, Collection<String> childRegionIds)
-			throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("ProtectionChilds");
-		List<Map<Column, Data>> childData = childRegionIds.stream().map(childRegionId -> {
-			HashMap<Column, Data> data = new HashMap<>();
-			data.put(t.getColumn("ParentRegionId"), new Data(Types.VARCHAR, parentRegionId));
-			data.put(t.getColumn("ChildRegionId"), new Data(Types.VARCHAR, childRegionId));
-			return data;
-		}).collect(Collectors.toList());
-		if (!this.getDatabase().insertMultiple(t, childData)) {
-			throw Exceptions.Protections.Delete.SQL.generateException();
 		}
 	}
 

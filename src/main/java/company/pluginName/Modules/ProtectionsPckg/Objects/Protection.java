@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -121,6 +120,8 @@ public class Protection implements IProtection {
 	private ProtectionBoundaries boundaries = new ProtectionBoundaries(this);
 	private ProtectionDisplayItem displayItem = new ProtectionDisplayItem(this);
 	private ProtectionFlags flags = new ProtectionFlags(this);
+
+	private boolean deleted = false;
 
 	public Protection(String regionId, UUID ownerUuid, ReferencedProtectionBlock protectionBlock, String worldName,
 			String displayName, long createdDate) {
@@ -520,6 +521,8 @@ public class Protection implements IProtection {
 				TasksUtils.execute(
 						() -> Bukkit.getPluginManager().callEvent(new ProtectionRemovalEvent(player, this, cause)));
 
+				this.deleted = true;
+
 				return this;
 			} finally {
 				this.removalInProgress = false;
@@ -623,6 +626,10 @@ public class Protection implements IProtection {
 		}
 	}
 
+	public Protection getParentProtection() {
+		return this.parentProtection != null ? this.parentProtection.getParentProtection() : this;
+	}
+
 	/*
 	 * Save data methods
 	 */
@@ -630,10 +637,7 @@ public class Protection implements IProtection {
 	public void saveData() {
 		TasksUtils.executeOnAsync(() -> {
 			try {
-				sqlService.clearChilds(regionId);
 				sqlService.saveProtection(this);
-				sqlService.saveChilds(regionId,
-						this.getChildProtections().stream().map(Protection::getRegionId).collect(Collectors.toList()));
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
@@ -643,7 +647,6 @@ public class Protection implements IProtection {
 	public void deleteData() {
 		TasksUtils.executeOnAsync(() -> {
 			try {
-				sqlService.clearChilds(regionId);
 				sqlService.deleteProtection(this);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());

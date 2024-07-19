@@ -412,44 +412,45 @@ public class Protection implements IProtection {
 					}
 				}
 			}
-		}
-		int offset = SETTINGS_PROTECTION_MINIMUMDISTANCEBETWEENPROTECTIONS.getContent();
 
-		// Checks if there's other protections overlapping this region
-		if (player != null && !PermissionsService.OVERLAP_BYPASS.hasPermission(player)) {
-			if (protectionsService
-					.findProtectionsByArea(
-							offset > 0 ? getMinLocation().clone().add(-offset, -offset, -offset) : getMinLocation(),
-							offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation(), false)
-					.anyMatch(prot -> !prot.isMainOwner(player.getUniqueId())
-							|| !Settings.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent())) {
-				throw offset < 0 ? Exceptions.Protections.Save.OVERLAPS.generateException()
-						: Exceptions.Protections.Save.OVERLAPSOFFSET.generateException()
-								.setReplacements(new Replacement("%blocks%", () -> String.valueOf(offset)));
+			int offset = SETTINGS_PROTECTION_MINIMUMDISTANCEBETWEENPROTECTIONS.getContent();
+
+			// Checks if there's other protections overlapping this region
+			if (!PermissionsService.OVERLAP_BYPASS.hasPermission(player)) {
+				if (protectionsService.findProtectionsByArea(
+						offset > 0 ? getMinLocation().clone().add(-offset, -offset, -offset) : getMinLocation(),
+						offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation(), false)
+						.anyMatch(prot -> !prot.isMainOwner(player.getUniqueId())
+								|| !Settings.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent())) {
+					throw offset < 0 ? Exceptions.Protections.Save.OVERLAPS.generateException()
+							: Exceptions.Protections.Save.OVERLAPSOFFSET.generateException()
+									.setReplacements(new Replacement("%blocks%", () -> String.valueOf(offset)));
+				}
 			}
-		}
 
-		// Tries to get the region manager from the world
-		RegionManager regionManager = getRegionManager(getLocation().getWorld());
+			// Tries to get the region manager from the world
+			RegionManager regionManager = getRegionManager(getLocation().getWorld());
 
-		if (regionManager == null) {
-			throw Exceptions.Protections.Save.UNKNOWN.generateException(new Exception("Region Manager is"));
-		}
+			if (regionManager == null) {
+				throw Exceptions.Protections.Save.UNKNOWN.generateException(new Exception("Region Manager is"));
+			}
 
-		// Gets the min and max coords for the region
-		Location minLocation = offset > 0 ? getMinLocation().clone().add(-offset, -offset, -offset) : getMinLocation();
-		Location maxLocation = offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation();
+			// Gets the min and max coords for the region
+			Location minLocation = offset > 0 ? getMinLocation().clone().add(-offset, -offset, -offset)
+					: getMinLocation();
+			Location maxLocation = offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation();
 
-		// Creates a region from WorldGuard which contains the min and max coords
-		// calculated previously
-		ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
-				BlockVector3.at(minLocation.getBlockX(), minLocation.getBlockY(), minLocation.getBlockZ()),
-				BlockVector3.at(maxLocation.getBlockX(), maxLocation.getBlockY(), maxLocation.getBlockZ()));
+			// Creates a region from WorldGuard which contains the min and max coords
+			// calculated previously
+			ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
+					BlockVector3.at(minLocation.getBlockX(), minLocation.getBlockY(), minLocation.getBlockZ()),
+					BlockVector3.at(maxLocation.getBlockX(), maxLocation.getBlockY(), maxLocation.getBlockZ()));
 
-		ApplicableRegionSet set = regionManager.getApplicableRegions(protectedRegion);
+			ApplicableRegionSet set = regionManager.getApplicableRegions(protectedRegion);
 
-		if (set.getRegions().stream().anyMatch(pr -> protectionsService.findProtectionById(pr.getId()) == null)) {
-			throw Exceptions.Protections.Save.OVERLAPSWORLDGUARD.generateException();
+			if (set.getRegions().stream().anyMatch(pr -> protectionsService.findProtectionById(pr.getId()) == null)) {
+				throw Exceptions.Protections.Save.OVERLAPSWORLDGUARD.generateException();
+			}
 		}
 	}
 

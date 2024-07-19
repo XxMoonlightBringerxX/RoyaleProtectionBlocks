@@ -2,9 +2,11 @@ package company.pluginName.Hooks.ProtectionStonesAPI.Hook;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -101,8 +103,7 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 			});
 		}
 
-		return new TransferResult<ProtectionBlock>(successList, exceptionsList, errorsInConsole.get()) {
-		};
+		return new TransferResult<ProtectionBlock>(successList, exceptionsList, errorsInConsole.get());
 	}
 
 	public TransferResult<Protection> transferProtections() {
@@ -111,28 +112,16 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 		AtomicReference<Boolean> errorsInConsole = new AtomicReference<>(false);
 
 		if (isHooked()) {
+			Set<PSRegion> regionsToTransfer = new HashSet<>();
+
 			Bukkit.getWorlds().stream().forEach(world -> {
 				try {
 					RegionManager regionManager = worldGuardApi.getHook().getInternalWorldGuard()
 							.getRegionManager(world);
 					regionManager.getRegions().entrySet().stream()
-							.filter((entry) -> ProtectionStones.isPSRegion(entry.getValue())).map((entry) -> {
-								List<PSRegion> regions = ProtectionStones.getPSRegions(world, entry.getKey());
-
-								if (regions.size() > 0
-										&& protectionsService.findProtectionById(regions.get(0).getId()) == null) {
-									return this.transferRegion(regions.get(0));
-								}
-
-								return null;
-							}).filter(Objects::nonNull).forEach(result -> {
-								successList.addAll(result.getSuccessList());
-								exceptionsList.addAll(result.getExceptionsList());
-
-								if (!errorsInConsole.get() && result.isErrorsInConsole()) {
-									errorsInConsole.set(true);
-								}
-							});
+							.filter((entry) -> ProtectionStones.isPSRegion(entry.getValue()))
+							.forEach((entry) -> ProtectionStones.getPSRegions(world, entry.getKey()).stream()
+									.findFirst().ifPresent(regionsToTransfer::add));
 				} catch (Throwable e) {
 					MessageTemplate
 							.inst(PandaPrefixedStringField.applyPrefix(String.format(
@@ -141,10 +130,23 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 					errorsInConsole.set(true);
 				}
 			});
+
+			regionsToTransfer.stream().filter(Objects::nonNull).forEach(psRegion -> {
+				if (protectionsService.findProtectionById(psRegion.getId()) == null
+						&& !psRegion.getOwners().isEmpty()) {
+					TransferResult<Protection> result = transferRegion(psRegion);
+
+					successList.addAll(result.getSuccessList());
+					exceptionsList.addAll(result.getExceptionsList());
+
+					if (!errorsInConsole.get() && result.isErrorsInConsole()) {
+						errorsInConsole.set(true);
+					}
+				}
+			});
 		}
 
-		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get()) {
-		};
+		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get());
 	}
 
 	private TransferResult<Protection> transferRegion(PSRegion protectionStonesRegion) {
@@ -253,6 +255,9 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 								});
 
 								successList.add(createdProtection);
+
+								ProtectionStones.removePSRegion(protection.getLocation().getWorld(),
+										protectionStonesRegion.getId());
 							} catch (RoyaleProtectionBlocksExceptionImpl e) {
 								MessageTemplate
 										.inst(PandaPrefixedStringField.applyPrefix(
@@ -263,6 +268,14 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 								exceptionsList.add(e);
 								errorsInConsole.set(true);
 							}
+						}, (e) -> {
+							MessageTemplate
+									.inst(PandaPrefixedStringField.applyPrefix(
+											String.format("&cUnable to save information for protection '%s': %s",
+													region.getId(), e.getMessage())))
+									.process().sendMessage(Bukkit.getConsoleSender());
+							exceptionsList.add(e);
+							errorsInConsole.set(true);
 						});
 					} catch (RoyaleProtectionBlocksExceptionImpl e) {
 						if (e.getExceptionType() == Exceptions.Protections.Save.CANCELLED) {
@@ -286,13 +299,12 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 			});
 		}
 
-		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get()) {
-		};
+		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get());
 	}
 
 	@Data
 	@AllArgsConstructor
-	public abstract static class TransferResult<T> {
+	public static class TransferResult<T> {
 
 		private List<T> successList;
 		private List<Throwable> exceptionsList;

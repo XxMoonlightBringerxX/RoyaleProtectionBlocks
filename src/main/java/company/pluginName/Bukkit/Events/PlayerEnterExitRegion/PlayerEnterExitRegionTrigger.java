@@ -51,14 +51,14 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionCreation(ProtectionCreationEvent e) {
-		Bukkit.getOnlinePlayers().stream().filter(pl -> e.getProtection().isInside(e.getPlayer().getLocation(), true))
-				.forEach(pl -> processMovement(e, pl, e.getPlayer().getLocation(), false));
+		Bukkit.getOnlinePlayers().stream().filter(pl -> e.getProtection().isInside(pl.getLocation(), true))
+				.forEach(pl -> processMovement(e, pl, pl.getLocation(), false));
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionRemoval(ProtectionRemovalEvent e) {
-		Bukkit.getOnlinePlayers().stream().filter(pl -> e.getProtection().isInside(e.getPlayer().getLocation(), true))
-				.forEach(pl -> processMovement(e, pl, e.getPlayer().getLocation(), false));
+		Bukkit.getOnlinePlayers().stream().filter(pl -> e.getProtection().isInside(pl.getLocation(), true))
+				.forEach(pl -> processMovement(e, pl, pl.getLocation(), false));
 	}
 
 	public void processMovement(Event originEvent, Player player, Location toLocation, boolean cancellable) {

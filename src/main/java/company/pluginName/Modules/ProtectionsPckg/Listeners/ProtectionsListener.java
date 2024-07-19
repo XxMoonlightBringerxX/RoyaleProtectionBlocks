@@ -11,6 +11,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -250,6 +251,13 @@ public class ProtectionsListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBucketFill(PlayerBucketEmptyEvent e) {
 		if (protectionsService.findProtectionBySourceBlock(e.getBlockClicked().getRelative(e.getBlockFace())) != null) {
+			e.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onBucketFill(BlockPistonRetractEvent e) {
+		if (e.getBlocks().stream().anyMatch(block -> protectionsService.findProtectionBySourceBlock(block) != null)) {
 			e.setCancelled(true);
 		}
 	}

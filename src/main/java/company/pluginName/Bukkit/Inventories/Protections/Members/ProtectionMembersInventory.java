@@ -55,7 +55,7 @@ public class ProtectionMembersInventory extends PagedChestInventoryObject<UUID> 
 
 	@Override
 	protected List<UUID> getEntityList() {
-		return new ArrayList<>(protection.getMembers().list());
+		return new ArrayList<>(protection.getWorldGuardMembers().list());
 	}
 
 	@ItemGenerator("Search-button")

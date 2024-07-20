@@ -3,7 +3,6 @@ package company.pluginName.Modules.ProtectionsPckg.Objects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -28,6 +27,7 @@ import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Hooks.VaultAPI.VaultAPI;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
+import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
@@ -36,14 +36,15 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.Referen
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBanneds;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBoundaries;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionDisplayItem;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionFlags;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionMembers;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionOwners;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation.SimpleLocationArea;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardBanneds;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardFlags;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardMembers;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardOwners;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Utils.ReflectUtils;
@@ -52,7 +53,6 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
-import darkpanda73.PandaUtils.PandaUtilities.WorldUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.Location.LocationReference;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
@@ -112,14 +112,14 @@ public class Protection implements IProtection {
 	private @ToString.Include @EqualsAndHashCode.Include String worldName;
 	private @ToString.Include @Setter(lombok.AccessLevel.NONE) long createdDate;
 
-	private ProtectionMembers members = new ProtectionMembers(this);
-	private ProtectionOwners owners = new ProtectionOwners(this);
-	private ProtectionBanneds banneds = new ProtectionBanneds(this);
+	private ProtectionWorldGuardMembers worldGuardMembers = new ProtectionWorldGuardMembers(this);
+	private ProtectionWorldGuardOwners worldGuardOwners = new ProtectionWorldGuardOwners(this);
+	private ProtectionWorldGuardBanneds worldGuardBanneds = new ProtectionWorldGuardBanneds(this);
+	private ProtectionWorldGuardFlags worldGuardFlags = new ProtectionWorldGuardFlags(this);
 	private ProtectionActions actions = new ProtectionActions(this);
 	private ProtectionUtils utils = new ProtectionUtils(this);
 	private ProtectionBoundaries boundaries = new ProtectionBoundaries(this);
 	private ProtectionDisplayItem displayItem = new ProtectionDisplayItem(this);
-	private ProtectionFlags flags = new ProtectionFlags(this);
 
 	private boolean deleted = false;
 
@@ -148,47 +148,8 @@ public class Protection implements IProtection {
 
 	private @ToString.Include LocationReference location;
 
-	private Location minLocation;
-	private Location maxLocation;
-
 	public Location getLocation() {
 		return this.location.toLocation();
-	}
-
-	public Location getMinLocation() {
-		if (this.minLocation == null) {
-			Location location = getLocation();
-			ProtectionBlock protectionBlock = getProtectionBlock().getObject();
-
-			if (location != null && protectionBlock != null) {
-				this.minLocation = new Location(location.getWorld(),
-						location.getBlockX() - protectionBlock.getInformation().getBlocksX(),
-						protectionBlock.getInformation().getBlocksY() != -1
-								? location.getBlockY() - protectionBlock.getInformation().getBlocksY()
-								: WorldUtilities.getMinHeight(location.getWorld()),
-						location.getBlockZ() - protectionBlock.getInformation().getBlocksZ());
-			}
-		}
-
-		return this.minLocation;
-	}
-
-	public Location getMaxLocation() {
-		if (this.maxLocation == null) {
-			Location location = getLocation();
-			ProtectionBlock protectionBlock = getProtectionBlock().getObject();
-
-			if (location != null && protectionBlock != null) {
-				this.maxLocation = new Location(location.getWorld(),
-						location.getBlockX() + protectionBlock.getInformation().getBlocksX(),
-						protectionBlock.getInformation().getBlocksY() != -1
-								? location.getBlockY() + protectionBlock.getInformation().getBlocksY()
-								: location.getWorld().getMaxHeight(),
-						location.getBlockZ() + protectionBlock.getInformation().getBlocksZ());
-			}
-		}
-
-		return this.maxLocation;
 	}
 
 	/*
@@ -322,6 +283,58 @@ public class Protection implements IProtection {
 	}
 
 	/*
+	 * Banneds methods
+	 */
+
+	private List<UUID> banneds = new ArrayList<>();
+
+	@Override
+	public void addBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+		if (this.isOwner(bannedUuid)) {
+			throw Exceptions.Protections.Banneds.Save.CANNOTADDPROTECTIONOWNER.generateException();
+		}
+
+		this.getBanneds().add(bannedUuid);
+
+		TasksUtils.execute(() -> {
+			Player bannedPlayer = Bukkit.getPlayer(bannedUuid);
+
+			if (bannedPlayer != null) {
+				try {
+					if (PermissionsService.BANNEDS_BYPASS.hasPermission(bannedPlayer)
+							|| this.kickPlayer(bannedPlayer)) {
+						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BANNED.applyPrefix()).process()
+								.sendMessage(bannedPlayer);
+					}
+				} catch (RoyaleProtectionBlocksException e) {
+					e.sendError(Bukkit.getConsoleSender());
+				}
+			}
+		});
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.saveProtectionBanned(this, bannedUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	@Override
+	public void removeBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+		this.getBanneds().remove(bannedUuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.deleteProtectionBanned(this, bannedUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	/*
 	 * Save methods
 	 */
 
@@ -416,44 +429,48 @@ public class Protection implements IProtection {
 					}
 				}
 			}
-		}
-		int offset = SETTINGS_PROTECTION_MINIMUMDISTANCEBETWEENPROTECTIONS.getContent();
 
-		// Checks if there's other protections overlapping this region
-		if (player != null && !PermissionsService.OVERLAP_BYPASS.hasPermission(player)) {
-			if (protectionsService
-					.findProtectionsByArea(
-							offset > 0 ? getMinLocation().clone().add(-offset, -offset, -offset) : getMinLocation(),
-							offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation(), false)
-					.anyMatch(prot -> !prot.isMainOwner(player.getUniqueId())
-							|| !Settings.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent())) {
-				throw offset < 0 ? Exceptions.Protections.Save.OVERLAPS.generateException()
-						: Exceptions.Protections.Save.OVERLAPSOFFSET.generateException()
-								.setReplacements(new Replacement("%blocks%", () -> String.valueOf(offset)));
+			int offset = SETTINGS_PROTECTION_MINIMUMDISTANCEBETWEENPROTECTIONS.getContent();
+
+			Location minLocationWithOffset = offset > 0
+					? getUtils().getProtectionArea().getMinLocation().toLocation().clone().add(-offset, -offset,
+							-offset)
+					: getUtils().getProtectionArea().getMinLocation().toLocation();
+			Location maxLocationWithOffset = offset > 0
+					? getUtils().getProtectionArea().getMaxLocation().toLocation().clone().add(offset, offset, offset)
+					: getUtils().getProtectionArea().getMaxLocation().toLocation();
+
+			// Checks if there's other protections overlapping this region
+			if (!PermissionsService.OVERLAP_BYPASS.hasPermission(player)) {
+				if (protectionsService.findProtectionsByArea(minLocationWithOffset, maxLocationWithOffset, false)
+						.anyMatch(prot -> !prot.isMainOwner(player.getUniqueId())
+								|| !Settings.SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER.getContent())) {
+					throw offset < 0 ? Exceptions.Protections.Save.OVERLAPS.generateException()
+							: Exceptions.Protections.Save.OVERLAPSOFFSET.generateException()
+									.setReplacements(new Replacement("%blocks%", () -> String.valueOf(offset)));
+				}
 			}
-		}
 
-		// Tries to get the region manager from the world
-		RegionManager regionManager = getRegionManager(getLocation().getWorld());
+			// Tries to get the region manager from the world
+			RegionManager regionManager = getRegionManager(getLocation().getWorld());
 
-		if (regionManager == null) {
-			throw Exceptions.Protections.Save.UNKNOWN.generateException(new Exception("Region Manager is"));
-		}
+			if (regionManager == null) {
+				throw Exceptions.Protections.Save.UNKNOWN.generateException(new Exception("Region Manager is"));
+			}
 
-		// Gets the min and max coords for the region
-		Location minLocation = offset > 0 ? getMinLocation().clone().add(-offset, -offset, -offset) : getMinLocation();
-		Location maxLocation = offset > 0 ? getMaxLocation().clone().add(offset, offset, offset) : getMaxLocation();
+			// Creates a region from WorldGuard which contains the min and max coords
+			// calculated previously
+			ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
+					BlockVector3.at(minLocationWithOffset.getBlockX(), minLocationWithOffset.getBlockY(),
+							minLocationWithOffset.getBlockZ()),
+					BlockVector3.at(maxLocationWithOffset.getBlockX(), maxLocationWithOffset.getBlockY(),
+							maxLocationWithOffset.getBlockZ()));
 
-		// Creates a region from WorldGuard which contains the min and max coords
-		// calculated previously
-		ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
-				BlockVector3.at(minLocation.getBlockX(), minLocation.getBlockY(), minLocation.getBlockZ()),
-				BlockVector3.at(maxLocation.getBlockX(), maxLocation.getBlockY(), maxLocation.getBlockZ()));
+			ApplicableRegionSet set = regionManager.getApplicableRegions(protectedRegion);
 
-		ApplicableRegionSet set = regionManager.getApplicableRegions(protectedRegion);
-
-		if (set.getRegions().stream().anyMatch(pr -> protectionsService.findProtectionById(pr.getId()) == null)) {
-			throw Exceptions.Protections.Save.OVERLAPSWORLDGUARD.generateException();
+			if (set.getRegions().stream().anyMatch(pr -> protectionsService.findProtectionById(pr.getId()) == null)) {
+				throw Exceptions.Protections.Save.OVERLAPSWORLDGUARD.generateException();
+			}
 		}
 	}
 
@@ -462,8 +479,8 @@ public class Protection implements IProtection {
 
 		try {
 			// Gets the min and max coords for the region
-			Location minLocation = getMinLocation();
-			Location maxLocation = getMaxLocation();
+			Location minLocation = getUtils().getProtectionArea().getMinLocation().toLocation();
+			Location maxLocation = getUtils().getProtectionArea().getMaxLocation().toLocation();
 
 			// Creates a region from WorldGuard which contains the min and max coords
 			// calculated previously
@@ -478,8 +495,8 @@ public class Protection implements IProtection {
 			regionManager.addRegion(protectedRegion);
 			this.protectedRegion = protectedRegion;
 
-			// Sets the default falgs for the protected region.
-			this.flags.resetFlags();
+			// Sets the default flags for the protected region.
+			this.worldGuardFlags.resetFlags();
 		} catch (Exception e) {
 			// If the region was able to be created on WorldGuard, then it removes the
 			// region from the region manager
@@ -573,7 +590,6 @@ public class Protection implements IProtection {
 			Map<Flag<?>, Object> flags = getProtectedRegion().getFlags();
 			DefaultDomain owners = getProtectedRegion().getOwners();
 			DefaultDomain members = getProtectedRegion().getMembers();
-			Set<String> banneds = getBanneds().list();
 
 			deleteProtectedRegion();
 
@@ -582,20 +598,6 @@ public class Protection implements IProtection {
 			getProtectedRegion().setFlags(flags);
 			getProtectedRegion().setOwners(owners);
 			getProtectedRegion().setMembers(members);
-			try {
-				banneds.stream().map(UUID::fromString).forEach(uuid -> {
-					try {
-						getBanneds().add(uuid);
-					} catch (RoyaleProtectionBlocksExceptionImpl e) {
-						throw new RuntimeException(e);
-					}
-				});
-			} catch (RuntimeException e) {
-				if (e.getCause() instanceof RoyaleProtectionBlocksExceptionImpl) {
-					throw (RoyaleProtectionBlocksExceptionImpl) e.getCause();
-				}
-				throw e;
-			}
 		} else {
 			createProtectedRegion();
 		}
@@ -648,6 +650,7 @@ public class Protection implements IProtection {
 		TasksUtils.executeOnAsync(() -> {
 			try {
 				sqlService.deleteProtection(this);
+				sqlService.deleteProtectionBanneds(this);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
@@ -663,45 +666,35 @@ public class Protection implements IProtection {
 	}
 
 	public boolean isOwner(UUID playerUuid) {
-		return this.getOwners().list().contains(playerUuid);
+		return this.getWorldGuardOwners().list().contains(playerUuid);
 	}
 
 	public boolean isMember(UUID playerUuid) {
-		return this.getMembers().list().contains(playerUuid);
+		return this.getWorldGuardMembers().list().contains(playerUuid);
 	}
 
 	public boolean isBanned(UUID playerUuid) {
-		return this.getBanneds().list().contains(playerUuid.toString());
+		return this.getBanneds().contains(playerUuid);
 	}
 
 	@Override
 	public void addMember(UUID memberUuid) throws RoyaleProtectionBlocksException {
-		this.getMembers().add(memberUuid);
+		this.getWorldGuardMembers().add(memberUuid);
 	}
 
 	@Override
 	public void removeMember(UUID memberUuid) throws RoyaleProtectionBlocksException {
-		this.getMembers().remove(memberUuid);
+		this.getWorldGuardMembers().remove(memberUuid);
 	}
 
 	@Override
 	public void addOwner(UUID ownerUuid) throws RoyaleProtectionBlocksException {
-		this.getOwners().add(ownerUuid);
+		this.getWorldGuardOwners().add(ownerUuid);
 	}
 
 	@Override
 	public void removeOwner(UUID ownerUuid) throws RoyaleProtectionBlocksException {
-		this.getOwners().remove(ownerUuid);
-	}
-
-	@Override
-	public void addBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
-		this.getBanneds().add(bannedUuid);
-	}
-
-	@Override
-	public void removeBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
-		this.getBanneds().remove(bannedUuid);
+		this.getWorldGuardOwners().remove(ownerUuid);
 	}
 
 	@Override
@@ -721,12 +714,16 @@ public class Protection implements IProtection {
 
 	@Override
 	public boolean isInside(Location location, boolean includeBorder) {
-		return this.getUtils().isInside(location, includeBorder);
+		return this.getUtils().isInside(SimpleLocation.of(location), includeBorder);
 	}
 
 	@Override
 	public boolean isInside(Location firstLocation, Location secondLocation, boolean includeBorder) {
 		return this.getUtils().isInside(SimpleLocationArea.of(firstLocation, secondLocation), includeBorder);
+	}
+
+	public boolean isInside(SimpleLocation location, boolean includeBorder) {
+		return this.getUtils().isInside(location, includeBorder);
 	}
 
 	public boolean isInside(SimpleLocationArea locationArea, boolean includeBorder) {

@@ -1,4 +1,4 @@
-package company.pluginName.Modules.ProtectionsPckg.Objects.Components;
+package company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard;
 
 import java.util.Collection;
 
@@ -21,7 +21,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 @AllArgsConstructor
-public class ProtectionFlags {
+public class ProtectionWorldGuardFlags {
 
 	@RegisteredPandaField("lang")
 	private static final PandaPrefixedStringField MESSAGE_PROTECTION_FLAGS_CHARGEDSUCCESSFULLY = new PandaPrefixedStringField(

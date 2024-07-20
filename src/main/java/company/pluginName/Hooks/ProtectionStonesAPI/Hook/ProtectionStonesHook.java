@@ -2,9 +2,11 @@ package company.pluginName.Hooks.ProtectionStonesAPI.Hook;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -71,36 +73,37 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 		if (isHooked()) {
 			ProtectionStones.getInstance().getConfiguredBlocks().forEach(pb -> {
-				try {
-					ProtectionBlock block = new ProtectionBlock(new ProtectionBlockInformation(pb.alias,
-							pb.createItem(), pb.xRadius, pb.yRadius, pb.zRadius,
-							pb.permission != null && !pb.permission.isEmpty() ? pb.permission : null, pb.price));
+				if (protectionBlocksService.getProtectionBlockById(pb.alias) == null) {
+					try {
+						ProtectionBlock block = new ProtectionBlock(new ProtectionBlockInformation(pb.alias,
+								pb.createItem(), pb.xRadius, pb.yRadius, pb.zRadius,
+								pb.permission != null && !pb.permission.isEmpty() ? pb.permission : null, pb.price));
 
-					if (pb.worlds.size() > 0 && pb.worldListType != null && !pb.worldListType.isBlank()) {
-						Bukkit.getWorlds().stream()
-								.filter(world -> pb.worldListType.equalsIgnoreCase("whitelist") == pb.worlds
-										.contains(world.getName()))
-								.map(World::getName).forEach(block.getAllowedWorlds()::add);
+						if (pb.worlds.size() > 0 && pb.worldListType != null && !pb.worldListType.isBlank()) {
+							Bukkit.getWorlds().stream()
+									.filter(world -> pb.worldListType.equalsIgnoreCase("whitelist") == pb.worlds
+											.contains(world.getName()))
+									.map(World::getName).forEach(block.getAllowedWorlds()::add);
+						}
+
+						block.save();
+
+						successList.add(block);
+					} catch (RoyaleProtectionBlocksExceptionImpl e) {
+						MessageTemplate
+								.inst(PandaPrefixedStringField.applyPrefix(
+										String.format("&cUnable to create protection block using config from '%s': %s",
+												pb.alias, e.getMessage())))
+								.process().sendMessage(Bukkit.getConsoleSender());
+						e.printStackTrace();
+						exceptionsList.add(e);
+						errorsInConsole.set(true);
 					}
-
-					block.save();
-
-					successList.add(block);
-				} catch (RoyaleProtectionBlocksExceptionImpl e) {
-					MessageTemplate
-							.inst(PandaPrefixedStringField.applyPrefix(
-									String.format("&cUnable to create protection block using config from '%s': %s",
-											pb.alias, e.getMessage())))
-							.process().sendMessage(Bukkit.getConsoleSender());
-					e.printStackTrace();
-					exceptionsList.add(e);
-					errorsInConsole.set(true);
 				}
 			});
 		}
 
-		return new TransferResult<ProtectionBlock>(successList, exceptionsList, errorsInConsole.get()) {
-		};
+		return new TransferResult<ProtectionBlock>(successList, exceptionsList, errorsInConsole.get());
 	}
 
 	public TransferResult<Protection> transferProtections() {
@@ -109,43 +112,45 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 		AtomicReference<Boolean> errorsInConsole = new AtomicReference<>(false);
 
 		if (isHooked()) {
+			Set<PSRegion> regionsToTransfer = new HashSet<>();
+
 			Bukkit.getWorlds().stream().forEach(world -> {
 				try {
 					RegionManager regionManager = worldGuardApi.getHook().getInternalWorldGuard()
 							.getRegionManager(world);
 					regionManager.getRegions().entrySet().stream()
-							.filter((entry) -> ProtectionStones.isPSRegion(entry.getValue())).map((entry) -> {
-								List<PSRegion> regions = ProtectionStones.getPSRegions(world, entry.getKey());
-
-								return regions.size() > 0 ? this.transferRegion(regions.get(0)) : null;
-							}).filter(Objects::nonNull).forEach(result -> {
-								successList.addAll(result.getSuccessList());
-								exceptionsList.addAll(result.getExceptionsList());
-
-								if (!errorsInConsole.get() && result.isErrorsInConsole()) {
-									errorsInConsole.set(true);
-								}
-							});
+							.filter((entry) -> ProtectionStones.isPSRegion(entry.getValue()))
+							.forEach((entry) -> ProtectionStones.getPSRegions(world, entry.getKey()).stream()
+									.findFirst().ifPresent(regionsToTransfer::add));
 				} catch (Throwable e) {
 					MessageTemplate
 							.inst(PandaPrefixedStringField.applyPrefix(String.format(
 									"&cUnable to process regions for world '%s': %s", world.getName(), e.getMessage())))
 							.process().sendMessage(Bukkit.getConsoleSender());
-					e.printStackTrace();
 					errorsInConsole.set(true);
+				}
+			});
+
+			regionsToTransfer.stream().filter(Objects::nonNull).forEach(psRegion -> {
+				if (protectionsService.findProtectionById(psRegion.getId()) == null
+						&& !psRegion.getOwners().isEmpty()) {
+					TransferResult<Protection> result = transferRegion(psRegion);
+
+					successList.addAll(result.getSuccessList());
+					exceptionsList.addAll(result.getExceptionsList());
+
+					if (!errorsInConsole.get() && result.isErrorsInConsole()) {
+						errorsInConsole.set(true);
+					}
 				}
 			});
 		}
 
-		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get()) {
-		};
+		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get());
 	}
 
 	private TransferResult<Protection> transferRegion(PSRegion protectionStonesRegion) {
 		Map<Flag<?>, Object> flags = new HashMap<>(protectionStonesRegion.getWGRegion().getFlags());
-
-		World world = protectionStonesRegion.getWorld();
-		String id = protectionStonesRegion.getId();
 
 		List<UUID> owners = protectionStonesRegion.getOwners();
 		List<UUID> members = protectionStonesRegion.getMembers();
@@ -217,7 +222,7 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 								owners.forEach(owner -> {
 									try {
-										createdProtection.getOwners().add(owner);
+										createdProtection.getWorldGuardOwners().add(owner);
 									} catch (RoyaleProtectionBlocksExceptionImpl e) {
 										if (e.getExceptionType() != Exceptions.Protections.Owners.Save.CANNOTADDPROTECTIONOWNER) {
 											MessageTemplate
@@ -234,7 +239,7 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 								members.forEach(member -> {
 									try {
-										createdProtection.getMembers().add(member);
+										createdProtection.getWorldGuardMembers().add(member);
 									} catch (RoyaleProtectionBlocksExceptionImpl e) {
 										if (e.getExceptionType() != Exceptions.Protections.Members.Save.CANNOTADDPROTECTIONOWNER) {
 											MessageTemplate
@@ -250,6 +255,9 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 								});
 
 								successList.add(createdProtection);
+
+								ProtectionStones.removePSRegion(protection.getLocation().getWorld(),
+										protectionStonesRegion.getId());
 							} catch (RoyaleProtectionBlocksExceptionImpl e) {
 								MessageTemplate
 										.inst(PandaPrefixedStringField.applyPrefix(
@@ -260,6 +268,14 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 								exceptionsList.add(e);
 								errorsInConsole.set(true);
 							}
+						}, (e) -> {
+							MessageTemplate
+									.inst(PandaPrefixedStringField.applyPrefix(
+											String.format("&cUnable to save information for protection '%s': %s",
+													region.getId(), e.getMessage())))
+									.process().sendMessage(Bukkit.getConsoleSender());
+							exceptionsList.add(e);
+							errorsInConsole.set(true);
 						});
 					} catch (RoyaleProtectionBlocksExceptionImpl e) {
 						if (e.getExceptionType() == Exceptions.Protections.Save.CANCELLED) {
@@ -283,15 +299,12 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 			});
 		}
 
-		ProtectionStones.removePSRegion(world, id);
-
-		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get()) {
-		};
+		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get());
 	}
 
 	@Data
 	@AllArgsConstructor
-	public abstract static class TransferResult<T> {
+	public static class TransferResult<T> {
 
 		private List<T> successList;
 		private List<Throwable> exceptionsList;

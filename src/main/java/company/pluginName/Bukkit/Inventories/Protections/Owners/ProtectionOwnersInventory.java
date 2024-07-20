@@ -55,7 +55,7 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 
 	@Override
 	protected List<UUID> getEntityList() {
-		return protection.getOwners().list().stream().filter(uuid -> !this.protection.isMainOwner(uuid))
+		return protection.getWorldGuardOwners().list().stream().filter(uuid -> !this.protection.isMainOwner(uuid))
 				.collect(Collectors.toList());
 	}
 

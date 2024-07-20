@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.bukkit.Bukkit;
@@ -14,7 +16,9 @@ import org.bukkit.block.Block;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
+import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation.SimpleLocationArea;
 import company.pluginName.Modules.SQLPckg.SQLService;
@@ -38,6 +42,9 @@ public class ProtectionsService {
 
 	@PandaInject
 	private ProtectionBlocksService protectionBlocksService;
+
+	@PandaInject
+	private WorldGuardAPI worldGuardApi;
 
 	private @Getter HashMap<UUID, List<Protection>> protectionsByOwner = new HashMap<>();
 	private @Getter HashMap<String, List<Protection>> protectionsByWorld = new HashMap<>();
@@ -73,12 +80,33 @@ public class ProtectionsService {
 						protection.delete(RemovalCause.REMOVE).subscribe();
 					} catch (RoyaleProtectionBlocksExceptionImpl e1) {
 						e1.sendError(Bukkit.getConsoleSender());
+						return false;
 					}
 				}
-				return false;
 			}
+
+			Set<String> banneds = protection.getWorldGuardBanneds().get();
+
+			if (!banneds.isEmpty()) {
+				try {
+					sqlService.saveProtectionBanneds(protection,
+							banneds.stream().map(UUID::fromString).collect(Collectors.toList()));
+					ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
+							worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag(), null);
+				} catch (RoyaleProtectionBlocksExceptionImpl e) {
+					e.sendError(Bukkit.getConsoleSender());
+				}
+			}
+
 			return true;
 		}).forEach(this::registerProtection);
+
+		sqlService.getProtectionBanneds().forEach((id, banneds) -> {
+			Protection protection = findProtectionById(id);
+			if (protection != null) {
+				protection.setBanneds(banneds);
+			}
+		});
 
 		plugin.sendDebug(getClass(),
 				String.format("Loaded a total amount of '%d' protection(s)", this.protectionByRegion.size()));
@@ -147,8 +175,9 @@ public class ProtectionsService {
 	}
 
 	public Stream<Protection> getAllowedProtections(OfflinePlayer pl) {
-		return protectionByRegion.values().stream().filter(prot -> prot.getOwners().list().contains(pl.getUniqueId())
-				|| prot.getMembers().list().contains(pl.getUniqueId()));
+		return protectionByRegion.values().stream()
+				.filter(prot -> prot.getWorldGuardOwners().list().contains(pl.getUniqueId())
+						|| prot.getWorldGuardMembers().list().contains(pl.getUniqueId()));
 	}
 
 	public Protection findProtectionBySourceLocation(Location sourceLocation) {

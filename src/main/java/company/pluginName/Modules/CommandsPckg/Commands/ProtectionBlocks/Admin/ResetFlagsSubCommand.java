@@ -124,9 +124,9 @@ public class ResetFlagsSubCommand extends PandaSubCommand {
 			(currentProtection != null ? Arrays.asList(currentProtection)
 					: protectionsService.getProtectionByRegion().values()).forEach(protection -> {
 						if (flagsToReset != null) {
-							protection.getFlags().resetFlags(flagsToReset);
+							protection.getWorldGuardFlags().resetFlags(flagsToReset);
 						} else {
-							protection.getFlags().resetFlags();
+							protection.getWorldGuardFlags().resetFlags();
 						}
 					});
 

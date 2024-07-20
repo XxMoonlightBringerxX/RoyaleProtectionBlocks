@@ -1,9 +1,7 @@
 package company.pluginName.Bukkit.Inventories.Protections.Banneds;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -56,12 +54,7 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 
 	@Override
 	protected List<UUID> getEntityList() {
-		try {
-			return protection.getBanneds().list().stream().map(string -> UUID.fromString(string))
-					.collect(Collectors.toList());
-		} catch (Exception e) {
-			return new LinkedList<>();
-		}
+		return protection.getBanneds();
 	}
 
 	@ItemGenerator("Search-button")

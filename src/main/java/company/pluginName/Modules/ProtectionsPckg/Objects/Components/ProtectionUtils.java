@@ -2,6 +2,7 @@ package company.pluginName.Modules.ProtectionsPckg.Objects.Components;
 
 import java.util.function.BiFunction;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
@@ -10,47 +11,74 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation.SimpleLocationArea;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
+import darkpanda73.PandaUtils.PandaUtilities.WorldUtilities;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ProtectionUtils {
 
-	private static final BiFunction<SimpleLocation, SimpleLocation, Boolean> HIGHER_OR_EQUAL_THAN_CHECKING = (loc1,
-			loc2) -> loc1.getX() >= loc2.getX() && loc1.getY() >= loc2.getY() && loc1.getZ() >= loc2.getZ();
-	private static final BiFunction<SimpleLocation, SimpleLocation, Boolean> LOWER_OR_EQUAL_THAN_CHECKING = (loc1,
-			loc2) -> loc1.getX() <= loc2.getX() && loc1.getY() <= loc2.getY() && loc1.getZ() <= loc2.getZ();
+	private @NonNull Protection protection;
+	private SimpleLocationArea protectionArea;
+	private SimpleLocationArea protectionAreaWithoutBorder;
 
-	private Protection protection;
-
-	public boolean isInside(Location location) {
-		return this.isInside(location, true);
+	public SimpleLocationArea getProtectionArea() {
+		if (this.protectionArea == null) {
+			this.regenerateProtectionArea();
+		}
+		return this.protectionArea;
 	}
 
-	public boolean isInside(Location location, boolean includeBorder) {
-		return this.isInside(SimpleLocationArea.of(location, location), includeBorder);
+	public SimpleLocationArea getProtectionAreaWithoutBorder() {
+		if (this.protectionAreaWithoutBorder == null) {
+			this.regenerateProtectionArea();
+		}
+		return this.protectionAreaWithoutBorder;
 	}
 
-	public boolean isInside(SimpleLocationArea locationArea) {
-		return this.isInside(locationArea, true);
+	public void regenerateProtectionArea() {
+		Location location = protection.getLocation();
+		ProtectionBlock protectionBlock = protection.getProtectionBlock().getObject();
+
+		if (protectionBlock != null) {
+			Location minLocation = new Location(location.getWorld(),
+					location.getBlockX() - protectionBlock.getInformation().getBlocksX(),
+					protectionBlock.getInformation().getBlocksY() != -1
+							? location.getBlockY() - protectionBlock.getInformation().getBlocksY()
+							: WorldUtilities.getMinHeight(location.getWorld()),
+					location.getBlockZ() - protectionBlock.getInformation().getBlocksZ());
+
+			Location maxLocation = new Location(location.getWorld(),
+					location.getBlockX() + protectionBlock.getInformation().getBlocksX() + 1,
+					protectionBlock.getInformation().getBlocksY() != -1
+							? location.getBlockY() + protectionBlock.getInformation().getBlocksY() + 1
+							: location.getWorld().getMaxHeight(),
+					location.getBlockZ() + protectionBlock.getInformation().getBlocksZ() + 1);
+
+			this.protectionArea = SimpleLocationArea.of(minLocation, maxLocation);
+			this.protectionAreaWithoutBorder = new SimpleLocationArea(this.protectionArea.getWorldName(),
+					this.protectionArea.getMinLocation().clone().add(1, 1, 1),
+					this.protectionArea.getMaxLocation().clone().substract(1, 1, 1));
+		} else {
+			this.protectionArea = SimpleLocationArea.of(location, location);
+			this.protectionAreaWithoutBorder = this.protectionArea.clone();
+		}
+	}
+
+	public boolean isInside(SimpleLocation location, boolean includeBorder) {
+		return (includeBorder ? this.getProtectionArea().isInside(location)
+				: this.getProtectionAreaWithoutBorder().isInside(location))
+				|| protection.getChildProtections().stream().anyMatch(prot -> prot.isInside(location, includeBorder));
 	}
 
 	public boolean isInside(SimpleLocationArea locationArea, boolean includeBorder) {
-		if (this.protection.getLocation().getWorld().getName().equals(locationArea.getWorldName())) {
-			SimpleLocation protMinLocation = SimpleLocation.of(this.protection.getMinLocation());
-			SimpleLocation protMaxLocation = SimpleLocation.of(this.protection.getMaxLocation());
-
-			if (!includeBorder) {
-				protMinLocation.add(1, 1, 1);
-			} else {
-				protMaxLocation.add(1, 1, 1);
-			}
-
-			return HIGHER_OR_EQUAL_THAN_CHECKING.apply(locationArea.getMaxLocation(), protMinLocation)
-					&& LOWER_OR_EQUAL_THAN_CHECKING.apply(locationArea.getMinLocation(), protMaxLocation);
-		}
-
-		return false;
+		return includeBorder ? this.getProtectionArea().isInside(locationArea)
+				: this.getProtectionAreaWithoutBorder().isInside(locationArea) || protection.getChildProtections()
+						.stream().anyMatch(prot -> prot.isInside(locationArea, includeBorder));
 	}
 
 	public boolean isProtectionBlock() {
@@ -90,8 +118,16 @@ public class ProtectionUtils {
 
 	@AllArgsConstructor
 	@Getter
+	@ToString
+	@EqualsAndHashCode
 	public static class SimpleLocation {
 
+		private static final BiFunction<SimpleLocation, SimpleLocation, Boolean> HIGHER_OR_EQUAL_THAN_CHECKING = (loc1,
+				loc2) -> loc1.getX() >= loc2.getX() && loc1.getY() >= loc2.getY() && loc1.getZ() >= loc2.getZ();
+		private static final BiFunction<SimpleLocation, SimpleLocation, Boolean> LOWER_OR_EQUAL_THAN_CHECKING = (loc1,
+				loc2) -> loc1.getX() <= loc2.getX() && loc1.getY() <= loc2.getY() && loc1.getZ() <= loc2.getZ();
+
+		private String worldName;
 		private double x;
 		private double y;
 		private double z;
@@ -110,11 +146,21 @@ public class ProtectionUtils {
 			return this;
 		}
 
+		public SimpleLocation clone() {
+			return new SimpleLocation(worldName, x, y, z);
+		}
+
+		public Location toLocation() {
+			return new Location(Bukkit.getWorld(worldName), x, y, z);
+		}
+
 		public static SimpleLocation of(Location location) {
-			return new SimpleLocation(location.getX(), location.getY(), location.getZ());
+			return new SimpleLocation(location.getWorld().getName(), location.getX(), location.getY(), location.getZ());
 		}
 
 		@Getter
+		@ToString
+		@EqualsAndHashCode
 		public static class SimpleLocationArea {
 
 			private String worldName;
@@ -129,10 +175,32 @@ public class ProtectionUtils {
 
 			public SimpleLocationArea(String worldName, Location location1, Location location2) {
 				this.worldName = worldName;
-				this.minLocation = new SimpleLocation(Math.min(location1.getX(), location2.getX()),
+				this.minLocation = new SimpleLocation(worldName, Math.min(location1.getX(), location2.getX()),
 						Math.min(location1.getY(), location2.getY()), Math.min(location1.getZ(), location2.getZ()));
-				this.maxLocation = new SimpleLocation(Math.max(location1.getX(), location2.getX()),
+				this.maxLocation = new SimpleLocation(worldName, Math.max(location1.getX(), location2.getX()),
 						Math.max(location1.getY(), location2.getY()), Math.max(location1.getZ(), location2.getZ()));
+			}
+
+			public boolean isInside(SimpleLocation location) {
+				if (!getWorldName().equals(location.getWorldName())) {
+					return false;
+				}
+
+				return HIGHER_OR_EQUAL_THAN_CHECKING.apply(location, minLocation)
+						&& LOWER_OR_EQUAL_THAN_CHECKING.apply(location, maxLocation);
+			}
+
+			public boolean isInside(SimpleLocationArea locationArea) {
+				if (!getWorldName().equals(locationArea.getWorldName())) {
+					return false;
+				}
+
+				return HIGHER_OR_EQUAL_THAN_CHECKING.apply(locationArea.getMaxLocation(), minLocation)
+						&& LOWER_OR_EQUAL_THAN_CHECKING.apply(locationArea.getMinLocation(), maxLocation);
+			}
+
+			public SimpleLocationArea clone() {
+				return new SimpleLocationArea(worldName, minLocation.clone(), maxLocation.clone());
 			}
 
 			public static SimpleLocationArea of(Location location1, Location location2) {

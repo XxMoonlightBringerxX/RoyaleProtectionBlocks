@@ -15,7 +15,7 @@ import company.pluginName.Modules.ProtectionFlagsPckg.ProtectionFlagsService;
 import company.pluginName.Modules.ProtectionFlagsPckg.Objects.ProtectionFlag;
 import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionFlags.FlagModificationRequest;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardFlags.FlagModificationRequest;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -77,7 +77,7 @@ public class ProtectionFlagsInventory extends PagedChestInventoryObject<Protecti
 		try {
 			if (entity.isEditable()) {
 				if (ProtectionFlagUtilities.isStateFlag(entity.getWorldGuardFlag())) {
-					protection.getFlags()
+					protection.getWorldGuardFlags()
 							.setFlag(FlagModificationRequest.inst(getPlayer(), entity,
 									entity.retrieveValue(protection.getProtectedRegion()) == State.ALLOW ? State.DENY
 											: State.ALLOW));
@@ -87,7 +87,7 @@ public class ProtectionFlagsInventory extends PagedChestInventoryObject<Protecti
 						messagesListener.startListening(e.getWhoClicked().getUniqueId(), (message) -> {
 							if (!message.equalsIgnoreCase("cancel")) {
 								try {
-									protection.getFlags()
+									protection.getWorldGuardFlags()
 											.setFlag(
 													FlagModificationRequest
 															.inst(entity,

@@ -56,13 +56,13 @@ public class LeaveSubCommand extends PandaSubCommand {
 					try {
 						boolean left = false;
 
-						if (protection.getOwners().list().contains(pl.getUniqueId())) {
+						if (protection.getWorldGuardOwners().list().contains(pl.getUniqueId())) {
 							playerInteractionsService.protectionOwnerRemoveRequest(
 									ProtectionOwnerRemoveRequestInput.inst(pl, protection, pl.getUniqueId()));
 							left = true;
 						}
 
-						if (protection.getMembers().list().contains(pl.getUniqueId())) {
+						if (protection.getWorldGuardMembers().list().contains(pl.getUniqueId())) {
 							playerInteractionsService.protectionMemberRemoveRequest(
 									ProtectionMemberRemoveRequestInput.inst(pl, protection, pl.getUniqueId()));
 							left = true;

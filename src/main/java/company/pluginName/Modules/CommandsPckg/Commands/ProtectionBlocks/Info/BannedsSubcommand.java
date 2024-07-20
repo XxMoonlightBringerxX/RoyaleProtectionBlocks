@@ -86,7 +86,7 @@ public class BannedsSubcommand extends PandaSubCommand {
 	}
 
 	private void sendInformation(Player player, Protection protection, int page) {
-		int maxPage = getMaxPage(protection.getBanneds().list(), 5);
+		int maxPage = getMaxPage(protection.getBanneds(), 5);
 
 		if (maxPage < 1) {
 			maxPage = 1;
@@ -101,9 +101,10 @@ public class BannedsSubcommand extends PandaSubCommand {
 		final int fPage = page;
 		final int fMaxPage = maxPage;
 
-		List<String> banneds = protection.getBanneds().list().size() != 0 ? Arrays.stream(Arrays.copyOfRange(
-				protection.getBanneds().list().toArray(new String[protection.getBanneds().list().size()]),
-				(page - 1) * 5, page * 5)).filter(Objects::nonNull).map(banned -> {
+		List<String> banneds = protection.getBanneds().size() != 0 ? Arrays
+				.stream(Arrays.copyOfRange(protection.getBanneds().toArray(new String[protection.getBanneds().size()]),
+						(page - 1) * 5, page * 5))
+				.filter(Objects::nonNull).map(banned -> {
 					OfflinePlayer bannedPlayer = OfflinePlayerUtilities.getOfflinePlayer(UUID.fromString(banned));
 					return "&e".concat(
 							bannedPlayer != null && bannedPlayer.getName() != null ? bannedPlayer.getName() : "???");

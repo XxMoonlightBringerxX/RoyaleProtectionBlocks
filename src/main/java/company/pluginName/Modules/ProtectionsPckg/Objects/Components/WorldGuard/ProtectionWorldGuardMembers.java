@@ -1,4 +1,4 @@
-package company.pluginName.Modules.ProtectionsPckg.Objects.Components;
+package company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard;
 
 import java.util.Collections;
 import java.util.Set;
@@ -14,7 +14,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class ProtectionMembers {
+public class ProtectionWorldGuardMembers {
 
 	private Protection protection;
 

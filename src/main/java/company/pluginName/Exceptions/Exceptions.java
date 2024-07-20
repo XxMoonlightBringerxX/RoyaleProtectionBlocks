@@ -36,6 +36,10 @@ public class Exceptions {
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_KICKDENIED, "Error.Exception.protection.kick.Denied",
 				"&cYou can't kick this player in this protection!");
 
+		public static final ThrowableField KICKDENIEDBYPASS = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_KICKDENIEDBYPASS,
+				"Error.Exception.protection.kick.DeniedBypass", "&cYou can't kick this player due his permissions!");
+
 		public static final ThrowableField NOTENOUGHBALANCE = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_NOTENOUGHBALANCE,
 				"Error.Exception.protection.NotEnoughBalance", "&cYou don't have enough balance for this!");
@@ -249,6 +253,10 @@ public class Exceptions {
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_DELETE_PERMISSIONDENIED,
 						"Error.Exception.protection.banneds.delete.PermissionDenied",
 						"&cYou aren't allowed to remove this banned!");
+				public static final ThrowableField SQL = new ThrowableField(
+						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_DELETE_SQL,
+						"Error.Exception.protection.blocks.delete.SQL",
+						"&cThere was an error trying to delete the banned user. Please contact with an administrator!");
 				public static final ThrowableField UNKNOWN = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_DELETE_UNKNOWN,
 						"Error.Exception.protection.banneds.delete.Unknown",
@@ -270,6 +278,10 @@ public class Exceptions {
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_PERMISSIONDENIED,
 						"Error.Exception.protection.banneds.save.PermissionDenied",
 						"&cYou aren't allowed to add banneds in this protection!");
+				public static final ThrowableField SQL = new ThrowableField(
+						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_SQL,
+						"Error.Exception.protection.blocks.delete.SQL",
+						"&cThere was an error trying to save the banned user. Please contact with an administrator!");
 				public static final ThrowableField UNKNOWN = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_UNKNOWN,
 						"Error.Exception.protection.banneds.save.Unknown",

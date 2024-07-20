@@ -14,6 +14,7 @@ import company.pluginName.Features.PvPPckg.Utils.CombatLogHookUtilities;
 import company.pluginName.Hooks.CombatLogX.CombatLogXAPI;
 import company.pluginName.Hooks.DeluxeCombat.DeluxeCombatAPI;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -287,6 +288,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 		if (input.getProtection().isBlocked()) {
 			throw Exceptions.Protections.BLOCKED.generateException();
+		}
+
+		if (PermissionsService.KICK_BYPASS.hasPermission(input.getKicked())) {
+			throw Exceptions.Protections.KICKDENIEDBYPASS.generateException();
 		}
 
 		if (!ProtectionUtilities.canKick(input.getProtection(), input.getPlayer())) {

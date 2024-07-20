@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,7 +20,6 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.Protec
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Objects.ProtectionMember;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.AutoPurgeLog;
 import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
 import darkpanda73.PandaUtils.PandaSQLModule.PandaSQLService;
@@ -38,7 +36,7 @@ import darkpanda73.PandaUtils.PandaUtilities.Location.LocationReference;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
 
-@PandaSQLConfig(allowMySQL = true, version = 10)
+@PandaSQLConfig(allowMySQL = true, version = 12)
 public class SQLService extends PandaSQLService {
 
 	@Override
@@ -67,15 +65,10 @@ public class SQLService extends PandaSQLService {
 						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ParentRegionId")),
 								Arrays.asList(t.getColumn("RegionId")))))
 
-				.addTable((t = new Table(getDatabase(), "ProtectionMembers"))
+				.addTable((t = new Table(getDatabase(), "ProtectionBanneds"))
 						.addColumns(new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "MemberUuid", "CHAR(36)", Types.CHAR).setNotNull(true),
-								new Column(t, "WorldGuardRole", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "CanInteract", "BOOLEAN", Types.BOOLEAN).setNotNull(false),
-								new Column(t, "CanBuild", "BOOLEAN", Types.BOOLEAN).setNotNull(false))
-						.addUniqueConstraint(new UniqueConstraint(t.getColumn("RegionId"), t.getColumn("MemberUuid")))
-						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("RegionId")),
-								Arrays.asList(getDatabase().getTable("Protections").getColumn("RegionId")))))
+								new Column(t, "BannedUuid", "CHAR(36)", Types.CHAR).setNotNull(true))
+						.addUniqueConstraint(new UniqueConstraint(t.getColumn("RegionId"), t.getColumn("BannedUuid"))))
 
 				.addTable((t = new Table(getDatabase(), "ProtectionBlocks")).addColumns(
 						new Column(t, "Id", "VARCHAR(32)", Types.VARCHAR).setPrimary(true).setUnique(true)
@@ -115,6 +108,10 @@ public class SQLService extends PandaSQLService {
 						new Column(t, "RemovedProtections", "INTEGER", Types.INTEGER).setNotNull(true)));
 	}
 
+	/*
+	 * Protection methods
+	 */
+
 	public List<Protection> getProtections() {
 		List<Protection> protections = new ArrayList<>();
 		HashMap<String, List<Protection>> parentProtections = new HashMap<>();
@@ -128,8 +125,8 @@ public class SQLService extends PandaSQLService {
 						new ReferencedProtectionBlock(set.getString("ProtectionBlockId")), set.getString("WorldName"),
 						set.getString("DisplayName"), createdDate > 0 ? createdDate : System.currentTimeMillis());
 
-				if (set.getString("ParentRecordId") != null) {
-					parentProtections.computeIfAbsent(set.getString("ParentRecordId"), (key) -> new ArrayList<>())
+				if (set.getString("ParentRegionId") != null) {
+					parentProtections.computeIfAbsent(set.getString("ParentRegionId"), (key) -> new ArrayList<>())
 							.add(protection);
 				}
 
@@ -174,9 +171,115 @@ public class SQLService extends PandaSQLService {
 		return protections;
 	}
 
-	public List<ProtectionMember> getProtectionMembers(String regionId) {
-		return Collections.emptyList();
+	public void saveProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		Table t = this.getDatabase().getTable("Protections");
+		HashMap<Column, Data> values = new HashMap<>();
+		values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
+		values.put(t.getColumn("OwnerUuid"), new Data(Types.CHAR, protection.getOwnerUuid().toString()));
+		values.put(t.getColumn("ProtectionBlockId"),
+				new Data(Types.VARCHAR, protection.getProtectionBlock().getIdentifier()));
+		values.put(t.getColumn("DisplayItem"),
+				protection.getDisplayItem() != null
+						? new Data(Types.BLOB,
+								ItemStacksUtils.itemsParse(new ItemStack[] { protection.getDisplayItem().get() }))
+						: new Data(Types.NULL, null));
+		values.put(t.getColumn("WorldName"), new Data(Types.VARCHAR, protection.getWorldName()));
+		values.put(t.getColumn("DisplayName"), new Data(Types.VARCHAR, protection.getDisplayName()));
+		values.put(t.getColumn("CreatedDate"), new Data(Types.BIGINT, protection.getCreatedDate()));
+		values.put(t.getColumn("LocationX"), new Data(Types.INTEGER, protection.getLocation().getBlockX()));
+		values.put(t.getColumn("LocationY"), new Data(Types.INTEGER, protection.getLocation().getBlockY()));
+		values.put(t.getColumn("LocationZ"), new Data(Types.INTEGER, protection.getLocation().getBlockZ()));
+		values.put(t.getColumn("Blocked"), new Data(Types.BOOLEAN, protection.isBlocked()));
+		values.put(t.getColumn("BlockReason"),
+				(protection.getBlockReason() != null ? new Data(Types.VARCHAR, protection.getBlockReason().name())
+						: new Data(Types.NULL, null)));
+		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("RegionId"),
+				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
+			throw Exceptions.Protections.Save.SQL.generateException();
+		}
 	}
+
+	public void deleteProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		Table t = this.getDatabase().getTable("Protections");
+		if (!this.getDatabase().delete(t, new Condition(t.getColumn("RegionId"),
+				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
+			throw Exceptions.Protections.Delete.SQL.generateException();
+		}
+	}
+
+	/*
+	 * Protection banneds methods
+	 */
+
+	public HashMap<String, List<UUID>> getProtectionBanneds() {
+		HashMap<String, List<UUID>> protectionBanneds = new HashMap<>();
+
+		try (ResultSet set = this.getDatabase()
+				.select(Arrays.asList(this.getDatabase().getTable("ProtectionBanneds")))) {
+			while (set.next()) {
+				protectionBanneds.computeIfAbsent(set.getString("RegionId"), (key) -> new ArrayList<>())
+						.add(UUID.fromString(set.getString("BannedUuid")));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return protectionBanneds;
+	}
+
+	public void saveProtectionBanned(Protection protection, UUID bannedUuid)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		Table t = this.getDatabase().getTable("ProtectionBanneds");
+		HashMap<Column, Data> values = new HashMap<>();
+		values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
+		values.put(t.getColumn("BannedUuid"), new Data(Types.CHAR, bannedUuid.toString()));
+		if (!this.getDatabase().insertMultipleIgnore(t, Arrays.asList(values))) {
+			throw Exceptions.Protections.Banneds.Save.SQL.generateException();
+		}
+	}
+
+	public void saveProtectionBanneds(Protection protection, List<UUID> bannedUuids)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		Table t = this.getDatabase().getTable("ProtectionBanneds");
+
+		List<Map<Column, Data>> valuesList = new ArrayList<>();
+		bannedUuids.forEach(bannedUuid -> {
+			HashMap<Column, Data> values = new HashMap<>();
+			values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
+			values.put(t.getColumn("BannedUuid"), new Data(Types.CHAR, bannedUuid.toString()));
+			valuesList.add(values);
+		});
+
+		if (!this.getDatabase().insertMultipleIgnore(t, valuesList)) {
+			throw Exceptions.Protections.Banneds.Save.SQL.generateException();
+		}
+	}
+
+	public void deleteProtectionBanned(Protection protection, UUID bannedUuid)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		Table t = this.getDatabase().getTable("ProtectionBanneds");
+		if (!this.getDatabase().delete(t,
+				new Condition(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()),
+						ConditionType.EQUAL),
+				new Condition(ConditionType.AND), new Condition(t.getColumn("BannedUuid"),
+						new Data(Types.CHAR, bannedUuid.toString()), ConditionType.EQUAL))) {
+			throw Exceptions.Protections.Banneds.Delete.SQL.generateException();
+		}
+	}
+
+	public void deleteProtectionBanneds(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		Table t = this.getDatabase().getTable("ProtectionBanneds");
+		if (!this.getDatabase().delete(t, new Condition(t.getColumn("RegionId"),
+				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
+			throw Exceptions.Protections.Banneds.Delete.SQL.generateException();
+		}
+	}
+
+	/*
+	 * Protection block methods
+	 */
 
 	public List<ProtectionBlock> getProtectionBlocks() {
 		List<ProtectionBlock> protectionBlocks = new ArrayList<>();
@@ -213,65 +316,6 @@ public class SQLService extends PandaSQLService {
 			e.printStackTrace();
 		}
 		return new ProtectionBlockAllowedWorlds(allowedWorlds);
-	}
-
-	public List<Recipe> getRecipes() {
-		List<Recipe> recipes = new ArrayList<>();
-		try (ResultSet set = this.getDatabase().select(Arrays.asList(this.getDatabase().getTable("Recipes")))) {
-			while (set.next()) {
-				Recipe recipe = new Recipe(new ReferencedProtectionBlock(set.getString("ProtectionBlockId")));
-
-				ItemStack[] recipeItems = ItemStacksUtils.itemsParse(set.getBytes("Recipe"));
-				for (int i = 0; i < recipeItems.length; i++) {
-					recipe.getRecipe()[i] = recipeItems[i];
-				}
-
-				recipe.setPermission(set.getString("Permission"));
-
-				recipes.add(recipe);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return recipes;
-	}
-
-	public void saveProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("Protections");
-		HashMap<Column, Data> values = new HashMap<>();
-		values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
-		values.put(t.getColumn("OwnerUuid"), new Data(Types.CHAR, protection.getOwnerUuid().toString()));
-		values.put(t.getColumn("ProtectionBlockId"),
-				new Data(Types.VARCHAR, protection.getProtectionBlock().getIdentifier()));
-		values.put(t.getColumn("DisplayItem"),
-				protection.getDisplayItem() != null
-						? new Data(Types.BLOB,
-								ItemStacksUtils.itemsParse(new ItemStack[] { protection.getDisplayItem().get() }))
-						: new Data(Types.NULL, null));
-		values.put(t.getColumn("WorldName"), new Data(Types.VARCHAR, protection.getWorldName()));
-		values.put(t.getColumn("DisplayName"), new Data(Types.VARCHAR, protection.getDisplayName()));
-		values.put(t.getColumn("CreatedDate"), new Data(Types.BIGINT, protection.getCreatedDate()));
-		values.put(t.getColumn("LocationX"), new Data(Types.INTEGER, protection.getLocation().getBlockX()));
-		values.put(t.getColumn("LocationY"), new Data(Types.INTEGER, protection.getLocation().getBlockY()));
-		values.put(t.getColumn("LocationZ"), new Data(Types.INTEGER, protection.getLocation().getBlockZ()));
-		values.put(t.getColumn("Blocked"), new Data(Types.BOOLEAN, protection.isBlocked()));
-		values.put(t.getColumn("BlockReason"),
-				(protection.getBlockReason() != null ? new Data(Types.VARCHAR, protection.getBlockReason().name())
-						: new Data(Types.NULL, null)));
-		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("RegionId"),
-				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
-			throw Exceptions.Protections.Save.SQL.generateException();
-		}
-	}
-
-	public void deleteProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("Protections");
-		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("RegionId"),
-				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL)))) {
-			throw Exceptions.Protections.Delete.SQL.generateException();
-		}
 	}
 
 	public void saveProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksExceptionImpl {
@@ -328,6 +372,33 @@ public class SQLService extends PandaSQLService {
 				new Data(Types.VARCHAR, protectionBlock.getInformation().getId()), ConditionType.EQUAL)))) {
 			throw Exceptions.Protections.Blocks.Delete.SQL.generateException();
 		}
+	}
+
+	/*
+	 * Recipe methods
+	 */
+
+	public List<Recipe> getRecipes() {
+		List<Recipe> recipes = new ArrayList<>();
+		try (ResultSet set = this.getDatabase().select(Arrays.asList(this.getDatabase().getTable("Recipes")))) {
+			while (set.next()) {
+				Recipe recipe = new Recipe(new ReferencedProtectionBlock(set.getString("ProtectionBlockId")));
+
+				ItemStack[] recipeItems = ItemStacksUtils.itemsParse(set.getBytes("Recipe"));
+				for (int i = 0; i < recipeItems.length; i++) {
+					recipe.getRecipe()[i] = recipeItems[i];
+				}
+
+				recipe.setPermission(set.getString("Permission"));
+
+				recipes.add(recipe);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return recipes;
 	}
 
 	public void saveRecipe(Recipe recipe) throws RoyaleProtectionBlocksExceptionImpl {

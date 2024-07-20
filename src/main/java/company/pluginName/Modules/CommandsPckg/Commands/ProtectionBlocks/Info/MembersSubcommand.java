@@ -86,7 +86,7 @@ public class MembersSubcommand extends PandaSubCommand {
 	}
 
 	private void sendInformation(Player player, Protection protection, int page) {
-		int maxPage = getMaxPage(protection.getMembers().list(), 5);
+		int maxPage = getMaxPage(protection.getWorldGuardMembers().list(), 5);
 
 		if (maxPage < 1) {
 			maxPage = 1;
@@ -101,9 +101,10 @@ public class MembersSubcommand extends PandaSubCommand {
 		final int fPage = page;
 		final int fMaxPage = maxPage;
 
-		List<String> members = protection.getMembers().list().size() != 0 ? Arrays.stream(Arrays.copyOfRange(
-				protection.getMembers().list().toArray(new UUID[protection.getMembers().list().size()]), (page - 1) * 5,
-				page * 5)).filter(Objects::nonNull).map(member -> {
+		List<String> members = protection.getWorldGuardMembers().list().size() != 0 ? Arrays
+				.stream(Arrays.copyOfRange(protection.getWorldGuardMembers().list()
+						.toArray(new UUID[protection.getWorldGuardMembers().list().size()]), (page - 1) * 5, page * 5))
+				.filter(Objects::nonNull).map(member -> {
 					OfflinePlayer memberPlayer = OfflinePlayerUtilities.getOfflinePlayer(member);
 					return "&e".concat(
 							memberPlayer != null && memberPlayer.getName() != null ? memberPlayer.getName() : "???");

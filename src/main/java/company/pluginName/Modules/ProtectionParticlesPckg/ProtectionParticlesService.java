@@ -16,7 +16,6 @@ import org.bukkit.scheduler.BukkitTask;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation.SimpleLocationArea;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Message;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -180,21 +179,27 @@ public class ProtectionParticlesService {
 
 							if (j <= length) {
 								for (long k = 0; k <= length; k++) {
-									if (currentProtections.stream()
-											.anyMatch(prot -> prot.isInside(diagonalLocation, true))) {
+									if (currentProtections.stream().anyMatch(
+											prot -> !prot.isDeleted() && prot.isInside(diagonalLocation, true))) {
 										Optional<Pair<Protection, Long>> coincidences = currentProtections.stream()
 												.filter(prot -> !prot.isDeleted()
 														&& prot.isInside(diagonalLocation, true))
-												.map(prot -> Pair.of(prot, Arrays.asList(((diagonalLocation
-														.getY() == currentLocation.getY()
-														|| diagonalLocation.getY() == prot.getLocation().getY())
-														|| (diagonalLocation.getY() == prot.getMinLocation().getY()
-																|| diagonalLocation
-																		.getY() == (prot.getMaxLocation().getY() + 1))),
-														(diagonalLocation.getX() == prot.getMinLocation().getX()),
-														(diagonalLocation.getZ() == prot.getMinLocation().getZ()),
-														(diagonalLocation.getX() == (prot.getMaxLocation().getX() + 1)),
-														(diagonalLocation.getZ() == (prot.getMaxLocation().getZ() + 1)))
+												.map(prot -> Pair.of(prot, Arrays
+														.asList(((diagonalLocation.getY() == currentLocation.getY()
+																|| diagonalLocation.getY() == prot.getLocation().getY())
+																|| (diagonalLocation.getY() == prot.getUtils()
+																		.getProtectionArea().getMinLocation().getY()
+																		|| diagonalLocation.getY() == (prot.getUtils()
+																				.getProtectionArea().getMaxLocation()
+																				.getY()))),
+																(diagonalLocation.getX() == prot.getUtils()
+																		.getProtectionArea().getMinLocation().getX()),
+																(diagonalLocation.getZ() == prot.getUtils()
+																		.getProtectionArea().getMinLocation().getZ()),
+																(diagonalLocation.getX() == (prot.getUtils()
+																		.getProtectionArea().getMaxLocation().getX())),
+																(diagonalLocation.getZ() == (prot.getUtils()
+																		.getProtectionArea().getMaxLocation().getZ())))
 														.stream().filter(Boolean.TRUE::equals).count()))
 												.filter(pair -> pair.getSecond() >= 2)
 												.collect(Collectors.maxBy((pair1, pair2) -> {
@@ -250,15 +255,13 @@ public class ProtectionParticlesService {
 												.add(0.5D, 0.5D, 0.5D);
 										coincidences = currentProtections.stream()
 												.filter(prot -> !prot.isDeleted()
-														&& diagonalLocation.getY() == prot.getLocation().getY()
-														&& prot.isInside(new SimpleLocationArea(
-																diagonalLocation.getWorld().getName(), diagonalLocation,
-																diagonalLocation), true))
+														&& prot.isInside(diagonalExtraLocation, true))
 												.map(prot -> Pair.of(prot, Arrays
 														.asList((diagonalLocation.getX() == prot.getLocation().getX()),
+																(diagonalLocation.getY() == prot.getLocation().getY()),
 																(diagonalLocation.getZ() == prot.getLocation().getZ()))
 														.stream().filter(Boolean.TRUE::equals).count()))
-												.filter(pair -> pair.getSecond() >= 1)
+												.filter(pair -> pair.getSecond() >= 2)
 												.collect(Collectors.maxBy((pair1, pair2) -> {
 													if (pair1.getSecond() == pair2.getSecond()) {
 														return Integer.compare(pair1.getFirst().getPriority(),
@@ -268,7 +271,7 @@ public class ProtectionParticlesService {
 												}));
 
 										if (coincidences.isPresent()) {
-											if (coincidences.get().getSecond() == 1) {
+											if (coincidences.get().getSecond() == 2) {
 												// Yellow
 												new PacketPlayOutParticle(diagonalExtraLocation.getX(),
 														diagonalExtraLocation.getY(), diagonalExtraLocation.getZ(), 0,

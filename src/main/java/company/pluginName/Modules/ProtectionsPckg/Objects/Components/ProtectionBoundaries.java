@@ -85,8 +85,8 @@ public class ProtectionBoundaries {
 		List<Location> locations = new ArrayList<>();
 
 		World world = Bukkit.getWorld(this.protection.getWorldName());
-		Location loc1 = this.protection.getMinLocation();
-		Location loc2 = this.protection.getMaxLocation();
+		Location loc1 = this.protection.getUtils().getProtectionArea().getMinLocation().toLocation();
+		Location loc2 = this.protection.getUtils().getProtectionArea().getMaxLocation().toLocation();
 
 		int minX = loc1.getBlockX();
 		int maxX = loc2.getBlockX() + 1;

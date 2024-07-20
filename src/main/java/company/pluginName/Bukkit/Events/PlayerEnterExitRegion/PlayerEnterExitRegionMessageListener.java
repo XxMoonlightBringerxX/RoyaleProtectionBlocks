@@ -19,6 +19,7 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
+import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerEnterExitProtectionEvent;
@@ -69,26 +70,29 @@ public class PlayerEnterExitRegionMessageListener implements Listener {
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onPlayerEnterRegionAllowed(PlayerEnterExitProtectionEvent e) {
-		IProtection lastProtection = lastProtections.get(e.getPlayer().getUniqueId());
-		if (e.getCurrentProtections().size() == 0 && lastProtection != null) {
-			sendExitMessage(e.getPlayer(), lastProtection);
-			lastProtections.remove(e.getPlayer().getUniqueId());
-		} else if (!e.getCurrentProtections().contains(lastProtection)) {
-			IProtection newProtection = e.getCurrentProtections().stream()
-					.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority())).findFirst().orElse(null);
-			if (newProtection != null) {
-				sendEnterMessage(e.getPlayer(), newProtection);
-				lastProtections.put(e.getPlayer().getUniqueId(), newProtection);
+		TasksUtils.executeOnAsync(() -> {
+			IProtection lastProtection = lastProtections.get(e.getPlayer().getUniqueId());
+			if (e.getCurrentProtections().size() == 0 && lastProtection != null) {
+				sendExitMessage(e.getPlayer(), lastProtection);
+				lastProtections.remove(e.getPlayer().getUniqueId());
+			} else if (!e.getCurrentProtections().contains(lastProtection)) {
+				IProtection newProtection = e.getCurrentProtections().stream()
+						.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority())).findFirst()
+						.orElse(null);
+				if (newProtection != null) {
+					sendEnterMessage(e.getPlayer(), newProtection);
+					lastProtections.put(e.getPlayer().getUniqueId(), newProtection);
+				}
+			} else if (e.getEnteredProtections().size() > 0) {
+				IProtection newProtection = e.getEnteredProtections().stream()
+						.filter(prot -> Integer.compare(prot.getPriority(), lastProtection.getPriority()) > 0)
+						.findFirst().orElse(null);
+				if (newProtection != null) {
+					sendEnterMessage(e.getPlayer(), newProtection);
+					lastProtections.put(e.getPlayer().getUniqueId(), newProtection);
+				}
 			}
-		} else if (e.getEnteredProtections().size() > 0) {
-			IProtection newProtection = e.getEnteredProtections().stream()
-					.filter(prot -> Integer.compare(prot.getPriority(), lastProtection.getPriority()) > 0).findFirst()
-					.orElse(null);
-			if (newProtection != null) {
-				sendEnterMessage(e.getPlayer(), newProtection);
-				lastProtections.put(e.getPlayer().getUniqueId(), newProtection);
-			}
-		}
+		});
 	}
 
 	@EventHandler

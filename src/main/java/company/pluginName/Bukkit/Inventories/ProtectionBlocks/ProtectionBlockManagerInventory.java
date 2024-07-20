@@ -244,12 +244,13 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 				prot.getUtils().showProtectionBlock();
 
 				try {
-					prot.setMinLocation(null);
-					prot.setMaxLocation(null);
-					if (!prot.getProtectedRegion().getMinimumPoint().equals(
-							worldGuardApi.getHook().getInternalWorldGuard().asBlockVector(prot.getMinLocation()))
-							|| !prot.getProtectedRegion().getMaximumPoint().equals(worldGuardApi.getHook()
-									.getInternalWorldGuard().asBlockVector(prot.getMaxLocation()))) {
+					prot.getUtils().regenerateProtectionArea();
+					if (!prot.getProtectedRegion().getMinimumPoint()
+							.equals(worldGuardApi.getHook().getInternalWorldGuard()
+									.asBlockVector(prot.getUtils().getProtectionArea().getMinLocation().toLocation()))
+							|| !prot.getProtectedRegion().getMaximumPoint()
+									.equals(worldGuardApi.getHook().getInternalWorldGuard().asBlockVector(
+											prot.getUtils().getProtectionArea().getMaxLocation().toLocation()))) {
 						prot.regenerateProtectedRegion();
 					}
 				} catch (Exception e) {

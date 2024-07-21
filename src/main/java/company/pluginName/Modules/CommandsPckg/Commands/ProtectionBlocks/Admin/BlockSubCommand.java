@@ -55,7 +55,7 @@ public class BlockSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
+			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 			if (protection != null) {
 				protection.block(BlockReason.OTHERS);
 				protection.saveData();

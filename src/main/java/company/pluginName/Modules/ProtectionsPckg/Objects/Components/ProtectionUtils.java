@@ -70,15 +70,23 @@ public class ProtectionUtils {
 	}
 
 	public boolean isInside(SimpleLocation location, boolean includeBorder) {
-		return (includeBorder ? this.getProtectionArea().isInside(location)
-				: this.getProtectionAreaWithoutBorder().isInside(location))
-				|| protection.getChildProtections().stream().anyMatch(prot -> prot.isInside(location, includeBorder));
+		return includeBorder ? this.getProtectionArea().isInside(location)
+				: this.getProtectionAreaWithoutBorder().isInside(location);
 	}
 
 	public boolean isInside(SimpleLocationArea locationArea, boolean includeBorder) {
 		return includeBorder ? this.getProtectionArea().isInside(locationArea)
-				: this.getProtectionAreaWithoutBorder().isInside(locationArea) || protection.getChildProtections()
-						.stream().anyMatch(prot -> prot.isInside(locationArea, includeBorder));
+				: this.getProtectionAreaWithoutBorder().isInside(locationArea);
+	}
+
+	public boolean isInsideAny(SimpleLocation location, boolean includeBorder) {
+		return this.isInside(location, includeBorder)
+				|| protection.getChildProtections().stream().anyMatch(prot -> prot.isInside(location, includeBorder));
+	}
+
+	public boolean isInsideAny(SimpleLocationArea locationArea, boolean includeBorder) {
+		return this.isInside(locationArea, includeBorder) || protection.getChildProtections().stream()
+				.anyMatch(prot -> prot.isInside(locationArea, includeBorder));
 	}
 
 	public boolean isProtectionBlock() {

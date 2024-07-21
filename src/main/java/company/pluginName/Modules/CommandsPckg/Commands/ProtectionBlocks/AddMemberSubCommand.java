@@ -69,7 +69,7 @@ public class AddMemberSubCommand extends PandaSubCommand {
 			Player pl = sender instanceof Player ? (Player) sender : null;
 			if (pl != null) {
 				if (parameters.getParameters().size() > 0) {
-					Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
+					Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 					if (protection != null) {
 						OfflinePlayer member = OfflinePlayerUtilities
 								.getOfflinePlayer(parameters.getParameters().get(0));

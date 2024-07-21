@@ -65,7 +65,7 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 		PlayerData playerData = (PlayerData) playerDataService.getPlayerData(player.getUniqueId(), false);
 
 		if (playerData != null) {
-			List<Protection> newProtections = this.protectionsService.findProtectionsByLocation(toLocation)
+			List<Protection> newProtections = this.protectionsService.findProtectionParentsByLocation(toLocation)
 					.collect(Collectors.toList());
 
 			PlayerEnterExitProtectionEvent event = new PlayerEnterExitProtectionEvent(originEvent, player,

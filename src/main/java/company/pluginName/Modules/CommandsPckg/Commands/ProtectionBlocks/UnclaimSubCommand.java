@@ -49,7 +49,7 @@ public class UnclaimSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player player = sender instanceof Player ? (Player) sender : null;
 		if (player != null) {
-			Protection protection = protectionsService.findProtectionByLocation(player.getLocation());
+			Protection protection = protectionsService.findProtectionParentByLocation(player.getLocation());
 			if (protection != null) {
 				try {
 					playerInteractionsService

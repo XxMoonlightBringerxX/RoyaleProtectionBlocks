@@ -104,7 +104,7 @@ public class FlagSubCommand extends PandaSubCommand {
 				if (!allRegions) {
 					if (sender instanceof Player) {
 						currentProtection = protectionsService
-								.findProtectionByLocation(((Player) sender).getLocation());
+								.findProtectionParentByLocation(((Player) sender).getLocation());
 
 						if (currentProtection == null) {
 							MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()

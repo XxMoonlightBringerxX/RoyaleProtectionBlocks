@@ -70,7 +70,7 @@ public class ProtectionsListener implements Listener {
 				break;
 			}
 
-			Protection protection = protectionsService.findProtectionByLocation(e.getBlockPlaced().getLocation());
+			Protection protection = protectionsService.findProtectionParentByLocation(e.getBlockPlaced().getLocation());
 			if (protection != null && protection.isBlocked()) {
 				e.setCancelled(true);
 				Exceptions.Protections.BLOCKED.generateException().sendError(e.getPlayer());
@@ -105,7 +105,7 @@ public class ProtectionsListener implements Listener {
 				break;
 			}
 
-			Protection protection = protectionsService.findProtectionByLocation(e.getBlock().getLocation());
+			Protection protection = protectionsService.findProtectionParentByLocation(e.getBlock().getLocation());
 			if (protection != null && protection.isBlocked()) {
 				e.setCancelled(true);
 				Exceptions.Protections.BLOCKED.generateException().sendError(e.getPlayer());
@@ -129,7 +129,7 @@ public class ProtectionsListener implements Listener {
 		if (protection != null) {
 			return;
 		} else if (!e.isBlockInHand()) {
-			protection = protectionsService.findProtectionByLocation(e.getClickedBlock().getLocation());
+			protection = protectionsService.findProtectionParentByLocation(e.getClickedBlock().getLocation());
 			if (protection != null && protection.isBlocked()) {
 				e.setCancelled(true);
 
@@ -155,7 +155,7 @@ public class ProtectionsListener implements Listener {
 				Protection protection = protectionsService.findProtectionBySourceBlock(e.getClickedBlock());
 				if (protection != null) {
 					e.setCancelled(true);
-					EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
+					EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection.getParentProtection());
 					return;
 				}
 				break;
@@ -197,7 +197,7 @@ public class ProtectionsListener implements Listener {
 		for (Protection protection : protections) {
 			if (protection.getBoundaries().isProtectionViewEntity(e.getRightClicked())) {
 				e.setCancelled(true);
-				EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
+				EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection.getParentProtection());
 				break;
 			}
 		}

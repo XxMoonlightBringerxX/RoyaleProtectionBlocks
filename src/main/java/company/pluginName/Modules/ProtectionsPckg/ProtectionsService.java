@@ -151,7 +151,7 @@ public class ProtectionsService {
 	}
 
 	public Protection findProtectionByLocation(Location location) {
-		return findProtectionsByLocation(location, true).findFirst().orElse(null);
+		return findProtectionsByLocation(location).findFirst().orElse(null);
 	}
 
 	public Stream<Protection> findProtectionsByLocation(Location location) {
@@ -170,7 +170,31 @@ public class ProtectionsService {
 		SimpleLocationArea locationArea = SimpleLocationArea.of(location1, location2);
 		return protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList()).stream()
 				.filter((prot) -> prot.getUtils().isInside(locationArea, includeBorder))
-				.map(prot -> prot.getParentProtection() != null ? prot.getParentProtection() : prot).distinct()
+				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
+	}
+
+	public Protection findProtectionParentByLocation(Location location) {
+		return findProtectionParentsByLocation(location).findFirst().orElse(null);
+	}
+
+	public Stream<Protection> findProtectionParentsByLocation(Location location) {
+		return findProtectionParentsByLocation(location, true);
+	}
+
+	public Stream<Protection> findProtectionParentsByLocation(Location location, boolean includeBorder) {
+		return findProtectionParentsByArea(location, location, includeBorder);
+	}
+
+	public Stream<Protection> findProtectionParentsByArea(Location location1, Location location2) {
+		return findProtectionParentsByArea(location1, location2, true);
+	}
+
+	public Stream<Protection> findProtectionParentsByArea(Location location1, Location location2,
+			boolean includeBorder) {
+		SimpleLocationArea locationArea = SimpleLocationArea.of(location1, location2);
+		return protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList()).stream()
+				.filter((prot) -> prot.getParentProtection() == prot
+						&& prot.getUtils().isInsideAny(locationArea, includeBorder))
 				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
 	}
 

@@ -67,7 +67,7 @@ public class KickSubCommand extends PandaSubCommand {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			if (parameters.getParameters().size() > 0) {
-				Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
+				Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 				if (protection != null) {
 					Player kicked = Bukkit.getPlayer(parameters.getParameters().get(0));
 					if (kicked != null) {

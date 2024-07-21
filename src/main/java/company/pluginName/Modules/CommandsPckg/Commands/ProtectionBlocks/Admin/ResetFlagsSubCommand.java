@@ -89,7 +89,8 @@ public class ResetFlagsSubCommand extends PandaSubCommand {
 
 			if (!allRegions) {
 				if (sender instanceof Player) {
-					currentProtection = protectionsService.findProtectionByLocation(((Player) sender).getLocation());
+					currentProtection = protectionsService
+							.findProtectionParentByLocation(((Player) sender).getLocation());
 
 					if (currentProtection == null) {
 						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()

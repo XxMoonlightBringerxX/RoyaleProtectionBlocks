@@ -164,9 +164,9 @@ public class SQLService extends PandaSQLService {
 			e.printStackTrace();
 		}
 
-		protections.stream().filter(prot -> parentProtections.containsKey(prot.getRegionId()))
-				.forEach(parentProt -> parentProtections.get(parentProt.getRegionId())
-						.forEach(prot -> prot.setParentProtection(parentProt)));
+		protections.stream().filter(parentProtection -> parentProtections.containsKey(parentProtection.getRegionId()))
+				.forEach(parentProtection -> parentProtections.get(parentProtection.getRegionId())
+						.forEach(protection -> protection.setParentProtection(parentProtection)));
 
 		return protections;
 	}

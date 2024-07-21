@@ -2,6 +2,7 @@ package company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard
 
 import java.util.Collection;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.Exceptions;
@@ -76,6 +77,16 @@ public class ProtectionWorldGuardFlags {
 				DiscordUtilities.sendFlagModificationMessage(request.getExecutor(), protection,
 						request.getFlag().getWorldGuardFlag().getName(), previousValue, request.getValue());
 			}
+
+			request.setExecutor(null);
+
+			this.protection.getChildProtections().forEach(child -> {
+				try {
+					child.getWorldGuardFlags().setFlag(request);
+				} catch (RoyaleProtectionBlocksExceptionImpl e) {
+					e.sendError(Bukkit.getConsoleSender());
+				}
+			});
 		} catch (Exception e) {
 			if (request.getExecutor() != null && request.getFlag().getCostPerChange() != null) {
 				EconomyUtils.deposit(request.getFlag().getEconomyService(), request.getExecutor(),

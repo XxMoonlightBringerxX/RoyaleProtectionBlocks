@@ -102,7 +102,10 @@ public class FlagsUtilities {
 					}
 				}
 
-				flag.modifyValue(protection.getProtectedRegion(), value);
+				Object fValue = value;
+
+				flag.modifyValue(protection.getProtectedRegion(), fValue);
+				protection.getChildProtections().forEach(child -> flag.modifyValue(child.getProtectedRegion(), fValue));
 			} else {
 				protection.getProtectedRegion().getFlags().keySet().stream()
 						.filter(wgFlag -> wgFlag.getName().equals(flagId)).findFirst()

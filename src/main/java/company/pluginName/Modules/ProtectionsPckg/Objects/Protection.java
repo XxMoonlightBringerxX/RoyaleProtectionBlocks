@@ -613,7 +613,7 @@ public class Protection implements IProtection {
 	public void setParentProtection(Protection protection) {
 		unsetParentProtection();
 
-		while (protection.getParentProtection() != null) {
+		while (protection.getParentProtection() != protection) {
 			protection = protection.getParentProtection();
 		}
 

@@ -44,7 +44,7 @@ public class HideSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
+			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 			if (protection != null) {
 				if (ProtectionUtilities.canToggleBlock(protection, pl)) {
 					if (protection.getUtils().isProtectionBlock()) {

@@ -1,4 +1,4 @@
-package company.pluginName.Bukkit.Events.PlayerEnterExitRegion;
+package company.pluginName.Bukkit.Events.Listeners;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +25,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerEnterExitPro
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 
 @PandaListener
-public class PlayerEnterExitRegionMessageListener implements Listener {
+public class PlayerRegionMessageListener implements Listener {
 
 	@RegisteredPandaField("config")
 	public static final PandaStringField SETTINGS_PROTECTION_MESSAGEONENTERREGION = new PandaStringField(

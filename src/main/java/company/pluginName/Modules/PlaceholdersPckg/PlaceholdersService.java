@@ -1,8 +1,11 @@
 package company.pluginName.Modules.PlaceholdersPckg;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.bukkit.entity.Player;
 
@@ -22,24 +25,19 @@ public class PlaceholdersService {
 	 * Player placeholders
 	 */
 
-	private static final String PLAYER_NAME_SUPPLIER_PLACEHOLDER = "{player_name}";
-	private static final Function<Player, String> PLAYER_NAME_SUPPLIER = (player) -> player.getName();
+	private static final List<Pair<String, Function<Player, String>>> PLAYER_PLACEHOLDERS = Arrays
+			.asList(Pair.of("{player_name}", (player) -> player.getName()));
 
 	/*
 	 * Protection placeholders
 	 */
 
-	private static final String PROTECTION_ID_SUPPLIER_PLACEHOLDER = "{protection_id}";
-	private static final Function<IProtection, String> PROTECTION_ID_SUPPLIER = (protection) -> protection
-			.getRegionId();
-
-	private static final String PROTECTION_NAME_SUPPLIER_PLACEHOLDER = "{protection_name}";
-	private static final Function<IProtection, String> PROTECTION_NAME_SUPPLIER = (
-			protection) -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getRegionId();
-
-	private static final String PROTECTION_OWNER_SUPPLIER_PLACEHOLDER = "{protection_owner}";
-	private static final Function<IProtection, String> PROTECTION_OWNER_SUPPLIER = (protection) -> protection
-			.getOwnerName();
+	private static final List<Pair<String, Function<IProtection, String>>> PROTECTION_PLACEHOLDERS = Arrays.asList(
+			Pair.of("{protection_id}", (protection) -> protection.getRegionId()),
+			Pair.of("{protection_name}",
+					(protection) -> protection.getDisplayName() != null ? protection.getDisplayName()
+							: protection.getRegionId()),
+			Pair.of("{protection_owner}", (protection) -> protection.getOwnerName()));
 
 	private HashMap<UUID, Pair<Long, Replacement[]>> playerReplacements = new HashMap<>();
 	private HashMap<String, Pair<Long, Replacement[]>> protectionReplacements = new HashMap<>();
@@ -56,9 +54,13 @@ public class PlaceholdersService {
 
 	public Replacement[] getPlayerReplacements(Player player) {
 		Pair<Long, Replacement[]> replacement = this.playerReplacements.computeIfAbsent(player.getUniqueId(),
-				(uuid) -> new Pair<>(null, new Replacement[] {
-						new Replacement(PLAYER_NAME_SUPPLIER_PLACEHOLDER, () -> PLAYER_NAME_SUPPLIER.apply(player))
-								.cacheText(false) }));
+				(uuid) -> {
+					List<Replacement> replacements = PLAYER_PLACEHOLDERS.stream()
+							.map(placeholder -> new Replacement(placeholder.getFirst(),
+									() -> placeholder.getSecond().apply(player)))
+							.collect(Collectors.toList());
+					return Pair.of(null, replacements.toArray(new Replacement[replacements.size()]));
+				});
 
 		replacement.setFirst(System.currentTimeMillis());
 
@@ -66,15 +68,14 @@ public class PlaceholdersService {
 	}
 
 	public Replacement[] getProtectionReplacements(IProtection protection) {
-		Pair<Long, Replacement[]> replacement = this.protectionReplacements
-				.computeIfAbsent(protection.getRegionId(),
-						(uuid) -> new Pair<>(null, new Replacement[] {
-								new Replacement(PROTECTION_ID_SUPPLIER_PLACEHOLDER,
-										() -> PROTECTION_ID_SUPPLIER.apply(protection)).cacheText(false),
-								new Replacement(PROTECTION_NAME_SUPPLIER_PLACEHOLDER,
-										() -> PROTECTION_NAME_SUPPLIER.apply(protection)).cacheText(false),
-								new Replacement(PROTECTION_OWNER_SUPPLIER_PLACEHOLDER,
-										() -> PROTECTION_OWNER_SUPPLIER.apply(protection)).cacheText(false), }));
+		Pair<Long, Replacement[]> replacement = this.protectionReplacements.computeIfAbsent(protection.getRegionId(),
+				(regionId) -> {
+					List<Replacement> replacements = PROTECTION_PLACEHOLDERS.stream()
+							.map(placeholder -> new Replacement(placeholder.getFirst(),
+									() -> placeholder.getSecond().apply(protection)))
+							.collect(Collectors.toList());
+					return Pair.of(null, replacements.toArray(new Replacement[replacements.size()]));
+				});
 
 		replacement.setFirst(System.currentTimeMillis());
 

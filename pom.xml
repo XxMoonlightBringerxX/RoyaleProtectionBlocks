@@ -153,6 +153,11 @@
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaLoggingModule</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
 			<groupId>YAMLLib</groupId>
 			<artifactId>YAMLLib</artifactId>
 			<version>1.0</version>

@@ -3,6 +3,7 @@ package company.pluginName.Modules.ProtectionFlagsPckg;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import company.pluginName.MainPluginClass;
@@ -26,7 +27,7 @@ public class ProtectionFlagsService {
 	@PandaInject
 	private FilesService filesService;
 
-	private HashMap<String, ProtectionFlag> flags = new HashMap<>();
+	private HashMap<String, ProtectionFlag> flags = new LinkedHashMap<>();
 
 	@LoadMethod
 	private void load() {

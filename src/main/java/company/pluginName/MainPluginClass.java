@@ -12,6 +12,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPan
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.EnableInventoriesService;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.EnablePlayerHeadCacheService;
+import darkpanda73.PandaUtils.Services.PandaLoggingModule.Annotations.EnableLoggingService;
 import darkpanda73.PandaUtils.Services.PandaPlayerDataModule.Listeners.PandaPlayerDataEvents;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Events.InventoryEvents;
 
@@ -23,6 +24,7 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Events.InventoryE
 @EnableUpdateChecker("109118")
 @EnableBStats(value = 21346, customCharts = ProvidedProtectionsCustomChart.class)
 @EnableDiscordWebhookService
+@EnableLoggingService
 public class MainPluginClass extends PandaPluginClass {
 
 	@RegisteredPandaField("lang")

@@ -60,6 +60,15 @@ public class Exceptions {
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_INCOMBAT, "Error.Exception.protection.InCombat",
 				"&cYou can't do this while in combat!");
 
+		public static final ThrowableField PRIORITYTOOHIGH = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_PRIORITYTOOHIGH,
+				"Error.Exception.protection.PriorityTooHigh",
+				"&cYou aren't allowed to use higher prorities! &8(&eLimit: &7{max}&8)");
+
+		public static final ThrowableField PRIORITYBELOWZERO = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_PRIORITYBELOWZERO,
+				"Error.Exception.protection.PriorityBelowZero", "&cYou must provide a number higher or equal to zero!");
+
 		public static class Delete {
 
 			public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
@@ -110,6 +119,10 @@ public class Exceptions {
 			public static final ThrowableField NAMEINUSE = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_SAVE_NAMEINUSE,
 					"Error.Exception.protection.save.NameInUse", "&cThere's already a protection using this name!");
+			public static final ThrowableField NAMETOOLONG = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SAVE_NAMETOOLONG,
+					"Error.Exception.protection.save.NameTooLong",
+					"&cThe specified name is too long! &8(&eCurrent: &7{current}&e, Limit: &7{max}&8)");
 			public static final ThrowableField OVERLAPS = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_SAVE_OVERLAPS,
 					"Error.Exception.protection.save.Overlaps",

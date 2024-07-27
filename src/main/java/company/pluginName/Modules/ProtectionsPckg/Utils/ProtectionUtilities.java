@@ -146,4 +146,8 @@ public class ProtectionUtilities {
 		return protection.isOwner(pl.getUniqueId());
 	}
 
+	public static boolean canChangePriority(IProtection protection, Player pl) {
+		return protection.isOwner(pl.getUniqueId()) || PermissionsService.PRIORITY_OTHERS.hasPermission(pl);
+	}
+
 }

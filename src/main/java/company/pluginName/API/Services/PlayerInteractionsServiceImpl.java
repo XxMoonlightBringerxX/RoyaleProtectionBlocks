@@ -20,6 +20,7 @@ import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
@@ -30,6 +31,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Play
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionKickRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionPriorityChangeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRemovalRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRenameRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSetHomeRequestInput;
@@ -345,6 +347,31 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		input.getProtection().rename(input.getNewName());
+	}
+
+	public void protectionPriorityChangeRequest(ProtectionPriorityChangeRequestInput input)
+			throws RoyaleProtectionBlocksException {
+		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+			throw Exceptions.Protections.INCOMBAT.generateException();
+		}
+
+		if (input.getProtection().isBlocked()) {
+			throw Exceptions.Protections.BLOCKED.generateException();
+		}
+
+		if (!ProtectionUtilities.canChangePriority(input.getProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+		}
+
+		if (!PermissionsService.PRIORITY_MAX_BYPASS.hasPermission(input.getPlayer())) {
+			Integer maxPriority = PermissionsService.getPriorityMaxAvailable(input.getPlayer(), Integer.MAX_VALUE);
+			if (maxPriority < input.getNewPriority()) {
+				throw Exceptions.Protections.PRIORITYTOOHIGH.generateException()
+						.setReplacements(new Replacement("{max}", () -> String.valueOf(maxPriority)));
+			}
+		}
+
+		input.getProtection().setPriority(input.getNewPriority());
 	}
 
 	private Protection protectionToInternalProtection(IProtection protection)

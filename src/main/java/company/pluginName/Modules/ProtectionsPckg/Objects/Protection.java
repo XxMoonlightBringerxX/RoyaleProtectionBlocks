@@ -78,6 +78,10 @@ public class Protection implements IProtection {
 	private static PandaIntegerField SETTINGS_PROTECTION_MINIMUMDISTANCEBETWEENPROTECTIONS = new PandaIntegerField(
 			"Settings.Protection.Minimum-distance-between-protections", -1);
 
+	@RegisteredPandaField("config")
+	private static PandaIntegerField SETTINGS_PROTECTION_MAXIMUMDISPLAYNAMELENGTH = new PandaIntegerField(
+			"Settings.Protection.Maximum-display-name-length", 255);
+
 	@PandaInject
 	private static ProtectionSettingsService protectionSettingsService;
 
@@ -160,7 +164,28 @@ public class Protection implements IProtection {
 	private @Setter(lombok.AccessLevel.NONE) String displayNameWithoutFormat;
 
 	public void setDisplayName(String displayName) throws RoyaleProtectionBlocksExceptionImpl {
-		String displayNameWithoutFormat = MessageTemplate.inst(displayName).setColor(false).process().toString();
+		Integer maxLength = SETTINGS_PROTECTION_MAXIMUMDISPLAYNAMELENGTH.getContent();
+
+		if (maxLength == null) {
+			maxLength = 255;
+		} else if (maxLength < 0) {
+			maxLength = 0;
+		} else if (maxLength > 255) {
+			maxLength = 255;
+		}
+
+		int fMaxLength = maxLength;
+
+		if (displayName.length() > fMaxLength) {
+			throw Exceptions.Protections.Save.NAMETOOLONG.generateException()
+					.setReplacements(new Replacement[] {
+							new Replacement("{current}", () -> String.valueOf(displayName.length())),
+							new Replacement("{max}", () -> String.valueOf(fMaxLength)) });
+		}
+
+		String displayNameWithoutFormat = displayName != null
+				? MessageTemplate.inst(displayName).setColor(false).process().toString()
+				: "";
 
 		if (displayNameWithoutFormat.isEmpty()) {
 			throw Exceptions.Protections.Save.NOVISIBLETEXT.generateException();
@@ -710,6 +735,15 @@ public class Protection implements IProtection {
 	@Override
 	public void rename(String displayName) throws RoyaleProtectionBlocksException {
 		this.setDisplayName(displayName);
+	}
+
+	@Override
+	public void setPriority(int priority) throws RoyaleProtectionBlocksException {
+		if (priority < 0) {
+			throw Exceptions.Protections.PRIORITYBELOWZERO.generateException();
+		}
+
+		getProtectedRegion().setPriority(priority);
 	}
 
 	@Override

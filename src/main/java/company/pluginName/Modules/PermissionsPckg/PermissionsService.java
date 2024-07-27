@@ -67,6 +67,9 @@ public class PermissionsService extends PandaPermissionsService {
 	public static final PandaPermission ECONOMY_BYPASS = new PandaCustomizablePermission("Economy.Bypass",
 			"protectionblocks.economy.bypass");
 
+	public static final PandaPermission PRIORITY_OTHERS = new PandaCustomizablePermission("Priority.Others",
+			"protectionblocks.priority.others");
+
 	public static final PandaPermission BLOCKS_CREATE = new PandaCustomizablePermission("Blocks.Create",
 			"protectionblocks.blocks.create");
 	public static final PandaPermission BLOCKS_EDIT = new PandaCustomizablePermission("Blocks.Edit",
@@ -74,14 +77,31 @@ public class PermissionsService extends PandaPermissionsService {
 	public static final PandaPermission BLOCKS_DELETE = new PandaCustomizablePermission("Blocks.Delete",
 			"protectionblocks.blocks.delete");
 
+	public static final PandaParametizedPermission PRIORITY_MAX_TEMPLATE = new PandaParametizedPermission(
+			"Priority.Max.Template", "protectionblocks.priority.max.{max}");
+	public static final PandaPermission PRIORITY_MAX_BYPASS = new PandaCustomizablePermission("Priority.Max.Bypass",
+			"protectionblocks.priority.max.bypass");
+
 	public static final PandaParametizedPermission MAX_TEMPLATE = new PandaParametizedPermission("Max.Template",
 			"protectionblocks.max.{max}");
 	public static final PandaPermission MAX_BYPASS = new PandaCustomizablePermission("Max.Bypass",
 			"protectionblocks.max.bypass");
+
 	public static final PandaParametizedPermission BLOCK_MAX_TEMPLATE = new PandaParametizedPermission(
 			"Blocks.Max.Template", "protectionblocks.{block}.max.{max}");
 	public static final PandaParametizedPermission BLOCK_MAX_BYPASS = new PandaParametizedPermission(
 			"Blocks.Max.Bypass", "protectionblocks.{block}.max.bypass");
+
+	public static Integer getPriorityMaxAvailable(Player pl) {
+		return getPriorityMaxAvailable(pl, null);
+	}
+
+	public static Integer getPriorityMaxAvailable(Player pl, Integer defaultIfNull) {
+		return PRIORITY_MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
+				.map(entry -> entry.getValue().containsKey("max") ? stringToInt(entry.getValue().get("max")) : null)
+				.filter(Objects::nonNull).sorted((int1, int2) -> int2.compareTo(int1)).findFirst()
+				.orElse(defaultIfNull);
+	}
 
 	public static Integer getGeneralMaxCapacity(Player pl) {
 		return getGeneralMaxCapacity(pl, null);

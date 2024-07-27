@@ -1,4 +1,4 @@
-package company.pluginName.Bukkit.Events.PlayerEnterExitRegion;
+package company.pluginName.Bukkit.Events.Listeners;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -21,7 +21,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerEnterExitProtectionEvent;
 
 @PandaListener
-public class PlayerEnterExitRegionBanListener implements Listener {
+public class PlayerBannedListener implements Listener {
 
 	private static final long MESSAGE_THRESHOLD = 1000 * 2;
 

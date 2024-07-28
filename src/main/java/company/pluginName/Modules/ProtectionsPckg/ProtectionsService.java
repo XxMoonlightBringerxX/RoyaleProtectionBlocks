@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -27,12 +28,18 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.UnloadMethod;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.Getter;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 
 @PandaService
 public class ProtectionsService {
+
+	@RegisteredPandaField("config")
+	private static final PandaBooleanField SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING = new PandaBooleanField(
+			"Settings.Protection.Allow-multi-thread-searching", false);
 
 	@PandaInject
 	private MainPluginClass plugin;
@@ -168,7 +175,9 @@ public class ProtectionsService {
 
 	public Stream<Protection> findProtectionsByArea(Location location1, Location location2, boolean includeBorder) {
 		SimpleLocationArea locationArea = SimpleLocationArea.of(location1, location2);
-		return protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList()).stream()
+		return StreamSupport
+				.stream(protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList())
+						.spliterator(), SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
 				.filter((prot) -> prot.getUtils().isInside(locationArea, includeBorder))
 				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
 	}
@@ -192,28 +201,36 @@ public class ProtectionsService {
 	public Stream<Protection> findProtectionParentsByArea(Location location1, Location location2,
 			boolean includeBorder) {
 		SimpleLocationArea locationArea = SimpleLocationArea.of(location1, location2);
-		return protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList()).stream()
+		return StreamSupport
+				.stream(protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList())
+						.spliterator(), SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
 				.filter((prot) -> prot.getParentProtection() == prot
 						&& prot.getUtils().isInsideAny(locationArea, includeBorder))
 				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
 	}
 
 	public Stream<Protection> getAllowedProtections(OfflinePlayer pl) {
-		return protectionByRegion.values().stream()
+		return StreamSupport
+				.stream(protectionByRegion.values().spliterator(),
+						SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
 				.filter(prot -> prot.getWorldGuardOwners().list().contains(pl.getUniqueId())
 						|| prot.getWorldGuardMembers().list().contains(pl.getUniqueId()));
 	}
 
 	public Protection findProtectionBySourceLocation(Location sourceLocation) {
-		return protectionByRegion.values().stream()
+		return StreamSupport
+				.stream(protectionByRegion.values().spliterator(),
+						SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
 				.filter(prot -> prot.getWorldName().equals(sourceLocation.getWorld().getName())
 						&& prot.getLocation().distance(sourceLocation) < 1D)
 				.findFirst().orElse(null);
 	}
 
 	public Protection findProtectionBySourceBlock(Block sourceBlock) {
-		return protectionByRegion.values().stream().filter(prot -> prot.getUtils().isProtectionBlock(sourceBlock))
-				.findFirst().orElse(null);
+		return StreamSupport
+				.stream(protectionByRegion.values().spliterator(),
+						SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
+				.filter(prot -> prot.getUtils().isProtectionBlock(sourceBlock)).findFirst().orElse(null);
 	}
 
 	public List<Protection> findProtectionsByOwner(UUID owner) {

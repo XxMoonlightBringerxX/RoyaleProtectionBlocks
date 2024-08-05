@@ -15,7 +15,6 @@ import org.bukkit.scheduler.BukkitTask;
 
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Message;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -31,6 +30,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoub
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 
 @PandaService
 public class ProtectionParticlesService {
@@ -179,11 +179,11 @@ public class ProtectionParticlesService {
 
 							if (j <= length) {
 								for (long k = 0; k <= length; k++) {
-									if (currentProtections.stream().anyMatch(
-											prot -> !prot.isDeleted() && prot.isInside(diagonalLocation, true))) {
+									if (currentProtections.stream().anyMatch(prot -> !prot.isDeleted()
+											&& prot.isInside(SimpleLocation.of(diagonalLocation), true))) {
 										Optional<Pair<Protection, Long>> coincidences = currentProtections.stream()
 												.filter(prot -> !prot.isDeleted()
-														&& prot.isInside(diagonalLocation, true))
+														&& prot.isInside(SimpleLocation.of(diagonalLocation), true))
 												.map(prot -> Pair.of(prot, Arrays
 														.asList(((diagonalLocation.getY() == currentLocation.getY()
 																|| diagonalLocation.getY() == prot.getLocation().getY())

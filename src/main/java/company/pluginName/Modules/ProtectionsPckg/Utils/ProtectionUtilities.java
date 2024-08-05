@@ -92,10 +92,6 @@ public class ProtectionUtilities {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canToggleBlock(IProtection protection, Player pl) {
-		return protection.isOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
-	}
-
 	public static boolean canViewBoundaries(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
@@ -148,6 +144,22 @@ public class ProtectionUtilities {
 
 	public static boolean canChangePriority(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.PRIORITY_OTHERS.hasPermission(pl);
+	}
+
+	public static boolean canMerge(IProtection protection, Player pl) {
+		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MERGE_OTHERS.hasPermission(pl);
+	}
+
+	public static boolean canSplit(IProtection protection, Player pl) {
+		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.SPLIT_OTHERS.hasPermission(pl);
+	}
+
+	public static boolean canHideBlock(IProtection protection, Player pl) {
+		return protection.isOwner(pl.getUniqueId()) || PermissionsService.HIDE_OTHERS.hasPermission(pl);
+	}
+
+	public static boolean canShowBlock(IProtection protection, Player pl) {
+		return protection.isOwner(pl.getUniqueId()) || PermissionsService.SHOW_OTHERS.hasPermission(pl);
 	}
 
 }

@@ -89,11 +89,11 @@ public class ProtectionBoundaries {
 		Location loc2 = this.protection.getUtils().getProtectionArea().getMaxLocation().toLocation();
 
 		int minX = loc1.getBlockX();
-		int maxX = loc2.getBlockX() + 1;
+		int maxX = loc2.getBlockX();
 		int minY = loc1.getBlockY();
-		int maxY = loc2.getBlockY() + 1;
+		int maxY = loc2.getBlockY();
 		int minZ = loc1.getBlockZ();
-		int maxZ = loc2.getBlockZ() + 1;
+		int maxZ = loc2.getBlockZ();
 
 		for (double x = minX; x <= maxX; x += 0.25) {
 			locations.add(new Location(world, x, minY, minZ));

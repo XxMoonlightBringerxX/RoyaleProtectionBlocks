@@ -69,6 +69,51 @@ public class Exceptions {
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_PRIORITYBELOWZERO,
 				"Error.Exception.protection.PriorityBelowZero", "&cYou must provide a number higher or equal to zero!");
 
+		public static final ThrowableField MERGETOOFAR = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGETOOFAR, "Error.Exception.protection.MergeTooFar",
+				"&cThe specified parent protection is far from the child protection!");
+
+		public static final ThrowableField MERGESAMEPROTECTION = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGESAMEPROTECTION,
+				"Error.Exception.protection.MergeSameProtection", "&cYou can't merge the protection with itself!");
+
+		public static final ThrowableField ALREADYMERGED = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_ALREADYMERGED,
+				"Error.Exception.protection.AlreadyMerged",
+				"&cThe protection is already merged with the specified protection!");
+
+		public static final ThrowableField NOTMERGED = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_NOTMERGED, "Error.Exception.protection.NotMerged",
+				"&cThe protection is not merged to any other protection!");
+
+		public static final ThrowableField BLOCKALREADYSHOWN = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKALREADYSHOWN,
+				"Error.Exception.protection.BlockAlreadyShown", "&cThe protection block is already shown!");
+
+		public static final ThrowableField BLOCKALREADYSHOWNMULTIPLE = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKALREADYSHOWNMULTIPLE,
+				"Error.Exception.protection.BlockAlreadyShownMultiple",
+				"&cAll the protection blocks in this protection are already shown!");
+
+		public static final ThrowableField BLOCKALREADYHIDDEN = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKALREADYHIDDEN,
+				"Error.Exception.protection.BlockAlreadyHidden", "&cThe protection block is already hidden!");
+
+		public static final ThrowableField BLOCKALREADYHIDDENMULTIPLE = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKALREADYHIDDENMULTIPLE,
+				"Error.Exception.protection.BlockAlreadyHiddenMultiple",
+				"&cAll the protection blocks in this protection are already hidden!");
+
+		public static final ThrowableField BLOCKOVERLAPING = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKOVERLAPING,
+				"Error.Exception.protection.BlockOverlaping",
+				"&cYou can't show the protection block if there's a block placed where the protection block should be located!");
+
+		public static final ThrowableField BLOCKOVERLAPINGMULTIPLE = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKOVERLAPINGMULTIPLE,
+				"Error.Exception.protection.BlockOverlapingMultiple",
+				"&cYou can't show the protection blocks if one or more protection blocks in this protection has a block placed where the protection block should be located!");
+
 		public static class Delete {
 
 			public static final ThrowableField PERMISSIONDENIED = new ThrowableField(

@@ -34,7 +34,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
 		id = "priority",
-		pathName = "priority",
+		pathName = "Priority",
 		defaultName = "priority",
 		defaultDescription = "Set the priority of the current protection",
 		defaultAliases = "p",
@@ -113,7 +113,6 @@ public class PrioritySubCommand extends PandaSubCommand {
 										: protection.getRegionId();
 								String command = "/" + getCommandPath() + " " + parameters.getParameters().get(0) + " "
 										+ displayName;
-								System.out.println(command);
 								Replacement[] replacements = placeholdersService.getProtectionReplacements(protection);
 								MessageTemplate.inst("{line}").setReplacements(new Replacement("{line}",
 										() -> MessageTemplate.inst(

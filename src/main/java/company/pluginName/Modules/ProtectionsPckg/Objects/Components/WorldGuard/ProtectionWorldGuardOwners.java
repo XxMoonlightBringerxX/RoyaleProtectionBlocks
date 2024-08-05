@@ -34,7 +34,7 @@ public class ProtectionWorldGuardOwners {
 
 		this.protection.getChildProtections().forEach(child -> {
 			try {
-				child.getWorldGuardOwners().add(owner);
+				((Protection) child).getWorldGuardOwners().add(owner);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
@@ -50,7 +50,7 @@ public class ProtectionWorldGuardOwners {
 
 		this.protection.getChildProtections().forEach(child -> {
 			try {
-				child.getWorldGuardOwners().remove(owner);
+				((Protection) child).getWorldGuardOwners().remove(owner);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}

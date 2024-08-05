@@ -35,6 +35,7 @@ import lombok.AllArgsConstructor;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRemovalRequestInput;
@@ -307,21 +308,21 @@ public class EventsUtils {
 		return BlockBreakResult.IGNORE;
 	}
 
-	public static BlockInteractResult onVanillaBlockInteractEvent(Player player, Protection protection) {
+	public static BlockInteractResult onVanillaBlockInteractEvent(Player player, IProtection protection) {
 		return onBlockInteractEvent(EventOrigin.VANILLA, player, protection);
 	}
 
-	public static BlockInteractResult onOraxenBlockInteractEvent(Player player, Protection protection) {
+	public static BlockInteractResult onOraxenBlockInteractEvent(Player player, IProtection protection) {
 		return onBlockInteractEvent(EventOrigin.ORAXEN, player, protection);
 	}
 
-	public static BlockInteractResult onItemsAdderBlockInteractEvent(Player player, Protection protection) {
+	public static BlockInteractResult onItemsAdderBlockInteractEvent(Player player, IProtection protection) {
 		return onBlockInteractEvent(EventOrigin.ITEMS_ADDER, player, protection);
 	}
 
 	private static BlockInteractResult onBlockInteractEvent(EventOrigin eventOrigin, Player player,
-			Protection protection) {
-		ProtectionBlock protectionBlock = protection.getProtectionBlock().getObject();
+			IProtection protection) {
+		ProtectionBlock protectionBlock = ((Protection) protection).getProtectionBlock().getObject();
 
 		if (protectionBlock != null && protectionBlock.getInformation().getItemType() != eventOrigin.itemType) {
 			return BlockInteractResult.IGNORE;

@@ -1,5 +1,8 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -15,6 +18,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import lombok.Getter;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -36,6 +40,9 @@ public class ViewSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsService protectionsService;
 
+	@Getter
+	private List<String> registeredKeyOnlyParameters = Arrays.asList("--all");
+
 	public ViewSubCommand() throws InstantiationException {
 		super();
 	}
@@ -44,10 +51,19 @@ public class ViewSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
+			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 			if (protection != null) {
 				if (ProtectionUtilities.canViewBoundaries(protection, pl)) {
 					protection.getBoundaries().toggleProtectionView();
+					if (parameters.getKeyOnlyParameters().contains("--all")) {
+						protection.getParentProtection().getChildProtections().forEach(childProtection -> {
+							Protection internalChildProtection = (Protection) childProtection;
+							if (internalChildProtection.getBoundaries().isProtectionViewActive() != protection
+									.getBoundaries().isProtectionViewActive()) {
+								internalChildProtection.getBoundaries().toggleProtectionView();
+							}
+						});
+					}
 				} else {
 					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTOWNER.applyPrefix()).process()
 							.sendMessage(sender);

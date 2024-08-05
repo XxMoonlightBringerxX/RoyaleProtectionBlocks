@@ -24,6 +24,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerEnterExitProtectionEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 
 @PandaListener
 public class PlayerEnterExitRegionTrigger implements Listener {
@@ -51,13 +52,15 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionCreation(ProtectionCreationEvent e) {
-		Bukkit.getOnlinePlayers().stream().filter(pl -> e.getProtection().isInside(pl.getLocation(), true))
+		Bukkit.getOnlinePlayers().stream()
+				.filter(pl -> e.getProtection().isInside(SimpleLocation.of(pl.getLocation()), true))
 				.forEach(pl -> processMovement(e, pl, pl.getLocation(), false));
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionRemoval(ProtectionRemovalEvent e) {
-		Bukkit.getOnlinePlayers().stream().filter(pl -> e.getProtection().isInside(pl.getLocation(), true))
+		Bukkit.getOnlinePlayers().stream()
+				.filter(pl -> e.getProtection().isInside(SimpleLocation.of(pl.getLocation()), true))
 				.forEach(pl -> processMovement(e, pl, pl.getLocation(), false));
 	}
 

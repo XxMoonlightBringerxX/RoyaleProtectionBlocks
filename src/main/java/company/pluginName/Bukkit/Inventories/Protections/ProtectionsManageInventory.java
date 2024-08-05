@@ -3,7 +3,6 @@ package company.pluginName.Bukkit.Inventories.Protections;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -36,7 +35,9 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInven
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionHideBlockRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRenameRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionShowBlockRequestInput;
 
 @Inventory("protections_manage")
 public class ProtectionsManageInventory extends ChestInventoryObject {
@@ -59,11 +60,13 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 	private static PlayerInteractionsService playerInteractionsService;
 
 	private Protection protection;
+	private Protection childProtection;
 
-	public ProtectionsManageInventory(Player player, Protection protection) {
+	public ProtectionsManageInventory(Player player, Protection protection, Protection childProtection) {
 		super(player);
 
 		this.protection = protection;
+		this.childProtection = childProtection;
 	}
 
 	@Override
@@ -111,10 +114,14 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@ItemGenerator("Toggle-block-button")
 	private ItemStack generateToggleBlockButton(Item item) {
-		return ProtectionUtilities.canToggleBlock(protection, getPlayer()) ? item.getItems()
-				.get(protection.getUtils().isProtectionBlockShown() ? TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH
-						: TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH)
-				: null;
+		return (protection.getUtils().isProtectionBlockShown()
+				? ProtectionUtilities.canHideBlock(protection, getPlayer())
+				: ProtectionUtilities.canShowBlock(protection, getPlayer()))
+						? item.getItems()
+								.get(protection.getUtils().isProtectionBlockShown()
+										? TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH
+										: TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH)
+						: null;
 	}
 
 	@ItemGenerator("Toggle-boundary-button")
@@ -201,19 +208,19 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@ItemExecutor("Toggle-block-button")
 	private void executeToggleBlockButton() {
-		if (protection.getUtils().isProtectionBlockShown()) {
-			protection.getUtils().hideProtectionBlock();
-		} else {
-			Block block = protection.getLocation().getBlock();
-			if (block.getType() == Material.AIR) {
-				protection.getUtils().showProtectionBlock();
+		try {
+			if (protection.getUtils().isProtectionBlockShown()) {
+				playerInteractionsService
+						.protectionHideBlockRequest(ProtectionHideBlockRequestInput.inst(getPlayer(), protection));
+				updateInventory();
 			} else {
-				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_BLOCKEDBYBLOCK.applyPrefix()).process()
-						.sendMessage(getPlayer());
-				return;
+				playerInteractionsService
+						.protectionShowBlockRequest(ProtectionShowBlockRequestInput.inst(getPlayer(), protection));
+				updateInventory();
 			}
+		} catch (RoyaleProtectionBlocksException e) {
+			e.sendError(getPlayer());
 		}
-		updateInventory();
 	}
 
 	@ItemExecutor("Toggle-boundary-button")

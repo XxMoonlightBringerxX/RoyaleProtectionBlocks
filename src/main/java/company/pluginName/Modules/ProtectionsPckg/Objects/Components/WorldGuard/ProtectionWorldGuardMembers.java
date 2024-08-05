@@ -34,7 +34,7 @@ public class ProtectionWorldGuardMembers {
 
 		this.protection.getChildProtections().forEach(child -> {
 			try {
-				child.getWorldGuardMembers().add(member);
+				((Protection) child).getWorldGuardMembers().add(member);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
@@ -46,7 +46,7 @@ public class ProtectionWorldGuardMembers {
 
 		this.protection.getChildProtections().forEach(child -> {
 			try {
-				child.getWorldGuardMembers().remove(member);
+				((Protection) child).getWorldGuardMembers().remove(member);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}

@@ -82,7 +82,7 @@ public class ProtectionWorldGuardFlags {
 
 			this.protection.getChildProtections().forEach(child -> {
 				try {
-					child.getWorldGuardFlags().setFlag(request);
+					((Protection) child).getWorldGuardFlags().setFlag(request);
 				} catch (RoyaleProtectionBlocksExceptionImpl e) {
 					e.sendError(Bukkit.getConsoleSender());
 				}

@@ -70,6 +70,18 @@ public class PermissionsService extends PandaPermissionsService {
 	public static final PandaPermission PRIORITY_OTHERS = new PandaCustomizablePermission("Priority.Others",
 			"protectionblocks.priority.others");
 
+	public static final PandaPermission MERGE_OTHERS = new PandaCustomizablePermission("Merge.Others",
+			"protectionblocks.merge.others");
+
+	public static final PandaPermission SPLIT_OTHERS = new PandaCustomizablePermission("Split.Others",
+			"protectionblocks.split.others");
+
+	public static final PandaPermission HIDE_OTHERS = new PandaCustomizablePermission("Hide.Others",
+			"protectionblocks.hide.others");
+
+	public static final PandaPermission SHOW_OTHERS = new PandaCustomizablePermission("Show.Others",
+			"protectionblocks.show.others");
+
 	public static final PandaPermission BLOCKS_CREATE = new PandaCustomizablePermission("Blocks.Create",
 			"protectionblocks.blocks.create");
 	public static final PandaPermission BLOCKS_EDIT = new PandaCustomizablePermission("Blocks.Edit",

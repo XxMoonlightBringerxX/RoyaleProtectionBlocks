@@ -155,7 +155,7 @@ public class ProtectionsListener implements Listener {
 				Protection protection = protectionsService.findProtectionBySourceBlock(e.getClickedBlock());
 				if (protection != null) {
 					e.setCancelled(true);
-					EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection.getParentProtection());
+					EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
 					return;
 				}
 				break;
@@ -197,7 +197,7 @@ public class ProtectionsListener implements Listener {
 		for (Protection protection : protections) {
 			if (protection.getBoundaries().isProtectionViewEntity(e.getRightClicked())) {
 				e.setCancelled(true);
-				EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection.getParentProtection());
+				EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
 				break;
 			}
 		}

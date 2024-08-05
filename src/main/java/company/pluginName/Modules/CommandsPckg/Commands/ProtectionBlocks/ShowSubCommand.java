@@ -1,13 +1,14 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import org.bukkit.block.Block;
+import java.util.Arrays;
+import java.util.List;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
@@ -16,7 +17,10 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
+import lombok.Getter;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionShowBlockRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -38,6 +42,12 @@ public class ShowSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsService protectionsService;
 
+	@PandaInject
+	private static PlayerInteractionsService playerInteractionsService;
+
+	@Getter
+	private List<String> registeredKeyOnlyParameters = Arrays.asList("--all");
+
 	public ShowSubCommand() throws InstantiationException {
 		super();
 	}
@@ -48,24 +58,15 @@ public class ShowSubCommand extends PandaSubCommand {
 		if (pl != null) {
 			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 			if (protection != null) {
-				if (ProtectionUtilities.canToggleBlock(protection, pl)) {
-					if (!protection.getUtils().isProtectionBlock()) {
-						Block block = protection.getLocation().getBlock();
-						if (block.getType() == Material.AIR.getMaterial()) {
-							protection.getUtils().showProtectionBlock();
-							MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY.applyPrefix()).process()
-									.sendMessage(sender);
-						} else {
-							MessageTemplate.inst(Messages.ERROR_PROTECTIONS_BLOCKEDBYBLOCK.applyPrefix()).process()
-									.sendMessage(sender);
-						}
-					} else {
-						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_BLOCKALREADYSHOWN.applyPrefix()).process()
-								.sendMessage(sender);
-					}
-				} else {
-					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTOWNER.applyPrefix()).process()
+				try {
+					boolean recursive = parameters.getKeyOnlyParameters().contains("--all");
+					playerInteractionsService.protectionShowBlockRequest(ProtectionShowBlockRequestInput
+							.inst(pl, recursive ? protection.getParentProtection() : protection)
+							.setRecursive(recursive));
+					MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY.applyPrefix()).process()
 							.sendMessage(sender);
+				} catch (RoyaleProtectionBlocksException e) {
+					e.sendError(sender);
 				}
 			} else {
 				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()

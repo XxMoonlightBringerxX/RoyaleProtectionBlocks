@@ -21,7 +21,6 @@ import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation.SimpleLocationArea;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -33,6 +32,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBool
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.Getter;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
 
 @PandaService
 public class ProtectionsService {
@@ -136,13 +136,13 @@ public class ProtectionsService {
 	 */
 
 	public synchronized void registerProtection(Protection protection) {
-		protectionByRegion.put(protection.getRegionId(), protection);
+		protectionByRegion.put(protection.getRegionId().toLowerCase(), protection);
 		protectionsByOwner.computeIfAbsent(protection.getOwnerUuid(), (ownerUuid) -> new ArrayList<>()).add(protection);
 		protectionsByWorld.computeIfAbsent(protection.getWorldName(), (worldName) -> new ArrayList<>()).add(protection);
 	}
 
 	public synchronized void unregisterProtection(Protection protection) {
-		protectionByRegion.remove(protection.getRegionId());
+		protectionByRegion.remove(protection.getRegionId().toLowerCase());
 		protectionsByOwner.computeIfAbsent(protection.getOwnerUuid(), (ownerUuid) -> new ArrayList<>())
 				.remove(protection);
 		protectionsByWorld.computeIfAbsent(protection.getWorldName(), (worldName) -> new ArrayList<>())
@@ -154,7 +154,7 @@ public class ProtectionsService {
 	 */
 
 	public Protection findProtectionById(String id) {
-		return this.protectionByRegion.get(id);
+		return this.protectionByRegion.get(id.toLowerCase());
 	}
 
 	public Protection findProtectionByLocation(Location location) {

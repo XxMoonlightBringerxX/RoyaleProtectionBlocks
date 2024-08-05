@@ -55,7 +55,7 @@ public class ProtectionBlocksCommand extends PandaCommand {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 
 		if (pl != null && parameters.getParameters().size() == 0) {
-			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
+			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
 			if (protection != null && ProtectionUtilities.canManage(protection, pl)) {
 				try {
 					playerInteractionsService.openProtectionManagementInventoryRequest(

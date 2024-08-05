@@ -39,8 +39,6 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionA
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBoundaries;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionDisplayItem;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation.SimpleLocationArea;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardBanneds;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardFlags;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardMembers;
@@ -55,6 +53,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.Location.LocationReference;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
 import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaParametizedPermission.Parameter;
 import darkpanda73.PandaUtils.Utilities.Java.Observable;
@@ -68,6 +67,8 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCrea
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
 
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -81,6 +82,10 @@ public class Protection implements IProtection {
 	@RegisteredPandaField("config")
 	private static PandaIntegerField SETTINGS_PROTECTION_MAXIMUMDISPLAYNAMELENGTH = new PandaIntegerField(
 			"Settings.Protection.Maximum-display-name-length", 255);
+
+	@RegisteredPandaField("config")
+	private static PandaBooleanField SETTINGS_PROTECTION_MUSTBECLOSEFORMERGE = new PandaBooleanField(
+			"Settings.Protection.Must-be-close-for-merge", true);
 
 	@PandaInject
 	private static ProtectionSettingsService protectionSettingsService;
@@ -554,6 +559,17 @@ public class Protection implements IProtection {
 
 				checkRemovalConditions(player);
 
+				unsetParentProtection();
+
+				new ArrayList<>(getChildProtections()).forEach(protection -> {
+					try {
+						protection.unsetParentProtection();
+						((Protection) protection).saveData();
+					} catch (RoyaleProtectionBlocksException e) {
+						e.sendError(Bukkit.getConsoleSender());
+					}
+				});
+
 				deleteProtectedRegion();
 
 				protectionsService.unregisterProtection(this);
@@ -632,10 +648,24 @@ public class Protection implements IProtection {
 	 * Merge methods
 	 */
 
-	private Protection parentProtection = null;
-	private List<Protection> childProtections = new ArrayList<>();
+	private IProtection parentProtection = null;
+	private List<IProtection> childProtections = new ArrayList<>();
 
-	public void setParentProtection(Protection protection) {
+	public void setParentProtection(IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		if (SETTINGS_PROTECTION_MUSTBECLOSEFORMERGE.isTrue()) {
+			if (!protection.isInside(this.getUtils().getProtectionArea(), true)) {
+				throw Exceptions.Protections.MERGETOOFAR.generateException();
+			}
+		}
+
+		if (this.parentProtection == protection) {
+			throw Exceptions.Protections.ALREADYMERGED.generateException();
+		}
+
+		if (this == protection) {
+			throw Exceptions.Protections.MERGESAMEPROTECTION.generateException();
+		}
+
 		unsetParentProtection();
 
 		while (protection.getParentProtection() != protection) {
@@ -646,14 +676,14 @@ public class Protection implements IProtection {
 		this.parentProtection.getChildProtections().add(this);
 	}
 
-	public void unsetParentProtection() {
+	public void unsetParentProtection() throws RoyaleProtectionBlocksExceptionImpl {
 		if (this.parentProtection != null) {
 			this.parentProtection.getChildProtections().remove(this);
 			this.parentProtection = null;
 		}
 	}
 
-	public Protection getParentProtection() {
+	public IProtection getParentProtection() {
 		return this.parentProtection != null ? this.parentProtection.getParentProtection() : this;
 	}
 
@@ -747,13 +777,18 @@ public class Protection implements IProtection {
 	}
 
 	@Override
-	public boolean isInside(Location location, boolean includeBorder) {
-		return this.getUtils().isInside(SimpleLocation.of(location), includeBorder);
+	public void hideBlock() {
+		this.getUtils().hideProtectionBlock();
 	}
 
 	@Override
-	public boolean isInside(Location firstLocation, Location secondLocation, boolean includeBorder) {
-		return this.getUtils().isInside(SimpleLocationArea.of(firstLocation, secondLocation), includeBorder);
+	public void showBlock() {
+		this.getUtils().showProtectionBlock();
+	}
+
+	@Override
+	public boolean isBlockShown() {
+		return this.getUtils().isProtectionBlockShown();
 	}
 
 	public boolean isInside(SimpleLocation location, boolean includeBorder) {

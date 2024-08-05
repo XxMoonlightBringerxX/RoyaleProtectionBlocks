@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.Exceptions;
@@ -166,7 +167,13 @@ public class SQLService extends PandaSQLService {
 
 		protections.stream().filter(parentProtection -> parentProtections.containsKey(parentProtection.getRegionId()))
 				.forEach(parentProtection -> parentProtections.get(parentProtection.getRegionId())
-						.forEach(protection -> protection.setParentProtection(parentProtection)));
+						.forEach(protection -> {
+							try {
+								protection.setParentProtection(parentProtection);
+							} catch (RoyaleProtectionBlocksExceptionImpl e) {
+								e.sendError(Bukkit.getConsoleSender());
+							}
+						}));
 
 		return protections;
 	}
@@ -175,6 +182,10 @@ public class SQLService extends PandaSQLService {
 		Table t = this.getDatabase().getTable("Protections");
 		HashMap<Column, Data> values = new HashMap<>();
 		values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
+		values.put(t.getColumn("ParentRegionId"),
+				protection.getParentProtection() != protection
+						? new Data(Types.VARCHAR, protection.getParentProtection().getRegionId())
+						: new Data(Types.NULL, null));
 		values.put(t.getColumn("OwnerUuid"), new Data(Types.CHAR, protection.getOwnerUuid().toString()));
 		values.put(t.getColumn("ProtectionBlockId"),
 				new Data(Types.VARCHAR, protection.getProtectionBlock().getIdentifier()));

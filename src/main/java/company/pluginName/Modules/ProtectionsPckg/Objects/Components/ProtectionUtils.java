@@ -1,23 +1,17 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects.Components;
 
-import java.util.function.BiFunction;
-
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils.SimpleLocation.SimpleLocationArea;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.WorldUtilities;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
 
 @RequiredArgsConstructor
 public class ProtectionUtils {
@@ -140,101 +134,6 @@ public class ProtectionUtils {
 
 	public void hideProtectionBlock() {
 		ProtectionUtilities.hideBlock(this.protection.getLocation().getBlock());
-	}
-
-	@AllArgsConstructor
-	@Getter
-	@ToString
-	@EqualsAndHashCode
-	public static class SimpleLocation {
-
-		private static final BiFunction<SimpleLocation, SimpleLocation, Boolean> HIGHER_OR_EQUAL_THAN_CHECKING = (loc1,
-				loc2) -> loc1.getX() >= loc2.getX() && loc1.getY() >= loc2.getY() && loc1.getZ() >= loc2.getZ();
-		private static final BiFunction<SimpleLocation, SimpleLocation, Boolean> LOWER_OR_EQUAL_THAN_CHECKING = (loc1,
-				loc2) -> loc1.getX() <= loc2.getX() && loc1.getY() <= loc2.getY() && loc1.getZ() <= loc2.getZ();
-
-		private String worldName;
-		private double x;
-		private double y;
-		private double z;
-
-		public SimpleLocation add(double x, double y, double z) {
-			this.x += x;
-			this.y += y;
-			this.z += z;
-			return this;
-		}
-
-		public SimpleLocation substract(double x, double y, double z) {
-			this.x -= x;
-			this.y -= y;
-			this.z -= z;
-			return this;
-		}
-
-		public SimpleLocation clone() {
-			return new SimpleLocation(worldName, x, y, z);
-		}
-
-		public Location toLocation() {
-			return new Location(Bukkit.getWorld(worldName), x, y, z);
-		}
-
-		public static SimpleLocation of(Location location) {
-			return new SimpleLocation(location.getWorld().getName(), location.getX(), location.getY(), location.getZ());
-		}
-
-		@Getter
-		@ToString
-		@EqualsAndHashCode
-		public static class SimpleLocationArea {
-
-			private String worldName;
-			private SimpleLocation minLocation;
-			private SimpleLocation maxLocation;
-
-			public SimpleLocationArea(String worldName, SimpleLocation minLocation, SimpleLocation maxLocation) {
-				this.worldName = worldName;
-				this.minLocation = minLocation;
-				this.maxLocation = maxLocation;
-			}
-
-			public SimpleLocationArea(String worldName, Location location1, Location location2) {
-				this.worldName = worldName;
-				this.minLocation = new SimpleLocation(worldName, Math.min(location1.getX(), location2.getX()),
-						Math.min(location1.getY(), location2.getY()), Math.min(location1.getZ(), location2.getZ()));
-				this.maxLocation = new SimpleLocation(worldName, Math.max(location1.getX(), location2.getX()),
-						Math.max(location1.getY(), location2.getY()), Math.max(location1.getZ(), location2.getZ()));
-			}
-
-			public boolean isInside(SimpleLocation location) {
-				if (!getWorldName().equals(location.getWorldName())) {
-					return false;
-				}
-
-				return HIGHER_OR_EQUAL_THAN_CHECKING.apply(location, minLocation)
-						&& LOWER_OR_EQUAL_THAN_CHECKING.apply(location, maxLocation);
-			}
-
-			public boolean isInside(SimpleLocationArea locationArea) {
-				if (!getWorldName().equals(locationArea.getWorldName())) {
-					return false;
-				}
-
-				return HIGHER_OR_EQUAL_THAN_CHECKING.apply(locationArea.getMaxLocation(), minLocation)
-						&& LOWER_OR_EQUAL_THAN_CHECKING.apply(locationArea.getMinLocation(), maxLocation);
-			}
-
-			public SimpleLocationArea clone() {
-				return new SimpleLocationArea(worldName, minLocation.clone(), maxLocation.clone());
-			}
-
-			public static SimpleLocationArea of(Location location1, Location location2) {
-				return new SimpleLocationArea(location1.getWorld().getName(), location1, location2);
-			}
-
-		}
-
 	}
 
 }

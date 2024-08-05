@@ -1,6 +1,7 @@
 package company.pluginName.API.Services;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
@@ -24,17 +25,22 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
+import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionHideBlockRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionKickRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionMergeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionPriorityChangeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRemovalRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRenameRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSetHomeRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionShowBlockRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSplitRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTeleportHomeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Banneds.ProtectionBannedAddRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Banneds.ProtectionBannedRemoveRequestInput;
@@ -55,25 +61,23 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	@PandaInject
 	private CombatLogXAPI combatLogXApi;
 
+	@Override
 	public void openProtectionManagementInventoryRequest(OpenProtectionManagementInventoryRequestInput input)
 			throws RoyaleProtectionBlocksExceptionImpl {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
-
-		if (input.getProtection().isBlocked()) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
 
 		if (!ProtectionUtilities.canManage(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 		}
 
+		Protection internalParentProtection = protectionToInternalProtection(
+				input.getProtection().getParentProtection());
 		Protection internalProtection = protectionToInternalProtection(input.getProtection());
 
-		new ProtectionsManageInventory(input.getPlayer(), internalProtection).openInventory();
+		new ProtectionsManageInventory(input.getPlayer(), internalParentProtection, internalProtection).openInventory();
 	}
 
+	@Override
 	public void openProtectionRemovalInventoryRequest(OpenProtectionRemovalInventoryRequestInput input)
 			throws RoyaleProtectionBlocksExceptionImpl {
 		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
@@ -93,6 +97,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}).openInventory();
 	}
 
+	@Override
 	public void protectionRemovalRequest(ProtectionRemovalRequestInput input)
 			throws RoyaleProtectionBlocksExceptionImpl {
 		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
@@ -166,15 +171,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 	}
 
+	@Override
 	public void protectionMemberAddRequest(ProtectionMemberAddRequestInput input)
 			throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
-
-		if (input.getProtection().isBlocked()) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
 
 		if (!ProtectionUtilities.canAddMember(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.Members.Save.PERMISSIONDENIED.generateException();
@@ -187,6 +187,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		input.getProtection().addMember(input.getMember());
 	}
 
+	@Override
 	public void protectionMemberRemoveRequest(ProtectionMemberRemoveRequestInput input)
 			throws RoyaleProtectionBlocksException {
 		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
@@ -206,14 +207,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		input.getProtection().removeMember(input.getMember());
 	}
 
+	@Override
 	public void protectionOwnerAddRequest(ProtectionOwnerAddRequestInput input) throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
-
-		if (input.getProtection().isBlocked()) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
 
 		if (!ProtectionUtilities.canAddOwner(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.Owners.Save.PERMISSIONDENIED.generateException();
@@ -226,6 +222,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		input.getProtection().addOwner(input.getOwner());
 	}
 
+	@Override
 	public void protectionOwnerRemoveRequest(ProtectionOwnerRemoveRequestInput input)
 			throws RoyaleProtectionBlocksException {
 		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
@@ -245,15 +242,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		input.getProtection().removeOwner(input.getOwner());
 	}
 
+	@Override
 	public void protectionBannedAddRequest(ProtectionBannedAddRequestInput input)
 			throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
-
-		if (input.getProtection().isBlocked()) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
 
 		if (!ProtectionUtilities.canAddBanned(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.Banneds.Save.PERMISSIONDENIED.generateException();
@@ -266,15 +258,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		input.getProtection().addBanned(input.getBanned());
 	}
 
+	@Override
 	public void protectionBannedRemoveRequest(ProtectionBannedRemoveRequestInput input)
 			throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
-
-		if (input.getProtection().isBlocked()) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
 
 		if (!ProtectionUtilities.canRemoveBanned(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.Banneds.Delete.PERMISSIONDENIED.generateException();
@@ -283,14 +270,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		input.getProtection().removeBanned(input.getBanned());
 	}
 
+	@Override
 	public boolean protectionKickRequest(ProtectionKickRequestInput input) throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
-
-		if (input.getProtection().isBlocked()) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
 
 		if (PermissionsService.KICK_BYPASS.hasPermission(input.getKicked())) {
 			throw Exceptions.Protections.KICKDENIEDBYPASS.generateException();
@@ -303,14 +285,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		return input.getProtection().kickPlayer(input.getKicked());
 	}
 
+	@Override
 	public void protectionSetHomeRequest(ProtectionSetHomeRequestInput input) throws Exception {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
-
-		if (input.getProtection().isBlocked()) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
 
 		if (!ProtectionUtilities.canSetHome(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
@@ -319,6 +296,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		input.getProtection().setHome(input.getPlayer().getLocation());
 	}
 
+	@Override
 	public void protectionTeleportHomeRequest(ProtectionTeleportHomeRequestInput input)
 			throws RoyaleProtectionBlocksException {
 		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONTELEPORTINCOMBAT.isTrue()
@@ -333,14 +311,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		input.getProtection().teleport(input.getPlayer());
 	}
 
+	@Override
 	public void protectionRenameRequest(ProtectionRenameRequestInput input) throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
-
-		if (input.getProtection().isBlocked()) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
 
 		if (!ProtectionUtilities.canRename(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
@@ -349,15 +322,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		input.getProtection().rename(input.getNewName());
 	}
 
+	@Override
 	public void protectionPriorityChangeRequest(ProtectionPriorityChangeRequestInput input)
 			throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
-
-		if (input.getProtection().isBlocked()) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
 
 		if (!ProtectionUtilities.canChangePriority(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
@@ -371,7 +339,123 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			}
 		}
 
-		input.getProtection().setPriority(input.getNewPriority());
+		try {
+			input.getProtection().setPriority(input.getNewPriority());
+			if (input.isRecursive()) {
+				input.getProtection().getChildProtections().forEach(child -> {
+					try {
+						child.setPriority(input.getNewPriority());
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				});
+			}
+		} catch (RuntimeException e) {
+			if (e.getCause() instanceof RoyaleProtectionBlocksException) {
+				throw (RoyaleProtectionBlocksException) e.getCause();
+			} else {
+				throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
+			}
+		}
+	}
+
+	@Override
+	public void protectionMergeRequest(ProtectionMergeRequestInput input) throws RoyaleProtectionBlocksException {
+		checkIfModifiable(input.getPlayer(), input.getProtection());
+		checkIfModifiable(input.getPlayer(), input.getParentProtection());
+
+		if (!ProtectionUtilities.canMerge(input.getProtection(), input.getPlayer())
+				|| !ProtectionUtilities.canMerge(input.getParentProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+		}
+
+		input.getProtection().setParentProtection(input.getParentProtection());
+		((Protection) input.getProtection()).saveData();
+	}
+
+	@Override
+	public void protectionSplitRequest(ProtectionSplitRequestInput input) throws RoyaleProtectionBlocksException {
+		checkIfModifiable(input.getPlayer(), input.getProtection());
+
+		if (!ProtectionUtilities.canSplit(input.getProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+		}
+
+		input.getProtection().unsetParentProtection();
+		((Protection) input.getProtection()).saveData();
+	}
+
+	@Override
+	public void protectionHideBlockRequest(ProtectionHideBlockRequestInput input)
+			throws RoyaleProtectionBlocksException {
+		// Preconditions
+
+		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+			throw Exceptions.Protections.INCOMBAT.generateException();
+		}
+
+		if (!ProtectionUtilities.canHideBlock(input.getProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+		}
+
+		if (!input.getProtection().isBlockShown() && (!input.isRecursive()
+				|| input.getProtection().getChildProtections().stream().noneMatch(IProtection::isBlockShown))) {
+			throw (input.isRecursive() ? Exceptions.Protections.BLOCKALREADYHIDDENMULTIPLE
+					: Exceptions.Protections.BLOCKALREADYHIDDEN).generateException();
+		}
+
+		// Actions
+
+		if (input.getProtection().isBlockShown()) {
+			input.getProtection().hideBlock();
+		}
+		if (input.isRecursive()) {
+			input.getProtection().getChildProtections().forEach(child -> {
+				if (child.isBlockShown()) {
+					child.hideBlock();
+				}
+			});
+		}
+	}
+
+	@Override
+	public void protectionShowBlockRequest(ProtectionShowBlockRequestInput input)
+			throws RoyaleProtectionBlocksException {
+		// Preconditions
+
+		checkIfModifiable(input.getPlayer(), input.getProtection());
+
+		if (!ProtectionUtilities.canHideBlock(input.getProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+		}
+
+		if (input.getProtection().isBlockShown() && (!input.isRecursive()
+				|| input.getProtection().getChildProtections().stream().allMatch(IProtection::isBlockShown))) {
+			throw (input.isRecursive() ? Exceptions.Protections.BLOCKALREADYSHOWNMULTIPLE
+					: Exceptions.Protections.BLOCKALREADYSHOWN).generateException();
+		}
+
+		if ((!input.getProtection().isBlockShown()
+				&& input.getProtection().getLocation().getBlock().getType() != Material.AIR.getMaterial())
+				|| (input.isRecursive()
+						&& input.getProtection().getChildProtections().stream().anyMatch(child -> !child.isBlockShown()
+								&& child.getLocation().getBlock().getType() != Material.AIR.getMaterial()))) {
+			throw (input.isRecursive() ? Exceptions.Protections.BLOCKOVERLAPINGMULTIPLE
+					: Exceptions.Protections.BLOCKOVERLAPING).generateException();
+		}
+
+		// Actions
+
+		if (!input.getProtection().isBlockShown()) {
+			input.getProtection().showBlock();
+		}
+		if (input.isRecursive()) {
+			input.getProtection().getChildProtections().forEach(child -> {
+				if (!child.isBlockShown()) {
+					child.showBlock();
+				}
+			});
+		}
 	}
 
 	private Protection protectionToInternalProtection(IProtection protection)
@@ -386,6 +470,20 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			return internalProtection;
 		}
 		return (Protection) protection;
+	}
+
+	private void checkIfModifiable(Player player, IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		if (CombatLogHookUtilities.isInCombat(player)) {
+			throw Exceptions.Protections.INCOMBAT.generateException();
+		}
+
+		if (protection.isBlocked()) {
+			throw Exceptions.Protections.BLOCKED.generateException();
+		}
+
+		if (protection.isDeleted()) {
+			throw Exceptions.Protections.NOTFOUND.generateException();
+		}
 	}
 
 }

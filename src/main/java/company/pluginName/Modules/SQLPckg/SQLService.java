@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.Exceptions;
@@ -23,21 +24,21 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.Referen
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.AutoPurgeLog;
 import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
-import darkpanda73.PandaUtils.PandaSQLModule.PandaSQLService;
-import darkpanda73.PandaUtils.PandaSQLModule.Annotations.PandaSQLConfig;
-import darkpanda73.PandaUtils.PandaSQLModule.Objects.Enums.ConditionType;
-import darkpanda73.PandaUtils.PandaSQLModule.Objects.Enums.SQLType;
-import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.Data;
-import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.Conditions.Condition;
-import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Column;
-import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Table;
-import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Constraints.ForeignConstraint;
-import darkpanda73.PandaUtils.PandaSQLModule.Objects.Objects.DataModel.Constraints.UniqueConstraint;
-import darkpanda73.PandaUtils.PandaUtilities.Location.LocationReference;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.PandaSQLService;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.Annotations.PandaSQLConfig;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Enums.ConditionType;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Enums.SQLType;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.Data;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.Conditions.Condition;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.DataModel.Column;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.DataModel.Table;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.DataModel.Constraints.ForeignConstraint;
+import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.DataModel.Constraints.UniqueConstraint;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 
-@PandaSQLConfig(allowMySQL = true, version = 12)
+@PandaSQLConfig(allowMySQL = true, version = 13)
 public class SQLService extends PandaSQLService {
 
 	@Override
@@ -49,7 +50,6 @@ public class SQLService extends PandaSQLService {
 								new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setPrimary(true)
 										.setNotNull(true),
 								new Column(t, "ParentRegionId", "VARCHAR(256)", Types.VARCHAR).setNotNull(false),
-								new Column(t, "CustomRegionId", "VARCHAR(256)", Types.VARCHAR),
 								new Column(t, "OwnerUuid", "CHAR(36)", Types.CHAR).setNotNull(true),
 								new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
 								new Column(t, "DisplayItem", "BLOB", Types.BLOB).setNotNull(false),
@@ -61,8 +61,7 @@ public class SQLService extends PandaSQLService {
 								new Column(t, "LocationZ", "INTEGER", Types.INTEGER).setNotNull(false),
 								new Column(t, "Blocked", "BOOLEAN", Types.BOOLEAN).setNotNull(false),
 								new Column(t, "BlockReason", "VARCHAR(64)", Types.VARCHAR).setNotNull(false))
-						.addUniqueConstraint(
-								new UniqueConstraint(t.getColumn("CustomRegionId"), t.getColumn("OwnerUuid")))
+						.addUniqueConstraint(new UniqueConstraint(t.getColumn("DisplayName"), t.getColumn("OwnerUuid")))
 						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ParentRegionId")),
 								Arrays.asList(t.getColumn("RegionId")))))
 
@@ -133,14 +132,15 @@ public class SQLService extends PandaSQLService {
 
 				if (set.getString("DisplayItem") != null) {
 					try {
-						protection.getDisplayItem().set(ItemStacksUtils.itemsParse(set.getBytes("DisplayItem"))[0]);
+						protection.getDisplayItem().set(ItemStacksUtils.itemsParse(set.getBytes("DisplayItem"),
+								new ItemStack[] { new ItemStack(Material.STONE) })[0]);
 					} catch (IllegalArgumentException e) {
 					}
 				}
 
 				if (set.getObject("LocationX") != null && set.getObject("LocationY") != null
 						&& set.getObject("LocationZ") != null) {
-					protection.setLocation(new LocationReference(set.getString("WorldName"), set.getInt("LocationX"),
+					protection.setLocation(new SimpleLocation(set.getString("WorldName"), set.getInt("LocationX"),
 							set.getInt("LocationY"), set.getInt("LocationZ")));
 				}
 
@@ -197,9 +197,9 @@ public class SQLService extends PandaSQLService {
 		values.put(t.getColumn("WorldName"), new Data(Types.VARCHAR, protection.getWorldName()));
 		values.put(t.getColumn("DisplayName"), new Data(Types.VARCHAR, protection.getDisplayName()));
 		values.put(t.getColumn("CreatedDate"), new Data(Types.BIGINT, protection.getCreatedDate()));
-		values.put(t.getColumn("LocationX"), new Data(Types.INTEGER, protection.getLocation().getBlockX()));
-		values.put(t.getColumn("LocationY"), new Data(Types.INTEGER, protection.getLocation().getBlockY()));
-		values.put(t.getColumn("LocationZ"), new Data(Types.INTEGER, protection.getLocation().getBlockZ()));
+		values.put(t.getColumn("LocationX"), new Data(Types.INTEGER, protection.getBukkitLocation().getBlockX()));
+		values.put(t.getColumn("LocationY"), new Data(Types.INTEGER, protection.getBukkitLocation().getBlockY()));
+		values.put(t.getColumn("LocationZ"), new Data(Types.INTEGER, protection.getBukkitLocation().getBlockZ()));
 		values.put(t.getColumn("Blocked"), new Data(Types.BOOLEAN, protection.isBlocked()));
 		values.put(t.getColumn("BlockReason"),
 				(protection.getBlockReason() != null ? new Data(Types.VARCHAR, protection.getBlockReason().name())
@@ -299,8 +299,10 @@ public class SQLService extends PandaSQLService {
 			while (set.next()) {
 				protectionBlocks.add(new ProtectionBlock(
 						new ProtectionBlockInformation(set.getString("Id"),
-								ItemStacksUtils.itemsParse(set.getBytes("Item"))[0], set.getInt("BlocksX"),
-								set.getInt("BlocksY"), set.getInt("BlocksZ"), set.getString("Permission"),
+								ItemStacksUtils.itemsParse(set.getBytes("Item"),
+										new ItemStack[] { new ItemStack(Material.STONE) })[0],
+								set.getInt("BlocksX"), set.getInt("BlocksY"), set.getInt("BlocksZ"),
+								set.getString("Permission"),
 								(set.getObject("Price") != null ? set.getDouble("Price") : null)),
 						getProtectionBlockAllowedWorlds(set.getString("Id"))));
 			}

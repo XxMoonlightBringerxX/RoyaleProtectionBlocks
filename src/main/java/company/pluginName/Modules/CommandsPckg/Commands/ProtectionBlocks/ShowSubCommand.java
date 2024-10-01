@@ -1,8 +1,5 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -17,7 +14,6 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
-import lombok.Getter;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionShowBlockRequestInput;
@@ -45,9 +41,6 @@ public class ShowSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
 
-	@Getter
-	private List<String> registeredKeyOnlyParameters = Arrays.asList("--all");
-
 	public ShowSubCommand() throws InstantiationException {
 		super();
 	}
@@ -59,10 +52,8 @@ public class ShowSubCommand extends PandaSubCommand {
 			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 			if (protection != null) {
 				try {
-					boolean recursive = parameters.getKeyOnlyParameters().contains("--all");
-					playerInteractionsService.protectionShowBlockRequest(ProtectionShowBlockRequestInput
-							.inst(pl, recursive ? protection.getParentProtection() : protection)
-							.setRecursive(recursive));
+					playerInteractionsService.protectionShowBlockRequest(
+							ProtectionShowBlockRequestInput.inst(pl, protection.getParentProtection()));
 					MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_SHOWNSUCCESSFULLY.applyPrefix()).process()
 							.sendMessage(sender);
 				} catch (RoyaleProtectionBlocksException e) {

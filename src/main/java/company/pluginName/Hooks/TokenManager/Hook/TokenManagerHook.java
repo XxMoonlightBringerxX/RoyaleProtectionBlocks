@@ -5,23 +5,10 @@ import java.util.OptionalLong;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
-import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import darkpanda73.PandaUtils.PandaAPIs.Objects.PandaAbstractHook;
-import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import me.realized.tokenmanager.api.TokenManager;
 
 public class TokenManagerHook extends PandaAbstractHook {
-
-	@PandaInject
-	private static WorldGuardAPI worldGuardApi;
-
-	@PandaInject
-	private static ProtectionBlocksService protectionBlocksService;
-
-	@PandaInject
-	private static ProtectionsService protectionsService;
 
 	private TokenManager api;
 

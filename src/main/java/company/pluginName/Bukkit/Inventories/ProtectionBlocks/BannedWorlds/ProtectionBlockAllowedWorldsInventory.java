@@ -59,7 +59,7 @@ public class ProtectionBlockAllowedWorldsInventory extends PagedChestInventoryOb
 
 	@ItemExecutor("Close-button")
 	private void executeCloseButton() {
-		goToPreviousHolder();
+		goToPreviousInventory();
 	}
 
 	@ItemExecutor("Search-button")

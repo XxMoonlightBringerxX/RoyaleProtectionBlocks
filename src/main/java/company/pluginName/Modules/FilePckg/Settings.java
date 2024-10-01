@@ -39,6 +39,9 @@ public class Settings {
 			"Settings.Protection.Open-inventory-on-interact", true);
 	public static final PandaBooleanField SETTINGS_PROTECTION_ALLOWREGIONSINSIDEANOTHERFROMSAMEOWNER = new PandaBooleanField(
 			"Settings.Protection.Allow-regions-inside-another-from-same-owner", true);
+	public static final PandaBooleanField SETTINGS_PROTECTION_DROPITEMONFULLINVENTORY = new PandaBooleanField(
+			"Settings.Protection.Drop-item-on-full-inventory", false);
+
 	public static final PandaBooleanField SETTINGS_PROTECTIONBLOCK_REQUESTCONFIRMATIONONPURCHASETHROUGHGUI = new PandaBooleanField(
 			"Settings.Protection-block.Request-confirmation-on-purchase-through-gui", false);
 

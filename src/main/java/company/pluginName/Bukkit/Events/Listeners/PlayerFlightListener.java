@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.scheduler.BukkitTask;
 
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
@@ -59,6 +60,10 @@ public class PlayerFlightListener implements Listener {
 	@EventHandler
 	public void onPlayerEnterExitProtection(PlayerEnterExitProtectionEvent e) {
 		if (!Boolean.TRUE.equals(SETTINGS_PROTECTION_FLIGHT_ENABLEFLIGHTCONTROL.getContent())) {
+			return;
+		}
+
+		if (PermissionsService.FLY_BYPASS.hasPermission(e.getPlayer())) {
 			return;
 		}
 

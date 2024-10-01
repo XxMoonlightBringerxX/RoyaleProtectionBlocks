@@ -12,8 +12,6 @@ import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Features.PvPPckg.Utils.CombatLogHookUtilities;
-import company.pluginName.Hooks.CombatLogX.CombatLogXAPI;
-import company.pluginName.Hooks.DeluxeCombat.DeluxeCombatAPI;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
@@ -26,7 +24,10 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionMergeAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionSplitAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
@@ -55,12 +56,6 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	@PandaInject
 	private ProtectionsService protectionsService;
 
-	@PandaInject
-	private DeluxeCombatAPI deluxeCombatApi;
-
-	@PandaInject
-	private CombatLogXAPI combatLogXApi;
-
 	@Override
 	public void openProtectionManagementInventoryRequest(OpenProtectionManagementInventoryRequestInput input)
 			throws RoyaleProtectionBlocksExceptionImpl {
@@ -70,11 +65,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 		}
 
-		Protection internalParentProtection = protectionToInternalProtection(
-				input.getProtection().getParentProtection());
-		Protection internalProtection = protectionToInternalProtection(input.getProtection());
+		Protection internalProtection = protectionToInternalProtection(input.getProtection().getParentProtection());
 
-		new ProtectionsManageInventory(input.getPlayer(), internalParentProtection, internalProtection).openInventory();
+		new ProtectionsManageInventory(input.getPlayer(), internalProtection).openInventory();
 	}
 
 	@Override
@@ -114,7 +107,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 		try {
 			ProtectionRemovalAttemptEvent attemptEvent = new ProtectionRemovalAttemptEvent(input.getPlayer(),
-					internalProtection);
+					internalProtection, RemovalCause.PLAYER);
 			Bukkit.getPluginManager().callEvent(attemptEvent);
 
 			if (attemptEvent.isCancelled()) {
@@ -141,8 +134,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 						TasksUtils.execute(() -> {
 							if (input.getPlayer().isOnline() && protectionBlockItem != null) {
 								input.getPlayer().getInventory().addItem(protectionBlockItem)
-										.forEach((index, remainingItem) -> internalProtection.getLocation().getWorld()
-												.dropItem(internalProtection.getLocation(), remainingItem));
+										.forEach((index, remainingItem) -> internalProtection.getBukkitLocation()
+												.getWorld()
+												.dropItem(internalProtection.getBukkitLocation(), remainingItem));
 							}
 
 							if (input.getPlayer().isOnline()
@@ -184,7 +178,13 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.Members.Save.CANNOTADDYOURSELF.generateException();
 		}
 
-		input.getProtection().addMember(input.getMember());
+		try {
+			input.getProtection().performAllProtections(prot -> prot.addMember(input.getMember()));
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
+		}
 	}
 
 	@Override
@@ -204,7 +204,13 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			}
 		}
 
-		input.getProtection().removeMember(input.getMember());
+		try {
+			input.getProtection().performAllProtections(prot -> prot.removeMember(input.getMember()));
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
+		}
 	}
 
 	@Override
@@ -219,7 +225,13 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.Owners.Save.CANNOTADDYOURSELF.generateException();
 		}
 
-		input.getProtection().addOwner(input.getOwner());
+		try {
+			input.getProtection().performAllProtections(prot -> prot.addOwner(input.getOwner()));
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
+		}
 	}
 
 	@Override
@@ -239,7 +251,13 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			}
 		}
 
-		input.getProtection().removeOwner(input.getOwner());
+		try {
+			input.getProtection().performAllProtections(prot -> prot.removeOwner(input.getOwner()));
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
+		}
 	}
 
 	@Override
@@ -255,7 +273,13 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.Banneds.Save.CANNOTADDYOURSELF.generateException();
 		}
 
-		input.getProtection().addBanned(input.getBanned());
+		try {
+			input.getProtection().performAllProtections(prot -> prot.addBanned(input.getBanned()));
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
+		}
 	}
 
 	@Override
@@ -267,7 +291,13 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.Banneds.Delete.PERMISSIONDENIED.generateException();
 		}
 
-		input.getProtection().removeBanned(input.getBanned());
+		try {
+			input.getProtection().performAllProtections(prot -> prot.removeBanned(input.getBanned()));
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
+		}
 	}
 
 	@Override
@@ -340,17 +370,12 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().setPriority(input.getNewPriority());
 			if (input.isRecursive()) {
-				input.getProtection().getChildProtections().forEach(child -> {
-					try {
-						child.setPriority(input.getNewPriority());
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-				});
+				input.getProtection().performAllProtections((prot) -> prot.setPriority(input.getNewPriority()));
+			} else {
+				input.getProtection().setPriority(input.getNewPriority());
 			}
-		} catch (RuntimeException e) {
+		} catch (Throwable e) {
 			if (e.getCause() instanceof RoyaleProtectionBlocksException) {
 				throw (RoyaleProtectionBlocksException) e.getCause();
 			} else {
@@ -369,6 +394,14 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 		}
 
+		ProtectionMergeAttemptEvent attemptEvent = new ProtectionMergeAttemptEvent(input.getPlayer(),
+				input.getProtection(), input.getParentProtection());
+		Bukkit.getPluginManager().callEvent(attemptEvent);
+
+		if (attemptEvent.isCancelled()) {
+			throw Exceptions.Protections.CANCELLED.generateException();
+		}
+
 		input.getProtection().setParentProtection(input.getParentProtection());
 		((Protection) input.getProtection()).saveData();
 	}
@@ -381,6 +414,14 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 		}
 
+		ProtectionSplitAttemptEvent attemptEvent = new ProtectionSplitAttemptEvent(input.getPlayer(),
+				input.getProtection());
+		Bukkit.getPluginManager().callEvent(attemptEvent);
+
+		if (attemptEvent.isCancelled()) {
+			throw Exceptions.Protections.CANCELLED.generateException();
+		}
+
 		input.getProtection().unsetParentProtection();
 		((Protection) input.getProtection()).saveData();
 	}
@@ -390,31 +431,32 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throws RoyaleProtectionBlocksException {
 		// Preconditions
 
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
-			throw Exceptions.Protections.INCOMBAT.generateException();
-		}
+		try {
+			if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+				throw Exceptions.Protections.INCOMBAT.generateException();
+			}
 
-		if (!ProtectionUtilities.canHideBlock(input.getProtection(), input.getPlayer())) {
-			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
-		}
+			if (!ProtectionUtilities.canHideBlock(input.getProtection(), input.getPlayer())) {
+				throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+			}
 
-		if (!input.getProtection().isBlockShown() && (!input.isRecursive()
-				|| input.getProtection().getChildProtections().stream().noneMatch(IProtection::isBlockShown))) {
-			throw (input.isRecursive() ? Exceptions.Protections.BLOCKALREADYHIDDENMULTIPLE
-					: Exceptions.Protections.BLOCKALREADYHIDDEN).generateException();
-		}
+			if (input.getProtection().checkAllMatchAllProtections(prot -> !prot.isBlockShown())) {
+				throw (!input.getProtection().getChildProtections().isEmpty()
+						? Exceptions.Protections.BLOCKALREADYHIDDENMULTIPLE
+						: Exceptions.Protections.BLOCKALREADYHIDDEN).generateException();
+			}
 
-		// Actions
+			// Actions
 
-		if (input.getProtection().isBlockShown()) {
-			input.getProtection().hideBlock();
-		}
-		if (input.isRecursive()) {
-			input.getProtection().getChildProtections().forEach(child -> {
-				if (child.isBlockShown()) {
-					child.hideBlock();
+			input.getProtection().performAllProtections(prot -> {
+				if (prot.isBlockShown()) {
+					prot.hideBlock();
 				}
 			});
+		} catch (RoyaleProtectionBlocksException e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.UNKNOWN.generateException(e);
 		}
 	}
 
@@ -423,38 +465,37 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throws RoyaleProtectionBlocksException {
 		// Preconditions
 
-		checkIfModifiable(input.getPlayer(), input.getProtection());
+		try {
+			checkIfModifiable(input.getPlayer(), input.getProtection());
 
-		if (!ProtectionUtilities.canHideBlock(input.getProtection(), input.getPlayer())) {
-			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
-		}
+			if (!ProtectionUtilities.canHideBlock(input.getProtection(), input.getPlayer())) {
+				throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+			}
 
-		if (input.getProtection().isBlockShown() && (!input.isRecursive()
-				|| input.getProtection().getChildProtections().stream().allMatch(IProtection::isBlockShown))) {
-			throw (input.isRecursive() ? Exceptions.Protections.BLOCKALREADYSHOWNMULTIPLE
-					: Exceptions.Protections.BLOCKALREADYSHOWN).generateException();
-		}
+			if (input.getProtection().checkAllMatchAllProtections(prot -> prot.isBlockShown())) {
+				throw (!input.getProtection().getChildProtections().isEmpty()
+						? Exceptions.Protections.BLOCKALREADYSHOWNMULTIPLE
+						: Exceptions.Protections.BLOCKALREADYSHOWN).generateException();
+			}
 
-		if ((!input.getProtection().isBlockShown()
-				&& input.getProtection().getLocation().getBlock().getType() != Material.AIR.getMaterial())
-				|| (input.isRecursive()
-						&& input.getProtection().getChildProtections().stream().anyMatch(child -> !child.isBlockShown()
-								&& child.getLocation().getBlock().getType() != Material.AIR.getMaterial()))) {
-			throw (input.isRecursive() ? Exceptions.Protections.BLOCKOVERLAPINGMULTIPLE
-					: Exceptions.Protections.BLOCKOVERLAPING).generateException();
-		}
+			if (input.getProtection().checkAnyMatchAllProtections(prot -> !input.getProtection().isBlockShown()
+					&& input.getProtection().getBukkitLocation().getBlock().getType() != Material.AIR.getMaterial())) {
+				throw (!input.getProtection().getChildProtections().isEmpty()
+						? Exceptions.Protections.BLOCKOVERLAPINGMULTIPLE
+						: Exceptions.Protections.BLOCKOVERLAPING).generateException();
+			}
 
-		// Actions
+			// Actions
 
-		if (!input.getProtection().isBlockShown()) {
-			input.getProtection().showBlock();
-		}
-		if (input.isRecursive()) {
-			input.getProtection().getChildProtections().forEach(child -> {
-				if (!child.isBlockShown()) {
-					child.showBlock();
+			input.getProtection().performAllProtections(prot -> {
+				if (!prot.isBlockShown()) {
+					prot.showBlock();
 				}
 			});
+		} catch (RoyaleProtectionBlocksException e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.UNKNOWN.generateException(e);
 		}
 	}
 
@@ -477,7 +518,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
-		if (protection.isBlocked()) {
+		if (protection.isBlocked() && !PermissionsService.ADMIN_BLOCK_BYPASS.hasPermission(player)) {
 			throw Exceptions.Protections.BLOCKED.generateException();
 		}
 

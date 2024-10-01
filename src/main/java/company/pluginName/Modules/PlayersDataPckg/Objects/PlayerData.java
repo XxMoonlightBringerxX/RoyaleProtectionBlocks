@@ -26,6 +26,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -46,6 +47,9 @@ public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataM
 	private @Setter(AccessLevel.NONE) Pair<Protection, Long> lastTeleport;
 	private @Setter(AccessLevel.NONE) @Getter(AccessLevel.NONE) BukkitTask task;
 	private List<Protection> currentProtections = new ArrayList<>();
+
+	private SimpleLocationArea cachedArea;
+	private List<Protection> cachedProtections;
 
 	public PlayerData(UUID uuid) {
 		super(uuid);

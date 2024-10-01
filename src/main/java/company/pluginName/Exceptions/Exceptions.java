@@ -77,6 +77,11 @@ public class Exceptions {
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGESAMEPROTECTION,
 				"Error.Exception.protection.MergeSameProtection", "&cYou can't merge the protection with itself!");
 
+		public static final ThrowableField MERGECHILDPROTECTION = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGECHILDPROTECTION,
+				"Error.Exception.protection.MergeChildProtection",
+				"&cYou can't merge this protection into its own child!");
+
 		public static final ThrowableField ALREADYMERGED = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_ALREADYMERGED,
 				"Error.Exception.protection.AlreadyMerged",
@@ -113,6 +118,14 @@ public class Exceptions {
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKOVERLAPINGMULTIPLE,
 				"Error.Exception.protection.BlockOverlapingMultiple",
 				"&cYou can't show the protection blocks if one or more protection blocks in this protection has a block placed where the protection block should be located!");
+
+		public static final ThrowableField UNKNOWN = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_UNKNOWN, "Error.Exception.protection.Unknown",
+				"&cThere was an unexpected error. Please contact with an administrator!");
+
+		public static final ThrowableField CANCELLED = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_CANCELLED, "Error.Exception.protection.Cancelled",
+				"&cAnother plugin has cancelled this action over this protection!");
 
 		public static class Delete {
 

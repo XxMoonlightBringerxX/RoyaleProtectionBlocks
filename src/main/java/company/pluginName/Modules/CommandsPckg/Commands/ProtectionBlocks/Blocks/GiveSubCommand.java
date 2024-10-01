@@ -7,13 +7,16 @@ import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackUtilities;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
@@ -31,16 +34,14 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		defaultDescription = "Give an existing block to yourself or a player",
 		defaultUsage = "<id> [player]",
 		defaultPermission = "protectionblocks.blocks.give",
-		defaultAliases = "g"
-)
+		defaultAliases = "g")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class GiveSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -84,7 +85,18 @@ public class GiveSubCommand extends PandaSubCommand {
 				}
 
 				try {
-					toGive.getInventory().addItem(block.getInformation().generateItem());
+					ItemStack item = block.getInformation().generateItem();
+
+					if (Settings.SETTINGS_PROTECTION_DROPITEMONFULLINVENTORY.isTrue()) {
+						ItemStackUtilities.giveOrDrop(toGive, item);
+					} else {
+						if (ItemStackUtilities.hasAvailableSpace(toGive, item)) {
+							toGive.getInventory().addItem(item);
+						} else {
+							MessageTemplate.inst(Messages.ERROR_INVENTORYFULL.applyPrefix()).process()
+									.sendMessage(toGive);
+						}
+					}
 				} catch (RoyaleProtectionBlocksExceptionImpl e) {
 					e.sendError(sender);
 				}

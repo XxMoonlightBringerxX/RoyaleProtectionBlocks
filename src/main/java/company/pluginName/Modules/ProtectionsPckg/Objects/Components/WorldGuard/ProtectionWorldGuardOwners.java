@@ -4,8 +4,6 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.Exceptions.Exceptions;
@@ -31,14 +29,6 @@ public class ProtectionWorldGuardOwners {
 		}
 
 		this.protection.getProtectedRegion().getOwners().addPlayer(owner);
-
-		this.protection.getChildProtections().forEach(child -> {
-			try {
-				((Protection) child).getWorldGuardOwners().add(owner);
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
-				e.sendError(Bukkit.getConsoleSender());
-			}
-		});
 	}
 
 	public void remove(UUID owner) throws RoyaleProtectionBlocksExceptionImpl {
@@ -47,14 +37,6 @@ public class ProtectionWorldGuardOwners {
 		}
 
 		this.protection.getProtectedRegion().getOwners().removePlayer(owner);
-
-		this.protection.getChildProtections().forEach(child -> {
-			try {
-				((Protection) child).getWorldGuardOwners().remove(owner);
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
-				e.sendError(Bukkit.getConsoleSender());
-			}
-		});
 	}
 
 }

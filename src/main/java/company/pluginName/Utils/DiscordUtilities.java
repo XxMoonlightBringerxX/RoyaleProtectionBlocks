@@ -42,7 +42,7 @@ public class DiscordUtilities {
 	public static void sendProtectionRegisteredMessage(Player player, Protection protection) {
 		if (Boolean.TRUE.equals(DISCORD_LOGS_PROTECTIONREGISTER.getContent()) && pandaDiscordWebhookService != null
 				&& pandaDiscordWebhookService.isWebhookDefined()) {
-			Location location = protection.getLocation();
+			Location location = protection.getBukkitLocation();
 
 			DiscordMessage message = new DiscordMessage().addEmbed(new EmbedObject()
 					.setTitle(String.format("[%s] New registered protection",
@@ -68,7 +68,7 @@ public class DiscordUtilities {
 	public static void sendProtectionUnregisteredMessage(Player player, Protection protection) {
 		if (Boolean.TRUE.equals(DISCORD_LOGS_PROTECTIONUNREGISTER.getContent()) && pandaDiscordWebhookService != null
 				&& pandaDiscordWebhookService.isWebhookDefined()) {
-			Location location = protection.getLocation();
+			Location location = protection.getBukkitLocation();
 
 			DiscordMessage message = new DiscordMessage().addEmbed(new EmbedObject()
 					.setTitle(String.format("[%s] Unregistered protection",

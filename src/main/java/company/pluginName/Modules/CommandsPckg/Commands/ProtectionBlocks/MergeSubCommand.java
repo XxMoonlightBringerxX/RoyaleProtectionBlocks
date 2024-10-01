@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.Bukkit.Inventories.Protections.Merge.ProtectionMergeInventory;
+import company.pluginName.Bukkit.Inventories.Shared.SearchProtectionInventory;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
@@ -15,6 +17,7 @@ import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
@@ -27,6 +30,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionMergeRequestInput;
 
@@ -38,16 +42,14 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 		defaultDescription = "Merge protections on other protections",
 		defaultAliases = "m",
 		defaultPermission = "protectionblocks.merge",
-		defaultUsage = "[parent protection] [child protection]"
-)
+		defaultUsage = "[parent protection] [child protection]")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class MergeSubCommand extends PandaSubCommand {
 
 	@RegisteredPandaField("lang")
@@ -84,38 +86,72 @@ public class MergeSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			PlayerData playerData = playerDataService.getPlayerData(pl);
-			Protection childProtection = parameters.getParameters().size() > 1
-					? protectionsService.findProtectionById(parameters.getParameters().get(1))
-					: (playerData.getCurrentProtections().size() > 0 ? playerData.getCurrentProtections().get(0)
-							: null);
-
 			try {
-				if (childProtection != null) {
-					if (parameters.getParameters().size() > 0) {
-						Optional<Protection> parentProtection = protectionsService
-								.getAllowedProtections((Player) sender)
-								.filter(p -> (p.getDisplayName() != null ? p.getDisplayNameWithoutFormat()
-										: p.getRegionId()).equalsIgnoreCase(
-												parameters.getParameters().stream().collect(Collectors.joining(" "))))
-								.findFirst();
+				if (parameters.getParameters().size() > 0) {
+					Optional<Protection> parentProtection = protectionsService.getAllowedProtections((Player) sender)
+							.filter(p -> (p.getDisplayName() != null ? p.getDisplayNameWithoutFormat()
+									: p.getRegionId()).equalsIgnoreCase(
+											parameters.getParameters().stream().collect(Collectors.joining(" "))))
+							.findFirst();
+					if (parentProtection.isPresent()) {
+						if (parameters.getParameters().size() > 1) {
+							Protection childProtection = protectionsService
+									.findProtectionById(parameters.getParameters().get(1));
 
-						if (parentProtection.isPresent()) {
-							playerInteractionsService.protectionMergeRequest(
-									ProtectionMergeRequestInput.inst(pl, childProtection, parentProtection.get()));
-							MessageTemplate.inst(MESSAGE_PROTECTION_MERGE_PARENTSETSUCCESSFULLY.applyPrefix()).process()
-									.sendMessage(sender);
+							if (childProtection != null) {
+								playerInteractionsService.protectionMergeRequest(
+										ProtectionMergeRequestInput.inst(pl, childProtection, parentProtection.get()));
+								MessageTemplate.inst(MESSAGE_PROTECTION_MERGE_PARENTSETSUCCESSFULLY.applyPrefix())
+										.process().sendMessage(sender);
+							} else {
+								throw Exceptions.Protections.NOTFOUND.generateException();
+							}
 						} else {
-							throw Exceptions.Protections.NOTFOUND.generateException();
+							PlayerData playerData = playerDataService.getPlayerData(pl);
+							List<IProtection> allowedProtections = playerData.getCurrentProtections().stream()
+									.filter(prot -> ProtectionUtilities.canMerge(prot, pl))
+									.collect(Collectors.toList());
+
+							if (allowedProtections.size() > 0) {
+								if (allowedProtections.size() == 1) {
+									playerInteractionsService.protectionMergeRequest(ProtectionMergeRequestInput
+											.inst(pl, allowedProtections.get(0), parentProtection.get()));
+									MessageTemplate.inst(MESSAGE_PROTECTION_MERGE_PARENTSETSUCCESSFULLY.applyPrefix())
+											.process().sendMessage(sender);
+								} else {
+									new SearchProtectionInventory(pl, allowedProtections, (prot) -> {
+										try {
+											playerInteractionsService.protectionMergeRequest(
+													ProtectionMergeRequestInput.inst(pl, prot, parentProtection.get()));
+											MessageTemplate
+													.inst(MESSAGE_PROTECTION_MERGE_PARENTSETSUCCESSFULLY.applyPrefix())
+													.process().sendMessage(sender);
+										} catch (RoyaleProtectionBlocksException e) {
+											e.sendError(pl);
+										}
+									}).openInventory();
+								}
+							} else {
+								MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix())
+										.process().sendMessage(sender);
+							}
 						}
 					} else {
-						// TODO: Inventory
-						MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process()
-								.sendMessage(sender);
+						throw Exceptions.Protections.NOTFOUND.generateException();
 					}
 				} else {
-					if (parameters.getParameters().size() > 1) {
-						throw Exceptions.Protections.NOTFOUND.generateException();
+					PlayerData playerData = playerDataService.getPlayerData(pl);
+					List<IProtection> allowedProtections = playerData.getCurrentProtections().stream()
+							.filter(prot -> ProtectionUtilities.canMerge(prot, pl)).collect(Collectors.toList());
+
+					if (allowedProtections.size() > 0) {
+						if (allowedProtections.size() == 1) {
+							new ProtectionMergeInventory(pl, (Protection) allowedProtections.get(0)).openInventory();
+						} else {
+							new SearchProtectionInventory(pl, allowedProtections, (prot) -> {
+								new ProtectionMergeInventory(pl, (Protection) prot).openInventory();
+							}).openInventory();
+						}
 					} else {
 						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
 								.sendMessage(sender);

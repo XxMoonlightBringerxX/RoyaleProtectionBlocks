@@ -35,7 +35,7 @@ public class ProtectionUtils {
 	}
 
 	public void regenerateProtectionArea() {
-		Location location = protection.getLocation();
+		Location location = protection.getBukkitLocation();
 		ProtectionBlock protectionBlock = protection.getProtectionBlock().getObject();
 
 		if (protectionBlock != null) {
@@ -74,49 +74,41 @@ public class ProtectionUtils {
 	}
 
 	public boolean isInsideAny(SimpleLocation location, boolean includeBorder) {
-		if (this.isInside(location, includeBorder)) {
-			return true;
+		try {
+			return this.protection.checkAnyMatchAllProtections(prot -> prot.isInside(location, includeBorder));
+		} catch (Throwable e) {
+			return false;
 		}
-		if (!protection.getChildProtections().isEmpty()) {
-			for (int i = 0; i < protection.getChildProtections().size(); i++) {
-				if (protection.getChildProtections().get(i).isInside(location, includeBorder)) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	public boolean isInsideAny(SimpleLocationArea locationArea, boolean includeBorder) {
-		if (this.isInside(locationArea, includeBorder)) {
-			return true;
+		try {
+			return this.protection.checkAnyMatchAllProtections(prot -> prot.isInside(locationArea, includeBorder));
+		} catch (Throwable e) {
+			return false;
 		}
-		if (!protection.getChildProtections().isEmpty()) {
-			for (int i = 0; i < protection.getChildProtections().size(); i++) {
-				if (protection.getChildProtections().get(i).isInside(locationArea, includeBorder)) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	public boolean isProtectionBlock() {
-		return isProtectionBlock(this.protection.getLocation().getBlock());
+		return isProtectionBlock(this.protection.getLocation());
 	}
 
-	public boolean isProtectionBlock(Block block) {
-		boolean isSameLocation = this.protection.getWorldName().equals(block.getLocation().getWorld().getName())
-				? block.getLocation().equals(this.protection.getLocation())
-				: false;
+	public boolean isProtectionBlock(SimpleLocation simpleLocation) {
+		boolean isSameLocation = simpleLocation.equals(this.protection.getLocation());
 		if (isSameLocation) {
+			Location location = simpleLocation.toLocation();
+
+			if (location == null) {
+				return false;
+			}
+
 			ProtectionBlock protectionBlock = this.protection.getProtectionBlock().getObject();
 
 			if (protectionBlock == null) {
 				return true;
 			}
 
-			return protectionBlock.getInformation().isSameType(block);
+			return protectionBlock.getInformation().isSameType(simpleLocation.toLocation().getBlock());
 		}
 		return false;
 	}
@@ -126,14 +118,14 @@ public class ProtectionUtils {
 	}
 
 	public void showProtectionBlock() {
-		Block block = this.protection.getLocation().getBlock();
+		Block block = this.protection.getBukkitLocation().getBlock();
 		ItemStack item = this.protection.getProtectionBlock().getObject().getInformation().getItem();
 
 		ProtectionUtilities.showBlock(block, item);
 	}
 
 	public void hideProtectionBlock() {
-		ProtectionUtilities.hideBlock(this.protection.getLocation().getBlock());
+		ProtectionUtilities.hideBlock(this.protection.getBukkitLocation().getBlock());
 	}
 
 }

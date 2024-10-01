@@ -10,7 +10,9 @@ import org.bukkit.inventory.ItemStack;
 import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBannedsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
+import company.pluginName.Bukkit.Inventories.Protections.Merge.ProtectionMergeInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
+import company.pluginName.Bukkit.Inventories.Protections.Split.ProtectionSplitInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
@@ -20,8 +22,6 @@ import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Events.MessagesListener;
-import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Exceptions.PlayerAlreadyListeningException;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
@@ -32,6 +32,8 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemPr
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.PandaMessageListenerService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
@@ -50,8 +52,9 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	public static final String TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH = "Show-boundary-item";
 	public static final String TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH = "Hide-boundary-item";
+
 	@PandaInject
-	private static MessagesListener messagesListener;
+	private static PandaMessageListenerService messageListenerService;
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
@@ -60,13 +63,11 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 	private static PlayerInteractionsService playerInteractionsService;
 
 	private Protection protection;
-	private Protection childProtection;
 
-	public ProtectionsManageInventory(Player player, Protection protection, Protection childProtection) {
+	public ProtectionsManageInventory(Player player, Protection protection) {
 		super(player);
 
 		this.protection = protection;
-		this.childProtection = childProtection;
 	}
 
 	@Override
@@ -107,9 +108,10 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@ItemGenerator("Close-button")
 	private ItemStack generateCloseButton(Item item) {
-		return getPreviousHolder() != null && !(getPreviousHolder() instanceof ProtectionsManageInventory)
-				? item.getItems().get(Item.DISPLAYITEM_KEY)
-				: null;
+		return getPreviousInventory() != null
+				&& !(getPreviousInventory().getHolder() instanceof ProtectionsManageInventory)
+						? item.getItems().get(Item.DISPLAYITEM_KEY)
+						: null;
 	}
 
 	@ItemGenerator("Toggle-block-button")
@@ -132,6 +134,11 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 				: null;
 	}
 
+	@ItemGenerator("Merge-button")
+	private ItemStack generateMergeButton(Item item) {
+		return ProtectionUtilities.canMerge(protection, getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+	}
+
 	@ItemGenerator("Delete-button")
 	private ItemStack generateDeleteButton(Item item) {
 		return ProtectionUtilities.canDelete(protection, getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY)
@@ -140,7 +147,7 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@ItemExecutor("Close-button")
 	private void executeCloseButton() {
-		goToPreviousHolder();
+		goToPreviousInventory();
 	}
 
 	@ItemExecutor("Change-display-item-button")
@@ -181,7 +188,7 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 	@ItemExecutor("Rename-button")
 	private void executeRenameButton() {
 		try {
-			messagesListener.startListening(getPlayer().getUniqueId(), (message) -> {
+			messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
 				if (!message.equalsIgnoreCase("cancel")) {
 					try {
 						playerInteractionsService.protectionRenameRequest(
@@ -229,6 +236,15 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 		updateInventory();
 	}
 
+	@ItemExecutor("Merge-button")
+	private void executeMergeButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
+		if (e.isLeftClick()) {
+			new ProtectionMergeInventory(getPlayer(), protection).openInventory();
+		} else if (e.isRightClick()) {
+			new ProtectionSplitInventory(getPlayer(), protection).openInventory();
+		}
+	}
+
 	@ItemExecutor("Delete-button")
 	private void executeDeleteButton() {
 		try {
@@ -247,7 +263,7 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	private Replacement[] getAvailableVariables(boolean renew) {
 		if (this.availableVariables == null || renew) {
-			Location loc = protection.getLocation();
+			Location loc = protection.getBukkitLocation();
 			ProtectionBlock block = protection.getProtectionBlock().getObject();
 			OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(protection.getOwnerUuid());
 

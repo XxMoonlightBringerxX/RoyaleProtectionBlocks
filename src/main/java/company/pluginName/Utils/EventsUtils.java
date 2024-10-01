@@ -33,6 +33,7 @@ import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackData.ItemStackDa
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.AllArgsConstructor;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.CreationCause;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
@@ -134,11 +135,12 @@ public class EventsUtils {
 							// fails, the event will be cancelled and an error message will be send to the
 							// player.
 							try {
+								// TODO: This should ask to PlayerInteractionsServiceImpl
 								Protection protection = new Protection(player.getUniqueId(), block.getLocation(),
 										protectionBlock);
 
 								ProtectionCreationAttemptEvent attemptEvent = new ProtectionCreationAttemptEvent(player,
-										protection);
+										protection, CreationCause.PLAYER);
 								Bukkit.getPluginManager().callEvent(attemptEvent);
 
 								if (attemptEvent.isCancelled()) {

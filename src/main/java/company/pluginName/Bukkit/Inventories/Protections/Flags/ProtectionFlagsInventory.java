@@ -3,12 +3,14 @@ package company.pluginName.Bukkit.Inventories.Protections.Flags;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 
+import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionFlagsPckg.ProtectionFlagsService;
@@ -19,13 +21,13 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Events.MessagesListener;
-import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Exceptions.PlayerAlreadyListeningException;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.PandaMessageListenerService;
 
 @Inventory("protections_flags")
 public class ProtectionFlagsInventory extends PagedChestInventoryObject<ProtectionFlag> {
@@ -33,7 +35,7 @@ public class ProtectionFlagsInventory extends PagedChestInventoryObject<Protecti
 	private static final String MESSAGES_FLAGSTRINGSPECIFYINFO_PATH = "Messages.Flag-string-specify-info";
 
 	@PandaInject
-	private static MessagesListener messagesListener;
+	private static PandaMessageListenerService messageListenerService;
 
 	@PandaInject
 	private static ProtectionFlagsService protectionFlagsService;
@@ -77,30 +79,45 @@ public class ProtectionFlagsInventory extends PagedChestInventoryObject<Protecti
 		try {
 			if (entity.isEditable()) {
 				if (ProtectionFlagUtilities.isStateFlag(entity.getWorldGuardFlag())) {
-					protection.getWorldGuardFlags()
-							.setFlag(FlagModificationRequest.inst(getPlayer(), entity,
-									entity.retrieveValue(protection.getProtectedRegion()) == State.ALLOW ? State.DENY
-											: State.ALLOW));
+					FlagModificationRequest request = FlagModificationRequest.inst(getPlayer(), entity,
+							entity.retrieveValue(protection.getProtectedRegion()) == State.ALLOW ? State.DENY
+									: State.ALLOW);
+					protection.performAllProtections(prot -> {
+						try {
+							((Protection) prot).getWorldGuardFlags().setFlag(request);
+						} catch (RoyaleProtectionBlocksExceptionImpl ex) {
+							ex.sendError(Bukkit.getConsoleSender());
+						}
+					});
 					updateInventory();
 				} else {
 					try {
-						messagesListener.startListening(e.getWhoClicked().getUniqueId(), (message) -> {
-							if (!message.equalsIgnoreCase("cancel")) {
-								try {
-									protection.getWorldGuardFlags()
-											.setFlag(
-													FlagModificationRequest
-															.inst(entity,
-																	ProtectionFlagUtilities.stringToValue(
-																			entity.getWorldGuardFlag(), message))
-															.setExecutor(getPlayer()));
-								} catch (RoyaleProtectionBlocksExceptionImpl ex) {
-									ex.sendError(getPlayer());
-								}
-							}
-							openInventory();
-							return true;
-						});
+						messageListenerService.getListener().startListening(e.getWhoClicked().getUniqueId(),
+								(message) -> {
+									if (!message.equalsIgnoreCase("cancel")) {
+										try {
+											FlagModificationRequest request = FlagModificationRequest
+													.inst(entity,
+															ProtectionFlagUtilities
+																	.stringToValue(entity.getWorldGuardFlag(), message))
+													.setExecutor(getPlayer());
+
+											protection.performAllProtections(prot -> {
+												try {
+													((Protection) prot).getWorldGuardFlags().setFlag(request);
+												} catch (RoyaleProtectionBlocksExceptionImpl ex) {
+													ex.sendError(Bukkit.getConsoleSender());
+												}
+											});
+										} catch (RoyaleProtectionBlocksExceptionImpl ex) {
+											ex.sendError(getPlayer());
+										} catch (Throwable ex) {
+											Exceptions.Protections.UNKNOWN.generateException(ex).sendError(getPlayer());
+										}
+									}
+									openInventory();
+									return true;
+								});
 						closeInventory();
 						MessageTemplate
 								.inst(PandaPrefixedStringField.applyPrefix(getChestInventoryData().getCustomFields()
@@ -115,12 +132,14 @@ public class ProtectionFlagsInventory extends PagedChestInventoryObject<Protecti
 			}
 		} catch (RoyaleProtectionBlocksExceptionImpl ex) {
 			ex.sendError(getPlayer());
+		} catch (Throwable ex) {
+			Exceptions.Protections.UNKNOWN.generateException(ex).sendError(getPlayer());
 		}
 	}
 
 	@ItemExecutor("Close-button")
 	private void executeCloseButton() {
-		goToPreviousHolder();
+		goToPreviousInventory();
 	}
 
 }

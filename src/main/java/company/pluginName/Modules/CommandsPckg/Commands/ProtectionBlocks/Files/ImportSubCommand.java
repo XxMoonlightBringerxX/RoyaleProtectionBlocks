@@ -1,5 +1,6 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Files;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -8,10 +9,13 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Utils.ProtectionBlocksUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -24,6 +28,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubComma
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 
 @PandaSubCommandAnnotation(parentCommand = FilesCommand.class)
 @PandaCommandAnnotation(
@@ -44,6 +49,9 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		usage = true
 )
 public class ImportSubCommand extends PandaSubCommand {
+
+	@PandaInject
+	private static ProtectionsService protectionsService;
 
 	@PandaInject
 	private static ProtectionBlocksService protectionBlocksService;
@@ -82,30 +90,68 @@ public class ImportSubCommand extends PandaSubCommand {
 					try {
 						PandaYaml yaml = new PandaYaml(filesService.getBlocksFile().getFile());
 
+						List<Pair<ProtectionBlock, ProtectionBlock>> blocks = new ArrayList<>();
+
 						yaml.getRoot().getNamedChilds().forEach(child -> {
 							if (child.isYamlSection()) {
-								ProtectionBlock block;
 								try {
-									block = ProtectionBlocksUtils.mapToProtectionBlock(child.getName(),
+									ProtectionBlock block = ProtectionBlocksUtils.mapToProtectionBlock(child.getName(),
 											child.asYamlSection().toMap());
-									ProtectionBlock originalBlock = protectionBlocksService
-											.getProtectionBlockById(child.getName());
-
-									if (originalBlock != null) {
-										originalBlock.copy(block);
-
-										originalBlock.save(pl);
-									} else {
-										block.save(pl);
-									}
+									blocks.add(Pair.of(protectionBlocksService.getProtectionBlockById(child.getName()),
+											block));
 								} catch (Exception e) {
 									throw new RuntimeException(e);
 								}
 							}
 						});
 
-						MessageTemplate.inst(Messages.MESSAGE_FILES_IMPORTEDSUCCESSFULLY.applyPrefix()).process()
-								.sendMessage(sender);
+						List<Pair<ProtectionBlock, Exception>> exceptions = new ArrayList<>();
+
+						blocks.forEach(pair -> {
+							List<Protection> protectionsToRefresh = new ArrayList<>();
+							try {
+								if (pair.getFirst() != null) {
+									ProtectionBlock copy = new ProtectionBlock().copy(pair.getFirst());
+									try {
+										protectionsService.getProtectionsByWorld().values()
+												.forEach(protections -> protections.stream()
+														.filter(protection -> protection.getProtectionBlock()
+																.getIdentifier()
+																.equals(pair.getFirst().getInformation().getId())
+																&& protection.getUtils().isProtectionBlockShown())
+														.forEach(prot -> {
+															prot.getUtils().hideProtectionBlock();
+															protectionsToRefresh.add(prot);
+														}));
+
+										pair.getFirst().copy(pair.getSecond());
+										pair.getFirst().save(pl);
+									} catch (RoyaleProtectionBlocksExceptionImpl ex) {
+										pair.getFirst().copy(copy);
+									}
+								} else {
+									pair.getSecond().save(pl);
+								}
+							} catch (Exception ex) {
+								exceptions.add(Pair.of(pair.getSecond(), ex));
+							} finally {
+								protectionsToRefresh.forEach(prot -> prot.getUtils().showProtectionBlock());
+							}
+						});
+
+						if (exceptions.isEmpty()) {
+							MessageTemplate.inst(Messages.MESSAGE_FILES_IMPORTEDSUCCESSFULLY.applyPrefix()).process()
+									.sendMessage(sender);
+						} else {
+							MessageTemplate.inst(Messages.MESSAGE_FILES_IMPORTEDWARNING.applyPrefix()).process()
+									.sendMessage(sender);
+							exceptions.forEach(pair -> {
+								MessageTemplate.inst(String.format("&8- &c%s: &e%s",
+										pair.getFirst().getInformation().getId(), pair.getSecond().getMessage()))
+										.process().sendMessage(sender);
+								pair.getSecond().printStackTrace();
+							});
+						}
 					} catch (Exception e) {
 						MessageTemplate.inst(Messages.ERROR_FILES_IMPORT.applyPrefix()).process().sendMessage(sender);
 						e.printStackTrace();

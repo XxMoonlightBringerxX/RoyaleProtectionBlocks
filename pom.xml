@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>0.1.5 Alpha</version>
+	<version>0.1.6 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -25,6 +25,10 @@
 	        <id>sirblobman-public</id>
 	        <url>https://nexus.sirblobman.xyz/public/</url>
 	    </repository>
+	    <repository>
+		    <id>CodeMC</id>
+		    <url>https://repo.codemc.org/repository/maven-public/</url>
+		</repository>
 	</repositories>
 	<dependencies>
 		<dependency>
@@ -36,7 +40,7 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.14-R0.1-SNAPSHOT</version>
+			<version>1.16.5-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -158,6 +162,11 @@
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaMessageListenerModule</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
 			<groupId>YAMLLib</groupId>
 			<artifactId>YAMLLib</artifactId>
 			<version>1.0</version>
@@ -231,6 +240,12 @@
 					<artifactId>*</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+		    <groupId>me.NoChance.PvPManager</groupId>
+		    <artifactId>pvpmanager</artifactId>
+		    <version>3.18.5</version>
+		    <scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<build>

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -24,8 +25,6 @@ import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Events.MessagesListener;
-import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Exceptions.PlayerAlreadyListeningException;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
@@ -34,6 +33,8 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGe
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.PandaMessageListenerService;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
 
@@ -54,7 +55,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	private static final String MESSAGES_PRICESPECIFYINFO_PATH = "Messages.Price-specify-info";
 
 	@PandaInject
-	private static MessagesListener messagesListener;
+	private static PandaMessageListenerService messageListenerService;
 
 	@PandaInject
 	private static RecipesService recipesService;
@@ -191,7 +192,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 
 	@ItemExecutor("Cancel-button")
 	private void executeCancelButton() {
-		goToPreviousHolder();
+		goToPreviousInventory();
 	}
 
 	@ItemExecutor("Confirm-button")
@@ -233,7 +234,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 				MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BLOCKS_CREATEDSUCCESSFULLY.applyPrefix()).process()
 						.sendMessage(getPlayer());
 			}
-			goToPreviousHolder();
+			goToPreviousInventory();
 		} catch (RoyaleProtectionBlocksExceptionImpl ex) {
 			if (originalProtectionBlock != null) {
 				originalProtectionBlock.copy(copyOriginalProtectionBlock);
@@ -241,20 +242,22 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 			ex.sendError(getPlayer());
 		} finally {
 			relatedProtections.forEach(prot -> {
-				prot.getUtils().showProtectionBlock();
+				if (Bukkit.getWorld(prot.getWorldName()) != null) {
+					prot.getUtils().showProtectionBlock();
 
-				try {
-					prot.getUtils().regenerateProtectionArea();
-					if (!prot.getProtectedRegion().getMinimumPoint()
-							.equals(worldGuardApi.getHook().getInternalWorldGuard()
-									.asBlockVector(prot.getUtils().getProtectionArea().getMinLocation().toLocation()))
-							|| !prot.getProtectedRegion().getMaximumPoint()
-									.equals(worldGuardApi.getHook().getInternalWorldGuard().asBlockVector(
-											prot.getUtils().getProtectionArea().getMaxLocation().toLocation()))) {
-						prot.regenerateProtectedRegion();
+					try {
+						prot.getUtils().regenerateProtectionArea();
+						if (!prot.getProtectedRegion().getMinimumPoint()
+								.equals(worldGuardApi.getHook().getInternalWorldGuard().asBlockVector(
+										prot.getUtils().getProtectionArea().getMinLocation().toLocation()))
+								|| !prot.getProtectedRegion().getMaximumPoint()
+										.equals(worldGuardApi.getHook().getInternalWorldGuard().asBlockVector(
+												prot.getUtils().getProtectionArea().getMaxLocation().toLocation()))) {
+							prot.regenerateProtectedRegion();
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
 			});
 		}
@@ -307,7 +310,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	private void executeIdButton() {
 		if (originalProtectionBlock == null) {
 			try {
-				messagesListener.startListening(getPlayer().getUniqueId(), (message) -> {
+				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
 					if (!message.equalsIgnoreCase("cancel")) {
 						newProtectionBlock.getInformation().setId(!message.isEmpty() ? message : null);
 					}
@@ -336,7 +339,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	private void executePermissionButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
 		if (e.getClick() == ClickType.LEFT) {
 			try {
-				messagesListener.startListening(getPlayer().getUniqueId(), (message) -> {
+				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
 					if (!message.equalsIgnoreCase("cancel")) {
 						newProtectionBlock.getInformation().setPermission(!message.isEmpty() ? message : null);
 					}
@@ -362,7 +365,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	private void executePriceButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
 		if (e.getClick() == ClickType.LEFT) {
 			try {
-				messagesListener.startListening(getPlayer().getUniqueId(), (message) -> {
+				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
 					if (!message.equalsIgnoreCase("cancel")) {
 						try {
 							double price = Double.parseDouble(message);
@@ -403,7 +406,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 		int cur = getBlocks.getAsInt();
 		if (e.getClick() == ClickType.SHIFT_LEFT) {
 			try {
-				messagesListener.startListening(getPlayer().getUniqueId(), (message) -> {
+				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
 					if (!message.equalsIgnoreCase("cancel")) {
 						try {
 							int value = Integer.parseInt(message);

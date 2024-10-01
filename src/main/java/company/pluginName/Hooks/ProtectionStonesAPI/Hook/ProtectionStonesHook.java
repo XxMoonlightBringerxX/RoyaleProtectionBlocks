@@ -39,6 +39,7 @@ import dev.espi.protectionstones.PSRegion;
 import dev.espi.protectionstones.ProtectionStones;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.CreationCause;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationAttemptEvent;
 
 public class ProtectionStonesHook extends PandaAbstractHook {
@@ -185,7 +186,7 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 								protectionBlock);
 
 						ProtectionCreationAttemptEvent attemptEvent = new ProtectionCreationAttemptEvent(null,
-								protection);
+								protection, CreationCause.IMPORT);
 						Bukkit.getPluginManager().callEvent(attemptEvent);
 
 						if (attemptEvent.isCancelled()) {
@@ -256,7 +257,7 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 								successList.add(createdProtection);
 
-								ProtectionStones.removePSRegion(protection.getLocation().getWorld(),
+								ProtectionStones.removePSRegion(protection.getBukkitLocation().getWorld(),
 										protectionStonesRegion.getId());
 							} catch (RoyaleProtectionBlocksExceptionImpl e) {
 								MessageTemplate

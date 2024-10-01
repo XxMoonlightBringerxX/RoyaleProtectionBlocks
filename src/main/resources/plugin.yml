@@ -5,7 +5,7 @@ version: ${project.version}
 description: ${project.description}
 api-version: 1.13
 depend: [ WorldGuard ]
-softdepend: [ PlaceholderAPI, ItemsAdder, ProtectionStones, Oraxen, DeluxeCombat, LuckPerms, Vault, TokenManager, CombatLogX ]
+softdepend: [ PlaceholderAPI, ItemsAdder, ProtectionStones, Oraxen, DeluxeCombat, LuckPerms, Vault, TokenManager, CombatLogX, PvPManager ]
 
 permissions:
   protectionblocks.teleport:

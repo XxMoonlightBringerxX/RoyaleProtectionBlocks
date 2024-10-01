@@ -13,8 +13,6 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Events.MessagesListener;
-import darkpanda73.PandaUtils.PandaPlugin.Defaults.Messages.Exceptions.PlayerAlreadyListeningException;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.PandaUtilities.Java.JavaHelper;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
@@ -26,6 +24,8 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInven
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item.ClickResult;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Utils.ItemUtilities;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.PandaMessageListenerService;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -41,7 +41,7 @@ public class ProtectionBlockRecipeInventory extends ChestInventoryObject {
 	public static final String PERMISSION_NOTSETITEM_PATH = "Not-set-item";
 
 	@PandaInject
-	private static MessagesListener messagesListener;
+	private static PandaMessageListenerService messageListenerService;
 
 	public int[] recipeSlots;
 
@@ -83,7 +83,7 @@ public class ProtectionBlockRecipeInventory extends ChestInventoryObject {
 	@Override
 	protected void onPostUpdate() {
 		for (int i = 0; i < 9 && i < this.recipeSlots.length; i++) {
-			this.setSlot(this.recipeSlots[i], new GeneratedItem(RECIPE_ITEM, newRecipe.getRecipe()[i]));
+			this.setSlot(this.recipeSlots[i], new GeneratedItem(RECIPE_ITEM, newRecipe.getRecipe()[i], null));
 		}
 	}
 
@@ -99,7 +99,7 @@ public class ProtectionBlockRecipeInventory extends ChestInventoryObject {
 
 	@ItemExecutor("Cancel-button")
 	private void executeCancelButton() {
-		goToPreviousHolder();
+		goToPreviousInventory();
 	}
 
 	@ItemExecutor("Confirm-button")
@@ -110,7 +110,7 @@ public class ProtectionBlockRecipeInventory extends ChestInventoryObject {
 
 		onRecipeUpdate.accept(newRecipe);
 
-		goToPreviousHolder();
+		goToPreviousInventory();
 	}
 
 	@ItemExecutor("Permission-button")
@@ -121,7 +121,7 @@ public class ProtectionBlockRecipeInventory extends ChestInventoryObject {
 
 		if (e.getClick() == ClickType.LEFT) {
 			try {
-				messagesListener.startListening(getPlayer().getUniqueId(), (message) -> {
+				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
 					if (!message.equalsIgnoreCase("cancel")) {
 						newRecipe.setPermission(!message.isEmpty() ? message : null);
 					}

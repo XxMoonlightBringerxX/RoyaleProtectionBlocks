@@ -1,5 +1,6 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,6 +8,7 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.Bukkit.Inventories.Shared.SearchProtectionInventory;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
@@ -14,6 +16,7 @@ import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
@@ -26,6 +29,8 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSplitRequestInput;
 
@@ -83,25 +88,35 @@ public class SplitSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			PlayerData playerData = playerDataService.getPlayerData(pl);
-			Protection protection = parameters.getParameters().size() > 0
-					? protectionsService.findProtectionById(parameters.getParameters().get(0))
-					: (playerData.getCurrentProtections().size() > 0 ? playerData.getCurrentProtections().get(0)
-							: null);
-
 			try {
-				if (protection != null) {
-					if (protection.getParentProtection() != protection) {
-						playerInteractionsService
-								.protectionSplitRequest(ProtectionSplitRequestInput.inst(pl, protection));
-						MessageTemplate.inst(MESSAGE_PROTECTION_MERGE_PARENTREMOVEDSUCCESSFULLY.applyPrefix()).process()
-								.sendMessage(sender);
+				if (parameters.getParameters().size() > 0) {
+					Protection protection = protectionsService.findProtectionById(parameters.getParameters().get(0));
+					if (protection != null) {
+						splitProtection(pl, protection);
 					} else {
-						throw Exceptions.Protections.NOTMERGED.generateException();
+						throw Exceptions.Protections.NOTFOUND.generateException();
 					}
 				} else {
-					if (parameters.getParameters().size() > 0) {
-						throw Exceptions.Protections.NOTFOUND.generateException();
+					PlayerData playerData = playerDataService.getPlayerData(pl);
+					List<IProtection> mergedAndAllowedProtections = new ArrayList<>();
+
+					playerData.getCurrentProtections()
+							.forEach(prot -> prot.getChildProtectionsRecursively().forEach(childProt -> {
+								if (childProt.getChildProtections().isEmpty()
+										&& childProt.isInside(SimpleLocation.of(pl.getLocation()), true)
+										&& ProtectionUtilities.canMerge(prot, pl)) {
+									mergedAndAllowedProtections.add(childProt);
+								}
+							}));
+
+					if (mergedAndAllowedProtections.size() > 0) {
+						if (mergedAndAllowedProtections.size() == 1) {
+							splitProtection(pl, mergedAndAllowedProtections.get(0));
+						} else {
+							new SearchProtectionInventory(pl, mergedAndAllowedProtections, (prot) -> {
+								splitProtection(pl, prot);
+							}).openInventory();
+						}
 					} else {
 						MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
 								.sendMessage(sender);
@@ -114,6 +129,20 @@ public class SplitSubCommand extends PandaSubCommand {
 			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 		}
 		return new TrueResponse();
+	}
+
+	private void splitProtection(Player player, IProtection prot) {
+		try {
+			if (prot.getParentProtection() != prot) {
+				playerInteractionsService.protectionSplitRequest(ProtectionSplitRequestInput.inst(player, prot));
+				MessageTemplate.inst(MESSAGE_PROTECTION_MERGE_PARENTREMOVEDSUCCESSFULLY.applyPrefix()).process()
+						.sendMessage(player);
+			} else {
+				throw Exceptions.Protections.NOTMERGED.generateException();
+			}
+		} catch (RoyaleProtectionBlocksException e) {
+			e.sendError(player);
+		}
 	}
 
 }

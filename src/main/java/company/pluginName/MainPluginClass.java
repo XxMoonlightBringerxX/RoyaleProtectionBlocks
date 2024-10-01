@@ -3,7 +3,6 @@ package company.pluginName;
 import company.pluginName.Modules.BStatsPckg.Objects.ProvidedProtectionsCustomChart;
 import darkpanda73.PandaUtils.PandaBStats.Annotations.EnableBStats;
 import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
-import darkpanda73.PandaUtils.PandaPlugin.Annotations.EnableMessagesListener;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListeners;
 import darkpanda73.PandaUtils.PandaUpdateChecker.Annotations.EnableUpdateChecker;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.EnableCommandsService;
@@ -13,12 +12,12 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStri
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.EnableInventoriesService;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.EnablePlayerHeadCacheService;
 import darkpanda73.PandaUtils.Services.PandaLoggingModule.Annotations.EnableLoggingService;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Annotations.EnableMessageListenerService;
 import darkpanda73.PandaUtils.Services.PandaPlayerDataModule.Listeners.PandaPlayerDataEvents;
-import relampagorojo93.LibsCollection.Utils.Bukkit.Inventories.Events.InventoryEvents;
 
-@PandaListeners({ InventoryEvents.class, PandaPlayerDataEvents.class })
+@PandaListeners({ PandaPlayerDataEvents.class })
 @EnableCommandsService
-@EnableMessagesListener
+@EnableMessageListenerService
 @EnableInventoriesService
 @EnablePlayerHeadCacheService
 @EnableUpdateChecker("109118")

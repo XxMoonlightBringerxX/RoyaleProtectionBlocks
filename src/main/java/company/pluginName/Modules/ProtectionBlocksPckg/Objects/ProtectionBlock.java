@@ -19,6 +19,7 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackUtilities;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.Data;
@@ -74,21 +75,8 @@ public class ProtectionBlock {
 	public void purchase(Player pl) {
 		try {
 			ItemStack item = getInformation().generateItem();
-			boolean hasAvailableSpace = true;
 
-			if (pl.getInventory().firstEmpty() == -1) {
-				if (pl.getInventory().containsAtLeast(item, 1)) {
-					if (pl.getInventory().addItem(item).isEmpty()) {
-						pl.getInventory().removeItem(item);
-					} else {
-						hasAvailableSpace = false;
-					}
-				} else {
-					hasAvailableSpace = false;
-				}
-			}
-
-			if (hasAvailableSpace) {
+			if (ItemStackUtilities.hasAvailableSpace(pl, item)) {
 				if (PermissionsService.ECONOMY_BYPASS.hasPermission(pl)) {
 					pl.getInventory().addItem(item);
 				} else {
@@ -174,9 +162,10 @@ public class ProtectionBlock {
 		protectionBlocksService.unregisterProtectionBlock(this);
 	}
 
-	public void copy(ProtectionBlock protectionBlock) {
+	public ProtectionBlock copy(ProtectionBlock protectionBlock) {
 		this.information.copy(protectionBlock.getInformation());
 		this.allowedWorlds.copy(protectionBlock.getAllowedWorlds());
+		return this;
 	}
 
 }

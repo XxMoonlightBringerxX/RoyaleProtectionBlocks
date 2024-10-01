@@ -1,13 +1,19 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.API.Services.PlayerInteractionsServiceImpl;
 import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlocksShopInventory;
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventory;
+import company.pluginName.Bukkit.Inventories.Shared.SearchProtectionInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.VaultAPI.VaultAPI;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
@@ -20,6 +26,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
 
 @PandaCommandAnnotation(
@@ -41,6 +48,9 @@ public class ProtectionBlocksCommand extends PandaCommand {
 	private static ProtectionsService protectionsService;
 
 	@PandaInject
+	private static PlayerDataService playerDataService;
+
+	@PandaInject
 	private static PlayerInteractionsServiceImpl playerInteractionsService;
 
 	@PandaInject
@@ -55,13 +65,27 @@ public class ProtectionBlocksCommand extends PandaCommand {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 
 		if (pl != null && parameters.getParameters().size() == 0) {
-			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
-			if (protection != null && ProtectionUtilities.canManage(protection, pl)) {
-				try {
-					playerInteractionsService.openProtectionManagementInventoryRequest(
-							OpenProtectionManagementInventoryRequestInput.inst(pl, protection));
-				} catch (RoyaleProtectionBlocksExceptionImpl e) {
-					e.sendError(pl);
+			PlayerData playerData = playerDataService.getPlayerData(pl);
+			List<IProtection> allowedProtections = playerData.getCurrentProtections().stream()
+					.filter(prot -> ProtectionUtilities.canManage(prot, pl)).collect(Collectors.toList());
+
+			if (allowedProtections.size() > 0) {
+				if (allowedProtections.size() == 1) {
+					try {
+						playerInteractionsService.openProtectionManagementInventoryRequest(
+								OpenProtectionManagementInventoryRequestInput.inst(pl, allowedProtections.get(0)));
+					} catch (RoyaleProtectionBlocksExceptionImpl e) {
+						e.sendError(pl);
+					}
+				} else {
+					new SearchProtectionInventory(pl, allowedProtections, (prot) -> {
+						try {
+							playerInteractionsService.openProtectionManagementInventoryRequest(
+									OpenProtectionManagementInventoryRequestInput.inst(pl, (Protection) prot));
+						} catch (RoyaleProtectionBlocksExceptionImpl e) {
+							e.sendError(pl);
+						}
+					}).openInventory();
 				}
 			} else {
 				if (vaultApi.isHooked() && SETTINGS_PROTECTIONBLOCK_OPENSHOPONLISTEMPTY.getContent()

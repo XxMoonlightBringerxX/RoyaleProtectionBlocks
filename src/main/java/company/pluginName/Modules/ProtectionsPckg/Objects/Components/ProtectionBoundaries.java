@@ -46,7 +46,7 @@ public class ProtectionBoundaries {
 				if (isProtectionViewActive()) {
 					protectionViewTask = TasksUtils.execute(() -> {
 						AtomicInteger seconds = new AtomicInteger(0);
-						protectionViewEntity = BlockUtilities.setLocationGlowing(this.protection.getLocation());
+						protectionViewEntity = BlockUtilities.setLocationGlowing(this.protection.getBukkitLocation());
 						protectionViewTask = TasksUtils.executeOnAsyncWithTimer(() -> {
 							locationsForParticles.forEach((loc) -> {
 								DustOptions dustOptions = new DustOptions(Color.fromRGB((int) (Math.random() * 256),

@@ -65,7 +65,7 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 
 	@ItemExecutor("Close-button")
 	private void executeCloseButton() {
-		goToPreviousHolder();
+		goToPreviousInventory();
 	}
 
 	@ItemExecutor("Search-button")

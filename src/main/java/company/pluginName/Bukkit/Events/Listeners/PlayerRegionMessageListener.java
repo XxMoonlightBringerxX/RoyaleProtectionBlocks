@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Message;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -22,6 +23,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
+import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerEnterExitProtectionEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 
@@ -118,28 +120,67 @@ public class PlayerRegionMessageListener implements Listener {
 				SETTINGS_PROTECTION_SUBTITLEONEXITREGION.getContent());
 	}
 
+	private HashMap<UUID, String> lastMessages = new HashMap<>();
+
 	private void sendMessage(Player player, Replacement[] replacements, String message) {
 		if (message != null && !message.isEmpty()) {
-			MessageTemplate.inst(
+			String lastMessage = lastMessages.get(player.getUniqueId());
+			Message messageResult = MessageTemplate.inst(
 					placeholderApi.isHooked() ? placeholderApi.getHook().applyPlaceholders(message, player) : message)
-					.setReplacements(replacements).process().sendMessage(player);
+					.setReplacements(replacements).process();
+			String messageResultString = messageResult.toString();
+
+			if (lastMessage == null || !messageResultString.equals(lastMessage)) {
+				messageResult.sendMessage(player);
+				lastMessages.put(player.getUniqueId(), messageResultString);
+			}
 		}
 	}
+
+	private HashMap<UUID, Pair<String, String>> lastTitles = new HashMap<>();
 
 	private void sendTitle(Player player, Replacement[] replacements, String title, String subtitle) {
 		if ((title != null && !title.isEmpty()) || (subtitle != null && !subtitle.isEmpty())) {
-			MessageTemplate.inst(
+			Pair<String, String> lastTitle = lastTitles.get(player.getUniqueId());
+			Message messageResult = MessageTemplate.inst(
 					placeholderApi.isHooked() ? placeholderApi.getHook().applyPlaceholders(title, player) : title,
 					placeholderApi.isHooked() ? placeholderApi.getHook().applyPlaceholders(subtitle, player) : subtitle)
-					.setReplacements(replacements).process().sendTitle(player);
+					.setReplacements(replacements).process();
+
+			String generatedTitle = messageResult.getStrings().size() > 0 ? messageResult.getStrings().get(0) : null;
+			if (generatedTitle == null) {
+				generatedTitle = "";
+			}
+
+			String generatedSubtitle = messageResult.getStrings().size() > 1 ? messageResult.getStrings().get(1) : null;
+			if (generatedSubtitle == null) {
+				generatedSubtitle = "";
+			}
+
+			Pair<String, String> messageResultPair = Pair.of(generatedTitle, generatedSubtitle);
+
+			if (lastTitle == null || !lastTitle.getFirst().equals(messageResultPair.getFirst())
+					|| !lastTitle.getSecond().equals(messageResultPair.getSecond())) {
+				messageResult.sendTitle(player);
+				lastTitles.put(player.getUniqueId(), messageResultPair);
+			}
 		}
 	}
 
+	private HashMap<UUID, String> lastActionBars = new HashMap<>();
+
 	private void sendActionBar(Player player, Replacement[] replacements, String message) {
 		if (message != null && !message.isEmpty()) {
-			MessageTemplate.inst(
+			String lastActionBar = lastActionBars.get(player.getUniqueId());
+			Message messageResult = MessageTemplate.inst(
 					placeholderApi.isHooked() ? placeholderApi.getHook().applyPlaceholders(message, player) : message)
-					.setReplacements(replacements).process().sendActionBar(player);
+					.setReplacements(replacements).process();
+			String messageResultString = messageResult.toString();
+
+			if (lastActionBar == null || !messageResultString.equals(lastActionBar)) {
+				messageResult.sendActionBar(player);
+				lastActionBars.put(player.getUniqueId(), messageResultString);
+			}
 		}
 	}
 

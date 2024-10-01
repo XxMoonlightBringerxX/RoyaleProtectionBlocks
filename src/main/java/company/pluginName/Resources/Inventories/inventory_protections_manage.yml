@@ -84,6 +84,16 @@ Items:
       Amount: 1
       Name: "&eHide the protection boundaries"
     Slots: "24"
+  Merge-button:
+    Display-item:
+      Type: "SLIME_BLOCK"
+      Amount: 1
+      Name: "&eMerge protection"
+      Lore:
+      - "&8&o- &aLeft-click: &eSet parent protection"
+      - "&8&o- &aRight-click: &eRemove child protections"
+    Slots: "25"
+    Version: 4
   Delete-button:
     Display-item:
       Type: "PLAYER_HEAD"

@@ -3,9 +3,13 @@ package company.pluginName.Modules.ProtectionsPckg;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -32,13 +36,14 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBool
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.Getter;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
 
 @PandaService
 public class ProtectionsService {
 
 	@RegisteredPandaField("config")
-	private static final PandaBooleanField SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING = new PandaBooleanField(
+	public static final PandaBooleanField SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING = new PandaBooleanField(
 			"Settings.Protection.Allow-multi-thread-searching", false);
 
 	@PandaInject
@@ -53,55 +58,91 @@ public class ProtectionsService {
 	@PandaInject
 	private WorldGuardAPI worldGuardApi;
 
-	private @Getter HashMap<UUID, List<Protection>> protectionsByOwner = new HashMap<>();
-	private @Getter HashMap<String, List<Protection>> protectionsByWorld = new HashMap<>();
-	private @Getter HashMap<String, Protection> protectionByRegion = new HashMap<>();
+	private @Getter HashMap<UUID, List<Protection>> protectionsByOwner = new LinkedHashMap<>();
+	private @Getter HashMap<String, List<Protection>> protectionsByWorld = new LinkedHashMap<>();
+	private @Getter HashMap<String, Protection> protectionByRegion = new LinkedHashMap<>();
+
+	private final Consumer<Protection> registerProtectionFunction = (protection) -> {
+		protectionByRegion.put(protection.getRegionId().toLowerCase(), protection);
+		protectionsByOwner.computeIfAbsent(protection.getOwnerUuid(), (ownerUuid) -> new ArrayList<>()).add(protection);
+		protectionsByWorld.computeIfAbsent(protection.getWorldName(), (worldName) -> new ArrayList<>()).add(protection);
+	};
+
+	private final Consumer<Protection> unregisterProtectionFunction = (protection) -> {
+		protectionByRegion.remove(protection.getRegionId().toLowerCase());
+		protectionsByOwner.computeIfAbsent(protection.getOwnerUuid(), (ownerUuid) -> new ArrayList<>())
+				.remove(protection);
+		protectionsByWorld.computeIfAbsent(protection.getWorldName(), (worldName) -> new ArrayList<>())
+				.remove(protection);
+	};
 
 	@LoadMethod
 	private void load() {
+		AtomicInteger regeneratedRegions = new AtomicInteger();
+
 		sqlService.getProtections().stream().filter(protection -> {
-			if (Bukkit.getWorld(protection.getWorldName()) == null) {
-				return false;
-			}
-
-			if (protection.getProtectedRegion() == null) {
-				try {
-					protection.regenerateProtectedRegion();
-				} catch (RoyaleProtectionBlocksExceptionImpl e) {
-					MessageTemplate
-							.inst(PandaPrefixedStringField
-									.applyPrefix("&7Removing protection '" + protection.getRegionId()
-											+ "' as it couldn't be found on '" + protection.getWorldName()
-											+ "' and were problems trying to regenerate the region."))
-							.process().sendMessage(Bukkit.getConsoleSender());
-
-					if (protection.getUtils().isProtectionBlockShown()) {
-						protection.getUtils().hideProtectionBlock();
-					}
-
-					if (protection.getBoundaries().isProtectionViewActive()) {
-						protection.getBoundaries().toggleProtectionView();
-					}
-
+			if (Bukkit.getWorld(protection.getWorldName()) != null) {
+				if (protection.getProtectedRegion() == null) {
 					try {
-						protection.delete(RemovalCause.REMOVE).subscribe();
-					} catch (RoyaleProtectionBlocksExceptionImpl e1) {
-						e1.sendError(Bukkit.getConsoleSender());
-						return false;
+						protection.regenerateProtectedRegion();
+					} catch (RoyaleProtectionBlocksExceptionImpl e) {
+						MessageTemplate
+								.inst(PandaPrefixedStringField
+										.applyPrefix("&7Removing protection '" + protection.getRegionId()
+												+ "' as it couldn't be found on '" + protection.getWorldName()
+												+ "' and were problems trying to regenerate the region."))
+								.process().sendMessage(Bukkit.getConsoleSender());
+
+						if (protection.getUtils().isProtectionBlockShown()) {
+							protection.getUtils().hideProtectionBlock();
+						}
+
+						if (protection.getBoundaries().isProtectionViewActive()) {
+							protection.getBoundaries().toggleProtectionView();
+						}
+
+						try {
+							protection.delete(RemovalCause.PLAYER).subscribe();
+						} catch (RoyaleProtectionBlocksExceptionImpl e1) {
+							e1.sendError(Bukkit.getConsoleSender());
+							return false;
+						}
 					}
 				}
-			}
 
-			Set<String> banneds = protection.getWorldGuardBanneds().get();
+				if (protection.getProtectedRegion().getMaximumPoint()
+						.getX() != protection.getUtils().getProtectionArea().getMaxLocation().getX() - 1
+						|| protection.getProtectedRegion().getMaximumPoint()
+								.getY() != protection.getUtils().getProtectionArea().getMaxLocation().getY() - 1
+						|| protection.getProtectedRegion().getMaximumPoint()
+								.getZ() != protection.getUtils().getProtectionArea().getMaxLocation().getZ() - 1
+						|| protection.getProtectedRegion().getMinimumPoint().getX() != protection.getUtils()
+								.getProtectionArea().getMinLocation().getX()
+						|| protection.getProtectedRegion().getMinimumPoint().getY() != protection.getUtils()
+								.getProtectionArea().getMinLocation().getY()
+						|| protection.getProtectedRegion().getMinimumPoint().getZ() != protection.getUtils()
+								.getProtectionArea().getMinLocation().getZ()) {
+					try {
+						protection.regenerateProtectedRegion();
+						regeneratedRegions.incrementAndGet();
+					} catch (RoyaleProtectionBlocksExceptionImpl e) {
+						e.sendError(Bukkit.getConsoleSender());
+					}
+				}
 
-			if (!banneds.isEmpty()) {
-				try {
-					sqlService.saveProtectionBanneds(protection,
-							banneds.stream().map(UUID::fromString).collect(Collectors.toList()));
-					ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
-							worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag(), null);
-				} catch (RoyaleProtectionBlocksExceptionImpl e) {
-					e.sendError(Bukkit.getConsoleSender());
+				// TODO: Remove this code after some versions as everything should already be
+				// parsed to the database.
+				Set<String> banneds = protection.getWorldGuardBanneds().get();
+
+				if (!banneds.isEmpty()) {
+					try {
+						sqlService.saveProtectionBanneds(protection,
+								banneds.stream().map(UUID::fromString).collect(Collectors.toList()));
+						ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
+								worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag(), null);
+					} catch (RoyaleProtectionBlocksExceptionImpl e) {
+						e.sendError(Bukkit.getConsoleSender());
+					}
 				}
 			}
 
@@ -117,6 +158,11 @@ public class ProtectionsService {
 
 		plugin.sendDebug(getClass(),
 				String.format("Loaded a total amount of '%d' protection(s)", this.protectionByRegion.size()));
+		if (regeneratedRegions.get() > 0) {
+			plugin.sendWarning(getClass(), String.format(
+					"A total of %d protections didn't have a proper WorldGuard region. This regions have been regenerated.",
+					regeneratedRegions.get()));
+		}
 	}
 
 	@UnloadMethod
@@ -136,17 +182,11 @@ public class ProtectionsService {
 	 */
 
 	public synchronized void registerProtection(Protection protection) {
-		protectionByRegion.put(protection.getRegionId().toLowerCase(), protection);
-		protectionsByOwner.computeIfAbsent(protection.getOwnerUuid(), (ownerUuid) -> new ArrayList<>()).add(protection);
-		protectionsByWorld.computeIfAbsent(protection.getWorldName(), (worldName) -> new ArrayList<>()).add(protection);
+		executeSynchronized(() -> registerProtectionFunction.accept(protection));
 	}
 
 	public synchronized void unregisterProtection(Protection protection) {
-		protectionByRegion.remove(protection.getRegionId().toLowerCase());
-		protectionsByOwner.computeIfAbsent(protection.getOwnerUuid(), (ownerUuid) -> new ArrayList<>())
-				.remove(protection);
-		protectionsByWorld.computeIfAbsent(protection.getWorldName(), (worldName) -> new ArrayList<>())
-				.remove(protection);
+		executeSynchronized(() -> unregisterProtectionFunction.accept(protection));
 	}
 
 	/*
@@ -154,87 +194,117 @@ public class ProtectionsService {
 	 */
 
 	public Protection findProtectionById(String id) {
-		return this.protectionByRegion.get(id.toLowerCase());
+		return executeSynchronizedWithReturn(() -> this.protectionByRegion.get(id.toLowerCase()));
 	}
 
 	public Protection findProtectionByLocation(Location location) {
-		return findProtectionsByLocation(location).findFirst().orElse(null);
+		return executeSynchronizedWithReturn(() -> findProtectionsByLocation(location).findFirst().orElse(null));
 	}
 
 	public Stream<Protection> findProtectionsByLocation(Location location) {
-		return findProtectionsByLocation(location, true);
+		return executeSynchronizedWithReturn(() -> findProtectionsByLocation(location, true));
 	}
 
 	public Stream<Protection> findProtectionsByLocation(Location location, boolean includeBorder) {
-		return findProtectionsByArea(location, location, includeBorder);
+		return executeSynchronizedWithReturn(() -> findProtectionsByArea(location, location, includeBorder));
 	}
 
 	public Stream<Protection> findProtectionsByArea(Location location1, Location location2) {
-		return findProtectionsByArea(location1, location2, true);
+		return executeSynchronizedWithReturn(() -> findProtectionsByArea(location1, location2, true));
 	}
 
 	public Stream<Protection> findProtectionsByArea(Location location1, Location location2, boolean includeBorder) {
 		SimpleLocationArea locationArea = SimpleLocationArea.of(location1, location2);
-		return StreamSupport
+		return executeSynchronizedWithReturn(() -> StreamSupport
 				.stream(protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList())
 						.spliterator(), SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
-				.filter((prot) -> prot.getUtils().isInside(locationArea, includeBorder))
-				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
+				.filter((prot) -> !prot.isCreationInProgress() && !prot.isDeleted()
+						&& prot.getUtils().isInside(locationArea, includeBorder))
+				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority())));
 	}
 
 	public Protection findProtectionParentByLocation(Location location) {
-		return findProtectionParentsByLocation(location).findFirst().orElse(null);
+		return executeSynchronizedWithReturn(() -> findProtectionParentsByLocation(location).findFirst().orElse(null));
 	}
 
 	public Stream<Protection> findProtectionParentsByLocation(Location location) {
-		return findProtectionParentsByLocation(location, true);
+		return executeSynchronizedWithReturn(() -> findProtectionParentsByLocation(location, true));
 	}
 
 	public Stream<Protection> findProtectionParentsByLocation(Location location, boolean includeBorder) {
-		return findProtectionParentsByArea(location, location, includeBorder);
+		return executeSynchronizedWithReturn(() -> findProtectionParentsByArea(location, location, includeBorder));
 	}
 
 	public Stream<Protection> findProtectionParentsByArea(Location location1, Location location2) {
-		return findProtectionParentsByArea(location1, location2, true);
+		return executeSynchronizedWithReturn(() -> findProtectionParentsByArea(location1, location2, true));
 	}
 
 	public Stream<Protection> findProtectionParentsByArea(Location location1, Location location2,
 			boolean includeBorder) {
-		SimpleLocationArea locationArea = SimpleLocationArea.of(location1, location2);
-		return StreamSupport
-				.stream(protectionsByWorld.getOrDefault(location1.getWorld().getName(), Collections.emptyList())
+		return executeSynchronizedWithReturn(
+				() -> findProtectionParentsByArea(SimpleLocationArea.of(location1, location2), true));
+	}
+
+	public Stream<Protection> findProtectionParentsByArea(SimpleLocationArea locationArea) {
+		return executeSynchronizedWithReturn(() -> findProtectionParentsByArea(locationArea, true));
+	}
+
+	public Stream<Protection> findProtectionParentsByArea(SimpleLocationArea locationArea, boolean includeBorder) {
+		return executeSynchronizedWithReturn(() -> StreamSupport
+				.stream(protectionsByWorld.getOrDefault(locationArea.getWorldName(), Collections.emptyList())
 						.spliterator(), SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
-				.filter((prot) -> prot.getParentProtection() == prot
-						&& prot.getUtils().isInsideAny(locationArea, includeBorder))
-				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()));
+				.filter((prot) -> !prot.isCreationInProgress() && !prot.isDeleted()
+						&& (prot.getParentProtection() == prot
+								&& prot.getUtils().isInsideAny(locationArea, includeBorder)))
+				.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority())));
 	}
 
 	public Stream<Protection> getAllowedProtections(OfflinePlayer pl) {
-		return StreamSupport
+		return executeSynchronizedWithReturn(() -> StreamSupport
 				.stream(protectionByRegion.values().spliterator(),
 						SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
-				.filter(prot -> prot.getWorldGuardOwners().list().contains(pl.getUniqueId())
-						|| prot.getWorldGuardMembers().list().contains(pl.getUniqueId()));
+				.filter(prot -> !prot.isCreationInProgress() && !prot.isDeleted()
+						&& (prot.getWorldGuardOwners().list().contains(pl.getUniqueId())
+								|| prot.getWorldGuardMembers().list().contains(pl.getUniqueId()))));
 	}
 
 	public Protection findProtectionBySourceLocation(Location sourceLocation) {
-		return StreamSupport
+		SimpleLocation loc = SimpleLocation.of(sourceLocation.getBlock().getLocation());
+		return executeSynchronizedWithReturn(() -> StreamSupport
 				.stream(protectionByRegion.values().spliterator(),
 						SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
-				.filter(prot -> prot.getWorldName().equals(sourceLocation.getWorld().getName())
-						&& prot.getLocation().distance(sourceLocation) < 1D)
-				.findFirst().orElse(null);
+				.filter(prot -> !prot.isCreationInProgress() && !prot.isDeleted() && loc.equals(prot.getLocation()))
+				.findFirst().orElse(null));
 	}
 
 	public Protection findProtectionBySourceBlock(Block sourceBlock) {
-		return StreamSupport
+		SimpleLocation loc = SimpleLocation.of(sourceBlock.getLocation());
+		Protection foundProt = executeSynchronizedWithReturn(() -> StreamSupport
 				.stream(protectionByRegion.values().spliterator(),
 						SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
-				.filter(prot -> prot.getUtils().isProtectionBlock(sourceBlock)).findFirst().orElse(null);
+				.filter(prot -> !prot.isCreationInProgress() && !prot.isDeleted() && loc.equals(prot.getLocation()))
+				.findFirst().orElse(null));
+		return foundProt != null && (foundProt.getUtils().isProtectionBlock(loc)) ? foundProt : null;
 	}
 
 	public List<Protection> findProtectionsByOwner(UUID owner) {
-		return this.protectionsByOwner.getOrDefault(owner, Collections.emptyList());
+		return executeSynchronizedWithReturn(
+				() -> this.protectionsByOwner.getOrDefault(owner, Collections.emptyList()));
+	}
+
+	/*
+	 * Private methods
+	 */
+
+	private synchronized <T> T executeSynchronizedWithReturn(Supplier<T> func) {
+		return func.get();
+	}
+
+	private void executeSynchronized(Runnable func) {
+		executeSynchronizedWithReturn(() -> {
+			func.run();
+			return null;
+		});
 	}
 
 }

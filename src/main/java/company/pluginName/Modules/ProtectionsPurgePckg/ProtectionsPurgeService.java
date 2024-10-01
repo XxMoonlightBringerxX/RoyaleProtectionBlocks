@@ -45,6 +45,7 @@ import lombok.Getter;
 import relampagorojo93.LibsCollection.JSONLib.JSONArray;
 import relampagorojo93.LibsCollection.JSONLib.JSONObject;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 
 @PandaService
 public class ProtectionsPurgeService {
@@ -144,6 +145,28 @@ public class ProtectionsPurgeService {
 		load();
 	}
 
+	public boolean isRunning() {
+		return this.configuredPurgeConfiguration != null;
+	}
+
+	public long calculateExpiresIn(IProtection protection) {
+		if (this.configuredPurgeConfiguration != null) {
+			long currentTime = System.currentTimeMillis();
+			long olderThan = currentTime - (this.configuredPurgeConfiguration.getDays() * DAYS_IN_MILLIS)
+					- (this.configuredPurgeConfiguration.getHours() * HOURS_IN_MILLIS)
+					- (this.configuredPurgeConfiguration.getMinutes() * MINUTES_IN_MILLIS)
+					- this.configuredPurgeConfiguration.getMillis();
+
+			switch (this.configuredPurgeConfiguration.getBasedOn()) {
+			case PLAYER_LAST_TIME:
+				return Math.max(protection.getOwnerLastPlayed() - olderThan, 0);
+			case REGION_CREATED_DATE:
+				return Math.max(protection.getCreatedDate() - olderThan, 0);
+			}
+		}
+		return Long.MAX_VALUE;
+	}
+
 	public List<Protection> retrieveProtectionsToPurge(PurgeConfiguration configuration) {
 		long currentTime = System.currentTimeMillis();
 		long olderThan = currentTime - (configuration.getDays() * DAYS_IN_MILLIS)
@@ -153,25 +176,12 @@ public class ProtectionsPurgeService {
 
 		switch (configuration.getBasedOn()) {
 		case PLAYER_LAST_TIME:
-			protectionsService.getProtectionsByOwner().forEach((owner, ownerProtections) -> {
-				OfflinePlayer pl = OfflinePlayerUtilities.getOfflinePlayer(owner);
-				if (pl != null) {
-					if ((pl.isOnline() ? currentTime : pl.getLastPlayed()) <= olderThan) {
-						protections.addAll(ownerProtections);
-					}
-				} else {
-					protections.addAll(ownerProtections);
-				}
-			});
+			protectionsService.getProtectionByRegion().values().stream()
+					.filter(protection -> protection.getOwnerLastPlayed() <= olderThan).forEach(protections::add);
 			break;
 		case REGION_CREATED_DATE:
-			protectionsService.getProtectionsByWorld().forEach((world, ownerProtections) -> {
-				ownerProtections.forEach(protection -> {
-					if (protection.getCreatedDate() <= olderThan) {
-						protections.add(protection);
-					}
-				});
-			});
+			protectionsService.getProtectionByRegion().values().stream()
+					.filter(protection -> protection.getCreatedDate() <= olderThan).forEach(protections::add);
 			break;
 		}
 

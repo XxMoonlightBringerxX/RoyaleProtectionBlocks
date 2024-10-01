@@ -127,6 +127,9 @@ public class Messages {
 			"Message.Files.Exported-successfully", "All the data has been exported successfully!");
 	public static final PandaPrefixedStringField MESSAGE_FILES_IMPORTEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Files.Imported-successfully", "All the data has been imported successfully!");
+	public static final PandaPrefixedStringField MESSAGE_FILES_IMPORTEDWARNING = new PandaPrefixedStringField(
+			"Message.Files.Imported-warning",
+			"&cThe following blocks couldn't be saved. Check the console for more information:");
 
 	// Errors
 	public static final PandaPrefixedStringField ERROR_ERROR = new PandaPrefixedStringField("Error.Error", "&cError!");

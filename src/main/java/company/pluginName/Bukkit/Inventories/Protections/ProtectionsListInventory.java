@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.API.Services.PlayerInteractionsServiceImpl;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
@@ -25,6 +26,7 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemEx
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
+import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
 import lombok.AllArgsConstructor;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException.Type;
@@ -58,6 +60,9 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 	private static ProtectionsService protectionsService;
 
 	@PandaInject
+	private static PlaceholdersService placeholdersService;
+
+	@PandaInject
 	private static PlayerInteractionsServiceImpl playerInteractionsService;
 
 	private OfflinePlayer owner;
@@ -70,14 +75,22 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 	public ProtectionsListInventory(Player player, OfflinePlayer owner) {
 		super(player);
 		this.owner = owner;
+
+		Replacement[] playerReplacements = placeholdersService.getPlayerReplacements(player);
+		setReplacements(playerReplacements);
 	}
 
 	@Override
 	protected String getTitle() {
+		Replacement[] replacements = new Replacement[] { new Replacement("{playername}", () -> owner.getName()) };
+
 		return this.owner.getUniqueId().equals(getPlayer().getUniqueId())
 				? MessageTemplate.inst(super.getTitle()).toString()
 				: MessageTemplate.inst(getChestInventoryData().getCustomFields().get(TITLE_OTHER_PATH).toString())
-						.setReplacements(new Replacement("{playername}", () -> owner.getName())).process().toString();
+						.setReplacements(
+								ArrayUtilities.join(new Replacement[getReplacements().length + replacements.length],
+										getReplacements(), replacements))
+						.process().toString();
 	}
 
 	@Override
@@ -104,7 +117,7 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 		final boolean canDelete = ProtectionUtilities.canDelete(protection, getPlayer());
 
 		Location homeLocation = protection.getHome();
-		Location loc = protection.getLocation();
+		Location loc = protection.getBukkitLocation();
 		Replacement[] replacements = {
 				new Replacement("{protection}",
 						() -> protection.getDisplayName() != null ? protection.getDisplayName()
@@ -115,9 +128,12 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 				new Replacement("{location_x}", () -> loc != null ? String.valueOf(loc.getBlockX()) : "???"),
 				new Replacement("{location_y}", () -> loc != null ? String.valueOf(loc.getBlockY()) : "???"),
 				new Replacement("{location_z}", () -> loc != null ? String.valueOf(loc.getBlockZ()) : "???") };
+		Replacement[] protectionReplacements = placeholdersService.getProtectionReplacements(protection);
 
 		ItemBuilder itemBuilder = ItemBuilder.inst().fromMap(getChestInventoryData().getCustomFields(), "Entity")
-				.setReplacements(replacements);
+				.setReplacements(
+						ArrayUtilities.join(new Replacement[protectionReplacements.length + replacements.length],
+								protectionReplacements, replacements));
 
 		List<String> lore = new ArrayList<>(getChestInventoryData().getEntityLore());
 		lore.add("&0");

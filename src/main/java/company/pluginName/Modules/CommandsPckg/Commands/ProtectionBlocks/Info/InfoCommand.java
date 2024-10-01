@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.ProtectionBlocksCommand;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -25,6 +26,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
+import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -33,16 +35,14 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStri
 		defaultName = "info",
 		defaultDescription = "Show the information of a protection",
 		defaultAliases = "i",
-		defaultUsage = "[members|owners|banneds]"
-)
+		defaultUsage = "[members|owners|banneds]")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class InfoCommand extends PandaCommand {
 
 	@RegisteredPandaField("lang")
@@ -56,6 +56,9 @@ public class InfoCommand extends PandaCommand {
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
+
+	@PandaInject
+	private static PlaceholdersService placeholdersService;
 
 	private MembersSubcommand membersCommand;
 	private OwnersSubcommand ownersCommand;
@@ -101,35 +104,36 @@ public class InfoCommand extends PandaCommand {
 	private void sendInformation(Player player, Protection protection) {
 		ProtectionBlock block = protection.getProtectionBlock().getObject();
 
+		Replacement[] replacements = new Replacement[] {
+				new Replacement("{protection_id}", () -> protection.getRegionId()),
+				new Replacement("{protection_name}", () -> protection
+						.getDisplayName()),
+				new Replacement("{protection_size_x}",
+						() -> block != null ? String.valueOf((block.getInformation().getBlocksX() * 2) + 1) : "???"),
+				new Replacement("{protection_size_y}",
+						() -> block != null ? (block.getInformation().getBlocksY() == -1
+								? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
+								: String.valueOf((block.getInformation().getBlocksY() * 2) + 1)) : "???"),
+				new Replacement("{protection_size_z}",
+						() -> block != null ? String.valueOf((block.getInformation().getBlocksZ() * 2) + 1) : "???"),
+				new Replacement("{protection_owner}", () -> protection.getOwnerName()),
+				new Replacement("{protection_members}",
+						new MessageFragment(() -> "&7[click]",
+								new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+										"/".concat(membersCommand.getCommandPath())))),
+				new Replacement("{protection_owners}",
+						new MessageFragment(() -> "&7[click]",
+								new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+										"/".concat(ownersCommand.getCommandPath())))),
+				new Replacement("{protection_banneds}", new MessageFragment(() -> "&7[click]",
+						new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/".concat(bannedsCommand.getCommandPath())))) };
+
+		Replacement[] protectionReplacements = placeholdersService.getProtectionReplacements(protection);
+
 		MessageTemplate.inst(MESSAGE_WORLDINFO_GENERALINFORMATION.getContent())
-				.setReplacements(new Replacement("{protection_id}", () -> protection.getRegionId()),
-						new Replacement("{protection_name}", () -> protection.getDisplayName()),
-						new Replacement("{protection_size_x}",
-								() -> block != null ? String.valueOf((block.getInformation().getBlocksX() * 2) + 1)
-										: "???"),
-						new Replacement(
-								"{protection_size_y}",
-								() -> block != null
-										? (block.getInformation().getBlocksY() == -1
-												? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
-												: String.valueOf((block.getInformation().getBlocksY() * 2) + 1))
-										: "???"),
-						new Replacement("{protection_size_z}",
-								() -> block != null ? String.valueOf((block.getInformation().getBlocksZ() * 2) + 1)
-										: "???"),
-						new Replacement("{protection_owner}", () -> protection.getOwnerName()),
-						new Replacement("{protection_members}",
-								new MessageFragment(() -> "&7[click]",
-										new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-												"/".concat(membersCommand.getCommandPath())))),
-						new Replacement("{protection_owners}",
-								new MessageFragment(() -> "&7[click]",
-										new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-												"/".concat(ownersCommand.getCommandPath())))),
-						new Replacement("{protection_banneds}",
-								new MessageFragment(() -> "&7[click]",
-										new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-												"/".concat(bannedsCommand.getCommandPath())))))
+				.setReplacements(
+						ArrayUtilities.join(new Replacement[replacements.length + protectionReplacements.length],
+								replacements, protectionReplacements))
 				.process().sendMessage(player);
 	}
 

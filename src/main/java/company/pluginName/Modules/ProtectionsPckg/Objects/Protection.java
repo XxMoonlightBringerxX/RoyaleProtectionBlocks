@@ -1,8 +1,10 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -30,6 +32,7 @@ import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
+import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
@@ -51,10 +54,10 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
-import darkpanda73.PandaUtils.PandaUtilities.Location.LocationReference;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaParametizedPermission.Parameter;
 import darkpanda73.PandaUtils.Utilities.Java.Observable;
 import lombok.Data;
@@ -62,9 +65,12 @@ import lombok.EqualsAndHashCode;
 import lombok.Setter;
 import lombok.ToString;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.CreationCause;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionMergeEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionSplitEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
@@ -76,19 +82,31 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLoc
 public class Protection implements IProtection {
 
 	@RegisteredPandaField("config")
-	private static PandaIntegerField SETTINGS_PROTECTION_MINIMUMDISTANCEBETWEENPROTECTIONS = new PandaIntegerField(
+	public static PandaIntegerField SETTINGS_PROTECTION_MINIMUMDISTANCEBETWEENPROTECTIONS = new PandaIntegerField(
 			"Settings.Protection.Minimum-distance-between-protections", -1);
 
 	@RegisteredPandaField("config")
-	private static PandaIntegerField SETTINGS_PROTECTION_MAXIMUMDISPLAYNAMELENGTH = new PandaIntegerField(
+	public static PandaIntegerField SETTINGS_PROTECTION_MAXIMUMDISPLAYNAMELENGTH = new PandaIntegerField(
 			"Settings.Protection.Maximum-display-name-length", 255);
 
 	@RegisteredPandaField("config")
-	private static PandaBooleanField SETTINGS_PROTECTION_MUSTBECLOSEFORMERGE = new PandaBooleanField(
+	public static PandaBooleanField SETTINGS_PROTECTION_MUSTBECLOSEFORMERGE = new PandaBooleanField(
 			"Settings.Protection.Must-be-close-for-merge", true);
+
+	@RegisteredPandaField("config")
+	public static PandaStringField SETTINGS_PROTECTION_DEFAULTDISPLAYNAME = new PandaStringField(
+			"Settings.Protection.Default-display-name",
+			"{protection_world}_{protection_location_x}_{protection_location_y}_{protection_location_z}");
+
+	@RegisteredPandaField("config")
+	public static PandaIntegerField SETTINGS_PROTECTION_DEFAULTPRIORITY = new PandaIntegerField(
+			"Settings.Protection.Default-priority", 0);
 
 	@PandaInject
 	private static ProtectionSettingsService protectionSettingsService;
+
+	@PandaInject
+	private static PlaceholdersService placeholdersService;
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
@@ -116,7 +134,7 @@ public class Protection implements IProtection {
 
 	private @ToString.Include @EqualsAndHashCode.Include String regionId;
 	private @ToString.Include UUID ownerUuid;
-	private String ownerName;
+	private OfflinePlayer ownerOfflinePlayer;
 	private ReferencedProtectionBlock protectionBlock;
 	private @ToString.Include @EqualsAndHashCode.Include String worldName;
 	private @ToString.Include @Setter(lombok.AccessLevel.NONE) long createdDate;
@@ -148,16 +166,16 @@ public class Protection implements IProtection {
 		this.worldName = location.getWorld().getName();
 		this.regionId = ProtectionUtilities.generateDefaultName(location).toLowerCase();
 		this.displayName = ProtectionUtilities.generateDefaultName(location);
-		this.location = LocationReference.fromLocation(location);
+		this.location = SimpleLocation.of(location);
 	}
 
 	/*
 	 * Locations
 	 */
 
-	private @ToString.Include LocationReference location;
+	private @ToString.Include SimpleLocation location;
 
-	public Location getLocation() {
+	public Location getBukkitLocation() {
 		return this.location.toLocation();
 	}
 
@@ -169,6 +187,10 @@ public class Protection implements IProtection {
 	private @Setter(lombok.AccessLevel.NONE) String displayNameWithoutFormat;
 
 	public void setDisplayName(String displayName) throws RoyaleProtectionBlocksExceptionImpl {
+		setDisplayName(displayName, true);
+	}
+
+	public void setDisplayName(String displayName, boolean saveData) throws RoyaleProtectionBlocksExceptionImpl {
 		Integer maxLength = SETTINGS_PROTECTION_MAXIMUMDISPLAYNAMELENGTH.getContent();
 
 		if (maxLength == null) {
@@ -205,9 +227,11 @@ public class Protection implements IProtection {
 		}
 
 		this.displayName = displayName;
-		this.displayNameWithoutFormat = MessageTemplate.inst(displayName).setColor(false).process().toString();
+		this.displayNameWithoutFormat = displayNameWithoutFormat;
 
-		saveData();
+		if (saveData) {
+			saveData();
+		}
 	}
 
 	public String getDisplayNameWithoutFormat() {
@@ -235,16 +259,19 @@ public class Protection implements IProtection {
 	}
 
 	/*
-	 * Data methods
+	 * Owner methods
 	 */
 
-	public String getOwnerName() {
-		if (ownerName == null) {
-			OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(ownerUuid);
-			this.ownerName = owner != null && owner.getName() != null ? owner.getName() : "???";
+	public OfflinePlayer getOwnerOfflinePlayer() {
+		if (this.ownerOfflinePlayer == null) {
+			this.ownerOfflinePlayer = OfflinePlayerUtilities.getOfflinePlayer(ownerUuid);
 		}
-		return this.ownerName;
+		return this.ownerOfflinePlayer;
 	}
+
+	/*
+	 * Data methods
+	 */
 
 	@Override
 	public String getProtectionBlockIdentifier() {
@@ -309,7 +336,8 @@ public class Protection implements IProtection {
 
 	@Override
 	public int getPriority() {
-		return getProtectedRegion().getPriority();
+		return getProtectedRegion() != null ? getProtectedRegion().getPriority()
+				: SETTINGS_PROTECTION_DEFAULTPRIORITY.getContent();
 	}
 
 	/*
@@ -396,10 +424,15 @@ public class Protection implements IProtection {
 
 				this.createdDate = System.currentTimeMillis();
 
+				this.setDisplayName(
+						MessageTemplate.inst(SETTINGS_PROTECTION_DEFAULTDISPLAYNAME.getContent())
+								.setReplacements(placeholdersService.getProtectionReplacements(this)).toString(),
+						false);
+
 				TasksUtils.executeOnAsync(() -> this.saveData());
 
-				TasksUtils
-						.execute(() -> Bukkit.getPluginManager().callEvent(new ProtectionCreationEvent(player, this)));
+				TasksUtils.execute(() -> Bukkit.getPluginManager()
+						.callEvent(new ProtectionCreationEvent(player, this, CreationCause.PLAYER)));
 
 				return this;
 			} catch (Throwable e) {
@@ -414,7 +447,7 @@ public class Protection implements IProtection {
 
 	private void checkCreationConditions(Player player) throws RoyaleProtectionBlocksExceptionImpl {
 		// Check if the protection is already registered
-		Protection registeredProtection = protectionsService.findProtectionBySourceLocation(getLocation());
+		Protection registeredProtection = protectionsService.findProtectionBySourceLocation(getBukkitLocation());
 		if (registeredProtection != null) {
 			if (registeredProtection != this) {
 				throw Exceptions.Protections.Save.ALREADYOCCUPIED.generateException();
@@ -466,9 +499,9 @@ public class Protection implements IProtection {
 					? getUtils().getProtectionArea().getMinLocation().toLocation().clone().add(-offset, -offset,
 							-offset)
 					: getUtils().getProtectionArea().getMinLocation().toLocation();
-			Location maxLocationWithOffset = offset > 0
+			Location maxLocationWithOffset = (offset > 0
 					? getUtils().getProtectionArea().getMaxLocation().toLocation().clone().add(offset, offset, offset)
-					: getUtils().getProtectionArea().getMaxLocation().toLocation();
+					: getUtils().getProtectionArea().getMaxLocation().toLocation());
 
 			// Checks if there's other protections overlapping this region
 			if (!PermissionsService.OVERLAP_BYPASS.hasPermission(player)) {
@@ -482,7 +515,7 @@ public class Protection implements IProtection {
 			}
 
 			// Tries to get the region manager from the world
-			RegionManager regionManager = getRegionManager(getLocation().getWorld());
+			RegionManager regionManager = getRegionManager(getBukkitLocation().getWorld());
 
 			if (regionManager == null) {
 				throw Exceptions.Protections.Save.UNKNOWN.generateException(new Exception("Region Manager is"));
@@ -516,7 +549,11 @@ public class Protection implements IProtection {
 			// calculated previously
 			ProtectedRegion protectedRegion = new ProtectedCuboidRegion(regionId,
 					BlockVector3.at(minLocation.getBlockX(), minLocation.getBlockY(), minLocation.getBlockZ()),
-					BlockVector3.at(maxLocation.getBlockX(), maxLocation.getBlockY(), maxLocation.getBlockZ()));
+					BlockVector3.at(maxLocation.getBlockX() - 1, maxLocation.getBlockY() - 1,
+							maxLocation.getBlockZ() - 1));
+
+			// Set default priority
+			protectedRegion.setPriority(SETTINGS_PROTECTION_DEFAULTPRIORITY.getContent());
 
 			// Adds the owner of the protection as an owner of the protection on WorldGuard
 			protectedRegion.getOwners().addPlayer(ownerUuid);
@@ -559,16 +596,59 @@ public class Protection implements IProtection {
 
 				checkRemovalConditions(player);
 
-				unsetParentProtection();
+				IProtection parent = getParentProtection();
 
-				new ArrayList<>(getChildProtections()).forEach(protection -> {
+				try {
 					try {
-						protection.unsetParentProtection();
-						((Protection) protection).saveData();
-					} catch (RoyaleProtectionBlocksException e) {
-						e.sendError(Bukkit.getConsoleSender());
+						unsetParentProtection();
+
+						new ArrayList<>(getChildProtections()).forEach(protection -> {
+							try {
+								protection.unsetParentProtection();
+								((Protection) protection).saveData();
+							} catch (RoyaleProtectionBlocksException e) {
+								e.sendError(Bukkit.getConsoleSender());
+							}
+						});
+
+						if (parent != this) {
+							Set<IProtection> insideParentProtections = new HashSet<>();
+							insideParentProtections.add(parent);
+
+							parent.performAllProtections(prot -> {
+								if (prot != parent && insideParentProtections.stream().anyMatch(prot2 -> prot2
+										.isInside(((Protection) prot).getUtils().getProtectionArea(), true))) {
+									insideParentProtections.add(prot);
+								}
+							});
+
+							Set<IProtection> notInsideParentProtections = new HashSet<>();
+
+							parent.performAllProtections(prot -> {
+								if (!insideParentProtections.contains(prot)) {
+									notInsideParentProtections.add(prot);
+								}
+							});
+
+							notInsideParentProtections.forEach(prot -> {
+								try {
+									prot.unsetParentProtection();
+									((Protection) prot).saveData();
+								} catch (Throwable e) {
+									throw new RuntimeException(e);
+								}
+							});
+						}
+					} catch (RuntimeException e) {
+						throw e.getCause();
 					}
-				});
+				} catch (Throwable e) {
+					if (e instanceof RoyaleProtectionBlocksExceptionImpl) {
+						throw (RoyaleProtectionBlocksExceptionImpl) e;
+					} else {
+						throw Exceptions.Protections.Delete.UNKNOWN.generateException(e);
+					}
+				}
 
 				deleteProtectedRegion();
 
@@ -620,14 +700,9 @@ public class Protection implements IProtection {
 	 */
 
 	public void regenerateProtectedRegion() throws RoyaleProtectionBlocksExceptionImpl {
-		ProtectedRegion pr = null;
+		int priority = getPriority();
 
-		try {
-			pr = getProtectedRegion();
-		} catch (NullPointerException e) {
-		}
-
-		if (pr != null) {
+		if (getProtectedRegion() != null) {
 			Map<Flag<?>, Object> flags = getProtectedRegion().getFlags();
 			DefaultDomain owners = getProtectedRegion().getOwners();
 			DefaultDomain members = getProtectedRegion().getMembers();
@@ -642,6 +717,8 @@ public class Protection implements IProtection {
 		} else {
 			createProtectedRegion();
 		}
+
+		getProtectedRegion().setPriority(priority);
 	}
 
 	/*
@@ -651,11 +728,20 @@ public class Protection implements IProtection {
 	private IProtection parentProtection = null;
 	private List<IProtection> childProtections = new ArrayList<>();
 
+	@Override
 	public void setParentProtection(IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		this.setParentProtection(null, protection);
+	}
+
+	public void setParentProtection(Player player, IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		if (SETTINGS_PROTECTION_MUSTBECLOSEFORMERGE.isTrue()) {
-			if (!protection.isInside(this.getUtils().getProtectionArea(), true)) {
+			if (!protection.isInsideAny(this.getUtils().getProtectionArea(), true)) {
 				throw Exceptions.Protections.MERGETOOFAR.generateException();
 			}
+		}
+
+		if (this.getChildProtectionsRecursively().contains(protection)) {
+			throw Exceptions.Protections.MERGECHILDPROTECTION.generateException();
 		}
 
 		if (this.parentProtection == protection) {
@@ -666,7 +752,10 @@ public class Protection implements IProtection {
 			throw Exceptions.Protections.MERGESAMEPROTECTION.generateException();
 		}
 
-		unsetParentProtection();
+		if (this.parentProtection != null) {
+			this.parentProtection.getChildProtections().remove(this);
+			this.parentProtection = null;
+		}
 
 		while (protection.getParentProtection() != protection) {
 			protection = protection.getParentProtection();
@@ -674,17 +763,57 @@ public class Protection implements IProtection {
 
 		this.parentProtection = protection;
 		this.parentProtection.getChildProtections().add(this);
+
+		try {
+			this.performAllProtections((prot) -> {
+				((Protection) prot).getProtectedRegion()
+						.setMembers(((Protection) this.parentProtection).getProtectedRegion().getMembers());
+				((Protection) prot).getProtectedRegion()
+						.setOwners(((Protection) this.parentProtection).getProtectedRegion().getOwners());
+				((Protection) prot).getProtectedRegion()
+						.setFlags(((Protection) this.parentProtection).getProtectedRegion().getFlags());
+				((Protection) prot).getProtectedRegion()
+						.setPriority(((Protection) this.parentProtection).getProtectedRegion().getPriority());
+			});
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+
+		TasksUtils.execute(() -> Bukkit.getPluginManager()
+				.callEvent(new ProtectionMergeEvent(player, this, this.parentProtection)));
 	}
 
+	@Override
 	public void unsetParentProtection() throws RoyaleProtectionBlocksExceptionImpl {
+		unsetParentProtection(null);
+	}
+
+	public void unsetParentProtection(Player player) throws RoyaleProtectionBlocksExceptionImpl {
+		IProtection parentProtection = this.parentProtection;
+
 		if (this.parentProtection != null) {
 			this.parentProtection.getChildProtections().remove(this);
 			this.parentProtection = null;
+
+			TasksUtils.execute(() -> Bukkit.getPluginManager()
+					.callEvent(new ProtectionSplitEvent(player, this, parentProtection)));
 		}
 	}
 
 	public IProtection getParentProtection() {
 		return this.parentProtection != null ? this.parentProtection.getParentProtection() : this;
+	}
+
+	@Override
+	public List<IProtection> getChildProtectionsRecursively() {
+		return getChildProtectionsRecursively(new ArrayList<>());
+	}
+
+	@Override
+	public List<IProtection> getChildProtectionsRecursively(List<IProtection> list) {
+		list.addAll(this.childProtections);
+		this.childProtections.forEach(prot -> prot.getChildProtectionsRecursively(list));
+		return list;
 	}
 
 	/*
@@ -797,6 +926,26 @@ public class Protection implements IProtection {
 
 	public boolean isInside(SimpleLocationArea locationArea, boolean includeBorder) {
 		return this.getUtils().isInside(locationArea, includeBorder);
+	}
+
+	@Override
+	public boolean isInsideAny(SimpleLocation location, boolean includeBorder) {
+		return this.getUtils().isInsideAny(location, includeBorder);
+	}
+
+	@Override
+	public boolean isInsideAny(SimpleLocationArea locationArea, boolean includeBorder) {
+		return this.getUtils().isInsideAny(locationArea, includeBorder);
+	}
+
+	@Override
+	public SimpleLocationArea getProtectionArea() {
+		return this.getUtils().getProtectionArea();
+	}
+
+	@Override
+	public SimpleLocationArea getProtectionAreaWithoutBorder() {
+		return this.getUtils().getProtectionAreaWithoutBorder();
 	}
 
 }

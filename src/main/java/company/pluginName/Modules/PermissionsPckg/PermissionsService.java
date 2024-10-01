@@ -1,10 +1,13 @@
 package company.pluginName.Modules.PermissionsPckg;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.bukkit.entity.Player;
 
@@ -13,6 +16,7 @@ import darkpanda73.PandaUtils.Services.PandaPermissionsModule.PandaPermissionsSe
 import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaCustomizablePermission;
 import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaParametizedPermission;
 import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaPermission;
+import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 
 public class PermissionsService extends PandaPermissionsService {
 
@@ -82,6 +86,9 @@ public class PermissionsService extends PandaPermissionsService {
 	public static final PandaPermission SHOW_OTHERS = new PandaCustomizablePermission("Show.Others",
 			"protectionblocks.show.others");
 
+	public static final PandaPermission ADMIN_BLOCK_BYPASS = new PandaCustomizablePermission("Admin.Block.Bypass",
+			"protectionblocks.admin.block.bypass");
+
 	public static final PandaPermission BLOCKS_CREATE = new PandaCustomizablePermission("Blocks.Create",
 			"protectionblocks.blocks.create");
 	public static final PandaPermission BLOCKS_EDIT = new PandaCustomizablePermission("Blocks.Edit",
@@ -109,10 +116,10 @@ public class PermissionsService extends PandaPermissionsService {
 	}
 
 	public static Integer getPriorityMaxAvailable(Player pl, Integer defaultIfNull) {
-		return PRIORITY_MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
-				.map(entry -> entry.getValue().containsKey("max") ? stringToInt(entry.getValue().get("max")) : null)
-				.filter(Objects::nonNull).sorted((int1, int2) -> int2.compareTo(int1)).findFirst()
-				.orElse(defaultIfNull);
+		return getMaxCapacity(
+				PRIORITY_MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
+						.map(entry -> Pair.of(entry.getValue().get("max"), stringToInt(entry.getValue().get("max")))),
+				defaultIfNull);
 	}
 
 	public static Integer getGeneralMaxCapacity(Player pl) {
@@ -120,10 +127,10 @@ public class PermissionsService extends PandaPermissionsService {
 	}
 
 	public static Integer getGeneralMaxCapacity(Player pl, Integer defaultIfNull) {
-		return MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
-				.map(entry -> entry.getValue().containsKey("max") ? stringToInt(entry.getValue().get("max")) : null)
-				.filter(Objects::nonNull).sorted((int1, int2) -> int2.compareTo(int1)).findFirst()
-				.orElse(defaultIfNull);
+		return getMaxCapacity(
+				MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
+						.map(entry -> Pair.of(entry.getValue().get("max"), stringToInt(entry.getValue().get("max")))),
+				defaultIfNull);
 	}
 
 	public static Integer getPerBlockMaxCapacity(Player pl, ProtectionBlock block) {
@@ -131,37 +138,54 @@ public class PermissionsService extends PandaPermissionsService {
 	}
 
 	public static Integer getPerBlockMaxCapacity(Player pl, ProtectionBlock block, Integer defaultIfNull) {
-		return BLOCK_MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
-				.filter(entry -> block.getInformation().getId()
-						.equalsIgnoreCase(entry.getValue().getOrDefault("block", null)))
-				.map(entry -> entry.getValue().containsKey("max") ? stringToInt(entry.getValue().get("max")) : null)
-				.filter(Objects::nonNull).sorted((int1, int2) -> int2.compareTo(int1)).findFirst()
-				.orElse(defaultIfNull);
+		return getMaxCapacity(
+				BLOCK_MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
+						.filter(entry -> block.getInformation().getId()
+								.equalsIgnoreCase(entry.getValue().getOrDefault("block", null)))
+						.map(entry -> Pair.of(entry.getValue().get("max"), stringToInt(entry.getValue().get("max")))),
+				defaultIfNull);
 	}
 
 	public static Map<String, Integer> getAllPerBlockMaxCapacity(Player pl) {
-		return BLOCK_MAX_TEMPLATE.findPermissions(pl).values().stream()
-				.map(map -> map.entrySet().stream().filter(entry -> {
-					try {
-						Integer.parseInt(entry.getValue());
-					} catch (Exception e) {
-						return false;
-					}
+		Map<String, List<Pair<String, Integer>>> map = new HashMap<>();
 
-					return entry.getKey() != null && entry.getKey().isEmpty();
-				}).collect(Collectors.toMap(Entry::getKey, entry -> Integer.parseInt(entry.getValue()))))
-				.reduce(new HashMap<>(), (fullMap, currentMap) -> {
-					fullMap.putAll(currentMap);
-					return fullMap;
-				});
+		BLOCK_MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
+				.filter(entry -> entry.getValue().containsKey("block"))
+				.forEach(entry -> map.computeIfAbsent(entry.getValue().get("block"), (key) -> new ArrayList<>())
+						.add(Pair.of(entry.getValue().get("max"), stringToInt(entry.getValue().get("max")))));
+
+		return map.entrySet().stream()
+				.collect(Collectors.toMap(Entry::getKey, entry -> getMaxCapacity(entry.getValue().stream(), null)));
 	}
 
 	public static Integer stringToInt(String number) {
 		try {
-			return Integer.parseInt(number);
+			int hashIndex = number != null ? number.indexOf("#") : -1;
+			return number != null ? Integer.parseInt(hashIndex != -1 ? number.substring(0, hashIndex) : number) : null;
 		} catch (NumberFormatException e) {
 			return null;
 		}
+	}
+
+	private static Integer getMaxCapacity(Stream<Pair<String, Integer>> stream, Integer defaultIfNull) {
+		AtomicReference<Integer> incrementAmount = new AtomicReference<>();
+		AtomicReference<Integer> maxAmount = new AtomicReference<>();
+
+		stream.forEach(pair -> {
+			if (pair.getFirst() != null && pair.getSecond() != null) {
+				if (pair.getFirst().charAt(0) == '+' || pair.getFirst().charAt(0) == '-') {
+					incrementAmount.updateAndGet((i) -> i != null ? (i + pair.getSecond()) : pair.getSecond());
+				} else {
+					maxAmount.updateAndGet((i) -> (i == null || i < pair.getSecond()) ? pair.getSecond() : i);
+				}
+			}
+		});
+
+		if (incrementAmount.get() != null) {
+			maxAmount.updateAndGet((i) -> i != null ? (i + incrementAmount.get()) : null);
+		}
+
+		return maxAmount.get() != null ? maxAmount.get() : defaultIfNull;
 	}
 
 }

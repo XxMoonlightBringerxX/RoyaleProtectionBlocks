@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Hooks.CombatLogX.CombatLogXAPI;
 import company.pluginName.Hooks.DeluxeCombat.DeluxeCombatAPI;
+import company.pluginName.Hooks.PvPManager.PvPManagerAPI;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
@@ -17,6 +18,10 @@ public class CombatLogHookUtilities {
 	@RegisteredPandaField("config")
 	public static final PandaBooleanField SETTINGS_COMBATLOGHOOK_COMBATLOGXENABLED = new PandaBooleanField(
 			"Settings.Combat-log-hook.Combat-log-X-enabled", true);
+
+	@RegisteredPandaField("config")
+	public static final PandaBooleanField SETTINGS_COMBATLOGHOOK_PVPMANAGERENABLED = new PandaBooleanField(
+			"Settings.Combat-log-hook.PvP-manager-enabled", true);
 
 	@RegisteredPandaField("config")
 	public static final PandaBooleanField SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONCREATIONINCOMBAT = new PandaBooleanField(
@@ -38,6 +43,9 @@ public class CombatLogHookUtilities {
 	@PandaInject
 	private static CombatLogXAPI combatLogXApi;
 
+	@PandaInject
+	private static PvPManagerAPI pvpManagerApi;
+
 	public static boolean isInCombat(Player player) {
 		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_DELUXECOMBATENABLED.isTrue() && deluxeCombatApi.isHooked()
 				&& deluxeCombatApi.getHook().isInCombat(player)) {
@@ -46,6 +54,11 @@ public class CombatLogHookUtilities {
 
 		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_COMBATLOGXENABLED.isTrue() && combatLogXApi.isHooked()
 				&& combatLogXApi.getHook().isInCombat(player)) {
+			return true;
+		}
+
+		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_PVPMANAGERENABLED.isTrue() && pvpManagerApi.isHooked()
+				&& pvpManagerApi.getHook().isInCombat(player)) {
 			return true;
 		}
 

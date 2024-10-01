@@ -1,11 +1,9 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -18,7 +16,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
-import lombok.Getter;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -40,9 +38,6 @@ public class ViewSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsService protectionsService;
 
-	@Getter
-	private List<String> registeredKeyOnlyParameters = Arrays.asList("--all");
-
 	public ViewSubCommand() throws InstantiationException {
 		super();
 	}
@@ -51,18 +46,22 @@ public class ViewSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			Protection protection = protectionsService.findProtectionByLocation(pl.getLocation());
+			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 			if (protection != null) {
 				if (ProtectionUtilities.canViewBoundaries(protection, pl)) {
-					protection.getBoundaries().toggleProtectionView();
-					if (parameters.getKeyOnlyParameters().contains("--all")) {
-						protection.getParentProtection().getChildProtections().forEach(childProtection -> {
-							Protection internalChildProtection = (Protection) childProtection;
-							if (internalChildProtection.getBoundaries().isProtectionViewActive() != protection
-									.getBoundaries().isProtectionViewActive()) {
-								internalChildProtection.getBoundaries().toggleProtectionView();
+					boolean activate = !protection.getBoundaries().isProtectionViewActive();
+					try {
+						protection.performAllProtections(prot -> {
+							if (activate != ((Protection) prot).getBoundaries().isProtectionViewActive()) {
+								((Protection) prot).getBoundaries().toggleProtectionView();
 							}
 						});
+					} catch (Throwable e) {
+						if (e instanceof RoyaleProtectionBlocksException) {
+							((RoyaleProtectionBlocksException) e).sendError(sender);
+						} else {
+							Exceptions.Protections.UNKNOWN.generateException(e).sendError(pl);
+						}
 					}
 				} else {
 					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTOWNER.applyPrefix()).process()

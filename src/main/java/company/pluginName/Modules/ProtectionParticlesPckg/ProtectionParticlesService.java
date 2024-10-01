@@ -1,5 +1,6 @@
 package company.pluginName.Modules.ProtectionParticlesPckg;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -13,8 +14,10 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import company.pluginName.Bukkit.Events.PlayerEnterExitRegion.PlayerEnterExitRegionTrigger;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Message;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -30,6 +33,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoub
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 
 @PandaService
@@ -53,6 +57,9 @@ public class ProtectionParticlesService {
 
 	@PandaInject
 	private ProtectionsService protectionsService;
+
+	@PandaInject
+	private PlayerDataService playerDataService;
 
 	private HashMap<UUID, Pair<Long, BukkitTask>> tasks = new HashMap<>();
 	private BukkitTask checkerTask;
@@ -130,7 +137,7 @@ public class ProtectionParticlesService {
 		private Location currentLocation;
 		private Location currentMinLocation;
 		private Location currentMaxLocation;
-		private List<Protection> currentProtections;
+		private List<IProtection> currentProtections;
 		private int currentTick;
 
 		private Message actionBarMessage;
@@ -181,25 +188,25 @@ public class ProtectionParticlesService {
 								for (long k = 0; k <= length; k++) {
 									if (currentProtections.stream().anyMatch(prot -> !prot.isDeleted()
 											&& prot.isInside(SimpleLocation.of(diagonalLocation), true))) {
-										Optional<Pair<Protection, Long>> coincidences = currentProtections.stream()
+										Optional<Pair<IProtection, Long>> coincidences = currentProtections.stream()
 												.filter(prot -> !prot.isDeleted()
 														&& prot.isInside(SimpleLocation.of(diagonalLocation), true))
 												.map(prot -> Pair.of(prot, Arrays
 														.asList(((diagonalLocation.getY() == currentLocation.getY()
-																|| diagonalLocation.getY() == prot.getLocation().getY())
-																|| (diagonalLocation.getY() == prot.getUtils()
-																		.getProtectionArea().getMinLocation().getY()
-																		|| diagonalLocation.getY() == (prot.getUtils()
-																				.getProtectionArea().getMaxLocation()
-																				.getY()))),
-																(diagonalLocation.getX() == prot.getUtils()
-																		.getProtectionArea().getMinLocation().getX()),
-																(diagonalLocation.getZ() == prot.getUtils()
-																		.getProtectionArea().getMinLocation().getZ()),
-																(diagonalLocation.getX() == (prot.getUtils()
-																		.getProtectionArea().getMaxLocation().getX())),
-																(diagonalLocation.getZ() == (prot.getUtils()
-																		.getProtectionArea().getMaxLocation().getZ())))
+																|| diagonalLocation.getY() == prot.getBukkitLocation().getY())
+																|| (diagonalLocation.getY() == prot.getProtectionArea()
+																		.getMinLocation().getY()
+																		|| diagonalLocation
+																				.getY() == (prot.getProtectionArea()
+																						.getMaxLocation().getY()))),
+																(diagonalLocation.getX() == prot.getProtectionArea()
+																		.getMinLocation().getX()),
+																(diagonalLocation.getZ() == prot.getProtectionArea()
+																		.getMinLocation().getZ()),
+																(diagonalLocation.getX() == (prot.getProtectionArea()
+																		.getMaxLocation().getX())),
+																(diagonalLocation.getZ() == (prot.getProtectionArea()
+																		.getMaxLocation().getZ())))
 														.stream().filter(Boolean.TRUE::equals).count()))
 												.filter(pair -> pair.getSecond() >= 2)
 												.collect(Collectors.maxBy((pair1, pair2) -> {
@@ -214,7 +221,7 @@ public class ProtectionParticlesService {
 											if (coincidences.get().getSecond() >= 3L
 													|| (diagonalLocation.getY() != currentLocation.getY()
 															&& diagonalLocation.getY() != coincidences.get().getFirst()
-																	.getLocation().getY())) {
+																	.getBukkitLocation().getY())) {
 												if (coincidences.get().getFirst().isMember(playerUuid)
 														|| coincidences.get().getFirst().isOwner(playerUuid)) {
 													// Green
@@ -233,7 +240,7 @@ public class ProtectionParticlesService {
 												}
 											}
 
-											if (diagonalLocation.getY() == coincidences.get().getFirst().getLocation()
+											if (diagonalLocation.getY() == coincidences.get().getFirst().getBukkitLocation()
 													.getY()) {
 												// Yellow
 												new PacketPlayOutParticle(diagonalLocation.getX(),
@@ -257,9 +264,9 @@ public class ProtectionParticlesService {
 												.filter(prot -> !prot.isDeleted()
 														&& prot.isInside(diagonalExtraLocation, true))
 												.map(prot -> Pair.of(prot, Arrays
-														.asList((diagonalLocation.getX() == prot.getLocation().getX()),
-																(diagonalLocation.getY() == prot.getLocation().getY()),
-																(diagonalLocation.getZ() == prot.getLocation().getZ()))
+														.asList((diagonalLocation.getX() == prot.getBukkitLocation().getX()),
+																(diagonalLocation.getY() == prot.getBukkitLocation().getY()),
+																(diagonalLocation.getZ() == prot.getBukkitLocation().getZ()))
 														.stream().filter(Boolean.TRUE::equals).count()))
 												.filter(pair -> pair.getSecond() >= 2)
 												.collect(Collectors.maxBy((pair1, pair2) -> {
@@ -317,10 +324,29 @@ public class ProtectionParticlesService {
 			currentLocation = location;
 			currentMinLocation = currentLocation.clone().subtract(radius, radius, radius);
 			currentMaxLocation = currentLocation.clone().add(radius + 1, radius + 1, radius + 1);
-			currentProtections = service.protectionsService
-					.findProtectionsByArea(currentMinLocation, currentMaxLocation)
-					.filter(prot -> showAll || prot.isMember(playerUuid) || prot.isOwner(playerUuid))
-					.collect(Collectors.toList());
+
+			if (PlayerEnterExitRegionTrigger.SETTINGS_PROTECTION_RADIUSFORSEARCHCACHE
+					.getContent() >= SETTINGS_PROTECTION_VIEW_RADIUS.getContent()) {
+				PlayerData pd = service.playerDataService.getPlayerData(playerUuid);
+
+				if (pd != null) {
+					currentProtections = new ArrayList<>();
+					pd.getCachedProtections().forEach(prot -> {
+						currentProtections.add(prot);
+						currentProtections.addAll(prot.getChildProtections());
+					});
+				} else {
+					currentProtections = service.protectionsService
+							.findProtectionsByArea(currentMinLocation, currentMaxLocation)
+							.filter(prot -> showAll || prot.isMember(playerUuid) || prot.isOwner(playerUuid))
+							.collect(Collectors.toList());
+				}
+			} else {
+				currentProtections = service.protectionsService
+						.findProtectionsByArea(currentMinLocation, currentMaxLocation)
+						.filter(prot -> showAll || prot.isMember(playerUuid) || prot.isOwner(playerUuid))
+						.collect(Collectors.toList());
+			}
 		}
 
 	}

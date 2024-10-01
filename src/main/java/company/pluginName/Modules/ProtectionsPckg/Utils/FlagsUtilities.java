@@ -104,9 +104,12 @@ public class FlagsUtilities {
 
 				Object fValue = value;
 
-				flag.modifyValue(protection.getProtectedRegion(), fValue);
-				protection.getChildProtections()
-						.forEach(child -> flag.modifyValue(((Protection) child).getProtectedRegion(), fValue));
+				try {
+					protection.performAllProtections(
+							prot -> flag.modifyValue(((Protection) prot).getProtectedRegion(), fValue));
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
 			} else {
 				protection.getProtectedRegion().getFlags().keySet().stream()
 						.filter(wgFlag -> wgFlag.getName().equals(flagId)).findFirst()

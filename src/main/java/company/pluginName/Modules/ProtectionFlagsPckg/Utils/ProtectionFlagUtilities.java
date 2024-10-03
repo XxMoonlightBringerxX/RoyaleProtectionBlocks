@@ -17,10 +17,8 @@ import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.Enums.EconomyService;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.ProtectionFlagsPckg.Objects.ProtectionFlag;
-import company.pluginName.Utils.EconomyUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment.ColorMode;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -224,8 +222,6 @@ public class ProtectionFlagUtilities {
 	public static ProtectionFlag sectionToFlag(YamlSection section)
 			throws NullPointerException, IllegalArgumentException {
 		RegionGroup defaultGroup = getRegionGroup(section);
-		Double costPerChange = getCostPerChange(section);
-		EconomyService economyService = getEconomyService(section);
 
 		ProtectionFlag protectionFlag = new ProtectionFlag(section.getName());
 		YamlData<?> value = section.getDataOrDefault("Default-value", YamlData.empty());
@@ -267,16 +263,8 @@ public class ProtectionFlagUtilities {
 					ItemBuilder.inst().fromMap(section.toMap(), "Display-item").setColorMode(ColorMode.IGNORE).build());
 		}
 
-		if (costPerChange != null) {
-			protectionFlag.setCostPerChange(costPerChange);
-		}
-
 		if (defaultGroup != null) {
 			protectionFlag.setDefaultGroup(defaultGroup);
-		}
-
-		if (economyService != null) {
-			protectionFlag.setEconomyService(economyService);
 		}
 
 		return protectionFlag;
@@ -317,47 +305,6 @@ public class ProtectionFlagUtilities {
 		}
 
 		return defaultGroup;
-	}
-
-	private static Double getCostPerChange(YamlSection section) {
-		Double costPerChange = section.getDataOrDefault("Cost-per-change", YamlData.empty()).getDouble();
-
-		if (costPerChange != null && !EconomyUtils.isVaultHooked() && !EconomyUtils.isTokenManagerHooked()) {
-			throw new NullPointerException("No compatible economy plugin is currently attached");
-		}
-
-		return costPerChange;
-	}
-
-	private static EconomyService getEconomyService(YamlSection section) {
-		String economyServiceValue = section.getDataOrDefault("Economy-service", YamlData.empty()).getString();
-		EconomyService economyService = null;
-
-		if (economyServiceValue != null) {
-			try {
-				economyService = EconomyService.valueOf(economyServiceValue.toUpperCase());
-			} catch (IllegalArgumentException e) {
-				throw new IllegalArgumentException(
-						String.format("Value '%s' is not a valid economy service", economyServiceValue));
-			}
-		}
-
-		if (economyService != null) {
-			switch (economyService) {
-			case VAULT:
-				if (!EconomyUtils.isVaultHooked()) {
-					throw new NullPointerException("Vault is currently not hooked");
-				}
-				break;
-			case TOKENMANAGER:
-				if (!EconomyUtils.isTokenManagerHooked()) {
-					throw new NullPointerException("TokenManager is currently not hooked");
-				}
-				break;
-			}
-		}
-
-		return economyService;
 	}
 
 }

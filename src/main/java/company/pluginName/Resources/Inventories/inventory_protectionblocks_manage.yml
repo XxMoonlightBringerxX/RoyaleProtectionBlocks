@@ -4,7 +4,6 @@ Messages:
   Id-specify-info: "&7Type the ID you wish to set on your protection block. Type 'cancel' to cancel this action."
   Permission-specify-info: "&7Type the permission you wish to set on your protection block. Type 'cancel' to cancel this action."
   Blocks-specify-info: "&7Type the amount of blocks you wish to set on your protection block. Type 'cancel' to cancel this action."
-  Price-specify-info: "&7Type the price you wish to set on your protection block. Type 'cancel' to cancel this action."
 Items: 
   Background: 
     Display-item: 
@@ -90,11 +89,6 @@ Items:
       Type: "NAME_TAG"
       Name: "&aCurrent ID: &e{block_id} &7&o[Not modifiable]"
     Slots: "31"
-  Recipe-button:
-    Display-item:
-      Type: "CRAFTING_TABLE"
-      Name: "&aRecipe"
-    Slots: "32"
   Permission-button:
     Display-item:
       Type: "PAPER"
@@ -103,11 +97,3 @@ Items:
       Type: "PAPER"
       Name: "&aCurrent permission: &7&oNot set yet"
     Slots: "33"
-  Price-button:
-    Display-item:
-      Type: "EMERALD"
-      Name: "&aCurrent price: &e{block_price}"
-    Not-set-item:
-      Type: "EMERALD"
-      Name: "&aCurrent price: &7&oNot for sale"
-    Slots: "34"

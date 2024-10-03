@@ -6,7 +6,6 @@ import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.RegionGroup;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.Enums.EconomyService;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -28,8 +27,6 @@ public class ProtectionFlag {
 	protected Object defaultValue;
 	protected RegionGroup defaultGroup;
 	protected String permission;
-	protected Double costPerChange;
-	protected EconomyService economyService;
 
 	public ProtectionFlag(String id) throws NullPointerException {
 		try {

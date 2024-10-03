@@ -52,7 +52,7 @@ public class InfoCommand extends PandaCommand {
 					"&f&l|&r Name: &a{protection_name}",
 					"&f&l|&r Size: &a{protection_size_x}x{protection_size_y}x{protection_size_z}",
 					"&f&l|&r Owner: &a{protection_owner}", "&f&l|&r Members: &a{protection_members}",
-					"&f&l|&r Owners: &a{protection_owners}", "&f&l|&r Banneds: &a{protection_banneds}"));
+					"&f&l|&r Owners: &a{protection_owners}"));
 
 	@PandaInject
 	private static ProtectionsService protectionsService;
@@ -62,7 +62,6 @@ public class InfoCommand extends PandaCommand {
 
 	private MembersSubcommand membersCommand;
 	private OwnersSubcommand ownersCommand;
-	private BannedsSubcommand bannedsCommand;
 
 	public InfoCommand() throws InstantiationException {
 		super();
@@ -76,8 +75,6 @@ public class InfoCommand extends PandaCommand {
 				.filter(cmd -> cmd instanceof MembersSubcommand).findFirst().orElse(null);
 		this.ownersCommand = (OwnersSubcommand) this.getCommands().stream()
 				.filter(cmd -> cmd instanceof OwnersSubcommand).findFirst().orElse(null);
-		this.bannedsCommand = (BannedsSubcommand) this.getCommands().stream()
-				.filter(cmd -> cmd instanceof BannedsSubcommand).findFirst().orElse(null);
 	}
 
 	@Override
@@ -121,12 +118,8 @@ public class InfoCommand extends PandaCommand {
 						new MessageFragment(() -> "&7[click]",
 								new ClickEvent(ClickEvent.Action.RUN_COMMAND,
 										"/".concat(membersCommand.getCommandPath())))),
-				new Replacement("{protection_owners}",
-						new MessageFragment(() -> "&7[click]",
-								new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-										"/".concat(ownersCommand.getCommandPath())))),
-				new Replacement("{protection_banneds}", new MessageFragment(() -> "&7[click]",
-						new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/".concat(bannedsCommand.getCommandPath())))) };
+				new Replacement("{protection_owners}", new MessageFragment(() -> "&7[click]",
+						new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/".concat(ownersCommand.getCommandPath())))) };
 
 		Replacement[] protectionReplacements = placeholdersService.getProtectionReplacements(protection);
 

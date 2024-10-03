@@ -36,15 +36,6 @@ Permissions:
       Others: "protectionblocks.members.add.others"
     Remove: 
       Others: "protectionblocks.members.remove.others"
-  Banneds: 
-    Add: 
-      Others: "protectionblocks.banneds.add.others"
-    Remove: 
-      Others: "protectionblocks.banneds.remove.others"
-    Bypass: "protectionblocks.banneds.bypass"
-  Kick: 
-    Others: "protectionblocks.kick.others"
-    Bypass: "protectionblocks.kick.bypass"
   Owners: 
     Add: 
       Others: "protectionblocks.owners.add.others"
@@ -54,8 +45,6 @@ Permissions:
     Others: "protectionblocks.info.others"
   Overlap: 
     Bypass: "protectionblocks.overlap.bypass"
-  Economy: 
-    Bypass: "protectionblocks.economy.bypass"
   Blocks: 
     Create: "protectionblocks.blocks.create"
     Edit: "protectionblocks.blocks.edit"
@@ -69,18 +58,11 @@ Permissions:
   Max: 
     Bypass: "protectionblocks.max.bypass"
     Template: "protectionblocks.max.{max}"
-  Fly: 
-    Others: "protectionblocks.fly.others"
-    Bypass: "protectionblocks.fly.bypass"
   Priority: 
     Others: "protectionblocks.priority.others"
     Max: 
       Template: "protectionblocks.priority.max.{max}"
       Bypass: "protectionblocks.priority.max.bypass"
-  Merge: 
-    Others: "protectionblocks.merge.others"
-  Split: 
-    Others: "protectionblocks.split.others"
   Hide: 
     Others: "protectionblocks.hide.others"
   Show: 

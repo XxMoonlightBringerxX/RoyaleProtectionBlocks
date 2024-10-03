@@ -32,22 +32,6 @@ public class Exceptions {
 
 	public static class Protections {
 
-		public static final ThrowableField KICKDENIED = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_KICKDENIED, "Error.Exception.protection.kick.Denied",
-				"&cYou can't kick this player in this protection!");
-
-		public static final ThrowableField KICKDENIEDBYPASS = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_KICKDENIEDBYPASS,
-				"Error.Exception.protection.kick.DeniedBypass", "&cYou can't kick this player due his permissions!");
-
-		public static final ThrowableField NOTENOUGHBALANCE = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_NOTENOUGHBALANCE,
-				"Error.Exception.protection.NotEnoughBalance", "&cYou don't have enough balance for this!");
-
-		public static final ThrowableField BLOCKED = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKED,
-				"Error.Exception.protection.ProtectionBlocked", "&cYou can't do this while the protection is blocked!");
-
 		public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONDENIED,
 				"Error.Exception.protection.PermissionDenied", "&cYou aren't allowed to do this in this protection!");
@@ -68,28 +52,6 @@ public class Exceptions {
 		public static final ThrowableField PRIORITYBELOWZERO = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_PRIORITYBELOWZERO,
 				"Error.Exception.protection.PriorityBelowZero", "&cYou must provide a number higher or equal to zero!");
-
-		public static final ThrowableField MERGETOOFAR = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGETOOFAR, "Error.Exception.protection.MergeTooFar",
-				"&cThe specified parent protection is far from the child protection!");
-
-		public static final ThrowableField MERGESAMEPROTECTION = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGESAMEPROTECTION,
-				"Error.Exception.protection.MergeSameProtection", "&cYou can't merge the protection with itself!");
-
-		public static final ThrowableField MERGECHILDPROTECTION = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGECHILDPROTECTION,
-				"Error.Exception.protection.MergeChildProtection",
-				"&cYou can't merge this protection into its own child!");
-
-		public static final ThrowableField ALREADYMERGED = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_ALREADYMERGED,
-				"Error.Exception.protection.AlreadyMerged",
-				"&cThe protection is already merged with the specified protection!");
-
-		public static final ThrowableField NOTMERGED = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_NOTMERGED, "Error.Exception.protection.NotMerged",
-				"&cThe protection is not merged to any other protection!");
 
 		public static final ThrowableField BLOCKALREADYSHOWN = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKALREADYSHOWN,
@@ -316,52 +278,6 @@ public class Exceptions {
 
 		}
 
-		public static class Banneds {
-
-			public static class Delete {
-
-				public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
-						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_DELETE_PERMISSIONDENIED,
-						"Error.Exception.protection.banneds.delete.PermissionDenied",
-						"&cYou aren't allowed to remove this banned!");
-				public static final ThrowableField SQL = new ThrowableField(
-						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_DELETE_SQL,
-						"Error.Exception.protection.blocks.delete.SQL",
-						"&cThere was an error trying to delete the banned user. Please contact with an administrator!");
-				public static final ThrowableField UNKNOWN = new ThrowableField(
-						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_DELETE_UNKNOWN,
-						"Error.Exception.protection.banneds.delete.Unknown",
-						"&cAn unknown error happened while trying to remove this banned. Please contact with an administrator!");
-
-			}
-
-			public static class Save {
-
-				public static final ThrowableField CANNOTADDPROTECTIONOWNER = new ThrowableField(
-						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_CANNOTADDPROTECTIONOWNER,
-						"Error.Exception.protection.banneds.save.CannotAddProtectionOwner",
-						"&cYou can't add the owner of this protection as a banned!");
-				public static final ThrowableField CANNOTADDYOURSELF = new ThrowableField(
-						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_CANNOTADDYOURSELF,
-						"Error.Exception.protection.banneds.save.CannotAddYourself",
-						"&cYou can't add yourself as a banned!");
-				public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
-						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_PERMISSIONDENIED,
-						"Error.Exception.protection.banneds.save.PermissionDenied",
-						"&cYou aren't allowed to add banneds in this protection!");
-				public static final ThrowableField SQL = new ThrowableField(
-						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_SQL,
-						"Error.Exception.protection.blocks.delete.SQL",
-						"&cThere was an error trying to save the banned user. Please contact with an administrator!");
-				public static final ThrowableField UNKNOWN = new ThrowableField(
-						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_UNKNOWN,
-						"Error.Exception.protection.banneds.save.Unknown",
-						"&cAn unknown error happened while trying to add this banned. Please contact with an administrator!");
-
-			}
-
-		}
-
 		public static class Blocks {
 
 			public static class Delete {
@@ -399,6 +315,10 @@ public class Exceptions {
 						RoyaleProtectionBlocksException.Type.PROTECTIONBLOCKS_SAVE_ITEMNULL,
 						"Error.Exception.protection.blocks.save.ItemNull",
 						"&cThere's no item specified for this protection block!");
+				public static final ThrowableField MAXIMUMACHIEVED = new ThrowableField(
+						RoyaleProtectionBlocksException.Type.PROTECTIONBLOCKS_SAVE_MAXIMUMACHIEVED,
+						"Error.Exception.protection.blocks.save.MaximumAchieved",
+						"&cYou've achieved the maximum amount of protections available! &8(&e{amount}&8)");
 				public static final ThrowableField SQL = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONBLOCKS_SAVE_SQL,
 						"Error.Exception.protection.blocks.save.SQL",
@@ -423,10 +343,6 @@ public class Exceptions {
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_FLAGS_PERMISSIONDENIED,
 					"Error.Exception.protection.flags.PermissionDenied",
 					"&cYou don't have permissions to modify this flag!");
-			public static final ThrowableField NOTENOUGHBALANCE = new ThrowableField(
-					RoyaleProtectionBlocksException.Type.PROTECTIONS_NOTENOUGHBALANCE,
-					"Error.Exception.protection.flags.NotEnoughBalance",
-					"&cYou don't have enough balance to change this flag!");
 			public static final ThrowableField UNKNOWN = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_FLAGS_UNKNOWN,
 					"Error.Exception.protection.flags.Unknown",

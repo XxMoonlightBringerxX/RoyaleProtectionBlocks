@@ -36,16 +36,14 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 		defaultDescription = "Create a new block",
 		defaultUsage = "<id> <x> <y> <z> [permission]",
 		defaultPermission = "protectionblocks.blocks.create",
-		defaultAliases = "a"
-)
+		defaultAliases = "a")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class AddSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -105,7 +103,7 @@ public class AddSubCommand extends PandaSubCommand {
 										: null;
 								ProtectionBlock protectionBlock = new ProtectionBlock(new ProtectionBlockInformation(
 										parameters.getParameters().get(0).toLowerCase(), protectionBlockItemstack,
-										x / 2, (y == -1 ? y : y / 2), z / 2, permission, null));
+										x / 2, (y == -1 ? y : y / 2), z / 2, permission));
 
 								protectionBlockItemstack = protectionBlock.getInformation().generateItem();
 

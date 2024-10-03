@@ -38,10 +38,8 @@ Version: 2
 #       Default-value: "DENY" #5
 #       Default-group: "ALL" #6
 #       Permission: "protectionblocks.flag.<flag-id>" #7
-#       Cost-per-change: 100.0 #8
-#       Economy-service: "VAULT" #9
-#       Hide-if-no-permission: false #10
-#       Hide-if-no-value: false #11
+#       Hide-if-no-permission: false #8
+#       Hide-if-no-value: false #9
 #
 #   #1 ID of the flag to be used, which is the name used on WorldGuard.
 #
@@ -64,34 +62,16 @@ Version: 2
 #
 #   #7 (Optional) Permission required to be able to modify the flag. By default, it'll not require any permission.
 #
-#   #8 (Optional) Cost of the flag to be applied every time is modified. By default, it'll apply no cost.
-#
-#   #9 (Optional) Economy service to use. The available values are: VAULT, TOKEN_MANAGER. By default,
-#      it'll use the first available service.
-#
-#   #10 (Optional) Hide the flag if the player does not have permissions to modify this plag. By default,
+#   #8 (Optional) Hide the flag if the player does not have permissions to modify this plag. By default,
 #      it's set on false.
 #
-#   #11 (Optional) Hide the flag if the protection doesn't have any value specified for this flag yet.
+#   #9 (Optional) Hide the flag if the protection doesn't have any value specified for this flag yet.
 #      By default, it's set on false.
 #
 # * Item standard: (Wiki in progress)
 #---
 
 Settings:
-
-  #---
-  # Defines which flags are ignored when using the reset functionality. In the default example, 'teleport' is
-  # included as is the flag used for the '/pb sethome' command, and 'banned-players' is the one used to
-  # preserve the banned players of the protection. This setting is only used when flags aren't specified on the
-  # 'resetflags' command, or when players decide to reset their flags, to allow the usage of the '--flags' command,
-  # to reset this flags even when they aren't allowed to.
-  #---
-
-  Ignore-flags-on-reset:
-  - "banned-players"
-  - "teleport"
-
   Flags:
     tnt:
       Editable: true
@@ -128,6 +108,5 @@ Settings:
         Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTc2NTM0MTM1M2MwMjllOWI2NTVmNGY1NzkzMWFlNmFkYzJjN2E3M2M2NTc5NDVkOTQ1YTMwNzY0MWQzNzc4In19fQ=="
       Default-value: "DENY"
       Default-group: "ALL"
-      Cost-per-change: 100.0
       Permission: "protectionblocks.flag.pvp"
       Hide-if-no-permission: true

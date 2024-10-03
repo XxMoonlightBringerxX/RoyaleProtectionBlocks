@@ -39,7 +39,6 @@ public class ProtectionBlocksUtils {
 	private static final String BLOCKSY_SECTION = "Blocks-y";
 	private static final String BLOCKSZ_SECTION = "Blocks-z";
 	private static final String PERMISSION_SECTION = "Permission";
-	private static final String PRICE_SECTION = "Price";
 	private static final String ITEM_TYPE_SECTION = "Item.Type";
 	private static final String ALLOWEDWORLDS_SECTION = "Allowed-worlds";
 
@@ -116,7 +115,6 @@ public class ProtectionBlocksUtils {
 		int blocksY;
 		int blocksZ;
 		String permission;
-		Double price;
 		List<String> allowedWorlds;
 
 		try {
@@ -146,14 +144,6 @@ public class ProtectionBlocksUtils {
 		}
 
 		try {
-			price = map.containsKey(PRICE_SECTION) && map.get(PRICE_SECTION) != null
-					? Double.parseDouble(map.get(PRICE_SECTION).toString())
-					: null;
-		} catch (ClassCastException e) {
-			throw new Exception("The value '%s' is currently not a decimal.".formatted(map.get(PRICE_SECTION)));
-		}
-
-		try {
 			allowedWorlds = map.containsKey(ALLOWEDWORLDS_SECTION) && map.get(ALLOWEDWORLDS_SECTION) != null
 					? (List<String>) map.get(ALLOWEDWORLDS_SECTION)
 					: null;
@@ -177,14 +167,6 @@ public class ProtectionBlocksUtils {
 				protectionBlock.getInformation().setPermission(permission);
 			}
 
-			if (map.containsKey(PRICE_SECTION)) {
-				if (price != null && price <= 0D) {
-					protectionBlock.getInformation().setPrice(null);
-				} else {
-					protectionBlock.getInformation().setPrice(price);
-				}
-			}
-
 			if (map.containsKey(ALLOWEDWORLDS_SECTION)) {
 				protectionBlock.getAllowedWorlds().clear();
 				allowedWorlds.forEach(protectionBlock.getAllowedWorlds()::add);
@@ -194,8 +176,7 @@ public class ProtectionBlocksUtils {
 
 			return protectionBlock;
 		} else {
-			return new ProtectionBlock(
-					new ProtectionBlockInformation(id, item, blocksX, blocksY, blocksZ, permission, price),
+			return new ProtectionBlock(new ProtectionBlockInformation(id, item, blocksX, blocksY, blocksZ, permission),
 					allowedWorlds != null ? new ProtectionBlockAllowedWorlds(new HashSet<>(allowedWorlds))
 							: new ProtectionBlockAllowedWorlds());
 		}

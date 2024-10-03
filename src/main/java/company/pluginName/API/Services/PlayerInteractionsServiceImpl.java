@@ -25,9 +25,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
-import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionMergeAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalAttemptEvent;
-import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionSplitAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
@@ -195,10 +193,6 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		if (!input.getPlayer().getUniqueId().equals(input.getMember())) {
-			if (input.getProtection().isBlocked()) {
-				throw Exceptions.Protections.BLOCKED.generateException();
-			}
-
 			if (!ProtectionUtilities.canRemoveMember(input.getProtection(), input.getPlayer())) {
 				throw Exceptions.Protections.Members.Delete.PERMISSIONDENIED.generateException();
 			}
@@ -242,10 +236,6 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		if (!input.getPlayer().getUniqueId().equals(input.getOwner())) {
-			if (input.getProtection().isBlocked()) {
-				throw Exceptions.Protections.BLOCKED.generateException();
-			}
-
 			if (!ProtectionUtilities.canRemoveOwner(input.getProtection(), input.getPlayer())) {
 				throw Exceptions.Protections.Owners.Delete.PERMISSIONDENIED.generateException();
 			}
@@ -258,61 +248,6 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
 		}
-	}
-
-	@Override
-	public void protectionBannedAddRequest(ProtectionBannedAddRequestInput input)
-			throws RoyaleProtectionBlocksException {
-		checkIfModifiable(input.getPlayer(), input.getProtection());
-
-		if (!ProtectionUtilities.canAddBanned(input.getProtection(), input.getPlayer())) {
-			throw Exceptions.Protections.Banneds.Save.PERMISSIONDENIED.generateException();
-		}
-
-		if (input.getBanned().equals(input.getPlayer().getUniqueId())) {
-			throw Exceptions.Protections.Banneds.Save.CANNOTADDYOURSELF.generateException();
-		}
-
-		try {
-			input.getProtection().performAllProtections(prot -> prot.addBanned(input.getBanned()));
-		} catch (RoyaleProtectionBlocksExceptionImpl e) {
-			throw e;
-		} catch (Throwable e) {
-			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
-		}
-	}
-
-	@Override
-	public void protectionBannedRemoveRequest(ProtectionBannedRemoveRequestInput input)
-			throws RoyaleProtectionBlocksException {
-		checkIfModifiable(input.getPlayer(), input.getProtection());
-
-		if (!ProtectionUtilities.canRemoveBanned(input.getProtection(), input.getPlayer())) {
-			throw Exceptions.Protections.Banneds.Delete.PERMISSIONDENIED.generateException();
-		}
-
-		try {
-			input.getProtection().performAllProtections(prot -> prot.removeBanned(input.getBanned()));
-		} catch (RoyaleProtectionBlocksExceptionImpl e) {
-			throw e;
-		} catch (Throwable e) {
-			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
-		}
-	}
-
-	@Override
-	public boolean protectionKickRequest(ProtectionKickRequestInput input) throws RoyaleProtectionBlocksException {
-		checkIfModifiable(input.getPlayer(), input.getProtection());
-
-		if (PermissionsService.KICK_BYPASS.hasPermission(input.getKicked())) {
-			throw Exceptions.Protections.KICKDENIEDBYPASS.generateException();
-		}
-
-		if (!ProtectionUtilities.canKick(input.getProtection(), input.getPlayer())) {
-			throw Exceptions.Protections.KICKDENIED.generateException();
-		}
-
-		return input.getProtection().kickPlayer(input.getKicked());
 	}
 
 	@Override
@@ -382,48 +317,6 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 				throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
 			}
 		}
-	}
-
-	@Override
-	public void protectionMergeRequest(ProtectionMergeRequestInput input) throws RoyaleProtectionBlocksException {
-		checkIfModifiable(input.getPlayer(), input.getProtection());
-		checkIfModifiable(input.getPlayer(), input.getParentProtection());
-
-		if (!ProtectionUtilities.canMerge(input.getProtection(), input.getPlayer())
-				|| !ProtectionUtilities.canMerge(input.getParentProtection(), input.getPlayer())) {
-			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
-		}
-
-		ProtectionMergeAttemptEvent attemptEvent = new ProtectionMergeAttemptEvent(input.getPlayer(),
-				input.getProtection(), input.getParentProtection());
-		Bukkit.getPluginManager().callEvent(attemptEvent);
-
-		if (attemptEvent.isCancelled()) {
-			throw Exceptions.Protections.CANCELLED.generateException();
-		}
-
-		input.getProtection().setParentProtection(input.getParentProtection());
-		((Protection) input.getProtection()).saveData();
-	}
-
-	@Override
-	public void protectionSplitRequest(ProtectionSplitRequestInput input) throws RoyaleProtectionBlocksException {
-		checkIfModifiable(input.getPlayer(), input.getProtection());
-
-		if (!ProtectionUtilities.canSplit(input.getProtection(), input.getPlayer())) {
-			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
-		}
-
-		ProtectionSplitAttemptEvent attemptEvent = new ProtectionSplitAttemptEvent(input.getPlayer(),
-				input.getProtection());
-		Bukkit.getPluginManager().callEvent(attemptEvent);
-
-		if (attemptEvent.isCancelled()) {
-			throw Exceptions.Protections.CANCELLED.generateException();
-		}
-
-		input.getProtection().unsetParentProtection();
-		((Protection) input.getProtection()).saveData();
 	}
 
 	@Override
@@ -518,13 +411,36 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
-		if (protection.isBlocked() && !PermissionsService.ADMIN_BLOCK_BYPASS.hasPermission(player)) {
-			throw Exceptions.Protections.BLOCKED.generateException();
-		}
-
 		if (protection.isDeleted()) {
 			throw Exceptions.Protections.NOTFOUND.generateException();
 		}
+	}
+
+	@Override
+	public boolean protectionKickRequest(ProtectionKickRequestInput input) throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void protectionMergeRequest(ProtectionMergeRequestInput input) throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void protectionSplitRequest(ProtectionSplitRequestInput input) throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void protectionBannedAddRequest(ProtectionBannedAddRequestInput input)
+			throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void protectionBannedRemoveRequest(ProtectionBannedRemoveRequestInput input)
+			throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
 	}
 
 }

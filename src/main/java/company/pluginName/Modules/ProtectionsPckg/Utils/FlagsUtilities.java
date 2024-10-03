@@ -1,15 +1,11 @@
 package company.pluginName.Modules.ProtectionsPckg.Utils;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.bukkit.OfflinePlayer;
-
-import com.sk89q.worldguard.protection.flags.Flag;
 
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
@@ -20,14 +16,8 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
-import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
-import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 
 public class FlagsUtilities {
-
-	@RegisteredPandaField("flags")
-	private static final PandaStringListField SETTINGS_IGNOREFLAGSONRESET = new PandaStringListField(
-			"Settings.Ignore-flags-on-reset", Arrays.asList("banned-players", "teleport"));
 
 	@PandaInject
 	private static ProtectionFlagsService protectionFlagsService;
@@ -45,13 +35,7 @@ public class FlagsUtilities {
 	public static void resetFlags(Protection protection, UUID ownerUuid) {
 		OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(ownerUuid);
 
-		Map<Flag<?>, Object> flags = new HashMap<>();
-		SETTINGS_IGNOREFLAGSONRESET.getContent().forEach(flagId -> {
-			protection.getProtectedRegion().getFlags().entrySet().stream()
-					.filter(entry -> entry.getKey().getName().equalsIgnoreCase(flagId)).findFirst()
-					.ifPresent(entry -> flags.put(entry.getKey(), entry.getValue()));
-		});
-		protection.getProtectedRegion().setFlags(flags);
+		protection.getProtectedRegion().setFlags(new HashMap<>());
 
 		protectionFlagsService.getFlags().forEach(flag -> {
 			Object value = flag.getDefaultValue();

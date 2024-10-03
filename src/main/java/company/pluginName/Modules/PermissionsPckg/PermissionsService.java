@@ -42,18 +42,6 @@ public class PermissionsService extends PandaPermissionsService {
 	public static final PandaPermission MEMBERS_REMOVE_OTHERS = new PandaCustomizablePermission("Members.Remove.Others",
 			"protectionblocks.members.remove.others");
 
-	public static final PandaPermission BANNEDS_ADD_OTHERS = new PandaCustomizablePermission("Banneds.Add.Others",
-			"protectionblocks.banneds.add.others");
-	public static final PandaPermission BANNEDS_REMOVE_OTHERS = new PandaCustomizablePermission("Banneds.Remove.Others",
-			"protectionblocks.banneds.remove.others");
-	public static final PandaPermission BANNEDS_BYPASS = new PandaCustomizablePermission("Banneds.Bypass",
-			"protectionblocks.banneds.bypass");
-
-	public static final PandaPermission KICK_OTHERS = new PandaCustomizablePermission("Kick.Others",
-			"protectionblocks.kick.others");
-	public static final PandaPermission KICK_BYPASS = new PandaCustomizablePermission("Kick.Bypass",
-			"protectionblocks.kick.bypass");
-
 	public static final PandaPermission OWNERS_ADD_OTHERS = new PandaCustomizablePermission("Owners.Add.Others",
 			"protectionblocks.owners.add.others");
 	public static final PandaPermission OWNERS_REMOVE_OTHERS = new PandaCustomizablePermission("Owners.Remove.Others",
@@ -62,32 +50,17 @@ public class PermissionsService extends PandaPermissionsService {
 	public static final PandaPermission INFO_OTHERS = new PandaCustomizablePermission("Info.Others",
 			"protectionblocks.info.others");
 
-	public static final PandaPermission FLY_BYPASS = new PandaCustomizablePermission("Fly.Bypass",
-			"protectionblocks.fly.bypass");
-
 	public static final PandaPermission OVERLAP_BYPASS = new PandaCustomizablePermission("Overlap.Bypass",
 			"protectionblocks.overlap.bypass");
 
-	public static final PandaPermission ECONOMY_BYPASS = new PandaCustomizablePermission("Economy.Bypass",
-			"protectionblocks.economy.bypass");
-
 	public static final PandaPermission PRIORITY_OTHERS = new PandaCustomizablePermission("Priority.Others",
 			"protectionblocks.priority.others");
-
-	public static final PandaPermission MERGE_OTHERS = new PandaCustomizablePermission("Merge.Others",
-			"protectionblocks.merge.others");
-
-	public static final PandaPermission SPLIT_OTHERS = new PandaCustomizablePermission("Split.Others",
-			"protectionblocks.split.others");
 
 	public static final PandaPermission HIDE_OTHERS = new PandaCustomizablePermission("Hide.Others",
 			"protectionblocks.hide.others");
 
 	public static final PandaPermission SHOW_OTHERS = new PandaCustomizablePermission("Show.Others",
 			"protectionblocks.show.others");
-
-	public static final PandaPermission ADMIN_BLOCK_BYPASS = new PandaCustomizablePermission("Admin.Block.Bypass",
-			"protectionblocks.admin.block.bypass");
 
 	public static final PandaPermission BLOCKS_CREATE = new PandaCustomizablePermission("Blocks.Create",
 			"protectionblocks.blocks.create");

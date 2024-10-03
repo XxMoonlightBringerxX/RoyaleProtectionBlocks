@@ -25,7 +25,6 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemEx
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
-import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
 
 @Inventory("protectionblocks_list")
 public class ProtectionBlocksListInventory extends PagedChestInventoryObject<ProtectionBlock> {
@@ -70,11 +69,7 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 				new Replacement("{block_allowed_worlds}",
 						() -> entity.getAllowedWorlds().get().size() > 0
 								? entity.getAllowedWorlds().get().stream().collect(Collectors.joining(", "))
-								: "&7&oAll"),
-				new Replacement("{block_price}",
-						() -> entity.getInformation().getPrice() != null
-								? StringsHelper.toCurrency(entity.getInformation().getPrice())
-								: "&7&o---") };
+								: "&7&oAll") };
 
 		ItemBuilder itemBuilder = ItemBuilder.inst().fromMap(getChestInventoryData().getCustomFields(), "Entity")
 				.setReplacements(replacements);
@@ -136,7 +131,9 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 
 	@ItemGenerator("Create-block-button")
 	private ItemStack generateCreateBlockButton(Item item) {
-		return canCreate ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+		return canCreate && protectionBlocksService.getProtectionBlocks().size() < 4
+				? item.getItems().get(Item.DISPLAYITEM_KEY)
+				: null;
 	}
 
 	@ItemExecutor("Create-block-button")

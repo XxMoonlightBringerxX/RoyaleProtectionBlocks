@@ -29,7 +29,6 @@ Prefix: "&d&lRoyale&fProtectionBlocks >>&r&7 "
 Message: 
   
   Reload: "&aThe plugin has been reloaded successfully."
-  Set-spawn-successfully: "&aA new spawn has ben set successfully."
   
   General: 
     No-limit: "No limit"
@@ -45,8 +44,6 @@ Message:
     Kicked: "&cYou've been kicked from this protection."
     Banned: "&cYou've been banned from this protection."
     Player-not-in-protection: "&cThis player is not currently inside this protection."
-    Player-with-kick-bypass: "&cYou can't kick this player due his permissions."
-    Player-kicked: "&aThe player has been kicked from this protection successfully!"
     Left-successfully: "&aYou have left the protection successfully!"
     
     Flags: 
@@ -64,63 +61,17 @@ Message:
       Added-successfully: "&aThe new owner has been added to the protection successfully!"
       Removed-successfully: "&aThe owner has been removed to the protection successfully!"
     
-    Banneds: 
-      Added-successfully: "&aThe player has been banned from the protection successfully!"
-      Removed-successfully: "&aThe player has been unbanned from the protection successfully!"
-    
     Blocks: 
       Created-successfully: "&aThe protection block has been created successfully!"
       Saved-successfully: "&aThe protection block changes has been saved successfully!"
       Removed-successfully: "&aThe protection block has been removed successfully!"
   
-  Transfer: 
-    Available-list: "&7Available protection plugins to transfer from: &f{list}"
-    Protection-stones-not-loaded: "&cProtectionStones is not loaded. Please load ProtectionStones to
-      transfer its data."
-    Warning: "&7You're about to transfer all the data from another plugin to RoyaleProtectionBlocks.
-      Once it starts, it's not recomended to stop the server. This process
-      may remove the old regions and lead to losing some in case their
-      transfer fails. Remember to keep a backup of the WorldGuard and desired
-      plugin folder in case something goes wrong. Make sure to remove the
-      plugin you want to transfer from once the transfer finishes, as it
-      can lead to unexpected behaviors if there are two protection plugins.
-      Please, type &e{command} &7to confirm your choice."
-    Start: "&7Starting transfer process..."
-    End: "&7Transfer finished! Remember to check the results and, if everything
-      went okey, remove the old protection plugin."
-    Result: 
-    - ""
-    - "&eTransfer result: "
-    - ""
-    - "&e  - &aTransferred protection blocks: {transferred_protection_blocks}"
-    - "&e  - &cFailed protection blocks: {failed_protection_blocks}"
-    - ""
-    - "&e  - &aTransferred protections: {transferred_protections}"
-    - "&e  - &cFailed protections: {failed_protections}"
-    - ""
-    - "&e  - &aRequired time: {required_time} ms"
-    - "&e  - &cErrors in console: {errors_in_console}"
-    - ""
-  
   Purge: 
-    Warning: "&7You're about to delete a total amount of &e{amount} &7protection=
-      new PandaPrefixedStringField(s) depending on the player's last playtime,
-      some protections may be lost if any error occurs. If there may be
-      some important protections you want to prevent from being removed,
-      remember to make a backup just in case. Please, type &e{command}
-      &7to confirm your choice."
     Search: "&7Searching matching protections..."
     Start: "&7Starting purge process..."
     End: "&aPurge finished! A total amount of &e{amount} &aprotection(s) has been purged."
     Error: "&7A total amount of &e{amount} protection(s)
       couldn't be purged. Check the console to see the related errors."
-    Export-end: "&aExportation finished! A total amount of &e{amount} &aprotection=
-      new PandaPrefixedStringField(s) has been found and exported to a
-      new JSON file called '&e{file}' on your plugin's directory."
-  
-  Files: 
-    Exported-successfully: "All the data has been exported successfully!"
-    Imported-successfully: "All the data has been imported successfully!"
   
   Helper: 
     Available-left-arrow: "&e«"
@@ -149,24 +100,12 @@ Error:
   No-item-in-hand: "&cYou must have an item in your hand!"
   Not-a-block: "&cThe item must be a block!"
   Inventory-full: "&cYou don't have enough space on your inventory!"
-  Insufficient-balance: "&cYou don't have enough balance to purchase this!"
   Invalid-number: "&cYou must specify a valid number!"
   Number-below-zero: "&cYou must specify a number higher than or equal to zero!"
   Set-spawn-error: "&cThere was an error trying to specify a new spawn. Check the console!"
   
   Chat-prompt: 
     Already-prompted: "&cYou've already a pending type operation!"
-  
-  Files: 
-    Export: "&cThere was an issue trying to export the data! Check the console
-      for more information."
-    Import: "&cThere was an issue trying to import the data! Check the console
-      for more information."
-  
-  Purge: 
-    Invalid-parameter: "&cYou must specify a valid parameter! (Available:
-      --days, --hours, --minutes, --config, --show-ignored-players, --export-only)"
-    No-value-for-parameter: "&cYou must specify a value for the parameter!"
   
   Protections: 
     Not-found: "&cThe specified protection could not be found!"
@@ -185,7 +124,6 @@ Error:
     Leave-denied-to-main-owner: "&cYou can't leave your own protection!"
     Blocks: 
       Not-found: "&cThere's no protection block with this ID!"
-      Not-for-sale: "&cThis protection block is currently not for sale!"
   
   Commands: 
     Permission-denied: "&cYou don't have permissions to use this command!"

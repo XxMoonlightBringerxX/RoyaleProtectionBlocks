@@ -1,9 +1,6 @@
 package company.pluginName.Bukkit.Events.Listeners;
 
 import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -21,7 +18,6 @@ import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.SQLPckg.SQLService;
@@ -113,21 +109,6 @@ public class BukkitListener implements Listener {
 								e2.sendError(Bukkit.getConsoleSender());
 								return;
 							}
-						}
-					}
-
-					// TODO: Remove this code after some versions as everything should already be
-					// parsed to the database.
-					Set<String> banneds = protection.getWorldGuardBanneds().get();
-
-					if (!banneds.isEmpty()) {
-						try {
-							sqlService.saveProtectionBanneds(protection,
-									banneds.stream().map(UUID::fromString).collect(Collectors.toList()));
-							ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
-									worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag(), null);
-						} catch (RoyaleProtectionBlocksExceptionImpl e1) {
-							e1.sendError(Bukkit.getConsoleSender());
 						}
 					}
 				});

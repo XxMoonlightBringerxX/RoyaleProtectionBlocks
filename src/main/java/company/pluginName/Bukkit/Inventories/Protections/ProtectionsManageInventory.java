@@ -7,12 +7,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBannedsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
-import company.pluginName.Bukkit.Inventories.Protections.Merge.ProtectionMergeInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
-import company.pluginName.Bukkit.Inventories.Protections.Split.ProtectionSplitInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
@@ -134,11 +131,6 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 				: null;
 	}
 
-	@ItemGenerator("Merge-button")
-	private ItemStack generateMergeButton(Item item) {
-		return ProtectionUtilities.canMerge(protection, getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
-	}
-
 	@ItemGenerator("Delete-button")
 	private ItemStack generateDeleteButton(Item item) {
 		return ProtectionUtilities.canDelete(protection, getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY)
@@ -173,11 +165,6 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 	@ItemExecutor("Members-button")
 	private void executeMembersButton() {
 		new ProtectionMembersInventory(getPlayer(), protection).openInventory();
-	}
-
-	@ItemExecutor("Banneds-button")
-	private void executeBannedsButton() {
-		new ProtectionBannedsInventory(getPlayer(), protection).openInventory();
 	}
 
 	@ItemExecutor("Flags-button")
@@ -234,15 +221,6 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 	private void executeToggleBoundaryButton() {
 		protection.getBoundaries().toggleProtectionView();
 		updateInventory();
-	}
-
-	@ItemExecutor("Merge-button")
-	private void executeMergeButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
-		if (e.isLeftClick()) {
-			new ProtectionMergeInventory(getPlayer(), protection).openInventory();
-		} else if (e.isRightClick()) {
-			new ProtectionSplitInventory(getPlayer(), protection).openInventory();
-		}
 	}
 
 	@ItemExecutor("Delete-button")

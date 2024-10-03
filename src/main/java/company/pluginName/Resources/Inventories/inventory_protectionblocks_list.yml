@@ -7,7 +7,6 @@ Entity:
   - "&a&oBlock size: &e{blocks_x}x{blocks_y}x{blocks_z}"
   - "&a&oAllowed worlds: &e{block_allowed_worlds}"
   - "&a&oPermission: &e{block_permission}"
-  - "&a&oPrice: &e{block_price}$"
   Copy-lore-line: " &8&o- &aLeft click: &eGet a copy"
   Edit-lore-line: " &8&o- &aLeft click + Shift: &eEdit the block"
   Remove-lore-line: " &8&o- &aRight click: &eRemove the block"

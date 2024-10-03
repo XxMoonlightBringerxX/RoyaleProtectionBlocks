@@ -46,18 +46,12 @@ Items:
       Amount: 1
       Name: "&eMembers"
     Slots: "14"
-  Banneds-button:
-    Display-item:
-      Type: "TNT"
-      Amount: 1
-      Name: "&eBanneds"
-    Slots: "15"
   Flags-button:
     Display-item:
       Type: "COMMAND_BLOCK"
       Amount: 1
       Name: "&eFlags"
-    Slots: "16"
+    Slots: "15"
   Rename-button:
     Display-item:
       Type: "NAME_TAG"
@@ -84,16 +78,6 @@ Items:
       Amount: 1
       Name: "&eHide the protection boundaries"
     Slots: "24"
-  Merge-button:
-    Display-item:
-      Type: "SLIME_BLOCK"
-      Amount: 1
-      Name: "&eMerge protection"
-      Lore:
-      - "&8&o- &aLeft-click: &eSet parent protection"
-      - "&8&o- &aRight-click: &eRemove child protections"
-    Slots: "25"
-    Version: 4
   Delete-button:
     Display-item:
       Type: "PLAYER_HEAD"

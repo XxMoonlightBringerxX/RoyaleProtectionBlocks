@@ -1,10 +1,8 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -27,9 +25,7 @@ import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
 import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
-import company.pluginName.Hooks.VaultAPI.VaultAPI;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
-import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
@@ -42,7 +38,6 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionA
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionBoundaries;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionDisplayItem;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardBanneds;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardFlags;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardMembers;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardOwners;
@@ -68,9 +63,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.CreationCause;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationEvent;
-import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionMergeEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalEvent;
-import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionSplitEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
@@ -127,9 +120,6 @@ public class Protection implements IProtection {
 	private static WorldGuardAPI worldGuardApi;
 
 	@PandaInject
-	private static VaultAPI vaultApi;
-
-	@PandaInject
 	private static PlayerDataService playerDataService;
 
 	private @ToString.Include @EqualsAndHashCode.Include String regionId;
@@ -141,7 +131,6 @@ public class Protection implements IProtection {
 
 	private ProtectionWorldGuardMembers worldGuardMembers = new ProtectionWorldGuardMembers(this);
 	private ProtectionWorldGuardOwners worldGuardOwners = new ProtectionWorldGuardOwners(this);
-	private ProtectionWorldGuardBanneds worldGuardBanneds = new ProtectionWorldGuardBanneds(this);
 	private ProtectionWorldGuardFlags worldGuardFlags = new ProtectionWorldGuardFlags(this);
 	private ProtectionActions actions = new ProtectionActions(this);
 	private ProtectionUtils utils = new ProtectionUtils(this);
@@ -242,23 +231,6 @@ public class Protection implements IProtection {
 	}
 
 	/*
-	 * Block methods
-	 */
-
-	private boolean blocked;
-	private BlockReason blockReason;
-
-	public void block(BlockReason blockReason) {
-		this.blocked = true;
-		this.blockReason = blockReason;
-	}
-
-	public void unblock() {
-		this.blocked = false;
-		this.blockReason = null;
-	}
-
-	/*
 	 * Owner methods
 	 */
 
@@ -338,58 +310,6 @@ public class Protection implements IProtection {
 	public int getPriority() {
 		return getProtectedRegion() != null ? getProtectedRegion().getPriority()
 				: SETTINGS_PROTECTION_DEFAULTPRIORITY.getContent();
-	}
-
-	/*
-	 * Banneds methods
-	 */
-
-	private List<UUID> banneds = new ArrayList<>();
-
-	@Override
-	public void addBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
-		if (this.isOwner(bannedUuid)) {
-			throw Exceptions.Protections.Banneds.Save.CANNOTADDPROTECTIONOWNER.generateException();
-		}
-
-		this.getBanneds().add(bannedUuid);
-
-		TasksUtils.execute(() -> {
-			Player bannedPlayer = Bukkit.getPlayer(bannedUuid);
-
-			if (bannedPlayer != null) {
-				try {
-					if (PermissionsService.BANNEDS_BYPASS.hasPermission(bannedPlayer)
-							|| this.kickPlayer(bannedPlayer)) {
-						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BANNED.applyPrefix()).process()
-								.sendMessage(bannedPlayer);
-					}
-				} catch (RoyaleProtectionBlocksException e) {
-					e.sendError(Bukkit.getConsoleSender());
-				}
-			}
-		});
-
-		TasksUtils.executeOnAsync(() -> {
-			try {
-				sqlService.saveProtectionBanned(this, bannedUuid);
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
-				e.sendError(Bukkit.getConsoleSender());
-			}
-		});
-	}
-
-	@Override
-	public void removeBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
-		this.getBanneds().remove(bannedUuid);
-
-		TasksUtils.executeOnAsync(() -> {
-			try {
-				sqlService.deleteProtectionBanned(this, bannedUuid);
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
-				e.sendError(Bukkit.getConsoleSender());
-			}
-		});
 	}
 
 	/*
@@ -596,60 +516,6 @@ public class Protection implements IProtection {
 
 				checkRemovalConditions(player);
 
-				IProtection parent = getParentProtection();
-
-				try {
-					try {
-						unsetParentProtection();
-
-						new ArrayList<>(getChildProtections()).forEach(protection -> {
-							try {
-								protection.unsetParentProtection();
-								((Protection) protection).saveData();
-							} catch (RoyaleProtectionBlocksException e) {
-								e.sendError(Bukkit.getConsoleSender());
-							}
-						});
-
-						if (parent != this) {
-							Set<IProtection> insideParentProtections = new HashSet<>();
-							insideParentProtections.add(parent);
-
-							parent.performAllProtections(prot -> {
-								if (prot != parent && insideParentProtections.stream().anyMatch(prot2 -> prot2
-										.isInside(((Protection) prot).getUtils().getProtectionArea(), true))) {
-									insideParentProtections.add(prot);
-								}
-							});
-
-							Set<IProtection> notInsideParentProtections = new HashSet<>();
-
-							parent.performAllProtections(prot -> {
-								if (!insideParentProtections.contains(prot)) {
-									notInsideParentProtections.add(prot);
-								}
-							});
-
-							notInsideParentProtections.forEach(prot -> {
-								try {
-									prot.unsetParentProtection();
-									((Protection) prot).saveData();
-								} catch (Throwable e) {
-									throw new RuntimeException(e);
-								}
-							});
-						}
-					} catch (RuntimeException e) {
-						throw e.getCause();
-					}
-				} catch (Throwable e) {
-					if (e instanceof RoyaleProtectionBlocksExceptionImpl) {
-						throw (RoyaleProtectionBlocksExceptionImpl) e;
-					} else {
-						throw Exceptions.Protections.Delete.UNKNOWN.generateException(e);
-					}
-				}
-
 				deleteProtectedRegion();
 
 				protectionsService.unregisterProtection(this);
@@ -722,101 +588,6 @@ public class Protection implements IProtection {
 	}
 
 	/*
-	 * Merge methods
-	 */
-
-	private IProtection parentProtection = null;
-	private List<IProtection> childProtections = new ArrayList<>();
-
-	@Override
-	public void setParentProtection(IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
-		this.setParentProtection(null, protection);
-	}
-
-	public void setParentProtection(Player player, IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
-		if (SETTINGS_PROTECTION_MUSTBECLOSEFORMERGE.isTrue()) {
-			if (!protection.isInsideAny(this.getUtils().getProtectionArea(), true)) {
-				throw Exceptions.Protections.MERGETOOFAR.generateException();
-			}
-		}
-
-		if (this.getChildProtectionsRecursively().contains(protection)) {
-			throw Exceptions.Protections.MERGECHILDPROTECTION.generateException();
-		}
-
-		if (this.parentProtection == protection) {
-			throw Exceptions.Protections.ALREADYMERGED.generateException();
-		}
-
-		if (this == protection) {
-			throw Exceptions.Protections.MERGESAMEPROTECTION.generateException();
-		}
-
-		if (this.parentProtection != null) {
-			this.parentProtection.getChildProtections().remove(this);
-			this.parentProtection = null;
-		}
-
-		while (protection.getParentProtection() != protection) {
-			protection = protection.getParentProtection();
-		}
-
-		this.parentProtection = protection;
-		this.parentProtection.getChildProtections().add(this);
-
-		try {
-			this.performAllProtections((prot) -> {
-				((Protection) prot).getProtectedRegion()
-						.setMembers(((Protection) this.parentProtection).getProtectedRegion().getMembers());
-				((Protection) prot).getProtectedRegion()
-						.setOwners(((Protection) this.parentProtection).getProtectedRegion().getOwners());
-				((Protection) prot).getProtectedRegion()
-						.setFlags(((Protection) this.parentProtection).getProtectedRegion().getFlags());
-				((Protection) prot).getProtectedRegion()
-						.setPriority(((Protection) this.parentProtection).getProtectedRegion().getPriority());
-			});
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-
-		TasksUtils.execute(() -> Bukkit.getPluginManager()
-				.callEvent(new ProtectionMergeEvent(player, this, this.parentProtection)));
-	}
-
-	@Override
-	public void unsetParentProtection() throws RoyaleProtectionBlocksExceptionImpl {
-		unsetParentProtection(null);
-	}
-
-	public void unsetParentProtection(Player player) throws RoyaleProtectionBlocksExceptionImpl {
-		IProtection parentProtection = this.parentProtection;
-
-		if (this.parentProtection != null) {
-			this.parentProtection.getChildProtections().remove(this);
-			this.parentProtection = null;
-
-			TasksUtils.execute(() -> Bukkit.getPluginManager()
-					.callEvent(new ProtectionSplitEvent(player, this, parentProtection)));
-		}
-	}
-
-	public IProtection getParentProtection() {
-		return this.parentProtection != null ? this.parentProtection.getParentProtection() : this;
-	}
-
-	@Override
-	public List<IProtection> getChildProtectionsRecursively() {
-		return getChildProtectionsRecursively(new ArrayList<>());
-	}
-
-	@Override
-	public List<IProtection> getChildProtectionsRecursively(List<IProtection> list) {
-		list.addAll(this.childProtections);
-		this.childProtections.forEach(prot -> prot.getChildProtectionsRecursively(list));
-		return list;
-	}
-
-	/*
 	 * Save data methods
 	 */
 
@@ -834,7 +605,6 @@ public class Protection implements IProtection {
 		TasksUtils.executeOnAsync(() -> {
 			try {
 				sqlService.deleteProtection(this);
-				sqlService.deleteProtectionBanneds(this);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
@@ -858,7 +628,7 @@ public class Protection implements IProtection {
 	}
 
 	public boolean isBanned(UUID playerUuid) {
-		return this.getBanneds().contains(playerUuid);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -879,11 +649,6 @@ public class Protection implements IProtection {
 	@Override
 	public void removeOwner(UUID ownerUuid) throws RoyaleProtectionBlocksException {
 		this.getWorldGuardOwners().remove(ownerUuid);
-	}
-
-	@Override
-	public boolean kickPlayer(Player player) throws RoyaleProtectionBlocksException {
-		return this.getActions().kickPlayer(player);
 	}
 
 	@Override
@@ -946,6 +711,61 @@ public class Protection implements IProtection {
 	@Override
 	public SimpleLocationArea getProtectionAreaWithoutBorder() {
 		return this.getUtils().getProtectionAreaWithoutBorder();
+	}
+
+	@Override
+	public IProtection getParentProtection() {
+		return this;
+	}
+
+	@Override
+	public List<IProtection> getChildProtections() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<IProtection> getChildProtectionsRecursively() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<IProtection> getChildProtectionsRecursively(List<IProtection> list) {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public boolean kickPlayer(Player player) throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void addBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void removeBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setParentProtection(IProtection parentProtection) throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void unsetParentProtection() throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isBlocked() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public BlockReason getBlockReason() {
+		throw new UnsupportedOperationException();
 	}
 
 }

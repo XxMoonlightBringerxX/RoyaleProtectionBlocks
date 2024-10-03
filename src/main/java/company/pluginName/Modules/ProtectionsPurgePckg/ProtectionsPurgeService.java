@@ -28,7 +28,6 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.AutoPurgeLog;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration;
 import company.pluginName.Modules.SQLPckg.SQLService;
-import company.pluginName.Utils.DiscordUtilities;
 import company.pluginName.Utils.TimeUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -108,8 +107,6 @@ public class ProtectionsPurgeService {
 							FutureTask<List<Protection>> purgedProtections = purgeProtections(protectionsToPurge);
 							TasksUtils.executeOnAsync(() -> {
 								try {
-									DiscordUtilities.sendPurgeSummaryMessage(null, configuredPurgeConfiguration,
-											purgedProtections.get());
 									lastLog = new AutoPurgeLog(System.currentTimeMillis(),
 											this.configuredPurgeConfiguration.getMillis(),
 											purgedProtections.get().size());

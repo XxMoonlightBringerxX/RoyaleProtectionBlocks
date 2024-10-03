@@ -19,12 +19,10 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.EquipmentSlot;
 
 import company.pluginName.Debugger;
 import company.pluginName.Debugger.MessageType;
 import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -69,12 +67,6 @@ public class ProtectionsListener implements Listener {
 			default:
 				break;
 			}
-
-			Protection protection = protectionsService.findProtectionParentByLocation(e.getBlockPlaced().getLocation());
-			if (protection != null && protection.isBlocked()) {
-				e.setCancelled(true);
-				Exceptions.Protections.BLOCKED.generateException().sendError(e.getPlayer());
-			}
 		} else {
 			Debugger.log(MessageType.BLOCK_PLACE_CANCELLED);
 		}
@@ -104,39 +96,8 @@ public class ProtectionsListener implements Listener {
 			default:
 				break;
 			}
-
-			Protection protection = protectionsService.findProtectionParentByLocation(e.getBlock().getLocation());
-			if (protection != null && protection.isBlocked()) {
-				e.setCancelled(true);
-				Exceptions.Protections.BLOCKED.generateException().sendError(e.getPlayer());
-			}
 		} else {
 			Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
-		}
-	}
-
-	/**
-	 * Event used to control the interactions of the players to the protection
-	 * blocks when the protection is blocked. If the blocked right clicked is a
-	 * protection block, it's ignored to leave the job to the next listener. If it's
-	 * not, and the block is inside the protection, it's cancelled.
-	 * 
-	 * @param e
-	 */
-	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-	public void onPlayerInteractOnBlocked(PlayerInteractEvent e) {
-		Protection protection = protectionsService.findProtectionBySourceBlock(e.getClickedBlock());
-		if (protection != null) {
-			return;
-		} else if (!e.isBlockInHand()) {
-			protection = protectionsService.findProtectionParentByLocation(e.getClickedBlock().getLocation());
-			if (protection != null && protection.isBlocked()) {
-				e.setCancelled(true);
-
-				if (e.getHand() == EquipmentSlot.HAND) {
-					Exceptions.Protections.BLOCKED.generateException().sendError(e.getPlayer());
-				}
-			}
 		}
 	}
 

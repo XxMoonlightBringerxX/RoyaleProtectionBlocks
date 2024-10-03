@@ -5,12 +5,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -23,7 +21,6 @@ import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
-import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -129,32 +126,10 @@ public class ProtectionsService {
 						e.sendError(Bukkit.getConsoleSender());
 					}
 				}
-
-				// TODO: Remove this code after some versions as everything should already be
-				// parsed to the database.
-				Set<String> banneds = protection.getWorldGuardBanneds().get();
-
-				if (!banneds.isEmpty()) {
-					try {
-						sqlService.saveProtectionBanneds(protection,
-								banneds.stream().map(UUID::fromString).collect(Collectors.toList()));
-						ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
-								worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag(), null);
-					} catch (RoyaleProtectionBlocksExceptionImpl e) {
-						e.sendError(Bukkit.getConsoleSender());
-					}
-				}
 			}
 
 			return true;
 		}).forEach(this::registerProtection);
-
-		sqlService.getProtectionBanneds().forEach((id, banneds) -> {
-			Protection protection = findProtectionById(id);
-			if (protection != null) {
-				protection.setBanneds(banneds);
-			}
-		});
 
 		plugin.sendDebug(getClass(),
 				String.format("Loaded a total amount of '%d' protection(s)", this.protectionByRegion.size()));

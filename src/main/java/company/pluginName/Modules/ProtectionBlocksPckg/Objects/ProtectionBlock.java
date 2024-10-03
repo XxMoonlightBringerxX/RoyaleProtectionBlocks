@@ -3,23 +3,17 @@ package company.pluginName.Modules.ProtectionBlocksPckg.Objects;
 import java.util.ArrayList;
 
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
-import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockAllowedWorlds;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.SQLPckg.SQLService;
-import company.pluginName.Utils.EconomyUtils;
-import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
-import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackUtilities;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.Data;
@@ -70,33 +64,6 @@ public class ProtectionBlock {
 
 		this.information.setId(protectionBlock.getInformation().getId());
 		this.copy(protectionBlock);
-	}
-
-	public void purchase(Player pl) {
-		try {
-			ItemStack item = getInformation().generateItem();
-
-			if (ItemStackUtilities.hasAvailableSpace(pl, item)) {
-				if (PermissionsService.ECONOMY_BYPASS.hasPermission(pl)) {
-					pl.getInventory().addItem(item);
-				} else {
-					if (EconomyUtils.withdraw(pl, getInformation().getPrice())) {
-						pl.getInventory().addItem(item);
-						MessageTemplate.inst(MESSAGE_PROTECTION_FLAGS_CHARGEDSUCCESSFULLY.applyPrefix())
-								.setReplacements(
-										new Replacement("{amount}", () -> String.valueOf(getInformation().getPrice())))
-								.process().sendMessage(pl);
-					} else {
-						MessageTemplate.inst(Messages.ERROR_INSUFFICIENTBALANCE.applyPrefix()).process()
-								.sendMessage(pl);
-					}
-				}
-			} else {
-				MessageTemplate.inst(Messages.ERROR_INVENTORYFULL.applyPrefix()).process().sendMessage(pl);
-			}
-		} catch (RoyaleProtectionBlocksExceptionImpl e) {
-			e.sendError(pl);
-		}
 	}
 
 	public void save() throws RoyaleProtectionBlocksExceptionImpl {

@@ -7,11 +7,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.API.Services.PlayerInteractionsServiceImpl;
-import company.pluginName.Bukkit.Inventories.ProtectionBlocks.ProtectionBlocksShopInventory;
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchProtectionInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
-import company.pluginName.Hooks.VaultAPI.VaultAPI;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
@@ -35,8 +33,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 		defaultName = "protectionblocks",
 		defaultDescription = "Open the GUI or execute commands",
 		defaultUsage = "[help|subcommand]",
-		defaultAliases = "pb"
-)
+		defaultAliases = "pb")
 @PandaCommandAnnotation.Customizable(aliases = true, description = true, name = true, permission = true, usage = true)
 public class ProtectionBlocksCommand extends PandaCommand {
 
@@ -52,9 +49,6 @@ public class ProtectionBlocksCommand extends PandaCommand {
 
 	@PandaInject
 	private static PlayerInteractionsServiceImpl playerInteractionsService;
-
-	@PandaInject
-	private static VaultAPI vaultApi;
 
 	public ProtectionBlocksCommand() throws InstantiationException {
 		super();
@@ -88,12 +82,7 @@ public class ProtectionBlocksCommand extends PandaCommand {
 					}).openInventory();
 				}
 			} else {
-				if (vaultApi.isHooked() && SETTINGS_PROTECTIONBLOCK_OPENSHOPONLISTEMPTY.getContent()
-						&& protectionsService.getAllowedProtections(pl).count() == 0) {
-					new ProtectionBlocksShopInventory(pl).openInventory();
-				} else {
-					new ProtectionsListInventory(pl).openInventory();
-				}
+				new ProtectionsListInventory(pl).openInventory();
 			}
 			return new TrueResponse();
 		}

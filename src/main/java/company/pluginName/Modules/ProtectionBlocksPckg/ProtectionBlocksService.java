@@ -4,8 +4,11 @@ import java.util.HashMap;
 
 import org.bukkit.Material;
 
+import company.pluginName.Exceptions.Exceptions;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.SQLPckg.SQLService;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
@@ -44,7 +47,14 @@ public class ProtectionBlocksService {
 	 * Register/Unregister methods
 	 */
 
-	public synchronized void registerProtectionBlock(ProtectionBlock protectionBlock) {
+	public synchronized void registerProtectionBlock(ProtectionBlock protectionBlock)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		if (this.protectionBlocks.size() > 3
+				&& !protectionBlocks.containsKey(protectionBlock.getInformation().getId().toLowerCase())) {
+			throw Exceptions.Protections.Blocks.Save.MAXIMUMACHIEVED.generateException()
+					.setReplacements(new Replacement("{amount}", () -> "4"));
+		}
+
 		protectionBlocks.putIfAbsent(protectionBlock.getInformation().getId().toLowerCase(), protectionBlock);
 	}
 

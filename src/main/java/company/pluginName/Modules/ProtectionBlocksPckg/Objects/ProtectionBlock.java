@@ -119,7 +119,7 @@ public class ProtectionBlock {
 						}
 
 						try {
-							protection.delete(RemovalCause.PURGE).subscribe();
+							protection.delete(RemovalCause.AUTO_PURGE).subscribe();
 						} catch (RoyaleProtectionBlocksExceptionImpl e1) {
 							e1.printStackTrace();
 						}

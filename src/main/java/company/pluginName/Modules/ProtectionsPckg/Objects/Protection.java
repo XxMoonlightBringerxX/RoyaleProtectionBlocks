@@ -124,7 +124,6 @@ public class Protection implements IProtection {
 
 	private @ToString.Include @EqualsAndHashCode.Include String regionId;
 	private @ToString.Include UUID ownerUuid;
-	private OfflinePlayer ownerOfflinePlayer;
 	private ReferencedProtectionBlock protectionBlock;
 	private @ToString.Include @EqualsAndHashCode.Include String worldName;
 	private @ToString.Include @Setter(lombok.AccessLevel.NONE) long createdDate;
@@ -234,11 +233,25 @@ public class Protection implements IProtection {
 	 * Owner methods
 	 */
 
+	private OfflinePlayer ownerOfflinePlayer;
+	private @Setter Long ownerLastPlayed;
+
 	public OfflinePlayer getOwnerOfflinePlayer() {
 		if (this.ownerOfflinePlayer == null) {
 			this.ownerOfflinePlayer = OfflinePlayerUtilities.getOfflinePlayer(ownerUuid);
 		}
 		return this.ownerOfflinePlayer;
+	}
+
+	@Override
+	public long getOwnerLastPlayed() {
+		if (this.getOwnerOfflinePlayer().isOnline()) {
+			return System.currentTimeMillis();
+		}
+		if (this.ownerLastPlayed == null) {
+			this.ownerLastPlayed = this.getOwnerOfflinePlayer().getLastPlayed();
+		}
+		return this.ownerLastPlayed;
 	}
 
 	/*

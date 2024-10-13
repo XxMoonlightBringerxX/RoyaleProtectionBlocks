@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.bukkit.entity.Player;
@@ -88,33 +89,53 @@ public class PlaceholdersService {
 	}
 
 	public Replacement[] getPlayerReplacements(Player player) {
-		Pair<Long, Replacement[]> replacement = this.playerReplacements.computeIfAbsent(player.getUniqueId(),
-				(uuid) -> {
-					List<Replacement> replacements = PLAYER_PLACEHOLDERS.stream()
-							.map(placeholder -> new Replacement(placeholder.getFirst(),
-									() -> placeholder.getSecond().apply(player)).cacheText(false))
-							.collect(Collectors.toList());
-					return Pair.of(null, replacements.toArray(new Replacement[replacements.size()]));
-				});
+		return executeSynchronizedWithReturn(() -> {
+			Pair<Long, Replacement[]> replacement = this.playerReplacements.computeIfAbsent(player.getUniqueId(),
+					(uuid) -> {
+						List<Replacement> replacements = PLAYER_PLACEHOLDERS.stream()
+								.map(placeholder -> new Replacement(placeholder.getFirst(),
+										() -> placeholder.getSecond().apply(player)).cacheText(false))
+								.collect(Collectors.toList());
+						return Pair.of(null, replacements.toArray(new Replacement[replacements.size()]));
+					});
 
-		replacement.setFirst(System.currentTimeMillis());
+			replacement.setFirst(System.currentTimeMillis());
 
-		return replacement.getSecond();
+			return replacement.getSecond();
+		});
 	}
 
 	public Replacement[] getProtectionReplacements(IProtection protection) {
-		Pair<Long, Replacement[]> replacement = this.protectionReplacements.computeIfAbsent(protection.getRegionId(),
-				(regionId) -> {
-					List<Replacement> replacements = PROTECTION_PLACEHOLDERS.stream()
-							.map(placeholder -> new Replacement(placeholder.getFirst(),
-									() -> placeholder.getSecond().apply(protection)).cacheText(false))
-							.collect(Collectors.toList());
-					return Pair.of(null, replacements.toArray(new Replacement[replacements.size()]));
-				});
+		return executeSynchronizedWithReturn(() -> {
+			Pair<Long, Replacement[]> replacement = this.protectionReplacements
+					.computeIfAbsent(protection.getRegionId(), (regionId) -> {
+						List<Replacement> replacements = PROTECTION_PLACEHOLDERS.stream()
+								.map(placeholder -> new Replacement(placeholder.getFirst(),
+										() -> placeholder.getSecond().apply(protection)).cacheText(false))
+								.collect(Collectors.toList());
+						return Pair.of(null, replacements.toArray(new Replacement[replacements.size()]));
+					});
 
-		replacement.setFirst(System.currentTimeMillis());
+			replacement.setFirst(System.currentTimeMillis());
 
-		return replacement.getSecond();
+			return replacement.getSecond();
+		});
+	}
+
+	/*
+	 * Private methods
+	 */
+
+	private synchronized <T> T executeSynchronizedWithReturn(Supplier<T> func) {
+		return func.get();
+	}
+
+	@SuppressWarnings("unused")
+	private void executeSynchronized(Runnable func) {
+		executeSynchronizedWithReturn(() -> {
+			func.run();
+			return null;
+		});
 	}
 
 }

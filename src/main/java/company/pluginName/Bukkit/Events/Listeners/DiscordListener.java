@@ -24,8 +24,9 @@ public class DiscordListener implements Listener {
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionRemoval(ProtectionRemovalEvent e) {
-		if (e.getCause() == RemovalCause.PLAYER) {
-			DiscordUtilities.sendProtectionUnregisteredMessage(e.getPlayer(), (Protection) e.getProtection());
+		if (e.getCause() == RemovalCause.PLAYER || e.getCause() == RemovalCause.AUTO_PURGE) {
+			DiscordUtilities.sendProtectionUnregisteredMessage(e.getPlayer(), (Protection) e.getProtection(),
+					e.getCause());
 		}
 	}
 

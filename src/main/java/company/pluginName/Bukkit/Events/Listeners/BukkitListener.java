@@ -11,6 +11,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 
 import company.pluginName.Exceptions.Exceptions;
@@ -66,10 +67,18 @@ public class BukkitListener implements Listener {
 			}
 		}
 
-		protectionsService.findProtectionsByOwner(e.getPlayer().getUniqueId()).stream()
-				.filter(protection -> protection.getOwnerOfflinePlayer() != null
-						&& !protection.getOwnerOfflinePlayer().isOnline())
-				.forEach(protection -> protection.setOwnerOfflinePlayer(e.getPlayer()));
+		protectionsService.findProtectionsByOwner(e.getPlayer().getUniqueId()).forEach(protection -> {
+			protection.setOwnerOfflinePlayer(e.getPlayer());
+			protection.setOwnerLastPlayed(System.currentTimeMillis());
+		});
+	}
+
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	public void onPlayerExit(PlayerQuitEvent e) {
+		protectionsService.findProtectionsByOwner(e.getPlayer().getUniqueId()).forEach(protection -> {
+			protection.setOwnerOfflinePlayer(null);
+			protection.setOwnerLastPlayed(System.currentTimeMillis());
+		});
 	}
 
 	@EventHandler

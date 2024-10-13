@@ -10,6 +10,7 @@ import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
+import company.pluginName.Modules.ProtectionsPurgePckg.ProtectionsPurgeService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
@@ -34,6 +35,9 @@ public class ProtectionCreationRemovalListener implements Listener {
 
 	@PandaInject
 	private PlaceholderAPI placeholderApi;
+
+	@PandaInject
+	private ProtectionsPurgeService protectionsPurgeService;
 
 	@EventHandler
 	public void onProtectionCreation(ProtectionCreationEvent e) {
@@ -65,6 +69,8 @@ public class ProtectionCreationRemovalListener implements Listener {
 				}
 			});
 		}
+
+		protectionsPurgeService.awakePurgeTask();
 	}
 
 	@EventHandler

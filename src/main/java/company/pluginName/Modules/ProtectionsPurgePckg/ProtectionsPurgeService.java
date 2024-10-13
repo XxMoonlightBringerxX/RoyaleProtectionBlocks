@@ -11,24 +11,24 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.scheduler.BukkitTask;
 
+import company.pluginName.Debugger;
+import company.pluginName.Debugger.MessageType;
 import company.pluginName.MainPluginClass;
+import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPurgePckg.Objects.AutoPurgeLog;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration;
+import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration.BasedOn;
 import company.pluginName.Modules.SQLPckg.SQLService;
-import company.pluginName.Utils.DiscordUtilities;
 import company.pluginName.Utils.TimeUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -41,17 +41,23 @@ import darkpanda73.PandaUtils.PandaPlugin.Exceptions.ReportResult.ReportError;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 import lombok.Getter;
 import relampagorojo93.LibsCollection.JSONLib.JSONArray;
 import relampagorojo93.LibsCollection.JSONLib.JSONObject;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 
-@PandaService
+@PandaService(priority = 1000)
 public class ProtectionsPurgeService {
 
 	@PandaInject
 	private MainPluginClass plugin;
+
+	@PandaInject
+	private PlayerInteractionsService playerInteractionsService;
 
 	@PandaInject
 	private ProtectionsService protectionsService;
@@ -65,64 +71,90 @@ public class ProtectionsPurgeService {
 	private static final DateFormat FILE_DATE_FORMAT = new SimpleDateFormat("'/purge.'yyyyMMddHHmmss'.json'");
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-	private static final long DAYS_IN_MILLIS = 86400000;
-	private static final long HOURS_IN_MILLIS = 3600000;
-	private static final long MINUTES_IN_MILLIS = 60000;
-
-	private BukkitTask autoRemovalTask;
+	private Thread autoRemovalThread;
+	private Thread sleepThread;
+	private Protection sleepThreadFoundProtection;
 	private @Getter PurgeConfiguration configuredPurgeConfiguration;
-
-	private AutoPurgeLog lastLog;
 
 	@LoadMethod
 	public void load() throws ReportError {
 		try {
-			if (!Settings.SETTINGS_PROTECTION_AUTOPURGE_EXECUTEEVERY.getContent().isEmpty()) {
+			if (!Settings.SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent().isEmpty()) {
 				long olderThan = TimeUtils
 						.stringToSeconds(Settings.SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent());
-				long executeEvery = TimeUtils
-						.stringToSeconds(Settings.SETTINGS_PROTECTION_AUTOPURGE_EXECUTEEVERY.getContent());
 
-				if (executeEvery > 0) {
-					plugin.sendDebug(getClass(), String.format(
-							"Set auto purge to execute every %d seconds to remove regions older than %d seconds",
-							executeEvery, olderThan));
-
+				if (olderThan > 0) {
+					plugin.sendDebug(getClass(),
+							String.format("Set auto purge to remove regions older than %d seconds", olderThan));
 					configuredPurgeConfiguration = new PurgeConfiguration().setMillis(olderThan * 1000);
-					lastLog = sqlService.getLastAutoPurgeLog();
 
-					if (lastLog == null) {
-						plugin.sendDebug(getClass(), String.format(
-								"There's no last auto-purge log. Creating a new one with the current millis. Next auto-purge will be executed once the last log is older than '%d' seconds.",
-								executeEvery));
-						lastLog = new AutoPurgeLog(System.currentTimeMillis(),
-								this.configuredPurgeConfiguration.getMillis(), 0);
-						sqlService.saveAutoPurgeLog(lastLog);
-					}
+					autoRemovalThread = new Thread(() -> {
+						while (!Thread.interrupted()) {
+							List<Protection> protectionsToPurge = retrieveProtectionsToPurge(
+									configuredPurgeConfiguration);
 
-					autoRemovalTask = TasksUtils.executeOnAsyncWithTimer(() -> {
-						lastLog = new AutoPurgeLog(System.currentTimeMillis(),
-								this.configuredPurgeConfiguration.getMillis(), 0);
-						List<Protection> protectionsToPurge = retrieveProtectionsToPurge(configuredPurgeConfiguration);
-						TasksUtils.execute(() -> {
-							FutureTask<List<Protection>> purgedProtections = purgeProtections(protectionsToPurge);
-							TasksUtils.executeOnAsync(() -> {
-								try {
-									DiscordUtilities.sendPurgeSummaryMessage(null, configuredPurgeConfiguration,
-											purgedProtections.get());
-									lastLog = new AutoPurgeLog(System.currentTimeMillis(),
-											this.configuredPurgeConfiguration.getMillis(),
-											purgedProtections.get().size());
-									sqlService.saveAutoPurgeLog(lastLog);
-								} catch (InterruptedException | ExecutionException e) {
-									e.printStackTrace();
-								}
-							});
-						});
+							if (protectionsToPurge.size() > 0) {
+								plugin.sendDebug(getClass(),
+										String.format("&7[System] Starting purge process with &e%d &7protection(s)...",
+												protectionsToPurge.size()));
 
-					}, (long) (Math.max(
-							((executeEvery * 1000) - (System.currentTimeMillis() - lastLog.getExecutionMillis())), 0)
-							/ 50), (long) (executeEvery * 20));
+								TasksUtils.execute(() -> {
+									protectionsToPurge.forEach(protection -> {
+										try {
+											ProtectionRemovalAttemptEvent attemptEvent = new ProtectionRemovalAttemptEvent(
+													null, protection, RemovalCause.AUTO_PURGE);
+											Bukkit.getPluginManager().callEvent(attemptEvent);
+
+											if (attemptEvent.isCancelled()) {
+												throw Exceptions.Protections.Delete.CANCELLED.generateException();
+											}
+
+											if (protection.getUtils().isProtectionBlockShown()) {
+												protection.getUtils().hideProtectionBlock();
+											}
+
+											if (protection.getBoundaries().isProtectionViewActive()) {
+												protection.getBoundaries().toggleProtectionView();
+											}
+
+											TasksUtils.executeOnAsync(() -> {
+												try {
+													protection.delete(null, RemovalCause.AUTO_PURGE)
+															.subscribe((deletedProtection) -> {
+															}, (throwable) -> {
+																if (!(throwable instanceof RoyaleProtectionBlocksExceptionImpl)) {
+																	throwable = Exceptions.Protections.Delete.UNKNOWN
+																			.generateException(throwable);
+																}
+
+																((RoyaleProtectionBlocksExceptionImpl) throwable)
+																		.sendError(Bukkit.getConsoleSender());
+															});
+												} catch (RoyaleProtectionBlocksExceptionImpl e) {
+													e.sendError(Bukkit.getConsoleSender());
+												}
+											});
+										} catch (RoyaleProtectionBlocksExceptionImpl e1) {
+											if (e1.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
+												Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
+														() -> new Object[] { protection.getRegionId() });
+											} else {
+												e1.sendError(Bukkit.getConsoleSender());
+											}
+										}
+									});
+
+									plugin.sendDebug(getClass(),
+											String.format(
+													"A total amount of %d protection(s) has been purged successfully",
+													protectionsToPurge.size()));
+								});
+							}
+
+							waitUntilNextProtection(protectionsToPurge);
+						}
+					});
+					autoRemovalThread.start();
 				}
 			}
 		} catch (NumberFormatException e) {
@@ -133,10 +165,12 @@ public class ProtectionsPurgeService {
 
 	@UnloadMethod
 	public void unload() {
-		if (autoRemovalTask != null) {
-			this.autoRemovalTask.cancel();
+		if (autoRemovalThread != null) {
+			this.autoRemovalThread.interrupt();
 		}
-		lastLog = null;
+		if (this.sleepThread != null) {
+			this.sleepThread.interrupt();
+		}
 	}
 
 	@ReloadMethod
@@ -145,47 +179,53 @@ public class ProtectionsPurgeService {
 		load();
 	}
 
+	private void waitUntilNextProtection(List<Protection> purgedProtections) {
+		try {
+			this.sleepThreadFoundProtection = this.protectionsService.getProtectionByRegion().values().stream()
+					.sorted((prot1, prot2) -> configuredPurgeConfiguration.getBasedOn() == BasedOn.PLAYER_LAST_TIME
+							? Long.compare(prot1.getOwnerLastPlayed(), prot2.getOwnerLastPlayed())
+							: Long.compare(prot1.getCreatedDate(), prot2.getCreatedDate()))
+					.filter(prot -> !purgedProtections.contains(prot)).findFirst().orElse(null);
+
+			long time = this.sleepThreadFoundProtection != null
+					? configuredPurgeConfiguration.getRemainingTime(this.sleepThreadFoundProtection)
+					: Long.MAX_VALUE;
+
+			sleepThread = new Thread(() -> {
+				try {
+					Thread.sleep(time);
+				} catch (InterruptedException e) {
+				}
+			});
+
+			sleepThread.start();
+			sleepThread.join();
+		} catch (InterruptedException e) {
+		} finally {
+			this.sleepThread = null;
+		}
+	}
+
+	public void awakePurgeTask() {
+		if (this.sleepThread != null && this.sleepThreadFoundProtection == null) {
+			this.sleepThread.interrupt();
+		}
+	}
+
 	public boolean isRunning() {
 		return this.configuredPurgeConfiguration != null;
 	}
 
 	public long calculateExpiresIn(IProtection protection) {
 		if (this.configuredPurgeConfiguration != null) {
-			long currentTime = System.currentTimeMillis();
-			long olderThan = currentTime - (this.configuredPurgeConfiguration.getDays() * DAYS_IN_MILLIS)
-					- (this.configuredPurgeConfiguration.getHours() * HOURS_IN_MILLIS)
-					- (this.configuredPurgeConfiguration.getMinutes() * MINUTES_IN_MILLIS)
-					- this.configuredPurgeConfiguration.getMillis();
-
-			switch (this.configuredPurgeConfiguration.getBasedOn()) {
-			case PLAYER_LAST_TIME:
-				return Math.max(protection.getOwnerLastPlayed() - olderThan, 0);
-			case REGION_CREATED_DATE:
-				return Math.max(protection.getCreatedDate() - olderThan, 0);
-			}
+			return this.configuredPurgeConfiguration.getRemainingTime(protection);
 		}
 		return Long.MAX_VALUE;
 	}
 
 	public List<Protection> retrieveProtectionsToPurge(PurgeConfiguration configuration) {
-		long currentTime = System.currentTimeMillis();
-		long olderThan = currentTime - (configuration.getDays() * DAYS_IN_MILLIS)
-				- (configuration.getHours() * HOURS_IN_MILLIS) - (configuration.getMinutes() * MINUTES_IN_MILLIS)
-				- configuration.getMillis();
-		List<Protection> protections = new ArrayList<>();
-
-		switch (configuration.getBasedOn()) {
-		case PLAYER_LAST_TIME:
-			protectionsService.getProtectionByRegion().values().stream()
-					.filter(protection -> protection.getOwnerLastPlayed() <= olderThan).forEach(protections::add);
-			break;
-		case REGION_CREATED_DATE:
-			protectionsService.getProtectionByRegion().values().stream()
-					.filter(protection -> protection.getCreatedDate() <= olderThan).forEach(protections::add);
-			break;
-		}
-
-		return protections;
+		return configuration.getRemainingTime(protectionsService.getProtectionByRegion().values())
+				.filter(pair -> pair.getSecond() <= 0).map(Pair::getFirst).collect(Collectors.toList());
 	}
 
 	public FutureTask<List<Protection>> purgeProtections(List<Protection> protectionsToPurge) {
@@ -213,7 +253,7 @@ public class ProtectionsPurgeService {
 							protection.getBoundaries().toggleProtectionView();
 						}
 
-						protection.delete(RemovalCause.PURGE).subscribe();
+						protection.delete(RemovalCause.MANUAL_PURGE).subscribe();
 
 						purgedProtections.add(protection);
 						iterator.remove();
@@ -266,9 +306,9 @@ public class ProtectionsPurgeService {
 		JSONObject json = new JSONObject();
 
 		long currentTime = System.currentTimeMillis();
-		long olderThan = currentTime - (configuration.getDays() * DAYS_IN_MILLIS)
-				- (configuration.getHours() * HOURS_IN_MILLIS) - (configuration.getMinutes() * MINUTES_IN_MILLIS)
-				- configuration.getMillis();
+		long olderThan = currentTime - (configuration.getDays() * PurgeConfiguration.DAYS_IN_MILLIS)
+				- (configuration.getHours() * PurgeConfiguration.HOURS_IN_MILLIS)
+				- (configuration.getMinutes() * PurgeConfiguration.MINUTES_IN_MILLIS) - configuration.getMillis();
 		json.addObject("beforeDate", DATE_FORMAT.format(new Date(olderThan)));
 
 		json.addObject("foundProtections", protectionsToPurge.size());

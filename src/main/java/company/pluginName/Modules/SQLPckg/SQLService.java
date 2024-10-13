@@ -1,17 +1,15 @@
 package company.pluginName.Modules.SQLPckg;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
@@ -22,90 +20,92 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.Protec
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPurgePckg.Objects.AutoPurgeLog;
 import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.PandaSQLService;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.Annotations.PandaSQLConfig;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Enums.ConditionType;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Enums.SQLType;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.Data;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.Conditions.Condition;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.DataModel.Column;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.DataModel.Table;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.DataModel.Constraints.ForeignConstraint;
-import darkpanda73.PandaUtils.PandaSQLModule.v1.Objects.Objects.DataModel.Constraints.UniqueConstraint;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0000Init;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0001DeleteAutoPurgeLogsTable;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.Annotations.PandaSQLConfigV2;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Changelogs.SQLChangelog;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.DeleteStatement;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.InsertStatement;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.SelectStatement;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.Conditions.AndCondition;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.Conditions.EqualsCondition;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Column;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Table;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.Services.PandaSQLService;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 
-@PandaSQLConfig(allowMySQL = true, version = 13)
+@PandaSQLConfigV2(allowMySQL = true)
 public class SQLService extends PandaSQLService {
 
+	private static final Table PROTECTIONS_TABLE = new Table("Protections").addColumns(
+			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setPrimary(true).setNotNull(true),
+			new Column("ParentRegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(false),
+			new Column("OwnerUuid", Types.CHAR, "CHAR(36)").setNotNull(true),
+			new Column("ProtectionBlockId", Types.VARCHAR, "VARCHAR(32)").setNotNull(true),
+			new Column("DisplayItem", Types.BLOB).setNotNull(false),
+			new Column("WorldName", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
+			new Column("DisplayName", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
+			new Column("CreatedDate", Types.BIGINT).setNotNull(false),
+			new Column("LocationX", Types.INTEGER).setNotNull(false),
+			new Column("LocationY", Types.INTEGER).setNotNull(false),
+			new Column("LocationZ", Types.INTEGER).setNotNull(false),
+			new Column("Blocked", Types.BOOLEAN).setNotNull(false),
+			new Column("BlockReason", Types.VARCHAR, "VARCHAR(64)").setNotNull(false));
+
+	private static final Table PROTECTION_BANNEDS_TABLE = new Table("ProtectionBanneds").addColumns(
+			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
+			new Column("BannedUuid", Types.CHAR, "CHAR(36)").setNotNull(true));
+
+	private static final Table PROTECTION_BLOCKS_TABLE = new Table("ProtectionBlocks").addColumns(
+			new Column("Id", Types.VARCHAR, "VARCHAR(32)").setPrimary(true).setUnique(true).setNotNull(true),
+			new Column("Item", Types.BLOB).setNotNull(true), new Column("BlocksX", Types.INTEGER).setNotNull(true),
+			new Column("BlocksY", Types.INTEGER).setNotNull(true),
+			new Column("BlocksZ", Types.INTEGER).setNotNull(true),
+			new Column("Permission", Types.VARCHAR, "VARCHAR(64)"), new Column("Price", Types.DECIMAL, "DECIMAL(11,2)"),
+			new Column("Recipe", Types.BLOB), new Column("RecipePermission", Types.VARCHAR, "VARCHAR(64)"));
+
+	private static final Table RECIPES_TABLE = new Table("Recipes").addColumns(
+			new Column("ProtectionBlockId", Types.VARCHAR, "VARCHAR(32)").setPrimary(true).setUnique(true)
+					.setNotNull(true),
+			new Column("Recipe", Types.BLOB).setNotNull(true), new Column("Permission", Types.VARCHAR, "VARCHAR(64)"));
+
+	private static final Table PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE = new Table("ProtectionBlockAllowedWorlds")
+			.addColumns(new Column("ProtectionBlockId", Types.VARCHAR, "VARCHAR(32)").setNotNull(true),
+					new Column("WorldName", Types.VARCHAR, "VARCHAR(256)"));
+
+	static {
+		PROTECTIONS_TABLE
+				.addUniqueConstraint(new Table.UniqueConstraint().addColumns(PROTECTIONS_TABLE.getColumn("DisplayName"),
+						PROTECTIONS_TABLE.getColumn("OwnerUuid")))
+				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
+						.addReferenceColumn(PROTECTIONS_TABLE.getColumn("ParentRegionId")));
+
+		PROTECTION_BANNEDS_TABLE
+				.addUniqueConstraint(
+						new Table.UniqueConstraint().addColumns(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"),
+								PROTECTION_BANNEDS_TABLE.getColumn("BannedUuid")))
+				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
+						.addReferenceColumn(PROTECTION_BANNEDS_TABLE.getColumn("RegionId")));
+
+		RECIPES_TABLE.addForeignConstraint(
+				new Table.ForeignConstraint().addColumn(RECIPES_TABLE.getColumn("ProtectionBlockId"))
+						.addReferenceColumn(PROTECTION_BLOCKS_TABLE.getColumn("Id")));
+
+		PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE
+				.addUniqueConstraint(new Table.UniqueConstraint().addColumns(
+						PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("ProtectionBlockId"),
+						PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("WorldName")))
+				.addForeignConstraint(new Table.ForeignConstraint()
+						.addColumn(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("ProtectionBlockId"))
+						.addReferenceColumn(PROTECTION_BLOCKS_TABLE.getColumn("Id")));
+	}
+
 	@Override
-	protected void generateTables() {
-		Table t;
-		getDatabase()
-				.addTable((t = new Table(getDatabase(), "Protections"))
-						.addColumns(
-								new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setPrimary(true)
-										.setNotNull(true),
-								new Column(t, "ParentRegionId", "VARCHAR(256)", Types.VARCHAR).setNotNull(false),
-								new Column(t, "OwnerUuid", "CHAR(36)", Types.CHAR).setNotNull(true),
-								new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "DisplayItem", "BLOB", Types.BLOB).setNotNull(false),
-								new Column(t, "WorldName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "DisplayName", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "CreatedDate", "BIGINT", Types.BIGINT).setNotNull(false),
-								new Column(t, "LocationX", "INTEGER", Types.INTEGER).setNotNull(false),
-								new Column(t, "LocationY", "INTEGER", Types.INTEGER).setNotNull(false),
-								new Column(t, "LocationZ", "INTEGER", Types.INTEGER).setNotNull(false),
-								new Column(t, "Blocked", "BOOLEAN", Types.BOOLEAN).setNotNull(false),
-								new Column(t, "BlockReason", "VARCHAR(64)", Types.VARCHAR).setNotNull(false))
-						.addUniqueConstraint(new UniqueConstraint(t.getColumn("DisplayName"), t.getColumn("OwnerUuid")))
-						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ParentRegionId")),
-								Arrays.asList(t.getColumn("RegionId")))))
-
-				.addTable((t = new Table(getDatabase(), "ProtectionBanneds"))
-						.addColumns(new Column(t, "RegionId", "VARCHAR(256)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "BannedUuid", "CHAR(36)", Types.CHAR).setNotNull(true))
-						.addUniqueConstraint(new UniqueConstraint(t.getColumn("RegionId"), t.getColumn("BannedUuid"))))
-
-				.addTable((t = new Table(getDatabase(), "ProtectionBlocks")).addColumns(
-						new Column(t, "Id", "VARCHAR(32)", Types.VARCHAR).setPrimary(true).setUnique(true)
-								.setNotNull(true),
-						new Column(t, "Item", "BLOB", Types.BLOB).setNotNull(true),
-						new Column(t, "BlocksX", "INTEGER", Types.INTEGER).setNotNull(true),
-						new Column(t, "BlocksY", "INTEGER", Types.INTEGER).setNotNull(true),
-						new Column(t, "BlocksZ", "INTEGER", Types.INTEGER).setNotNull(true),
-						new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR),
-						new Column(t, "Price", "DECIMAL(11,2)", Types.DECIMAL),
-						new Column(t, "Recipe", "BLOB", Types.BLOB),
-						new Column(t, "RecipePermission", "VARCHAR(64)", Types.VARCHAR)))
-
-				.addTable(
-						(t = new Table(getDatabase(), "Recipes"))
-								.addColumns(
-										new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR)
-												.setPrimary(true).setUnique(true).setNotNull(true),
-										new Column(t, "Recipe", "BLOB", Types.BLOB).setNotNull(true),
-										new Column(t, "Permission", "VARCHAR(64)", Types.VARCHAR))
-								.addForeignConstraint(
-										new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
-												Arrays.asList(
-														getDatabase().getTable("ProtectionBlocks").getColumn("Id")))))
-
-				.addTable((t = new Table(getDatabase(), "ProtectionBlockAllowedWorlds"))
-						.addColumns(new Column(t, "ProtectionBlockId", "VARCHAR(32)", Types.VARCHAR).setNotNull(true),
-								new Column(t, "WorldName", "VARCHAR(256)", Types.VARCHAR))
-						.addUniqueConstraint(
-								new UniqueConstraint(t.getColumn("ProtectionBlockId"), t.getColumn("WorldName")))
-						.addForeignConstraint(new ForeignConstraint(Arrays.asList(t.getColumn("ProtectionBlockId")),
-								Arrays.asList(getDatabase().getTable("ProtectionBlocks").getColumn("Id")))))
-
-				.addTable((t = new Table(getDatabase(), "AutoPurgeLogs")).addColumns(
-						new Column(t, "ExecutionMillis", "BIGINT", Types.BIGINT).setUnique(true).setNotNull(true),
-						new Column(t, "OlderThanMillis", "BIGINT", Types.BIGINT).setNotNull(true),
-						new Column(t, "RemovedProtections", "INTEGER", Types.INTEGER).setNotNull(true)));
+	public Collection<SQLChangelog> getSQLChangelogs() {
+		return Arrays.asList(new Changelog0000Init(), new Changelog0001DeleteAutoPurgeLogsTable());
 	}
 
 	/*
@@ -115,7 +115,7 @@ public class SQLService extends PandaSQLService {
 	public List<Protection> getProtections() {
 		List<Protection> protections = new ArrayList<>();
 		HashMap<String, List<Protection>> parentProtections = new HashMap<>();
-		try (ResultSet set = this.getDatabase().select(Arrays.asList(this.getDatabase().getTable("Protections")))) {
+		try (ResultSet set = this.getSqlConnection().executeQuery(SelectStatement.inst().addTable(PROTECTIONS_TABLE))) {
 			while (set.next()) {
 				Protection protection;
 
@@ -159,62 +159,49 @@ public class SQLService extends PandaSQLService {
 					saveProtection(protection);
 				}
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 
 		protections.stream().filter(parentProtection -> parentProtections.containsKey(parentProtection.getRegionId()))
 				.forEach(parentProtection -> parentProtections.get(parentProtection.getRegionId())
-						.forEach(protection -> {
-							try {
-								protection.setParentProtection(parentProtection);
-							} catch (RoyaleProtectionBlocksExceptionImpl e) {
-								e.sendError(Bukkit.getConsoleSender());
-							}
-						}));
+						.forEach(protection -> protection.setParentProtectionInstance(parentProtection)));
 
 		return protections;
 	}
 
 	public void saveProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("Protections");
-		HashMap<Column, Data> values = new HashMap<>();
-		values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
-		values.put(t.getColumn("ParentRegionId"),
-				protection.getParentProtection() != protection
-						? new Data(Types.VARCHAR, protection.getParentProtection().getRegionId())
-						: new Data(Types.NULL, null));
-		values.put(t.getColumn("OwnerUuid"), new Data(Types.CHAR, protection.getOwnerUuid().toString()));
-		values.put(t.getColumn("ProtectionBlockId"),
-				new Data(Types.VARCHAR, protection.getProtectionBlock().getIdentifier()));
-		values.put(t.getColumn("DisplayItem"),
-				protection.getDisplayItem() != null
-						? new Data(Types.BLOB,
-								ItemStacksUtils.itemsParse(new ItemStack[] { protection.getDisplayItem().get() }))
-						: new Data(Types.NULL, null));
-		values.put(t.getColumn("WorldName"), new Data(Types.VARCHAR, protection.getWorldName()));
-		values.put(t.getColumn("DisplayName"), new Data(Types.VARCHAR, protection.getDisplayName()));
-		values.put(t.getColumn("CreatedDate"), new Data(Types.BIGINT, protection.getCreatedDate()));
-		values.put(t.getColumn("LocationX"), new Data(Types.INTEGER, protection.getBukkitLocation().getBlockX()));
-		values.put(t.getColumn("LocationY"), new Data(Types.INTEGER, protection.getBukkitLocation().getBlockY()));
-		values.put(t.getColumn("LocationZ"), new Data(Types.INTEGER, protection.getBukkitLocation().getBlockZ()));
-		values.put(t.getColumn("Blocked"), new Data(Types.BOOLEAN, protection.isBlocked()));
-		values.put(t.getColumn("BlockReason"),
-				(protection.getBlockReason() != null ? new Data(Types.VARCHAR, protection.getBlockReason().name())
-						: new Data(Types.NULL, null)));
-		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("RegionId"),
-				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
-			throw Exceptions.Protections.Save.SQL.generateException();
+		InsertStatement insertStatement = InsertStatement
+				.inst(PROTECTIONS_TABLE, "RegionId", "ParentRegionId", "OwnerUuid", "ProtectionBlockId", "DisplayItem",
+						"WorldName", "DisplayName", "CreatedDate", "LocationX", "LocationY", "LocationZ", "Blocked",
+						"BlockReason")
+				.addEntry(protection.getRegionId(),
+						(protection.getParentProtection() != protection ? protection.getParentProtection().getRegionId()
+								: null),
+						protection.getOwnerUuid().toString(), protection.getProtectionBlockIdentifier(),
+						(protection.getDisplayItem() != null
+								? ItemStacksUtils.itemsParse(new ItemStack[] { protection.getDisplayItem().get() })
+								: null),
+						protection.getWorldName(), protection.getDisplayName(), protection.getCreatedDate(),
+						protection.getLocation().getX(), protection.getLocation().getY(),
+						protection.getLocation().getZ(), protection.isBlocked(),
+						(protection.getBlockReason() != null ? protection.getBlockReason().name() : null))
+				.setConditionIfExists(
+						EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getRegionId()));
+
+		try {
+			this.getSqlConnection().executeInsert(insertStatement);
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.SQL.generateException(e);
 		}
 	}
 
 	public void deleteProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("Protections");
-		if (!this.getDatabase().delete(t, new Condition(t.getColumn("RegionId"),
-				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
-			throw Exceptions.Protections.Delete.SQL.generateException();
+		try {
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTIONS_TABLE).setCondition(
+					EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getRegionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Delete.SQL.generateException(e);
 		}
 	}
 
@@ -225,15 +212,13 @@ public class SQLService extends PandaSQLService {
 	public HashMap<String, List<UUID>> getProtectionBanneds() {
 		HashMap<String, List<UUID>> protectionBanneds = new HashMap<>();
 
-		try (ResultSet set = this.getDatabase()
-				.select(Arrays.asList(this.getDatabase().getTable("ProtectionBanneds")))) {
+		try (ResultSet set = this.getSqlConnection()
+				.executeQuery(SelectStatement.inst().addTable(PROTECTION_BANNEDS_TABLE))) {
 			while (set.next()) {
 				protectionBanneds.computeIfAbsent(set.getString("RegionId"), (key) -> new ArrayList<>())
 						.add(UUID.fromString(set.getString("BannedUuid")));
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 
@@ -242,49 +227,42 @@ public class SQLService extends PandaSQLService {
 
 	public void saveProtectionBanned(Protection protection, UUID bannedUuid)
 			throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("ProtectionBanneds");
-		HashMap<Column, Data> values = new HashMap<>();
-		values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
-		values.put(t.getColumn("BannedUuid"), new Data(Types.CHAR, bannedUuid.toString()));
-		if (!this.getDatabase().insertMultipleIgnore(t, Arrays.asList(values))) {
-			throw Exceptions.Protections.Banneds.Save.SQL.generateException();
-		}
+		this.saveProtectionBanneds(protection, Arrays.asList(bannedUuid));
 	}
 
 	public void saveProtectionBanneds(Protection protection, List<UUID> bannedUuids)
 			throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("ProtectionBanneds");
+		InsertStatement insert = InsertStatement.inst(PROTECTION_BANNEDS_TABLE);
+		bannedUuids.forEach(bannedUuid -> insert.addEntry(protection.getRegionId(), bannedUuid.toString()));
 
-		List<Map<Column, Data>> valuesList = new ArrayList<>();
-		bannedUuids.forEach(bannedUuid -> {
-			HashMap<Column, Data> values = new HashMap<>();
-			values.put(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()));
-			values.put(t.getColumn("BannedUuid"), new Data(Types.CHAR, bannedUuid.toString()));
-			valuesList.add(values);
-		});
-
-		if (!this.getDatabase().insertMultipleIgnore(t, valuesList)) {
-			throw Exceptions.Protections.Banneds.Save.SQL.generateException();
+		try {
+			this.getSqlConnection().executeInsert(insert);
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Banneds.Save.SQL.generateException(e);
 		}
 	}
 
 	public void deleteProtectionBanned(Protection protection, UUID bannedUuid)
 			throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("ProtectionBanneds");
-		if (!this.getDatabase().delete(t,
-				new Condition(t.getColumn("RegionId"), new Data(Types.VARCHAR, protection.getRegionId()),
-						ConditionType.EQUAL),
-				new Condition(ConditionType.AND), new Condition(t.getColumn("BannedUuid"),
-						new Data(Types.CHAR, bannedUuid.toString()), ConditionType.EQUAL))) {
-			throw Exceptions.Protections.Banneds.Delete.SQL.generateException();
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_BANNEDS_TABLE)
+							.setCondition(AndCondition.inst(
+									EqualsCondition.inst(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"),
+											protection.getRegionId()),
+									EqualsCondition.inst(PROTECTION_BANNEDS_TABLE.getColumn("BannedUuid"),
+											bannedUuid.toString()))));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Banneds.Delete.SQL.generateException(e);
 		}
 	}
 
 	public void deleteProtectionBanneds(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("ProtectionBanneds");
-		if (!this.getDatabase().delete(t, new Condition(t.getColumn("RegionId"),
-				new Data(Types.VARCHAR, protection.getRegionId()), ConditionType.EQUAL))) {
-			throw Exceptions.Protections.Banneds.Delete.SQL.generateException();
+		try {
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTION_BANNEDS_TABLE).setCondition(
+					EqualsCondition.inst(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"), protection.getRegionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Banneds.Delete.SQL.generateException(e);
 		}
 	}
 
@@ -294,8 +272,8 @@ public class SQLService extends PandaSQLService {
 
 	public List<ProtectionBlock> getProtectionBlocks() {
 		List<ProtectionBlock> protectionBlocks = new ArrayList<>();
-		try (ResultSet set = this.getDatabase()
-				.select(Arrays.asList(this.getDatabase().getTable("ProtectionBlocks")))) {
+		try (ResultSet set = this.getSqlConnection()
+				.executeQuery(SelectStatement.inst().addTable(PROTECTION_BLOCKS_TABLE))) {
 			while (set.next()) {
 				protectionBlocks.add(new ProtectionBlock(
 						new ProtectionBlockInformation(set.getString("Id"),
@@ -306,9 +284,7 @@ public class SQLService extends PandaSQLService {
 								(set.getObject("Price") != null ? set.getDouble("Price") : null)),
 						getProtectionBlockAllowedWorlds(set.getString("Id"))));
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 		return protectionBlocks;
@@ -316,74 +292,69 @@ public class SQLService extends PandaSQLService {
 
 	private ProtectionBlockAllowedWorlds getProtectionBlockAllowedWorlds(String protectionBlockId) {
 		HashSet<String> allowedWorlds = new HashSet<>();
-		Table t = this.getDatabase().getTable("ProtectionBlockAllowedWorlds");
-		try (ResultSet set = this.getDatabase().select(Arrays.asList(t),
-				new Condition(new Condition(t.getColumn("ProtectionBlockId"),
-						new Data(Types.VARCHAR, protectionBlockId), ConditionType.EQUAL)))) {
+		try (ResultSet set = this.getSqlConnection()
+				.executeQuery(SelectStatement.inst().addTable(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE)
+						.setCondition(EqualsCondition.inst(
+								PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("ProtectionBlockId"),
+								protectionBlockId)))) {
 			while (set.next()) {
 				allowedWorlds.add(set.getString("WorldName"));
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 		return new ProtectionBlockAllowedWorlds(allowedWorlds);
 	}
 
 	public void saveProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("ProtectionBlocks");
-		HashMap<Column, Data> values = new HashMap<>();
-		values.put(t.getColumn("Id"), new Data(Types.VARCHAR, protectionBlock.getInformation().getId()));
-		values.put(t.getColumn("Item"), new Data(Types.BLOB,
-				ItemStacksUtils.itemsParse(new ItemStack[] { protectionBlock.getInformation().getItem() })));
-		values.put(t.getColumn("BlocksX"), new Data(Types.INTEGER, protectionBlock.getInformation().getBlocksX()));
-		values.put(t.getColumn("BlocksY"), new Data(Types.INTEGER, protectionBlock.getInformation().getBlocksY()));
-		values.put(t.getColumn("BlocksZ"), new Data(Types.INTEGER, protectionBlock.getInformation().getBlocksZ()));
-		values.put(t.getColumn("Permission"),
-				new Data(protectionBlock.getInformation().getPermission() != null ? Types.INTEGER : Types.NULL,
-						protectionBlock.getInformation().getPermission()));
-		values.put(t.getColumn("Price"),
-				new Data(protectionBlock.getInformation().getPrice() != null ? Types.INTEGER : Types.NULL,
-						protectionBlock.getInformation().getPrice()));
-		if (!this.getDatabase().insertOrUpdate(t, values, new Condition(t.getColumn("Id"),
-				new Data(Types.CHAR, protectionBlock.getInformation().getId()), ConditionType.EQUAL))) {
-			throw Exceptions.Protections.Blocks.Save.SQL.generateException();
+		InsertStatement insertStatement = InsertStatement
+				.inst(PROTECTION_BLOCKS_TABLE, "Id", "Item", "BlocksX", "BlocksY", "BlocksZ", "Permission", "Price")
+				.addEntry(protectionBlock.getInformation().getId(),
+						ItemStacksUtils.itemsParse(new ItemStack[] { protectionBlock.getInformation().getItem() }),
+						protectionBlock.getInformation().getBlocksX(), protectionBlock.getInformation().getBlocksY(),
+						protectionBlock.getInformation().getBlocksZ(), protectionBlock.getInformation().getPermission(),
+						protectionBlock.getInformation().getPrice())
+				.setConditionIfExists(EqualsCondition.inst(PROTECTION_BLOCKS_TABLE.getColumn("Id"),
+						protectionBlock.getInformation().getId()));
+
+		try {
+			this.getSqlConnection().executeInsert(insertStatement);
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE)
+							.setCondition(EqualsCondition.inst(
+									PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("ProtectionBlockId"),
+									protectionBlock.getInformation().getId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Blocks.Save.SQL.generateException(e);
 		}
 
-		t = this.getDatabase().getTable("ProtectionBlockAllowedWorlds");
-		if (!this.getDatabase().delete(t, new Condition(t.getColumn("ProtectionBlockId"),
-				new Data(Types.VARCHAR, protectionBlock.getInformation().getId()), ConditionType.EQUAL))) {
-			throw Exceptions.Protections.Blocks.Save.SQL.generateException();
-		}
+		if (!protectionBlock.getAllowedWorlds().get().isEmpty()) {
+			InsertStatement worldsInsertStatement = InsertStatement.inst(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE);
+			protectionBlock.getAllowedWorlds().get().forEach(allowedWorld -> worldsInsertStatement
+					.addEntry(protectionBlock.getInformation().getId(), allowedWorld));
 
-		if (protectionBlock.getAllowedWorlds().get().size() > 0) {
-			final Table finalT = t;
-			List<Map<Column, Data>> valuesList = new ArrayList<>();
-			protectionBlock.getAllowedWorlds().get().stream().forEach(allowedWorld -> {
-				HashMap<Column, Data> map = new HashMap<>();
-				map.put(finalT.getColumn("ProtectionBlockId"),
-						new Data(Types.VARCHAR, protectionBlock.getInformation().getId()));
-				map.put(finalT.getColumn("WorldName"), new Data(Types.VARCHAR, allowedWorld));
-				valuesList.add(map);
-			});
-			if (!this.getDatabase().insertMultiple(t, valuesList)) {
-				throw Exceptions.Protections.Blocks.Save.SQL.generateException();
+			try {
+				this.getSqlConnection().executeInsert(worldsInsertStatement);
+			} catch (Throwable e) {
+				throw Exceptions.Protections.Blocks.Save.SQL.generateException(e);
 			}
 		}
 	}
 
 	public void deleteProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("ProtectionBlocks");
-		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("Id"),
-				new Data(Types.VARCHAR, protectionBlock.getInformation().getId()), ConditionType.EQUAL)))) {
-			throw Exceptions.Protections.Blocks.Delete.SQL.generateException();
-		}
-
-		t = this.getDatabase().getTable("Recipes");
-		if (!this.getDatabase().delete(t, new Condition(new Condition(t.getColumn("ProtectionBlockId"),
-				new Data(Types.VARCHAR, protectionBlock.getInformation().getId()), ConditionType.EQUAL)))) {
-			throw Exceptions.Protections.Blocks.Delete.SQL.generateException();
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_BLOCKS_TABLE).setCondition(EqualsCondition
+							.inst(PROTECTION_BLOCKS_TABLE.getColumn("Id"), protectionBlock.getInformation().getId())));
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE)
+							.setCondition(EqualsCondition.inst(
+									PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("ProtectionBlockId"),
+									protectionBlock.getInformation().getId())));
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(RECIPES_TABLE).setCondition(EqualsCondition
+					.inst(RECIPES_TABLE.getColumn("ProtectionBlockId"), protectionBlock.getInformation().getId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Blocks.Delete.SQL.generateException(e);
 		}
 	}
 
@@ -393,7 +364,7 @@ public class SQLService extends PandaSQLService {
 
 	public List<Recipe> getRecipes() {
 		List<Recipe> recipes = new ArrayList<>();
-		try (ResultSet set = this.getDatabase().select(Arrays.asList(this.getDatabase().getTable("Recipes")))) {
+		try (ResultSet set = this.getSqlConnection().executeQuery(SelectStatement.inst().addTable(RECIPES_TABLE))) {
 			while (set.next()) {
 				Recipe recipe = new Recipe(new ReferencedProtectionBlock(set.getString("ProtectionBlockId")));
 
@@ -406,70 +377,35 @@ public class SQLService extends PandaSQLService {
 
 				recipes.add(recipe);
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 		return recipes;
 	}
 
 	public void saveRecipe(Recipe recipe) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("Recipes");
-		HashMap<Column, Data> values = new HashMap<>();
-		values.put(t.getColumn("ProtectionBlockId"),
-				new Data(Types.VARCHAR, recipe.getProtectionBlock().getObject().getInformation().getId()));
-		values.put(t.getColumn("Recipe"), new Data(Types.BLOB, ItemStacksUtils.itemsParse(recipe.getRecipe())));
-		values.put(t.getColumn("Permission"),
-				new Data(recipe.getPermission() != null ? Types.INTEGER : Types.NULL, recipe.getPermission()));
-		if (!this.getDatabase().insertOrUpdate(t, values,
-				new Condition(t.getColumn("ProtectionBlockId"),
-						new Data(Types.CHAR, recipe.getProtectionBlock().getObject().getInformation().getId()),
-						ConditionType.EQUAL))) {
-			throw Exceptions.Protections.Blocks.Save.SQL.generateException();
+		InsertStatement insertStatement = InsertStatement.inst(RECIPES_TABLE)
+				.addEntry(recipe.getProtectionBlock().getObject().getInformation().getId(),
+						ItemStacksUtils.itemsParse(recipe.getRecipe()), recipe.getPermission())
+				.setConditionIfExists(EqualsCondition.inst(RECIPES_TABLE.getColumn("ProtectionBlockId"),
+						recipe.getProtectionBlock().getObject().getInformation().getId()));
+
+		try {
+			this.getSqlConnection().executeInsert(insertStatement);
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Blocks.Save.SQL.generateException(e);
 		}
 	}
 
 	public void deleteRecipe(Recipe recipe) throws RoyaleProtectionBlocksExceptionImpl {
-		Table t = this.getDatabase().getTable("Recipes");
-		if (!this.getDatabase().delete(t,
-				new Condition(new Condition(t.getColumn("ProtectionBlockId"),
-						new Data(Types.VARCHAR, recipe.getProtectionBlock().getObject().getInformation().getId()),
-						ConditionType.EQUAL)))) {
-			throw Exceptions.Protections.Blocks.Delete.SQL.generateException();
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(RECIPES_TABLE)
+							.setCondition(EqualsCondition.inst(RECIPES_TABLE.getColumn("ProtectionBlockId"),
+									recipe.getProtectionBlock().getObject().getInformation().getId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Blocks.Delete.SQL.generateException(e);
 		}
-	}
-
-	/*
-	 * Auto-purge logs methods
-	 */
-
-	public AutoPurgeLog getLastAutoPurgeLog() {
-		try (ResultSet set = this.getDatabase().getSql()
-				.query("SELECT * FROM " + (this.getDatabase().getSql().getConnectionData().getType() == SQLType.MYSQL
-						? this.getDatabase().getPrefix()
-						: "") + "AutoPurgeLogs ORDER BY ExecutionMillis DESC;")) {
-			if (set.next()) {
-				return new AutoPurgeLog(set.getLong("ExecutionMillis"), set.getLong("OlderThanMillis"),
-						set.getInt("RemovedProtections"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public void saveAutoPurgeLog(AutoPurgeLog log) {
-		Table t = this.getDatabase().getTable("AutoPurgeLogs");
-
-		HashMap<Column, Data> values = new HashMap<>();
-		values.put(t.getColumn("ExecutionMillis"), new Data(Types.BIGINT, log.getExecutionMillis()));
-		values.put(t.getColumn("OlderThanMillis"), new Data(Types.BIGINT, log.getOlderThanMillis()));
-		values.put(t.getColumn("RemovedProtections"), new Data(Types.INTEGER, log.getRemovedProtections()));
-
-		this.getDatabase().insert(t, values);
 	}
 
 }

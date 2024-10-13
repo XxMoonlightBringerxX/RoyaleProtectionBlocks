@@ -1,5 +1,6 @@
 package company.pluginName;
 
+import company.pluginName.Modules.BStatsPckg.Objects.PremiumVersionCustomChart;
 import company.pluginName.Modules.BStatsPckg.Objects.ProvidedProtectionsCustomChart;
 import darkpanda73.PandaUtils.PandaBStats.Annotations.EnableBStats;
 import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
@@ -21,7 +22,7 @@ import darkpanda73.PandaUtils.Services.PandaPlayerDataModule.Listeners.PandaPlay
 @EnableInventoriesService
 @EnablePlayerHeadCacheService
 @EnableUpdateChecker("109118")
-@EnableBStats(value = 21346, customCharts = ProvidedProtectionsCustomChart.class)
+@EnableBStats(value = 21346, customCharts = { ProvidedProtectionsCustomChart.class, PremiumVersionCustomChart.class })
 @EnableDiscordWebhookService
 @EnableLoggingService
 public class MainPluginClass extends PandaPluginClass {

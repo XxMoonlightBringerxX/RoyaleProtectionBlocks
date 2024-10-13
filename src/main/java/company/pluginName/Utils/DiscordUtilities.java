@@ -17,6 +17,7 @@ import darkpanda73.PandaUtils.Services.PandaDiscordWebhook.Objects.DiscordMessag
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 
 public class DiscordUtilities {
 
@@ -65,7 +66,8 @@ public class DiscordUtilities {
 		}
 	}
 
-	public static void sendProtectionUnregisteredMessage(Player player, Protection protection) {
+	public static void sendProtectionUnregisteredMessage(Player player, Protection protection,
+			RemovalCause removalCause) {
 		if (Boolean.TRUE.equals(DISCORD_LOGS_PROTECTIONUNREGISTER.getContent()) && pandaDiscordWebhookService != null
 				&& pandaDiscordWebhookService.isWebhookDefined()) {
 			Location location = protection.getBukkitLocation();
@@ -80,7 +82,8 @@ public class DiscordUtilities {
 									location.getBlockY(), location.getBlockZ())))
 					.addField("Protection ID", intoCodeString(protection.getRegionId()))
 					.addField("Owner", intoCodeString(protection.getOwnerName()))
-					.addField("Protection block ID", intoCodeString(protection.getProtectionBlock().getIdentifier())));
+					.addField("Protection block ID", intoCodeString(protection.getProtectionBlock().getIdentifier()))
+					.addField("Removal cause", intoCodeString(removalCause.name())));
 
 			if (player != null) {
 				message.getEmbeds().get(0)

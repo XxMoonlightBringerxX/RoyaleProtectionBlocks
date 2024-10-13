@@ -22,8 +22,6 @@ public class Settings {
 
 	public static final PandaStringField SETTINGS_PROTECTION_STARTERBLOCK = new PandaStringField(
 			"Settings.Protection.Starter-block", "Settings.Protection.Stater-block", "");
-	public static final PandaStringField SETTINGS_PROTECTION_AUTOPURGE_EXECUTEEVERY = new PandaStringField(
-			"Settings.Protection.Auto-purge.Execute-every", "");
 	public static final PandaStringField SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN = new PandaStringField(
 			"Settings.Protection.Auto-purge.Purge-older-than", "7d");
 	public static final PandaIntegerField SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS = new PandaIntegerField(

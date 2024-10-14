@@ -150,16 +150,14 @@ public class SQLService extends PandaSQLService {
 	public void saveProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		InsertStatement insertStatement = InsertStatement
 				.inst(PROTECTIONS_TABLE, "RegionId", "OwnerUuid", "ProtectionBlockId", "DisplayItem", "WorldName",
-						"DisplayName", "CreatedDate", "LocationX", "LocationY", "LocationZ", "Blocked", "BlockReason")
+						"DisplayName", "CreatedDate", "LocationX", "LocationY", "LocationZ")
 				.addEntry(protection.getRegionId(), protection.getOwnerUuid().toString(),
 						protection.getProtectionBlockIdentifier(),
 						(protection.getDisplayItem() != null
 								? ItemStacksUtils.itemsParse(new ItemStack[] { protection.getDisplayItem().get() })
 								: null),
 						protection.getWorldName(), protection.getDisplayName(), protection.getCreatedDate(),
-						protection.getLocation().getX(), protection.getLocation().getY(),
-						protection.getLocation().getZ(), protection.isBlocked(),
-						(protection.getBlockReason() != null ? protection.getBlockReason().name() : null))
+						protection.getLocation().getX(), protection.getLocation().getY())
 				.setConditionIfExists(
 						EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getRegionId()));
 

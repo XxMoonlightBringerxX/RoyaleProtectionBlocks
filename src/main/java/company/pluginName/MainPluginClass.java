@@ -5,6 +5,7 @@ import company.pluginName.Modules.BStatsPckg.Objects.ProvidedProtectionsCustomCh
 import darkpanda73.PandaUtils.PandaBStats.Annotations.EnableBStats;
 import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListeners;
+import darkpanda73.PandaUtils.PandaUpdateChecker.Annotations.EnableUpdateChecker;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.EnableCommandsService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
@@ -19,7 +20,7 @@ import darkpanda73.PandaUtils.Services.PandaPlayerDataModule.Listeners.PandaPlay
 @EnableMessageListenerService
 @EnableInventoriesService
 @EnablePlayerHeadCacheService
-//@EnableUpdateChecker("109118")
+@EnableUpdateChecker("120188")
 @EnableBStats(value = 21346, customCharts = { ProvidedProtectionsCustomChart.class, PremiumVersionCustomChart.class })
 @EnableLoggingService
 public class MainPluginClass extends PandaPluginClass {

@@ -4,7 +4,7 @@ import org.bstats.charts.SimplePie;
 
 public class PremiumVersionCustomChart extends SimplePie {
 
-	private static final String VALUE = "PREMIUM";
+	private static final String VALUE = "FREE";
 
 	public PremiumVersionCustomChart() {
 		super("premium_version", () -> VALUE);

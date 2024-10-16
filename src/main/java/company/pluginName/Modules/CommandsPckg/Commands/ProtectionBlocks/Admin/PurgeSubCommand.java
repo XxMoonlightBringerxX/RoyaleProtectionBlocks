@@ -26,6 +26,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubComma
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 
 @PandaSubCommandAnnotation(parentCommand = AdminCommand.class)
 @PandaCommandAnnotation(
@@ -35,16 +36,14 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		defaultDescription = "Delete protections older than the specified time, based on the last connection of the owner or their creation date",
 		defaultUsage = "[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--config] [--show-ignored-players] [--export-only] [confirm]",
 		defaultAliases = "p",
-		defaultPermission = "protectionblocks.admin.purge"
-)
+		defaultPermission = "protectionblocks.admin.purge")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class PurgeSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -92,7 +91,7 @@ public class PurgeSubCommand extends PandaSubCommand {
 						TasksUtils.executeOnAsync(() -> {
 							try {
 								FutureTask<List<Protection>> removedProtectionsTask = protectionsPurgeService
-										.purgeProtections(protectionsToPurge);
+										.purgeProtections(protectionsToPurge, RemovalCause.MANUAL_PURGE);
 
 								List<Protection> removedProtections = removedProtectionsTask.get();
 

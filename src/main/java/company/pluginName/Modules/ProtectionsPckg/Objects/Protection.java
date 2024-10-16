@@ -62,6 +62,7 @@ import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaParam
 import darkpanda73.PandaUtils.Utilities.Java.Observable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
@@ -409,7 +410,7 @@ public class Protection implements IProtection {
 	 * Save methods
 	 */
 
-	private boolean creationInProgress = false;
+	private @Getter boolean creationInProgress = false;
 	private boolean removalInProgress = false;
 
 	public Observable<Protection> create() throws RoyaleProtectionBlocksExceptionImpl {
@@ -421,10 +422,10 @@ public class Protection implements IProtection {
 			throw Exceptions.Protections.Save.INPROGRESS.generateException();
 		}
 
+		this.creationInProgress = true;
+
 		return Observable.of(() -> {
 			try {
-				this.creationInProgress = true;
-
 				checkCreationConditions(player);
 
 				protectionsService.registerProtection(this);
@@ -603,10 +604,10 @@ public class Protection implements IProtection {
 			throw Exceptions.Protections.Delete.INPROGRESS.generateException();
 		}
 
+		this.removalInProgress = true;
+
 		return Observable.of(() -> {
 			try {
-				this.removalInProgress = true;
-
 				checkRemovalConditions(player);
 
 				IProtection parent = getParentProtection();

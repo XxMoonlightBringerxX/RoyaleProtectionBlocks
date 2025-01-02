@@ -16,7 +16,7 @@ import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionFlagsPckg.ProtectionFlagsService;
 import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -37,15 +37,13 @@ import lombok.Getter;
 		defaultDescription = "Replace the flag value of a protection or all the protections. Specify no value to clear the flag from the protections.",
 		defaultAliases = "f",
 		defaultPermission = "protectionblocks.admin.flag",
-		defaultUsage = "<flag name> [flag value] [--all] [--group <all|members|owners|non_members|non_owners>]"
-)
+		defaultUsage = "<flag name> [flag value] [--all] [--group <all|members|owners|non_members|non_owners>]")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true
-)
+		permission = true)
 public class FlagSubCommand extends PandaSubCommand {
 
 	@RegisteredPandaField("lang")
@@ -69,7 +67,7 @@ public class FlagSubCommand extends PandaSubCommand {
 			"Error.Flags.Invalid-Value", "&cThe specified value is not a valid value for this flag!");
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static ProtectionSettingsService protectionSettingsService;

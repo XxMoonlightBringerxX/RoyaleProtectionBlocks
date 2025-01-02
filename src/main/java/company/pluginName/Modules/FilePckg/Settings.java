@@ -2,6 +2,7 @@ package company.pluginName.Modules.FilePckg;
 
 import java.util.Arrays;
 
+import darkpanda73.PandaUtils.Services.PandaEconomiesModule.Enums.EconomyService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaFieldContainer;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoubleField;
@@ -22,8 +23,6 @@ public class Settings {
 
 	public static final PandaStringField SETTINGS_PROTECTION_STARTERBLOCK = new PandaStringField(
 			"Settings.Protection.Starter-block", "Settings.Protection.Stater-block", "");
-	public static final PandaStringField SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN = new PandaStringField(
-			"Settings.Protection.Auto-purge.Purge-older-than", "7d");
 	public static final PandaIntegerField SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS = new PandaIntegerField(
 			"Settings.Protection.Boundaries-view-duration-in-seconds", 30);
 	public static final PandaDoubleField SETTINGS_PROTECTION_TELEPORTCOST = new PandaDoubleField(
@@ -40,7 +39,17 @@ public class Settings {
 	public static final PandaBooleanField SETTINGS_PROTECTION_DROPITEMONFULLINVENTORY = new PandaBooleanField(
 			"Settings.Protection.Drop-item-on-full-inventory", false);
 
-	public static final PandaBooleanField SETTINGS_PROTECTIONBLOCK_REQUESTCONFIRMATIONONPURCHASETHROUGHGUI = new PandaBooleanField(
+	public static final PandaBooleanField SETTINGS_PROTECTION_PUBLICLIST_IGNORETELEPORTCOST = new PandaBooleanField(
+			"Settings.Protection.Public-list.Ignore-teleport-cost", true);
+
+	public static final PandaBooleanField SETTINGS_STORE_REQUESTCONFIRMATIONONPURCHASETHROUGHGUI = new PandaBooleanField(
+			"Settings.Store.Request-confirmation-on-purchase-through-gui",
 			"Settings.Protection-block.Request-confirmation-on-purchase-through-gui", false);
+	public static final PandaBooleanField SETTINGS_STORE_IGNORETELEPORTCOST = new PandaBooleanField(
+			"Settings.Store.Ignore-teleport-cost", true);
+	public static final PandaStringField SETTINGS_STORE_PROTECTIONECONOMYSERVICE = new PandaStringField(
+			"Settings.Store.Protection-economy-service", EconomyService.VAULT.name());
+	public static final PandaStringField SETTINGS_STORE_PROTECTIONBLOCKECONOMYSERVICE = new PandaStringField(
+			"Settings.Store.Protection-block-economy-service", EconomyService.VAULT.name());
 
 }

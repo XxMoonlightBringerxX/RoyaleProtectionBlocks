@@ -9,8 +9,7 @@ import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.ProtectionBlocksCommand;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
-import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment;
@@ -27,6 +26,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -55,7 +55,7 @@ public class InfoCommand extends PandaCommand {
 					"&f&l|&r Owners: &a{protection_owners}", "&f&l|&r Banneds: &a{protection_banneds}"));
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static PlaceholdersService placeholdersService;
@@ -102,30 +102,26 @@ public class InfoCommand extends PandaCommand {
 	}
 
 	private void sendInformation(Player player, Protection protection) {
-		ProtectionBlock block = protection.getProtectionBlock().getObject();
+		IProtectionBlock block = protection.getProtectionBlock();
 
 		Replacement[] replacements = new Replacement[] {
-				new Replacement("{protection_id}", () -> protection.getRegionId()),
-				new Replacement("{protection_name}", () -> protection
-						.getDisplayName()),
 				new Replacement("{protection_size_x}",
-						() -> block != null ? String.valueOf((block.getInformation().getBlocksX() * 2) + 1) : "???"),
+						() -> block != null ? String.valueOf((block.getBlocksX() * 2) + 1) : "???"),
 				new Replacement("{protection_size_y}",
-						() -> block != null ? (block.getInformation().getBlocksY() == -1
-								? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
-								: String.valueOf((block.getInformation().getBlocksY() * 2) + 1)) : "???"),
+						() -> block != null ? (block.getBlocksY() == -1 ? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
+								: String.valueOf((block.getBlocksY() * 2) + 1)) : "???"),
 				new Replacement("{protection_size_z}",
-						() -> block != null ? String.valueOf((block.getInformation().getBlocksZ() * 2) + 1) : "???"),
-				new Replacement("{protection_owner}", () -> protection.getOwnerName()),
-				new Replacement("{protection_members}",
-						new MessageFragment(() -> "&7[click]",
+						() -> block != null ? String.valueOf((block.getBlocksZ() * 2) + 1) : "???"),
+				new Replacement("{protection_members_button}",
+						new MessageFragment(() -> Messages.MESSAGE_GENERAL_CLICK.getContent(),
 								new ClickEvent(ClickEvent.Action.RUN_COMMAND,
 										"/".concat(membersCommand.getCommandPath())))),
-				new Replacement("{protection_owners}",
-						new MessageFragment(() -> "&7[click]",
+				new Replacement("{protection_owners_button}",
+						new MessageFragment(() -> Messages.MESSAGE_GENERAL_CLICK.getContent(),
 								new ClickEvent(ClickEvent.Action.RUN_COMMAND,
 										"/".concat(ownersCommand.getCommandPath())))),
-				new Replacement("{protection_banneds}", new MessageFragment(() -> "&7[click]",
+				new Replacement("{protection_banneds_button}", new MessageFragment(
+						() -> Messages.MESSAGE_GENERAL_CLICK.getContent(),
 						new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/".concat(bannedsCommand.getCommandPath())))) };
 
 		Replacement[] protectionReplacements = placeholdersService.getProtectionReplacements(protection);

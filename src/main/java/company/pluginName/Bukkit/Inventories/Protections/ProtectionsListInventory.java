@@ -1,20 +1,21 @@
 package company.pluginName.Bukkit.Inventories.Protections;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.API.Services.PlayerInteractionsServiceImpl;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.PlayerInteractionsPckg.PlayerInteractionsServiceImpl;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -28,6 +29,7 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInven
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
 import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException.Type;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
@@ -37,15 +39,19 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 @Inventory("protections_list")
 public class ProtectionsListInventory extends PagedChestInventoryObject<Protection> {
 
-	public static final String TITLE_OTHER_PATH = "Title-other";
 	public static final String ENTITY_TELEPORTLORELINE_PATH = "Entity.Teleport-lore-line";
 	public static final String ENTITY_TELEPORTNOTSETLORELINE_PATH = "Entity.Teleport-not-set-lore-line";
 	public static final String ENTITY_EDITLORELINE_PATH = "Entity.Edit-lore-line";
 	public static final String ENTITY_DELETELORELINE_PATH = "Entity.Delete-lore-line";
 
 	@AllArgsConstructor
-	public static enum Filter {
-		ALL, OWN, OTHERS;
+	@Getter
+	private static enum Filter {
+		ALL((player, protection) -> true),
+		OWN((player, protection) -> protection.getOwnerUuid().equals(player.getUniqueId())),
+		OTHERS((player, protection) -> !protection.getOwnerUuid().equals(player.getUniqueId()));
+
+		private BiFunction<Player, Protection, Boolean> filterFunction;
 
 		public Filter previous() {
 			return values()[(values().length + ordinal() + 1) % values().length];
@@ -56,8 +62,27 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 		}
 	}
 
+	@AllArgsConstructor
+	@Getter
+	private static enum Sort {
+		CREATION_DATE(
+				(protection1, protection2) -> Long.compare(protection1.getCreatedDate(), protection2.getCreatedDate())),
+		NAME((protection1, protection2) -> protection1.getDisplayName().compareTo(protection2.getDisplayName())),
+		WORLD((protection1, protection2) -> protection1.getWorldName().compareTo(protection2.getWorldName()));
+
+		private Comparator<Protection> sortFunction;
+
+		public Sort previous() {
+			return values()[(values().length + ordinal() + 1) % values().length];
+		}
+
+		public Sort next() {
+			return values()[(values().length + ordinal() + 1) % values().length];
+		}
+	}
+
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static PlaceholdersService placeholdersService;
@@ -65,16 +90,11 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 	@PandaInject
 	private static PlayerInteractionsServiceImpl playerInteractionsService;
 
-	private OfflinePlayer owner;
-	private Filter filter = Filter.ALL;
+	private Filter currentFilter = Filter.ALL;
+	private Sort currentSort = Sort.CREATION_DATE;
 
 	public ProtectionsListInventory(Player player) {
-		this(player, player);
-	}
-
-	public ProtectionsListInventory(Player player, OfflinePlayer owner) {
 		super(player);
-		this.owner = owner;
 
 		Replacement[] playerReplacements = placeholdersService.getPlayerReplacements(player);
 		setReplacements(playerReplacements);
@@ -82,31 +102,14 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 
 	@Override
 	protected String getTitle() {
-		Replacement[] replacements = new Replacement[] { new Replacement("{playername}", () -> owner.getName()) };
-
-		return this.owner.getUniqueId().equals(getPlayer().getUniqueId())
-				? MessageTemplate.inst(super.getTitle()).toString()
-				: MessageTemplate.inst(getChestInventoryData().getCustomFields().get(TITLE_OTHER_PATH).toString())
-						.setReplacements(
-								ArrayUtilities.join(new Replacement[getReplacements().length + replacements.length],
-										getReplacements(), replacements))
-						.process().toString();
+		return MessageTemplate.inst(super.getTitle()).toString();
 	}
 
 	@Override
 	protected List<Protection> getEntityList() {
-		return protectionsService.getAllowedProtections(owner).filter(protection -> {
-			switch (filter) {
-			case ALL:
-				return true;
-			case OWN:
-				return protection.isMainOwner(owner.getUniqueId());
-			case OTHERS:
-				return !protection.isMainOwner(owner.getUniqueId());
-			default:
-				return false;
-			}
-		}).collect(Collectors.toList());
+		return protectionsService.findAllowedParentProtectionsByPlayer(getPlayer())
+				.filter(protection -> this.currentFilter.getFilterFunction().apply(getPlayer(), protection))
+				.sorted(this.currentSort.getSortFunction()).collect(Collectors.toList());
 
 	}
 
@@ -121,7 +124,7 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 		Replacement[] replacements = {
 				new Replacement("{protection}",
 						() -> protection.getDisplayName() != null ? protection.getDisplayName()
-								: protection.getRegionId()),
+								: protection.getProtectionId()),
 				new Replacement("{protection_owner}",
 						() -> protection.getOwnerName() != null ? protection.getOwnerName() : "???"),
 				new Replacement("{world}", () -> protection.getWorldName()),
@@ -189,24 +192,48 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 
 	@ItemGenerator("All-filter-button")
 	private ItemStack generateAllFilterItem(Item item) {
-		return this.filter == Filter.ALL ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+		return this.currentFilter == Filter.ALL ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
 	}
 
 	@ItemGenerator("Own-filter-button")
 	private ItemStack generateOwnFilterItem(Item item) {
-		return this.filter == Filter.OWN ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+		return this.currentFilter == Filter.OWN ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
 	}
 
 	@ItemGenerator("Others-filter-button")
 	private ItemStack generateOthersFilterItem(Item item) {
-		return this.filter == Filter.OTHERS ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+		return this.currentFilter == Filter.OTHERS ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+	}
+
+	@ItemGenerator("Creation-date-sort-button")
+	private ItemStack generatePriceSortItem(Item item) {
+		return this.currentSort == Sort.CREATION_DATE ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+	}
+
+	@ItemGenerator("Name-sort-button")
+	private ItemStack generateNameSortItem(Item item) {
+		return this.currentSort == Sort.NAME ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
+	}
+
+	@ItemGenerator("World-sort-button")
+	private ItemStack generateWorldSortItem(Item item) {
+		return this.currentSort == Sort.WORLD ? item.getItems().get(Item.DISPLAYITEM_KEY) : null;
 	}
 
 	@ItemExecutor("All-filter-button")
 	@ItemExecutor("Own-filter-button")
 	@ItemExecutor("Others-filter-button")
 	private void executeFilter() {
-		this.filter = this.filter.next();
+		this.currentFilter = this.currentFilter.next();
+		updateEntityList();
+		updateInventory();
+	}
+
+	@ItemExecutor("Creation-date-sort-button")
+	@ItemExecutor("Name-sort-button")
+	@ItemExecutor("World-sort-button")
+	private void onClickSortButton() {
+		this.currentSort = this.currentSort.next();
 		updateEntityList();
 		updateInventory();
 	}

@@ -48,7 +48,7 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 	@Override
 	protected String getTitle() {
 		return MessageTemplate.inst(super.getTitle()).setReplacements(new Replacement("{protection}",
-				() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getRegionId()))
+				() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getProtectionId()))
 				.process().toString();
 	}
 
@@ -83,7 +83,7 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 			} else {
 				openInventory();
 			}
-		}).openInventory();
+		}, (player) -> !protection.isMainOwner(player.getUniqueId())).openInventory();
 	}
 
 	@Override

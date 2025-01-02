@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment;
@@ -28,6 +28,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 
 @PandaCommandAnnotation(
@@ -36,8 +37,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStri
 		defaultName = "owners",
 		defaultDescription = "Get the owners from the current protection",
 		defaultUsage = "[page]",
-		defaultAliases = "o"
-)
+		defaultAliases = "o")
 @PandaCommandAnnotation.Customizable(usage = true, permission = true, aliases = true)
 @PandaSubCommandAnnotation(parentCommand = InfoCommand.class)
 public class OwnersSubcommand extends PandaSubCommand {
@@ -47,8 +47,24 @@ public class OwnersSubcommand extends PandaSubCommand {
 			"Message.Protection.Info.Owners-information",
 			Arrays.asList("", "&a&lOwners", "{protection_owners}", "", "{previous_page} {current_page} {next_page}"));
 
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_OWNERSINFORMATIONPREVIOUSAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Owners-information-previous-available", "&e[previous]");
+
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_OWNERSINFORMATIONPREVIOUSUNAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Owners-information-previous-unavailable", "&8[previous]");
+
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_OWNERSINFORMATIONNEXTAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Owners-information-next-available", "&e[next]");
+
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_OWNERSINFORMATIONNEXTUNAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Owners-information-next-unavailable", "&8[next]");
+
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	public OwnersSubcommand() throws InstantiationException {
 		super();
@@ -108,24 +124,24 @@ public class OwnersSubcommand extends PandaSubCommand {
 					OfflinePlayer ownerPlayer = OfflinePlayerUtilities.getOfflinePlayer(owner);
 					return "&e".concat(
 							ownerPlayer != null && ownerPlayer.getName() != null ? ownerPlayer.getName() : "???");
-				}).collect(Collectors.toList()) : Arrays.asList("(empty)");
+				}).collect(Collectors.toList()) : Arrays.asList(Messages.MESSAGE_GENERAL_EMPTY.getContent());
 
 		MessageFragment previousPage = page > 1
-				? new MessageFragment(() -> "&e[previous]",
+				? new MessageFragment(() -> MESSAGE_WORLDINFO_OWNERSINFORMATIONPREVIOUSAVAILABLE.getContent(),
 						new ClickEvent(ClickEvent.Action.RUN_COMMAND,
 								"/".concat(getCommandPath()).concat(" " + (page - 1))))
-				: new MessageFragment(() -> "&8[previous]");
+				: new MessageFragment(() -> MESSAGE_WORLDINFO_OWNERSINFORMATIONPREVIOUSUNAVAILABLE.getContent());
 
 		MessageFragment nextPage = page < maxPage
-				? new MessageFragment(() -> "&e[next]",
+				? new MessageFragment(() -> MESSAGE_WORLDINFO_OWNERSINFORMATIONNEXTAVAILABLE.getContent(),
 						new ClickEvent(ClickEvent.Action.RUN_COMMAND,
 								"/".concat(getCommandPath()).concat(" " + (page + 1))))
-				: new MessageFragment(() -> "&8[next]");
+				: new MessageFragment(() -> MESSAGE_WORLDINFO_OWNERSINFORMATIONNEXTUNAVAILABLE.getContent());
 
 		MessageTemplate.inst(MESSAGE_WORLDINFO_OWNERSINFORMATION.getContent())
 				.setReplacements(
 						new Replacement("{protection_owners}",
-								() -> owners.stream().collect(Collectors.joining(System.lineSeparator(), "&e", ""))),
+								() -> owners.stream().collect(Collectors.joining(", ", "&e", ""))),
 						new Replacement("{previous_page}", previousPage),
 						new Replacement("{current_page}", () -> ("&7" + fPage + "/" + fMaxPage)),
 						new Replacement("{next_page}", nextPage))

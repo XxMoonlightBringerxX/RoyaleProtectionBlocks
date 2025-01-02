@@ -1,6 +1,5 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Blocks;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,7 +8,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
@@ -19,12 +17,12 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackUtilities;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 
 @PandaSubCommandAnnotation(parentCommand = BlocksCommand.class)
 @PandaCommandAnnotation(
@@ -52,14 +50,14 @@ public class GiveSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
-		switch (args.length) {
-		case 1:
+	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
+		switch (argIndex) {
+		case 0:
 			return protectionBlocksService.getProtectionBlocks().keySet().stream().collect(Collectors.toList());
-		case 2:
+		case 1:
 			return Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
 		default:
-			return Collections.emptyList();
+			return super.generateAutocompleteList(sender, argIndex);
 		}
 	}
 
@@ -85,7 +83,7 @@ public class GiveSubCommand extends PandaSubCommand {
 				}
 
 				try {
-					ItemStack item = block.getInformation().generateItem();
+					ItemStack item = block.getBlockInformation().generateItem();
 
 					if (Settings.SETTINGS_PROTECTION_DROPITEMONFULLINVENTORY.isTrue()) {
 						ItemStackUtilities.giveOrDrop(toGive, item);
@@ -97,7 +95,7 @@ public class GiveSubCommand extends PandaSubCommand {
 									.sendMessage(toGive);
 						}
 					}
-				} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				} catch (RoyaleProtectionBlocksException e) {
 					e.sendError(sender);
 				}
 			} else {

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -14,10 +15,10 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
-import company.pluginName.Bukkit.Events.PlayerEnterExitRegion.PlayerEnterExitRegionTrigger;
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
+import company.pluginName.Hooks.ProtocolLib.ProtocolLibAPI;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
-import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Message;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -33,11 +34,17 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoub
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import lombok.Getter;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 
 @PandaService
 public class ProtectionParticlesService {
+
+	private static final Color GREEN_COLOR = Color.fromRGB(50, 255, 55);
+	private static final Color GRAY_COLOR = Color.fromRGB(180, 180, 180);
+	private static final Color YELLOW_COLOR = Color.fromRGB(225, 230, 0);
+	private static final Color BROWN_COLOR = Color.fromRGB(200, 130, 0);
+	private static final Color PURPLE_COLOR = Color.fromRGB(195, 70, 255);
 
 	@RegisteredPandaField("config")
 	public static final PandaIntegerField SETTINGS_PROTECTION_VIEW_RADIUS = new PandaIntegerField(
@@ -56,26 +63,26 @@ public class ProtectionParticlesService {
 			"Message.Protection.View.View-active-action-bar", "&eProtection view: &aActive");
 
 	@PandaInject
-	private ProtectionsService protectionsService;
-
-	@PandaInject
 	private PlayerDataService playerDataService;
 
-	private HashMap<UUID, Pair<Long, BukkitTask>> tasks = new HashMap<>();
+	@PandaInject
+	private ProtocolLibAPI protocolLibApi;
+
+	private HashMap<UUID, ProtectionParticlePlayerContainer> containers = new HashMap<>();
 	private BukkitTask checkerTask;
 
 	@LoadMethod
 	private void load() {
 		checkerTask = TasksUtils.executeWithTimer(() -> {
-			tasks.entrySet().removeIf(entry -> {
-				if ((entry.getValue().getFirst()
+			containers.entrySet().stream().filter(entry -> {
+				if ((entry.getValue().getTaskStart()
 						+ (SETTINGS_PROTECTION_VIEW_DURATIONINMILLIS.getContent() * 1000)) < System
 								.currentTimeMillis()) {
-					entry.getValue().getSecond().cancel();
+					entry.getValue().stop();
 					return true;
 				}
 				return false;
-			});
+			}).map(entry -> entry.getKey()).collect(Collectors.toList()).forEach(uuid -> deactivateView(uuid));
 		}, 20, 20);
 	}
 
@@ -84,8 +91,8 @@ public class ProtectionParticlesService {
 		if (checkerTask != null) {
 			checkerTask.cancel();
 			checkerTask = null;
-			tasks.entrySet().removeIf(entry -> {
-				entry.getValue().getSecond().cancel();
+			containers.entrySet().removeIf(entry -> {
+				entry.getValue().stop();
 				return true;
 			});
 		}
@@ -98,7 +105,7 @@ public class ProtectionParticlesService {
 	}
 
 	public void toggleView(Player player, boolean showAll) {
-		if (this.tasks.containsKey(player.getUniqueId())) {
+		if (this.containers.containsKey(player.getUniqueId())) {
 			deactivateView(player.getUniqueId());
 		} else {
 			activateView(player, showAll);
@@ -109,15 +116,15 @@ public class ProtectionParticlesService {
 		ProtectionParticlePlayerContainer playerContainer = new ProtectionParticlePlayerContainer(this, player,
 				showAll);
 
-		tasks.put(player.getUniqueId(), Pair.of(System.currentTimeMillis(),
-				TasksUtils.executeOnAsyncWithTimer(() -> playerContainer.processTick(), 1, 1)));
+		containers.put(player.getUniqueId(), playerContainer);
+		playerContainer.start();
 	}
 
 	private void deactivateView(UUID playerUuid) {
-		Pair<Long, BukkitTask> pair = tasks.remove(playerUuid);
+		ProtectionParticlePlayerContainer container = containers.remove(playerUuid);
 
-		if (pair != null) {
-			pair.getSecond().cancel();
+		if (container != null) {
+			container.stop();
 		}
 	}
 
@@ -137,10 +144,15 @@ public class ProtectionParticlesService {
 		private Location currentLocation;
 		private Location currentMinLocation;
 		private Location currentMaxLocation;
-		private List<IProtection> currentProtections;
+		private List<Protection> currentProtections;
 		private int currentTick;
 
+		private HashMap<String, UUID> magmacubes = new HashMap<>();
+
 		private Message actionBarMessage;
+
+		private @Getter long taskStart = System.currentTimeMillis();
+		private @Getter BukkitTask task;
 
 		public ProtectionParticlePlayerContainer(ProtectionParticlesService service, Player player, boolean showAll) {
 			this.service = service;
@@ -150,11 +162,29 @@ public class ProtectionParticlesService {
 			this.actionBarMessage = MessageTemplate.inst(MESSAGE_PROTECTION_VIEW_VIEWACTIVEACTIONBAR.getContent())
 					.process();
 
-			updateLocation(player.getLocation().getBlock().getLocation());
+			updateLocation(player, player.getLocation().getBlock().getLocation());
 			actionBarMessage.sendActionBar(player);
 		}
 
-		public void processTick() {
+		public void start() {
+			this.taskStart = System.currentTimeMillis();
+			this.task = TasksUtils.executeOnAsyncWithTimer(() -> processTick(), 1, 1);
+		}
+
+		public void stop() {
+			if (this.task != null) {
+				this.task.cancel();
+			}
+
+			Player player = Bukkit.getPlayer(this.playerUuid);
+
+			if (player != null) {
+				this.service.protocolLibApi.getHook().removeGlowingMagmaCubes(player,
+						new ArrayList<>(magmacubes.values()));
+			}
+		}
+
+		private void processTick() {
 			Player pl = Bukkit.getPlayer(playerUuid);
 
 			if (pl == null || !pl.isOnline()) {
@@ -186,14 +216,16 @@ public class ProtectionParticlesService {
 
 							if (j <= length) {
 								for (long k = 0; k <= length; k++) {
-									if (currentProtections.stream().anyMatch(prot -> !prot.isDeleted()
-											&& prot.isInside(SimpleLocation.of(diagonalLocation), true))) {
-										Optional<Pair<IProtection, Long>> coincidences = currentProtections.stream()
+									SimpleLocation simpleDiagonalLocation = SimpleLocation.of(diagonalLocation);
+									if (currentProtections.stream().anyMatch(
+											prot -> !prot.isDeleted() && prot.isInside(simpleDiagonalLocation, true))) {
+										Optional<Pair<Protection, Long>> coincidences = currentProtections.stream()
 												.filter(prot -> !prot.isDeleted()
-														&& prot.isInside(SimpleLocation.of(diagonalLocation), true))
+														&& prot.isInside(simpleDiagonalLocation, true))
 												.map(prot -> Pair.of(prot, Arrays
 														.asList(((diagonalLocation.getY() == currentLocation.getY()
-																|| diagonalLocation.getY() == prot.getBukkitLocation().getY())
+																|| diagonalLocation.getY() == prot.getBukkitLocation()
+																		.getY())
 																|| (diagonalLocation.getY() == prot.getProtectionArea()
 																		.getMinLocation().getY()
 																		|| diagonalLocation
@@ -224,37 +256,27 @@ public class ProtectionParticlesService {
 																	.getBukkitLocation().getY())) {
 												if (coincidences.get().getFirst().isMember(playerUuid)
 														|| coincidences.get().getFirst().isOwner(playerUuid)) {
-													// Green
-													new PacketPlayOutParticle(diagonalLocation.getX(),
-															diagonalLocation.getY(), diagonalLocation.getZ(), 0, 0, 0,
-															0.5F, 5, false,
-															new DustParticleOptions(Color.fromRGB(50, 255, 55), 1.0F))
-															.send(pl);
+													if (currentProtections.stream().filter(
+															prot -> prot.isInside(simpleDiagonalLocation, false))
+															.count() == 0) {
+														sendParticle(pl, diagonalLocation, GREEN_COLOR);
+													}
 												} else {
-													// Gray
-													new PacketPlayOutParticle(diagonalLocation.getX(),
-															diagonalLocation.getY(), diagonalLocation.getZ(), 0, 0, 0,
-															0.5F, 5, false,
-															new DustParticleOptions(Color.fromRGB(180, 180, 180), 1.0F))
-															.send(pl);
+													sendParticle(pl, diagonalLocation, GRAY_COLOR);
 												}
 											}
 
-											if (diagonalLocation.getY() == coincidences.get().getFirst().getBukkitLocation()
-													.getY()) {
-												// Yellow
-												new PacketPlayOutParticle(diagonalLocation.getX(),
-														diagonalLocation.getY() + 0.5D, diagonalLocation.getZ(), 0, 0,
-														0, 0.5F, 5, false,
-														new DustParticleOptions(Color.fromRGB(225, 230, 0), 1.0F))
-														.send(pl);
+											if (diagonalLocation.getY() == coincidences.get().getFirst()
+													.getBukkitLocation().getY()) {
+												sendParticle(pl, diagonalLocation.clone().add(0, 0.5D, 0),
+														YELLOW_COLOR);
 											} else if (diagonalLocation.getY() == currentLocation.getY()) {
-												// Brown
-												new PacketPlayOutParticle(diagonalLocation.getX(),
-														diagonalLocation.getY() + 0.5D, diagonalLocation.getZ(), 0, 0,
-														0, 0.5F, 5, false,
-														new DustParticleOptions(Color.fromRGB(200, 130, 0), 1.0F))
-														.send(pl);
+												if (currentProtections.stream()
+														.filter(prot -> prot.isInside(simpleDiagonalLocation, false))
+														.count() == 0) {
+													sendParticle(pl, diagonalLocation.clone().add(0, 0.5D, 0),
+															BROWN_COLOR);
+												}
 											}
 										}
 
@@ -263,10 +285,10 @@ public class ProtectionParticlesService {
 										coincidences = currentProtections.stream()
 												.filter(prot -> !prot.isDeleted()
 														&& prot.isInside(diagonalExtraLocation, true))
-												.map(prot -> Pair.of(prot, Arrays
-														.asList((diagonalLocation.getX() == prot.getBukkitLocation().getX()),
-																(diagonalLocation.getY() == prot.getBukkitLocation().getY()),
-																(diagonalLocation.getZ() == prot.getBukkitLocation().getZ()))
+												.map(prot -> Pair.of(prot, Arrays.asList(
+														(diagonalLocation.getX() == prot.getBukkitLocation().getX()),
+														(diagonalLocation.getY() == prot.getBukkitLocation().getY()),
+														(diagonalLocation.getZ() == prot.getBukkitLocation().getZ()))
 														.stream().filter(Boolean.TRUE::equals).count()))
 												.filter(pair -> pair.getSecond() >= 2)
 												.collect(Collectors.maxBy((pair1, pair2) -> {
@@ -279,19 +301,9 @@ public class ProtectionParticlesService {
 
 										if (coincidences.isPresent()) {
 											if (coincidences.get().getSecond() == 2) {
-												// Yellow
-												new PacketPlayOutParticle(diagonalExtraLocation.getX(),
-														diagonalExtraLocation.getY(), diagonalExtraLocation.getZ(), 0,
-														0, 0, 0.5F, 5, false,
-														new DustParticleOptions(Color.fromRGB(225, 230, 0), 1.0F))
-														.send(pl);
+												sendParticle(pl, diagonalExtraLocation.toLocation(), YELLOW_COLOR);
 											} else {
-												// Purple
-												new PacketPlayOutParticle(diagonalExtraLocation.getX(),
-														diagonalExtraLocation.getY(), diagonalExtraLocation.getZ(), 0,
-														0, 0, 0.5F, 5, false,
-														new DustParticleOptions(Color.fromRGB(195, 70, 255), 1.0F))
-														.send(pl);
+												sendParticle(pl, diagonalExtraLocation.toLocation(), PURPLE_COLOR);
 											}
 										}
 									}
@@ -315,37 +327,58 @@ public class ProtectionParticlesService {
 			if (currentTick >= (20 * speed)) {
 				currentTick = 0;
 
-				updateLocation(pl.getLocation().getBlock().getLocation());
-				actionBarMessage.sendActionBar(pl);
+				updateLocation(pl, pl.getLocation().getBlock().getLocation());
+			}
+
+			actionBarMessage.sendActionBar(pl);
+		}
+
+		private void updateLocation(Player player, Location location) {
+			if (this.currentLocation == null || !this.currentLocation.equals(location)) {
+				currentLocation = location;
+				currentMinLocation = currentLocation.clone().subtract(radius, radius, radius);
+				currentMaxLocation = currentLocation.clone().add(radius + 1, radius + 1, radius + 1);
+				updateProtections(player, location);
 			}
 		}
 
-		private void updateLocation(Location location) {
-			currentLocation = location;
-			currentMinLocation = currentLocation.clone().subtract(radius, radius, radius);
-			currentMaxLocation = currentLocation.clone().add(radius + 1, radius + 1, radius + 1);
+		private void updateProtections(Player player, Location location) {
+			List<Protection> newProtections = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+					.findProtectionsByArea(currentMinLocation, currentMaxLocation)
+					.filter(prot -> showAll || prot.isMember(playerUuid) || prot.isOwner(playerUuid))
+					.collect(Collectors.toList());
 
-			if (PlayerEnterExitRegionTrigger.SETTINGS_PROTECTION_RADIUSFORSEARCHCACHE
-					.getContent() >= SETTINGS_PROTECTION_VIEW_RADIUS.getContent()) {
-				PlayerData pd = service.playerDataService.getPlayerData(playerUuid);
+			if (this.service.protocolLibApi.isHooked()) {
+				if (this.currentProtections != null) {
+					List<UUID> magmaCubesToRemove = currentProtections.stream().map(prot -> {
+						if (!newProtections.contains(prot)) {
+							return this.magmacubes.remove(prot.getProtectionId());
+						}
+						return null;
+					}).filter(Objects::nonNull).collect(Collectors.toList());
 
-				if (pd != null) {
-					currentProtections = new ArrayList<>();
-					pd.getCachedProtections().forEach(prot -> {
-						currentProtections.add(prot);
-						currentProtections.addAll(prot.getChildProtections());
-					});
-				} else {
-					currentProtections = service.protectionsService
-							.findProtectionsByArea(currentMinLocation, currentMaxLocation)
-							.filter(prot -> showAll || prot.isMember(playerUuid) || prot.isOwner(playerUuid))
-							.collect(Collectors.toList());
+					if (!magmaCubesToRemove.isEmpty()) {
+						this.service.protocolLibApi.getHook().removeGlowingMagmaCubes(player, magmaCubesToRemove);
+					}
 				}
+
+				newProtections.forEach(prot -> {
+					if (!this.magmacubes.containsKey(prot.getProtectionId())) {
+						this.magmacubes.put(prot.getProtectionId(), this.service.protocolLibApi.getHook()
+								.spawnGlowingMagmaCube(player, prot.getBukkitLocation().add(0.5D, 0D, 0.5D)));
+					}
+				});
+			}
+
+			this.currentProtections = newProtections;
+		}
+
+		private void sendParticle(Player player, Location location, Color color) throws Exception {
+			if (this.service.protocolLibApi.isHooked()) {
+				this.service.protocolLibApi.getHook().spawnParticle(player, location, color);
 			} else {
-				currentProtections = service.protectionsService
-						.findProtectionsByArea(currentMinLocation, currentMaxLocation)
-						.filter(prot -> showAll || prot.isMember(playerUuid) || prot.isOwner(playerUuid))
-						.collect(Collectors.toList());
+				new PacketPlayOutParticle(location.getX(), location.getY(), location.getZ(), 0, 0, 0, 0.5F, 5, false,
+						new DustParticleOptions(color, 1.0F)).send(player);
 			}
 		}
 

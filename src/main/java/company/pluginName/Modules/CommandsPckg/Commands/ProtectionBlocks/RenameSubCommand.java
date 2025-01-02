@@ -5,8 +5,8 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -28,20 +28,15 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 		defaultName = "rename",
 		defaultDescription = "Rename your current protection name",
 		defaultUsage = "<new name>",
-		defaultAliases = "rn"
-)
+		defaultAliases = "rn")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class RenameSubCommand extends PandaSubCommand {
-
-	@PandaInject
-	private static ProtectionsService protectionsService;
 
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
@@ -55,7 +50,8 @@ public class RenameSubCommand extends PandaSubCommand {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
 			if (parameters.getParameters().size() > 0) {
-				Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
+				Protection protection = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+						.findProtectionParentByLocation(pl.getLocation());
 				if (protection != null) {
 					try {
 						playerInteractionsService.protectionRenameRequest(ProtectionRenameRequestInput.inst(pl,

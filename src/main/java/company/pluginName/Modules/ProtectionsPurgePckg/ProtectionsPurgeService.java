@@ -8,10 +8,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
 
@@ -19,13 +17,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import company.pluginName.MainPluginClass;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.FilesService;
-import company.pluginName.Modules.FilePckg.Settings;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration;
-import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration.BasedOn;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Utils.DiscordUtilities;
 import company.pluginName.Utils.TimeUtils;
@@ -39,19 +34,26 @@ import darkpanda73.PandaUtils.PandaPlugin.Exceptions.ReportResult;
 import darkpanda73.PandaUtils.PandaPlugin.Exceptions.ReportResult.ReportError;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Utilities.Java.SleepingLoop;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 import lombok.Getter;
 import relampagorojo93.LibsCollection.JSONLib.JSONArray;
 import relampagorojo93.LibsCollection.JSONLib.JSONObject;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
-import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalAttemptEvent;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionRemovalData;
 
 @PandaService(priority = 1000)
 public class ProtectionsPurgeService {
+
+	@RegisteredPandaField("config")
+	public static final PandaStringField SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN = new PandaStringField(
+			"Settings.Protection.Auto-purge.Purge-older-than", "");
 
 	@PandaInject
 	private MainPluginClass plugin;
@@ -60,7 +62,7 @@ public class ProtectionsPurgeService {
 	private PlayerInteractionsService playerInteractionsService;
 
 	@PandaInject
-	private ProtectionsService protectionsService;
+	private ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private FilesService filesService;
@@ -77,49 +79,15 @@ public class ProtectionsPurgeService {
 	@LoadMethod
 	public void load() throws ReportError {
 		try {
-			if (!Settings.SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent().isEmpty()) {
-				long olderThan = TimeUtils
-						.stringToSeconds(Settings.SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent());
+			if (!SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent().isEmpty()) {
+				long olderThan = TimeUtils.stringToSeconds(SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent());
 
 				if (olderThan > 0) {
 					plugin.sendDebug(getClass(),
 							String.format("Set auto purge to remove regions older than %d seconds", olderThan));
 					configuredPurgeConfiguration = new PurgeConfiguration().setMillis(olderThan * 1000);
 
-					sleepingLoop = new SleepingLoop(() -> {
-						List<Protection> protectionsToPurge = retrieveProtectionsToPurge(configuredPurgeConfiguration);
-
-						if (protectionsToPurge.size() > 0) {
-							try {
-								FutureTask<List<Protection>> purgeTask = purgeProtections(protectionsToPurge,
-										RemovalCause.AUTO_PURGE);
-
-								List<Protection> removedProtections = purgeTask.get();
-
-								DiscordUtilities.sendPurgeSummaryMessage(null, this.configuredPurgeConfiguration,
-										removedProtections);
-							} catch (InterruptedException | ExecutionException e) {
-							}
-						}
-					}, () -> {
-						Thread.sleep(5000);
-
-						Protection protectionFound = this.protectionsService.getProtectionByRegion().values().stream()
-								.filter(prot -> !prot.isDeleted() && !prot.isCreationInProgress()
-										&& !prot.isRemovalInProgress())
-								.sorted((prot1,
-										prot2) -> configuredPurgeConfiguration.getBasedOn() == BasedOn.PLAYER_LAST_TIME
-												? Long.compare(prot1.getOwnerLastPlayed(), prot2.getOwnerLastPlayed())
-												: Long.compare(prot1.getCreatedDate(), prot2.getCreatedDate()))
-								.findFirst().orElse(null);
-
-						if (protectionFound != null) {
-							return configuredPurgeConfiguration.getRemainingTime(protectionFound);
-						}
-						return Long.MAX_VALUE;
-					});
-
-					this.sleepingLoop.start();
+					enableAutoPurge();
 				}
 			}
 		} catch (NumberFormatException e) {
@@ -130,15 +98,50 @@ public class ProtectionsPurgeService {
 
 	@UnloadMethod
 	public void unload() {
-		if (sleepingLoop != null) {
-			this.sleepingLoop.interrupt();
-		}
+		disableAutoPurge();
 	}
 
 	@ReloadMethod
 	private void reload() throws ReportError {
 		unload();
 		load();
+	}
+
+	public void enableAutoPurge() {
+		if (this.configuredPurgeConfiguration != null) {
+
+			sleepingLoop = new SleepingLoop(() -> {
+				List<Protection> protectionsToPurge = retrieveProtectionsToPurge(configuredPurgeConfiguration);
+
+				if (protectionsToPurge.size() > 0) {
+					List<Protection> purgedProtections = purgeProtections(protectionsToPurge, RemovalCause.AUTO_PURGE);
+
+					DiscordUtilities.sendPurgeSummaryMessage(null, this.configuredPurgeConfiguration,
+							purgedProtections);
+				}
+			}, () -> {
+				Pair<Protection, Long> protectionFound = this.protectionsService
+						.executeSynchronizedWithReturn(() -> this.protectionsService.getProtectionByRegion().values()
+								.stream().filter(prot -> !prot.isDeleted())
+								.map(prot -> Pair.of(prot, configuredPurgeConfiguration.getRemainingTime(prot)))
+								.sorted((prot1, prot2) -> Long.compare(prot1.getSecond(), prot2.getSecond()))
+								.findFirst().orElse(null));
+
+				if (protectionFound != null) {
+					return protectionFound.getSecond();
+				}
+				return Long.MAX_VALUE;
+			});
+
+			this.sleepingLoop.start();
+		}
+	}
+
+	public void disableAutoPurge() {
+		if (sleepingLoop != null) {
+			this.sleepingLoop.interrupt();
+			this.sleepingLoop = null;
+		}
 	}
 
 	public void awakePurgeTask() {
@@ -148,7 +151,7 @@ public class ProtectionsPurgeService {
 	}
 
 	public boolean isRunning() {
-		return this.configuredPurgeConfiguration != null;
+		return this.sleepingLoop != null;
 	}
 
 	public long calculateExpiresIn(IProtection protection) {
@@ -163,75 +166,62 @@ public class ProtectionsPurgeService {
 				.filter(pair -> pair.getSecond() <= 0).map(Pair::getFirst).collect(Collectors.toList());
 	}
 
-	public FutureTask<List<Protection>> purgeProtections(List<Protection> protectionsToPurge,
-			RemovalCause removalCause) {
+	public List<Protection> purgeProtections(List<Protection> protectionsToPurge, RemovalCause removalCause) {
 		MessageTemplate
 				.inst(PandaPrefixedStringField.applyPrefix(String.format(
 						"&7[System] Starting purge process with &e%d &7protection(s)...", protectionsToPurge.size())))
 				.process().sendMessage(Bukkit.getConsoleSender());
 
-		FutureTask<List<Protection>> task;
-
 		if (protectionsToPurge.size() != 0) {
-			task = new FutureTask<>(() -> {
-				List<Protection> purgedProtections = new ArrayList<>();
-				Iterator<Protection> iterator = protectionsToPurge.iterator();
+			List<Protection> protectionsToPurgeOnTask = new ArrayList<>();
+			List<Protection> purgedProtections = new ArrayList<>();
 
-				while (iterator.hasNext()) {
+			for (; !protectionsToPurge.isEmpty();) {
+				protectionsToPurgeOnTask.add(protectionsToPurge.get(0));
+				protectionsToPurge.remove(0);
+
+				if (protectionsToPurgeOnTask.size() >= 10 || protectionsToPurge.isEmpty()) {
+					FutureTask<Void> task = new FutureTask<Void>(() -> {
+						protectionsToPurgeOnTask.forEach(prot -> {
+							try {
+								protectionsService
+										.delete(ProtectionRemovalData.inst(null, prot.getProtectionId(), removalCause));
+								purgedProtections.add(prot);
+							} catch (RoyaleProtectionBlocksException e) {
+								e.sendError(Bukkit.getConsoleSender());
+							}
+						});
+						protectionsToPurgeOnTask.clear();
+						return null;
+					});
+
+					TasksUtils.execute(task::run);
+
 					try {
-						Protection protection = iterator.next();
+						task.get();
 
-						ProtectionRemovalAttemptEvent attemptEvent = new ProtectionRemovalAttemptEvent(null, protection,
-								removalCause);
-						Bukkit.getPluginManager().callEvent(attemptEvent);
-
-						if (protection.getUtils().isProtectionBlockShown()) {
-							protection.getUtils().hideProtectionBlock();
-						}
-
-						if (protection.getBoundaries().isProtectionViewActive()) {
-							protection.getBoundaries().toggleProtectionView();
-						}
-
-						protection.delete(removalCause).subscribe();
-
-						purgedProtections.add(protection);
-						iterator.remove();
-					} catch (RoyaleProtectionBlocksExceptionImpl e) {
+						Thread.sleep(10);
+					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
+			}
 
-				MessageTemplate.inst(Arrays.asList(MainPluginClass.PREFIX.getContent(),
-						PandaPrefixedStringField.applyPrefix(
-								String.format("&a[System] Purged protections: %d", purgedProtections.size())),
-						PandaPrefixedStringField.applyPrefix(
-								String.format("&c[System] Failed protections: %d", protectionsToPurge.size())),
-						MainPluginClass.PREFIX.getContent())).process().sendMessage(Bukkit.getConsoleSender());
+			MessageTemplate.inst(Arrays.asList(MainPluginClass.PREFIX.getContent(),
+					PandaPrefixedStringField
+							.applyPrefix(String.format("&a[System] Purged protections: %d", purgedProtections.size())),
+					PandaPrefixedStringField
+							.applyPrefix(String.format("&c[System] Failed protections: %d", protectionsToPurge.size())),
+					MainPluginClass.PREFIX.getContent())).process().sendMessage(Bukkit.getConsoleSender());
 
-				return purgedProtections;
-			});
-
-			TasksUtils.execute(() -> {
-				protectionsToPurge.forEach(protection -> {
-					if (protection.getUtils().isProtectionBlockShown()) {
-						protection.getUtils().hideProtectionBlock();
-					}
-				});
-
-				TasksUtils.executeOnAsync(task::run);
-			});
+			return purgedProtections;
 		} else {
-			task = new FutureTask<>(() -> Collections.emptyList());
-
-			task.run();
-
 			MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(String.format(
 					"&c[System] Cancelled purge process as no protections were found", protectionsToPurge.size())))
 					.process().sendMessage(Bukkit.getConsoleSender());
-		}
 
-		return task;
+			return Collections.emptyList();
+		}
 	}
 
 	public File exportProtections(PurgeConfiguration configuration, List<Protection> protectionsToPurge)
@@ -273,7 +263,7 @@ public class ProtectionsPurgeService {
 
 					JSONArray protectionsFromOwner = new JSONArray();
 
-					protections.forEach(protection -> protectionsFromOwner.addObject(protection.getRegionId()));
+					protections.forEach(protection -> protectionsFromOwner.addObject(protection.getProtectionId()));
 
 					data.addObject("protectionsTopurge", protectionsFromOwner);
 

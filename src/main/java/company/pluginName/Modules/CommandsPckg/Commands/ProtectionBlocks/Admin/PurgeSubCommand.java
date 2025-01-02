@@ -1,15 +1,13 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.ProtectionsPurgeService;
@@ -18,7 +16,6 @@ import company.pluginName.Utils.DiscordUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
@@ -34,7 +31,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 		pathName = "Purge",
 		defaultName = "purge",
 		defaultDescription = "Delete protections older than the specified time, based on the last connection of the owner or their creation date",
-		defaultUsage = "[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--config] [--show-ignored-players] [--export-only] [confirm]",
+		defaultUsage = "[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--show-ignored-players] [--export-only] [confirm]",
 		defaultAliases = "p",
 		defaultPermission = "protectionblocks.admin.purge")
 @PandaCommandAnnotation.Customizable(
@@ -46,11 +43,19 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 		usage = true)
 public class PurgeSubCommand extends PandaSubCommand {
 
+	private static final List<String> ARGS = Arrays.asList("--export-only", "--show-ignored-players", "--days",
+			"--hours", "--minutes", "confirm");
+
 	@PandaInject
 	private static ProtectionsPurgeService protectionsPurgeService;
 
 	public PurgeSubCommand() throws InstantiationException {
 		super();
+	}
+
+	@Override
+	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
+		return ARGS;
 	}
 
 	@Override
@@ -60,7 +65,7 @@ public class PurgeSubCommand extends PandaSubCommand {
 			for (int i = 0; i < parameters.getParameters().size(); i++) {
 				switch (parameters.getParameters().get(i).toLowerCase()) {
 				case "--export-only":
-					TasksUtils.executeOnAsync(() -> {
+					return CommandResponse.queuedAsync(() -> {
 						MessageTemplate.inst(Messages.MESSAGE_PURGE_SEARCH.applyPrefix()).process().sendMessage(sender);
 
 						List<Protection> protectionsToPurge = protectionsPurgeService
@@ -80,48 +85,33 @@ public class PurgeSubCommand extends PandaSubCommand {
 							e.printStackTrace();
 						}
 					});
-					return new TrueResponse();
 				case "confirm":
-					TasksUtils.executeOnAsync(() -> {
+					return CommandResponse.queuedAsync(() -> {
 						MessageTemplate.inst(Messages.MESSAGE_PURGE_START.applyPrefix()).process().sendMessage(sender);
 
 						List<Protection> protectionsToPurge = protectionsPurgeService
 								.retrieveProtectionsToPurge(purgeConfiguration);
 
-						TasksUtils.executeOnAsync(() -> {
-							try {
-								FutureTask<List<Protection>> removedProtectionsTask = protectionsPurgeService
-										.purgeProtections(protectionsToPurge, RemovalCause.MANUAL_PURGE);
+						List<Protection> removedProtections = protectionsPurgeService
+								.purgeProtections(protectionsToPurge, RemovalCause.MANUAL_PURGE);
 
-								List<Protection> removedProtections = removedProtectionsTask.get();
+						DiscordUtilities.sendPurgeSummaryMessage(sender instanceof Player ? (Player) sender : null,
+								purgeConfiguration, removedProtections);
 
-								DiscordUtilities.sendPurgeSummaryMessage(
-										sender instanceof Player ? (Player) sender : null, purgeConfiguration,
-										removedProtections);
+						MessageTemplate.inst(Messages.MESSAGE_PURGE_END.applyPrefix())
+								.setReplacements(
+										new Replacement("{amount}", () -> String.valueOf(removedProtections.size())))
+								.process().sendMessage(sender);
 
-								MessageTemplate.inst(Messages.MESSAGE_PURGE_END.applyPrefix())
-										.setReplacements(new Replacement("{amount}",
-												() -> String.valueOf(removedProtections.size())))
-										.process().sendMessage(sender);
-
-								if (protectionsToPurge.size() != 0) {
-									MessageTemplate.inst(Messages.MESSAGE_PURGE_ERROR.applyPrefix())
-											.setReplacements(new Replacement("{amount}",
-													() -> String.valueOf(protectionsToPurge.size())))
-											.process().sendMessage(sender);
-								}
-							} catch (InterruptedException | ExecutionException e) {
-								Exceptions.Protections.Delete.UNKNOWN.generateException(e).sendError(sender);
-							}
-						});
+						if (protectionsToPurge.size() != 0) {
+							MessageTemplate.inst(Messages.MESSAGE_PURGE_ERROR.applyPrefix())
+									.setReplacements(new Replacement("{amount}",
+											() -> String.valueOf(protectionsToPurge.size())))
+									.process().sendMessage(sender);
+						}
 					});
-
-					return new TrueResponse();
 				case "--show-ignored-players":
 					purgeConfiguration.setShowIgnoredPlayers(true);
-					break;
-				case "--config":
-					purgeConfiguration.copy(protectionsPurgeService.getConfiguredPurgeConfiguration());
 					break;
 				case "--days":
 				case "--hours":
@@ -162,7 +152,7 @@ public class PurgeSubCommand extends PandaSubCommand {
 				}
 			}
 
-			TasksUtils.executeOnAsync(() -> {
+			return CommandResponse.queuedAsync(() -> {
 				MessageTemplate.inst(Messages.MESSAGE_PURGE_SEARCH.applyPrefix()).process().sendMessage(sender);
 
 				List<Protection> protectionsToPurge = protectionsPurgeService

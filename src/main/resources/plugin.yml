@@ -1,11 +1,11 @@
 main: ${project.package}.${project.groupId}.Plugin.MainPluginClass
 name: ${project.name}
 author: ${project.author}
-version: ${project.version}
+version: ${project.spigotVersion}
 description: ${project.description}
 api-version: 1.13
 depend: [ WorldGuard ]
-softdepend: [ PlaceholderAPI, ItemsAdder, ProtectionStones, Oraxen, DeluxeCombat, LuckPerms, Vault, TokenManager, CombatLogX, PvPManager ]
+softdepend: [ PlaceholderAPI, ItemsAdder, ProtectionStones, Oraxen, DeluxeCombat, LuckPerms, CombatLogX, PvPManager, ProtocolLib, Vault, TokenManager, EssentialsX, CoinsEngine, PlayerPoints ]
 
 permissions:
   protectionblocks.teleport:

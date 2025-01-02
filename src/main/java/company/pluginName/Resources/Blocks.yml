@@ -45,9 +45,9 @@
 #---
 
 5: 
-  Blocks-x: 2
+  Blocks-x: 5
   Blocks-y: -1
-  Blocks-z: 2
+  Blocks-z: 5
   Permission: null
   Item: 
     Type: "COAL_ORE"
@@ -56,9 +56,9 @@
     - "&75x5"
   Allowed-worlds: []
 25: 
-  Blocks-x: 12
+  Blocks-x: 25
   Blocks-y: -1
-  Blocks-z: 12
+  Blocks-z: 25
   Permission: null
   Item: 
     Type: "IRON_ORE"

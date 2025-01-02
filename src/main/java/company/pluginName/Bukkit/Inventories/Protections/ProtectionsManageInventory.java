@@ -4,6 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -15,8 +16,8 @@ import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwners
 import company.pluginName.Bukkit.Inventories.Protections.Split.ProtectionSplitInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -32,35 +33,41 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemPr
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
-import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Listeners.PandaMessageListener.Callback;
 import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.PandaMessageListenerService;
+import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
+import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionHideBlockRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRenameRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSellRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionShowBlockRequestInput;
 
 @Inventory("protections_manage")
 public class ProtectionsManageInventory extends ChestInventoryObject {
 
-	public static final String MESSAGES_TYPENEWNAMEINFO_PATH = "Messages.Type-new-name-info";
-	public static final String MESSAGES_TYPENEWDISPLAYITEMINFO_PATH = "Messages.Type-new-display-item-info";
+	private static final String MESSAGES_TYPENEWNAMEINFO_PATH = "Messages.Type-new-name-info";
+	private static final String MESSAGES_PRICESPECIFYINFO_PATH = "Messages.Price-specify-info";
 
-	public static final String TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH = "Show-block-item";
-	public static final String TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH = "Hide-block-item";
+	private static final String TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH = "Show-block-item";
+	private static final String TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH = "Hide-block-item";
 
-	public static final String TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH = "Show-boundary-item";
-	public static final String TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH = "Hide-boundary-item";
+	private static final String PRICEBUTTON_NOTSETITEM_PATH = "Not-set-item";
 
 	@PandaInject
 	private static PandaMessageListenerService messageListenerService;
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
+
+	@PandaInject
+	private static PlaceholdersService placeholdersService;
 
 	private Protection protection;
 
@@ -68,11 +75,40 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 		super(player);
 
 		this.protection = protection;
+
+		Location loc = protection.getBukkitLocation();
+		IProtectionBlock block = protection.getProtectionBlock();
+
+		Replacement protectionDisplayName = new Replacement("{protection}",
+				() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getProtectionId());
+		protectionDisplayName.getMessageFragment().setCacheText(false);
+
+		Replacement[] playerReplacements = placeholdersService.getPlayerReplacements(getPlayer());
+		Replacement[] protectionReplacements = placeholdersService.getProtectionReplacements(protection);
+		Replacement[] protectionBlockReplacements = placeholdersService
+				.getProtectionBlockReplacements(protection.getProtectionBlock());
+		Replacement[] customReplacements = new Replacement[] { protectionDisplayName,
+				new Replacement("{owner}", () -> protection.getOwnerName()),
+				new Replacement("{world}", () -> protection.getWorldName()),
+				new Replacement("{location_x}", () -> loc != null ? String.valueOf(loc.getBlockX()) : "???"),
+				new Replacement("{location_y}", () -> loc != null ? String.valueOf(loc.getBlockY()) : "???"),
+				new Replacement("{location_z}", () -> loc != null ? String.valueOf(loc.getBlockZ()) : "???"),
+				new Replacement("{size_x}", () -> block != null ? String.valueOf((block.getBlocksX() * 2) + 1) : "???"),
+				new Replacement("{size_y}",
+						() -> block != null ? (block.getBlocksY() == -1 ? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
+								: String.valueOf((block.getBlocksY() * 2) + 1)) : "???"),
+				new Replacement("{size_z}",
+						() -> block != null ? String.valueOf((block.getBlocksZ() * 2) + 1) : "???") };
+
+		setReplacements(ArrayUtilities.join(
+				new Replacement[playerReplacements.length + protectionReplacements.length
+						+ protectionBlockReplacements.length + customReplacements.length],
+				playerReplacements, protectionReplacements, protectionBlockReplacements, customReplacements));
 	}
 
 	@Override
 	protected String getTitle() {
-		return MessageTemplate.inst(super.getTitle()).setReplacements(getAvailableVariables()).process().toString();
+		return MessageTemplate.inst(super.getTitle()).setReplacements(getReplacements()).process().toString();
 	}
 
 	@ItemPregenerator("Toggle-block-button")
@@ -83,21 +119,12 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH).build());
 	}
 
-	@ItemPregenerator("Toggle-boundary-button")
-	private static void pregenerateToggleBoundaryButton(Item item) {
-		item.getItems().put(TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH,
-				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH).build());
-		item.getItems().put(TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH,
-				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH).build());
-	}
-
 	@ItemGenerator("Protection-info")
 	private ItemStack generateProtectionInfo(Item item) {
 		OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(protection.getOwnerUuid());
 
 		return processPlayerHead(ItemBuilder.inst().setMaterial(Material.PLAYER_HEAD)
-				.fromMap(item.getData(), Item.DISPLAYITEM_KEY).setReplacements(getAvailableVariables()),
-				owner.getUniqueId());
+				.fromMap(item.getData(), Item.DISPLAYITEM_KEY).setReplacements(getReplacements()), owner.getUniqueId());
 	}
 
 	@ItemGenerator("Change-display-item-button")
@@ -126,12 +153,10 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 						: null;
 	}
 
-	@ItemGenerator("Toggle-boundary-button")
-	private ItemStack generateToggleBoundaryButton(Item item) {
-		return ProtectionUtilities.canViewBoundaries(protection, getPlayer()) ? item.getItems()
-				.get(protection.getBoundaries().isProtectionViewActive() ? TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH
-						: TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH)
-				: null;
+	@ItemGenerator("Price-button")
+	private ItemStack generatePriceButton(Item item) {
+		return ItemBuilder.inst().fromMap(item.getData(),
+				this.protection.isForSale() ? Item.DISPLAYITEM_KEY : PRICEBUTTON_NOTSETITEM_PATH).build();
 	}
 
 	@ItemGenerator("Merge-button")
@@ -187,30 +212,31 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@ItemExecutor("Rename-button")
 	private void executeRenameButton() {
-		try {
-			messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
-				if (!message.equalsIgnoreCase("cancel")) {
-					try {
-						playerInteractionsService.protectionRenameRequest(
-								ProtectionRenameRequestInput.inst(getPlayer(), protection, message));
-						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY.applyPrefix()).process()
-								.sendMessage(getPlayer());
-					} catch (RoyaleProtectionBlocksException e1) {
-						e1.sendError(getPlayer());
-					}
+		messageListenerService.getListener().replaceListening(getPlayer().getUniqueId(), new Callback() {
+
+			@Override
+			public boolean message(String message) {
+				try {
+					playerInteractionsService.protectionRenameRequest(
+							ProtectionRenameRequestInput.inst(getPlayer(), protection, message));
+					MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_RENAMEDSUCCESSFULLY.applyPrefix()).process()
+							.sendMessage(getPlayer());
+				} catch (RoyaleProtectionBlocksException e1) {
+					e1.sendError(getPlayer());
 				}
-				openInventory();
 				return true;
-			});
-			closeInventory();
-			MessageTemplate
-					.inst(PandaPrefixedStringField.applyPrefix(
-							getChestInventoryData().getCustomFields().get(MESSAGES_TYPENEWNAMEINFO_PATH).toString()))
-					.process().sendMessage(getPlayer());
-		} catch (PlayerAlreadyListeningException ex) {
-			MessageTemplate.inst(Messages.ERROR_CHATPROMPT_ALREADYPROMPTED.toString()).process()
-					.sendMessage(getPlayer());
-		}
+			}
+
+			public void cancel() {
+				openInventory();
+			}
+
+		});
+		closeInventory();
+		MessageTemplate
+				.inst(PandaPrefixedStringField.applyPrefix(
+						getChestInventoryData().getCustomFields().get(MESSAGES_TYPENEWNAMEINFO_PATH).toString()))
+				.process().sendMessage(getPlayer());
 	}
 
 	@ItemExecutor("Toggle-block-button")
@@ -230,10 +256,43 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 		}
 	}
 
-	@ItemExecutor("Toggle-boundary-button")
-	private void executeToggleBoundaryButton() {
-		protection.getBoundaries().toggleProtectionView();
-		updateInventory();
+	@ItemExecutor("Price-button")
+	private void executePriceButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
+		if (e.getClick() == ClickType.LEFT) {
+			messageListenerService.getListener().replaceListening(getPlayer().getUniqueId(), new Callback() {
+
+				@Override
+				public boolean message(String message) {
+					try {
+						double price = Double.parseDouble(message);
+						try {
+							RoyaleProtectionBlocksAPI.getInstance().getPlayerInteractionsService()
+									.protectionSellRequest(
+											ProtectionSellRequestInput.inst(getPlayer(), protection, price));
+						} catch (RoyaleProtectionBlocksException e) {
+							e.sendError(getPlayer());
+						}
+					} catch (NumberFormatException e1) {
+						MessageTemplate.inst(Messages.ERROR_INVALIDNUMBER.applyPrefix()).process()
+								.sendMessage(e.getWhoClicked());
+					}
+					return true;
+				}
+
+				public void cancel() {
+					openInventory();
+				}
+
+			});
+			closeInventory();
+			MessageTemplate
+					.inst(PandaPrefixedStringField.applyPrefix(
+							getChestInventoryData().getCustomFields().get(MESSAGES_PRICESPECIFYINFO_PATH).toString()))
+					.process().sendMessage(e.getWhoClicked());
+		} else if (e.getClick() == ClickType.RIGHT && this.protection.isForSale()) {
+			this.protection.setPriceAndSave(0);
+			updateInventory();
+		}
 	}
 
 	@ItemExecutor("Merge-button")
@@ -253,42 +312,6 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 		} catch (RoyaleProtectionBlocksException e) {
 			e.sendError(getPlayer());
 		}
-	}
-
-	private Replacement[] availableVariables = null;
-
-	private Replacement[] getAvailableVariables() {
-		return getAvailableVariables(false);
-	}
-
-	private Replacement[] getAvailableVariables(boolean renew) {
-		if (this.availableVariables == null || renew) {
-			Location loc = protection.getBukkitLocation();
-			ProtectionBlock block = protection.getProtectionBlock().getObject();
-			OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(protection.getOwnerUuid());
-
-			Replacement protectionDisplayName = new Replacement("{protection}",
-					() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getRegionId());
-			protectionDisplayName.getMessageFragment().setCacheText(false);
-
-			this.availableVariables = new Replacement[] { protectionDisplayName,
-					new Replacement("{owner}", () -> owner.getName()),
-					new Replacement("{world}", () -> protection.getWorldName()),
-					new Replacement("{location_x}", () -> loc != null ? String.valueOf(loc.getBlockX()) : "???"),
-					new Replacement("{location_y}", () -> loc != null ? String.valueOf(loc.getBlockY()) : "???"),
-					new Replacement("{location_z}", () -> loc != null ? String.valueOf(loc.getBlockZ()) : "???"),
-					new Replacement("{size_x}",
-							() -> block != null ? String.valueOf((block.getInformation().getBlocksX() * 2) + 1)
-									: "???"),
-					new Replacement("{size_y}",
-							() -> block != null ? (block.getInformation().getBlocksY() == -1
-									? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
-									: String.valueOf((block.getInformation().getBlocksY() * 2) + 1)) : "???"),
-					new Replacement("{size_z}",
-							() -> block != null ? String.valueOf((block.getInformation().getBlocksZ() * 2) + 1)
-									: "???") };
-		}
-		return this.availableVariables;
 	}
 
 }

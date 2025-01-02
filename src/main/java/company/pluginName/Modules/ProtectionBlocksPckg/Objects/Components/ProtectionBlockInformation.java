@@ -7,7 +7,6 @@ import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Utils.ProtectionBlocksUtils;
-import company.pluginName.Utils.ProtectionBlocksUtils.ItemType;
 import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackData.ItemStackDataUtilities;
@@ -15,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.ItemType;
 
 @NoArgsConstructor
 @AllArgsConstructor

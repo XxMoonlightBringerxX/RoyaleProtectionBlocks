@@ -3,8 +3,8 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -13,7 +13,6 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaComm
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRemovalRequestInput;
@@ -24,19 +23,14 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 		pathName = "Unclaim",
 		defaultName = "unclaim",
 		defaultDescription = "Remove the protection you're currently in",
-		defaultAliases = "uc"
-)
+		defaultAliases = "uc")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true
-)
+		permission = true)
 public class UnclaimSubCommand extends PandaSubCommand {
-
-	@PandaInject
-	private static ProtectionsService protectionsService;
 
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
@@ -47,23 +41,25 @@ public class UnclaimSubCommand extends PandaSubCommand {
 
 	@Override
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
-		Player player = sender instanceof Player ? (Player) sender : null;
-		if (player != null) {
-			Protection protection = protectionsService.findProtectionParentByLocation(player.getLocation());
-			if (protection != null) {
-				try {
-					playerInteractionsService
-							.protectionRemovalRequest(ProtectionRemovalRequestInput.inst(player, protection));
-				} catch (RoyaleProtectionBlocksException e) {
-					e.sendError(sender);
+		return CommandResponse.queuedAsync(() -> {
+			Player player = sender instanceof Player ? (Player) sender : null;
+			if (player != null) {
+				Protection protection = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+						.findProtectionParentByLocation(player.getLocation());
+				if (protection != null) {
+					try {
+						playerInteractionsService
+								.protectionRemovalRequest(ProtectionRemovalRequestInput.inst(player, protection));
+					} catch (RoyaleProtectionBlocksException e) {
+						e.sendError(sender);
+					}
+				} else {
+					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
+							.sendMessage(sender);
 				}
 			} else {
-				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
-						.sendMessage(sender);
+				MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 			}
-		} else {
-			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
-		}
-		return new TrueResponse();
+		});
 	}
 }

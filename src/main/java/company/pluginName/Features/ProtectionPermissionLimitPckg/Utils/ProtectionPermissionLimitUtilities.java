@@ -3,7 +3,6 @@ package company.pluginName.Features.ProtectionPermissionLimitPckg.Utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +12,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -28,7 +27,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 public class ProtectionPermissionLimitUtilities {
 
@@ -56,7 +55,7 @@ public class ProtectionPermissionLimitUtilities {
 			"&aYou now are in the current limit, all protections have been unblocked.");
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static ProtectionBlocksService protectionBlocksService;
@@ -64,8 +63,6 @@ public class ProtectionPermissionLimitUtilities {
 	public static Summary checkCapacity(Player player) {
 		Summary summary = new Summary(PermissionsService.getGeneralMaxCapacity(player, 0),
 				PermissionsService.getAllPerBlockMaxCapacity(player));
-
-		HashSet<Protection> modifiedProtections = new HashSet<>();
 
 		boolean hasBypassPermission = PermissionsService.MAX_BYPASS.hasPermission(player);
 
@@ -75,16 +72,14 @@ public class ProtectionPermissionLimitUtilities {
 		if (!hasBypassPermission && protections.size() > summary.getMaxCapacity()) {
 			protections.forEach(prot -> {
 				if (!prot.isBlocked() || prot.getBlockReason() != BlockReason.EXCEEDING_LIMIT) {
-					prot.block(BlockReason.EXCEEDING_LIMIT);
-					modifiedProtections.add(prot);
+					prot.blockAndSave(BlockReason.EXCEEDING_LIMIT);
 					summary.getBlockedProtections().add(prot);
 				}
 			});
 		} else {
 			protections.forEach(prot -> {
 				if (prot.isBlocked() && prot.getBlockReason() == BlockReason.EXCEEDING_LIMIT) {
-					prot.unblock();
-					modifiedProtections.add(prot);
+					prot.unblockAndSave();
 					summary.getUnblockedProtections().add(prot);
 				}
 			});
@@ -92,7 +87,7 @@ public class ProtectionPermissionLimitUtilities {
 
 		Map<String, List<Protection>> protectionsPerBlock = new HashMap<>();
 		protections.forEach(prot -> protectionsPerBlock
-				.computeIfAbsent(prot.getProtectionBlock().getIdentifier(), (key) -> new ArrayList<>()).add(prot));
+				.computeIfAbsent(prot.getProtectionBlockId(), (key) -> new ArrayList<>()).add(prot));
 
 		protectionsPerBlock.forEach((key, list) -> {
 			boolean hasBlockBypassPermission = PermissionsService.BLOCK_MAX_BYPASS.hasPermission(player,
@@ -104,25 +99,21 @@ public class ProtectionPermissionLimitUtilities {
 					&& (blockMaxCapacity != null && protectionsPerBlock.size() > blockMaxCapacity)) {
 				list.forEach(prot -> {
 					if (!prot.isBlocked() || prot.getBlockReason() != BlockReason.EXCEEDING_LIMIT_PROTECTION_BLOCK) {
-						prot.block(BlockReason.EXCEEDING_LIMIT_PROTECTION_BLOCK);
-						modifiedProtections.add(prot);
+						prot.blockAndSave(BlockReason.EXCEEDING_LIMIT_PROTECTION_BLOCK);
 						summary.getBlockedProtectionsPerBlock().computeIfAbsent(key, (k) -> new ArrayList<>())
 								.add(prot);
 					}
 				});
 			} else {
 				list.forEach(prot -> {
-					if (prot.isBlocked() && prot.getBlockReason() == BlockReason.EXCEEDING_LIMIT_PROTECTION_BLOCK) {
-						prot.unblock();
-						modifiedProtections.add(prot);
+					if (prot.isBlocked()) {
+						prot.unblockAndSave();
 						summary.getUnblockedProtectionsPerBlock().computeIfAbsent(key, (k) -> new ArrayList<>())
 								.add(prot);
 					}
 				});
 			}
 		});
-
-		modifiedProtections.forEach(Protection::saveData);
 
 		return summary;
 	}
@@ -150,7 +141,7 @@ public class ProtectionPermissionLimitUtilities {
 									.getProtectionBlockById(entry.getKey());
 
 							if (protectionBlock != null) {
-								ItemMeta im = protectionBlock.getInformation().getItem().getItemMeta();
+								ItemMeta im = protectionBlock.getItem().getItemMeta();
 
 								MessageTemplate
 										.inst(MESSAGE_PROTECTION_EXCEEDINGLIMITBLOCKSPECIFICWARNING.applyPrefix())

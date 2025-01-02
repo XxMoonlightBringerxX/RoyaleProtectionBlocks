@@ -17,10 +17,9 @@ import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.Enums.EconomyService;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.ProtectionFlagsPckg.Objects.ProtectionFlag;
-import company.pluginName.Utils.EconomyUtils;
+import company.pluginName.Utils.EconomyUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment.ColorMode;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -30,6 +29,7 @@ import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
 import darkpanda73.PandaUtils.PandaYaml.Exceptions.YamlException;
 import darkpanda73.PandaUtils.PandaYaml.Objects.YamlSection;
 import darkpanda73.PandaUtils.PandaYaml.Objects.Data.YamlData;
+import darkpanda73.PandaUtils.Services.PandaEconomiesModule.Enums.EconomyService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
@@ -322,7 +322,7 @@ public class ProtectionFlagUtilities {
 	private static Double getCostPerChange(YamlSection section) {
 		Double costPerChange = section.getDataOrDefault("Cost-per-change", YamlData.empty()).getDouble();
 
-		if (costPerChange != null && !EconomyUtils.isVaultHooked() && !EconomyUtils.isTokenManagerHooked()) {
+		if (costPerChange != null) {
 			throw new NullPointerException("No compatible economy plugin is currently attached");
 		}
 
@@ -343,17 +343,10 @@ public class ProtectionFlagUtilities {
 		}
 
 		if (economyService != null) {
-			switch (economyService) {
-			case VAULT:
-				if (!EconomyUtils.isVaultHooked()) {
-					throw new NullPointerException("Vault is currently not hooked");
-				}
-				break;
-			case TOKENMANAGER:
-				if (!EconomyUtils.isTokenManagerHooked()) {
-					throw new NullPointerException("TokenManager is currently not hooked");
-				}
-				break;
+			if (EconomyUtilities.isEconomyEnabled(economyService)) {
+				throw new NullPointerException(
+						String.format("%s is not an available currency or its related plugin is not available",
+								economyService.name()));
 			}
 		}
 

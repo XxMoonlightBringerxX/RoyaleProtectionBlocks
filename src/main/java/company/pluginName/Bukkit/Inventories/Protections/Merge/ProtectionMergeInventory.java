@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManageInventory;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -28,7 +28,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 public class ProtectionMergeInventory extends PagedChestInventoryObject<Protection> {
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static PlaceholdersService placeholdersService;
@@ -56,8 +56,9 @@ public class ProtectionMergeInventory extends PagedChestInventoryObject<Protecti
 
 	@Override
 	protected List<Protection> getEntityList() {
-		return protectionsService.getAllowedProtections(getPlayer())
+		return protectionsService.findAllowedParentProtectionsByPlayer(getPlayer())
 				.filter(protection -> protection != this.protection
+						&& protection.getOwnerUuid().equals(this.protection.getOwnerUuid())
 						&& ProtectionUtilities.canMerge(protection, getPlayer())
 						&& !this.protection.getChildProtectionsRecursively().contains(protection)
 						&& (Protection.SETTINGS_PROTECTION_MUSTBECLOSEFORMERGE.isFalse()
@@ -85,7 +86,7 @@ public class ProtectionMergeInventory extends PagedChestInventoryObject<Protecti
 		try {
 			playerInteractionsService
 					.protectionMergeRequest(ProtectionMergeRequestInput.inst(getPlayer(), protection, entity));
-			new ProtectionsManageInventory(getPlayer(), entity).openInventory();
+			new ProtectionsManageInventory(getPlayer(), entity).setPreviousInventory(null).openInventory();
 		} catch (RoyaleProtectionBlocksException e1) {
 			e1.sendError(getPlayer());
 		}

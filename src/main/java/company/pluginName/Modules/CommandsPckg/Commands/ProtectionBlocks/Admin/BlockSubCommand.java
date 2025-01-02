@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -26,15 +26,13 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
 		defaultName = "block",
 		defaultDescription = "Allows to block a protection",
 		defaultAliases = "b",
-		defaultPermission = "protectionblocks.admin.block"
-)
+		defaultPermission = "protectionblocks.admin.block")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true
-)
+		permission = true)
 public class BlockSubCommand extends PandaSubCommand {
 
 	@RegisteredPandaField("lang")
@@ -42,7 +40,7 @@ public class BlockSubCommand extends PandaSubCommand {
 			"Message.Protection.Blocked-successfully", "&aThe protection has been blocked successfully.");
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static ProtectionSettingsService protectionSettingService;
@@ -57,8 +55,7 @@ public class BlockSubCommand extends PandaSubCommand {
 		if (pl != null) {
 			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 			if (protection != null) {
-				protection.block(BlockReason.OTHERS);
-				protection.saveData();
+				protection.blockAndSave(BlockReason.OTHERS);
 				MessageTemplate.inst(MESSAGE_PROTECTION_BLOCKEDSUCCESSFULLY.applyPrefix()).process()
 						.sendMessage(sender);
 			} else {

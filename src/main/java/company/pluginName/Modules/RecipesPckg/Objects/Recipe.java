@@ -2,7 +2,6 @@ package company.pluginName.Modules.RecipesPckg.Objects;
 
 import java.util.Arrays;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -49,7 +48,7 @@ public class Recipe extends CustomRecipe {
 
 	@Override
 	public ItemStack getItemStack() {
-		return protectionBlock.getObject().getInformation().getItem();
+		return protectionBlock.getObject().getItem();
 	}
 
 	@Override
@@ -59,17 +58,12 @@ public class Recipe extends CustomRecipe {
 
 	@Override
 	public String getRecipeId() {
-		return "protectionblocks_recipe_" + protectionBlock.getObject().getInformation().getId();
+		return "protectionblocks_recipe_" + protectionBlock.getObject().getId();
 	}
 
 	@Override
 	public ItemStack getResult() {
-		try {
-			return protectionBlock.getObject().getInformation().generateItem();
-		} catch (RoyaleProtectionBlocksExceptionImpl e) {
-			e.sendError(Bukkit.getConsoleSender());
-			return null;
-		}
+		return protectionBlock.getObject().generateItem();
 	}
 
 	public void save() throws RoyaleProtectionBlocksExceptionImpl {

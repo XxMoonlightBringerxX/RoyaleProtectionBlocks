@@ -8,7 +8,6 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -24,7 +23,7 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInven
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item.ClickResult;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Utils.ItemUtilities;
-import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Listeners.PandaMessageListener.Callback;
 import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.PandaMessageListenerService;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -66,11 +65,8 @@ public class ProtectionBlockRecipeInventory extends ChestInventoryObject {
 
 	@Override
 	protected String getTitle() {
-		return MessageTemplate.inst(super.getTitle())
-				.setReplacements(new Replacement("{block}",
-						() -> protectionBlock.getInformation().getId() != null
-								? protectionBlock.getInformation().getId()
-								: "???"))
+		return MessageTemplate.inst(super.getTitle()).setReplacements(
+				new Replacement("{block}", () -> protectionBlock.getId() != null ? protectionBlock.getId() : "???"))
 				.process().toString();
 	}
 
@@ -120,23 +116,23 @@ public class ProtectionBlockRecipeInventory extends ChestInventoryObject {
 		}
 
 		if (e.getClick() == ClickType.LEFT) {
-			try {
-				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
-					if (!message.equalsIgnoreCase("cancel")) {
-						newRecipe.setPermission(!message.isEmpty() ? message : null);
-					}
-					openInventory();
+			messageListenerService.getListener().replaceListening(getPlayer().getUniqueId(), new Callback() {
+
+				@Override
+				public boolean message(String message) {
+					newRecipe.setPermission(!message.isEmpty() ? message : null);
 					return true;
-				});
-				closeInventory();
-				MessageTemplate
-						.inst(PandaPrefixedStringField.applyPrefix(this.getChestInventoryData().getCustomFields()
-								.get(MESSAGES_PERMISSIONSPECIFYINFO_PATH).toString()))
-						.process().sendMessage(getPlayer());
-			} catch (PlayerAlreadyListeningException e1) {
-				MessageTemplate.inst(Messages.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix()).process()
-						.sendMessage(getPlayer());
-			}
+				}
+
+				public void cancel() {
+					openInventory();
+				}
+
+			});
+			closeInventory();
+			MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(
+					this.getChestInventoryData().getCustomFields().get(MESSAGES_PERMISSIONSPECIFYINFO_PATH).toString()))
+					.process().sendMessage(getPlayer());
 		} else if (e.getClick() == ClickType.RIGHT && newRecipe.getPermission() != null) {
 			newRecipe.setPermission(null);
 			updateInventory();

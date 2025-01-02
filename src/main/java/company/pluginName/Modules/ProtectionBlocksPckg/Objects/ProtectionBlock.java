@@ -1,10 +1,13 @@
 package company.pluginName.Modules.ProtectionBlocksPckg.Objects;
 
-import java.util.ArrayList;
+import java.util.stream.Collectors;
 
+import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
@@ -12,9 +15,8 @@ import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockAllowedWorlds;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.SQLPckg.SQLService;
-import company.pluginName.Utils.EconomyUtils;
+import company.pluginName.Utils.EconomyUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
@@ -27,13 +29,18 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.ItemType;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionRemovalData;
 
 @Data
 @Accessors(chain = true)
 @Setter(lombok.AccessLevel.NONE)
 @RequiredArgsConstructor
-public class ProtectionBlock {
+public class ProtectionBlock implements IProtectionBlock {
 
 	@RegisteredPandaField("lang")
 	private static final PandaPrefixedStringField MESSAGE_PROTECTION_FLAGS_CHARGEDSUCCESSFULLY = new PandaPrefixedStringField(
@@ -48,13 +55,10 @@ public class ProtectionBlock {
 	@PandaInject
 	private static ProtectionBlocksService protectionBlocksService;
 
-	@PandaInject
-	private static ProtectionsService protectionsService;
-
 	public static final String PROTECTION_BLOCK_ID_KEY = "ProtectionBlockId";
 
-	private @NonNull ProtectionBlockInformation information;
-	private @NonNull ProtectionBlockAllowedWorlds allowedWorlds;
+	private @NonNull ProtectionBlockInformation blockInformation;
+	private @NonNull ProtectionBlockAllowedWorlds blockAllowedWorlds;
 
 	public ProtectionBlock() {
 		this(new ProtectionBlockInformation());
@@ -65,26 +69,31 @@ public class ProtectionBlock {
 	}
 
 	public ProtectionBlock(ProtectionBlock protectionBlock) {
-		this.information = new ProtectionBlockInformation();
-		this.allowedWorlds = new ProtectionBlockAllowedWorlds();
+		this.blockInformation = new ProtectionBlockInformation();
+		this.blockAllowedWorlds = new ProtectionBlockAllowedWorlds();
 
-		this.information.setId(protectionBlock.getInformation().getId());
+		this.blockInformation.setId(protectionBlock.getId());
 		this.copy(protectionBlock);
 	}
 
 	public void purchase(Player pl) {
 		try {
-			ItemStack item = getInformation().generateItem();
+			if (RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+					.getProtectionBlocksStoreEconomyService() == null) {
+				throw Exceptions.Protections.STOREUNAVAILABLE.generateException();
+			}
+
+			ItemStack item = getBlockInformation().generateItem();
 
 			if (ItemStackUtilities.hasAvailableSpace(pl, item)) {
 				if (PermissionsService.ECONOMY_BYPASS.hasPermission(pl)) {
 					pl.getInventory().addItem(item);
 				} else {
-					if (EconomyUtils.withdraw(pl, getInformation().getPrice())) {
+					if (EconomyUtilities.withdraw(RoyaleProtectionBlocksAPIImpl.getInstance()
+							.getPlayerInteractionsService().getProtectionBlocksStoreEconomyService(), pl, getPrice())) {
 						pl.getInventory().addItem(item);
 						MessageTemplate.inst(MESSAGE_PROTECTION_FLAGS_CHARGEDSUCCESSFULLY.applyPrefix())
-								.setReplacements(
-										new Replacement("{amount}", () -> String.valueOf(getInformation().getPrice())))
+								.setReplacements(new Replacement("{amount}", () -> String.valueOf(getPrice())))
 								.process().sendMessage(pl);
 					} else {
 						MessageTemplate.inst(Messages.ERROR_INSUFFICIENTBALANCE.applyPrefix()).process()
@@ -110,16 +119,15 @@ public class ProtectionBlock {
 			}
 		}
 
-		if (this.getInformation().getId() == null) {
+		if (this.getId() == null) {
 			throw Exceptions.Protections.Blocks.Save.IDNULL.generateException();
 		}
 
-		if (this.getInformation().getItem() == null) {
+		if (this.getItem() == null) {
 			throw Exceptions.Protections.Blocks.Save.ITEMNULL.generateException();
 		}
 
-		ProtectionBlock registeredProtectionBlock = protectionBlocksService
-				.getProtectionBlockById(this.getInformation().getId());
+		ProtectionBlock registeredProtectionBlock = protectionBlocksService.getProtectionBlockById(this.getId());
 
 		if (registeredProtectionBlock != null && registeredProtectionBlock != this) {
 			throw Exceptions.Protections.Blocks.Save.IDINUSE.generateException();
@@ -140,32 +148,93 @@ public class ProtectionBlock {
 			}
 		}
 
-		protectionsService.getProtectionsByWorld().values()
-				.forEach(protections -> new ArrayList<>(protections).forEach(protection -> {
-					if (protection.getProtectionBlock().getIdentifier().equals(this.getInformation().getId())) {
-						if (protection.getUtils().isProtectionBlockShown()) {
-							protection.getUtils().hideProtectionBlock();
-						}
-
-						if (protection.getBoundaries().isProtectionViewActive()) {
-							protection.getBoundaries().toggleProtectionView();
-						}
-
-						try {
-							protection.delete(RemovalCause.AUTO_PURGE).subscribe();
-						} catch (RoyaleProtectionBlocksExceptionImpl e1) {
-							e1.printStackTrace();
-						}
+		RoyaleProtectionBlocksAPI.getInstance().getProtectionsService().findProtectionsByProtectionBlock(this)
+				.collect(Collectors.toList()).forEach(protection -> {
+					try {
+						RoyaleProtectionBlocksAPI.getInstance().getProtectionsService().delete(ProtectionRemovalData
+								.inst(player, protection.getProtectionId(), RemovalCause.PROTECTION_BLOCK_REMOVAL));
+					} catch (RoyaleProtectionBlocksException e1) {
+						throw new RuntimeException(e1);
 					}
-				}));
+				});
+
 		sqlService.deleteProtectionBlock(this);
 		protectionBlocksService.unregisterProtectionBlock(this);
 	}
 
 	public ProtectionBlock copy(ProtectionBlock protectionBlock) {
-		this.information.copy(protectionBlock.getInformation());
-		this.allowedWorlds.copy(protectionBlock.getAllowedWorlds());
+		this.blockInformation.copy(protectionBlock.getBlockInformation());
+		this.blockAllowedWorlds.copy(protectionBlock.getBlockAllowedWorlds());
 		return this;
+	}
+
+	/*
+	 * API methods
+	 */
+
+	@Override
+	public String getId() {
+		return this.blockInformation.getId();
+	}
+
+	@Override
+	public int getBlocksX() {
+		return this.blockInformation.getBlocksX();
+	}
+
+	@Override
+	public int getBlocksY() {
+		return this.blockInformation.getBlocksY();
+	}
+
+	@Override
+	public int getBlocksZ() {
+		return this.blockInformation.getBlocksZ();
+	}
+
+	@Override
+	public ItemStack getItem() {
+		return this.blockInformation.getItem();
+	}
+
+	@Override
+	public ItemType getItemType() {
+		return this.blockInformation.getItemType();
+	}
+
+	@Override
+	public ItemStack generateItem() {
+		try {
+			return this.blockInformation.generateItem();
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			e.sendError(Bukkit.getConsoleSender());
+			return null;
+		}
+	}
+
+	@Override
+	public boolean isSameType(Block block) {
+		return this.blockInformation.isSameType(block);
+	}
+
+	@Override
+	public boolean isSameType(ItemStack item) {
+		return this.blockInformation.isSameType(item);
+	}
+
+	@Override
+	public String getPermission() {
+		return this.blockInformation.getPermission();
+	}
+
+	@Override
+	public Double getPrice() {
+		return getBlockInformation().getPrice();
+	}
+
+	@Override
+	public boolean isForSale() {
+		return getBlockInformation().isForSale();
 	}
 
 }

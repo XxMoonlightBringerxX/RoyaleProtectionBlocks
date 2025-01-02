@@ -1,5 +1,6 @@
 package company.pluginName.Features.PvPPckg.Listeners;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -13,11 +14,11 @@ public class CombatLogHookListener implements Listener {
 
 	@EventHandler
 	public void onProtectionBlockCreation(ProtectionCreationAttemptEvent e) {
-		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONCREATIONINCOMBAT.isTrue()
-				&& CombatLogHookUtilities.isInCombat(e.getPlayer())) {
+		if (e.getExecutor() instanceof Player
+				&& CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONCREATIONINCOMBAT.isTrue()
+				&& CombatLogHookUtilities.isInCombat((Player) e.getExecutor())) {
 			e.setCancelled(true);
-			Exceptions.Protections.INCOMBAT.generateException().sendError(e.getPlayer());
-
+			Exceptions.Protections.INCOMBAT.generateException().sendError((Player) e.getExecutor());
 		}
 	}
 

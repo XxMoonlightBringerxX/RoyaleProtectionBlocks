@@ -1,6 +1,5 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -8,6 +7,7 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Bukkit.Inventories.Protections.Merge.ProtectionMergeInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchProtectionInventory;
 import company.pluginName.Exceptions.Exceptions;
@@ -15,14 +15,12 @@ import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
@@ -30,7 +28,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionMergeRequestInput;
 
@@ -57,9 +55,6 @@ public class MergeSubCommand extends PandaSubCommand {
 			"Message.Protection.Merge.Parent-set-successfully", "&aProtection has been merged successfully.");
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
-
-	@PandaInject
 	private static PlayerDataService playerDataService;
 
 	@PandaInject
@@ -73,13 +68,13 @@ public class MergeSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
-		if (sender instanceof Player) {
-			return protectionsService.getAllowedProtections((Player) sender)
-					.filter(protection -> protection.getRegionId().toLowerCase().startsWith(args[args.length - 1]))
-					.map(Protection::getRegionId).collect(Collectors.toList());
+	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
+		if (argIndex == 0) {
+			return RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+					.findAllowedParentProtectionsByPlayer((Player) sender).map(Protection::getProtectionId)
+					.collect(Collectors.toList());
 		}
-		return Collections.emptyList();
+		return super.generateAutocompleteList(sender, argIndex);
 	}
 
 	@Override
@@ -88,15 +83,16 @@ public class MergeSubCommand extends PandaSubCommand {
 		if (pl != null) {
 			try {
 				if (parameters.getParameters().size() > 0) {
-					Optional<Protection> parentProtection = protectionsService.getAllowedProtections((Player) sender)
+					Optional<Protection> parentProtection = RoyaleProtectionBlocksAPIImpl.getInstance()
+							.getProtectionsService().findAllowedParentProtectionsByPlayer((Player) sender)
 							.filter(p -> (p.getDisplayName() != null ? p.getDisplayNameWithoutFormat()
-									: p.getRegionId()).equalsIgnoreCase(
+									: p.getProtectionId()).equalsIgnoreCase(
 											parameters.getParameters().stream().collect(Collectors.joining(" "))))
 							.findFirst();
 					if (parentProtection.isPresent()) {
 						if (parameters.getParameters().size() > 1) {
-							Protection childProtection = protectionsService
-									.findProtectionById(parameters.getParameters().get(1));
+							Protection childProtection = RoyaleProtectionBlocksAPIImpl.getInstance()
+									.getProtectionsService().findProtectionById(parameters.getParameters().get(1));
 
 							if (childProtection != null) {
 								playerInteractionsService.protectionMergeRequest(

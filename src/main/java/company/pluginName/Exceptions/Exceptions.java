@@ -30,6 +30,18 @@ public class Exceptions {
 
 	}
 
+	public static class Generic {
+
+		public static final ThrowableField PLAYERNOTFOUND = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PLAYERNOTFOUND, "Error.Exception.PlayerNotFound",
+				"&cThe player you're looking for could not be found!");
+
+		public static final ThrowableField PLAYERNOTONLINE = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PLAYERNOTONLINE, "Error.Exception.PlayerNotOnline",
+				"&cThe player you're looking for is not currently online!");
+
+	}
+
 	public static class Protections {
 
 		public static final ThrowableField KICKDENIED = new ThrowableField(
@@ -68,6 +80,11 @@ public class Exceptions {
 		public static final ThrowableField PRIORITYBELOWZERO = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_PRIORITYBELOWZERO,
 				"Error.Exception.protection.PriorityBelowZero", "&cYou must provide a number higher or equal to zero!");
+
+		public static final ThrowableField MERGEDIFFERENTOWNERS = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGEDIFFERENTOWNERS,
+				"Error.Exception.protection.MergeDifferentOwners",
+				"&cYou aren't allowed to merge two protections from different owners!");
 
 		public static final ThrowableField MERGETOOFAR = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGETOOFAR, "Error.Exception.protection.MergeTooFar",
@@ -127,8 +144,28 @@ public class Exceptions {
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_CANCELLED, "Error.Exception.protection.Cancelled",
 				"&cAnother plugin has cancelled this action over this protection!");
 
+		public static final ThrowableField STOREUNAVAILABLE = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_STOREUNAVAILABLE,
+				"Error.Exception.protection.StoreUnavailable", "&cThe protections store is currently unavailable!");
+
+		public static final ThrowableField ALREADYPUBLIC = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_ALREADYPUBLIC,
+				"Error.Exception.protection.AlreadyPublic", "&cThe protections is already public!");
+
+		public static final ThrowableField ALREADYPRIVATE = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_ALREADYPRIVATE,
+				"Error.Exception.protection.AlreadyPrivate", "&cThe protections is already private!");
+
 		public static class Delete {
 
+			public static final ThrowableField NOTFOUND = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_DELETE_NOTFOUND,
+					"Error.Exception.protection.delete.NotFound",
+					"&cThe requested protection to delete could not be found!");
+			public static final ThrowableField ALREADYDELETED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_DELETE_ALREADYDELETED,
+					"Error.Exception.protection.delete.AlreadyDeleted",
+					"&cThe requested protection to delete is already deleted!");
 			public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_DELETE_PERMISSIONDENIED,
 					"Error.Exception.protection.delete.PermissionDenied",
@@ -162,10 +199,25 @@ public class Exceptions {
 
 		public static class Save {
 
+			public static final ThrowableField ALREADYEXISTS = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SAVE_ALREADYEXISTS,
+					"Error.Exception.protection.save.AlreadyExists",
+					"&cThere's already a protection registered with the same ID!");
 			public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_SAVE_PERMISSIONDENIED,
 					"Error.Exception.protection.save.PermissionDenied",
 					"&cYou aren't allowed to save this protection!");
+			public static final ThrowableField PERMISSIONDENIEDPROTECTIONBLOCK = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SAVE_PERMISSIONDENIEDPROTECTIONBLOCK,
+					"Error.Exception.protection.save.PermissionDeniedProtectionBlock",
+					"&cYou don't have permissions to use this protection block!");
+			public static final ThrowableField NOTALLOWEDWORLD = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SAVE_NOTALLOWEDWORLD,
+					"Error.Exception.protection.save.NotAllowedWorld",
+					"&cYou can't use this protection block in this world!");
+			public static final ThrowableField BANNEDWORLD = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SAVE_BANNEDWORLD,
+					"Error.Exception.protection.save.BannedWorld", "&cYou can't use protection blocks in this world!");
 			public static final ThrowableField MAXREACHED = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_SAVE_MAXREACHED,
 					"Error.Exception.protection.save.MaxReached",
@@ -234,6 +286,46 @@ public class Exceptions {
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_TELEPORT_CANCELLEDDUEMOVEMENT,
 					"Error.Exception.protection.teleport.CancelledDueMovement",
 					"&cThe teleportation has been cancelled due a detected movement!");
+			public static final ThrowableField UNSAFE = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_TELEPORT_UNSAFE,
+					"Error.Exception.protection.teleport.Unsafe",
+					"&cThe current home location of the protection seems to be on an unsafe position. Try to set your home location on a safe place!");
+		}
+
+		public static class Transfer {
+
+			public static final ThrowableField SAMEOWNER = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_TRANSFER_SAMEOWNER,
+					"Error.Exception.protection.transfer.SameOwner",
+					"&cYou can't transfer the protection to its actual owner!");
+			public static final ThrowableField MAXREACHED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_TRANSFER_MAXREACHED,
+					"Error.Exception.protection.transfer.MaxReached",
+					"&cThe player you're trying to transfer the protection has reached the maximum amount of protections allowed!");
+			public static final ThrowableField BLOCKMAXREACHED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_TRANSFER_BLOCKMAXREACHED,
+					"Error.Exception.protection.transfer.BlockMaxReached",
+					"&cThe player you're trying to transfer the protection has reached the maximum amount of protections allowed with one or more of the protection blocks!");
+
+		}
+
+		public static class Purchase {
+
+			public static final ThrowableField NOTFORSALE = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PURCHASE_NOTFORSALE,
+					"Error.Exception.protection.purchase.NotForSale", "&cThis protection is not for sale right now!");
+			public static final ThrowableField ALREADYNOTFORSALE = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PURCHASE_ALREADYNOTFORSALE,
+					"Error.Exception.protection.purchase.AlreadyNotForSale",
+					"&cThis protection is already not for sale!");
+			public static final ThrowableField SAMEOWNER = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PURCHASE_SAMEOWNER,
+					"Error.Exception.protection.purchase.SameOwner", "&cYou can't purchase your own protections!");
+			public static final ThrowableField NOTENOUGHBALANCE = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PURCHASE_NOTENOUGHBALANCE,
+					"Error.Exception.protection.purchase.NotEnoughBalance",
+					"&cYou don't have enough balance to purchase this protection!");
+
 		}
 
 		public static class Members {
@@ -427,12 +519,23 @@ public class Exceptions {
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_NOTENOUGHBALANCE,
 					"Error.Exception.protection.flags.NotEnoughBalance",
 					"&cYou don't have enough balance to change this flag!");
+			public static final ThrowableField NOTFOUND = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_FLAGS_NOTFOUND,
+					"Error.Exception.protection.flags.NotFound", "&cThe specified flag could not be found!");
 			public static final ThrowableField UNKNOWN = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_FLAGS_UNKNOWN,
 					"Error.Exception.protection.flags.Unknown",
 					"&cAn unknown error happened while trying to modify the flag. Please contact with an administrator!");
 
 		}
+
+	}
+
+	public static class PlayerGuards {
+
+		public static final ThrowableField SQL = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PLAYERGUARDS_SQL, "Error.Exception.playerGuards.SQL",
+				"&cAn unknown error happened while trying to modify the player guard on the database. Please contact with an administrator!");
 
 	}
 

@@ -58,30 +58,27 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 	@Override
 	protected ItemStack generateEntityItem(ProtectionBlock entity) {
 		Replacement[] replacements = {
-				new Replacement("{blocks_x}", () -> String.valueOf((entity.getInformation().getBlocksX() * 2) + 1)),
+				new Replacement("{blocks_x}", () -> String.valueOf((entity.getBlocksX() * 2) + 1)),
 				new Replacement("{blocks_y}",
-						() -> entity.getInformation().getBlocksY() == -1 ? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
-								: String.valueOf((entity.getInformation().getBlocksY() * 2) + 1)),
-				new Replacement("{blocks_z}", () -> String.valueOf((entity.getInformation().getBlocksZ() * 2) + 1)),
-				new Replacement("{block_id}", () -> entity.getInformation().getId()),
+						() -> entity.getBlocksY() == -1 ? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
+								: String.valueOf((entity.getBlocksY() * 2) + 1)),
+				new Replacement("{blocks_z}", () -> String.valueOf((entity.getBlocksZ() * 2) + 1)),
+				new Replacement("{block_id}", () -> entity.getId()),
 				new Replacement("{block_permission}",
-						() -> entity.getInformation().getPermission() != null ? entity.getInformation().getPermission()
-								: "&7&o---"),
+						() -> entity.getPermission() != null ? entity.getPermission() : "&7&o---"),
 				new Replacement("{block_allowed_worlds}",
-						() -> entity.getAllowedWorlds().get().size() > 0
-								? entity.getAllowedWorlds().get().stream().collect(Collectors.joining(", "))
+						() -> entity.getBlockAllowedWorlds().get().size() > 0
+								? entity.getBlockAllowedWorlds().get().stream().collect(Collectors.joining(", "))
 								: "&7&oAll"),
 				new Replacement("{block_price}",
-						() -> entity.getInformation().getPrice() != null
-								? StringsHelper.toCurrency(entity.getInformation().getPrice())
-								: "&7&o---") };
+						() -> entity.getPrice() != null ? StringsHelper.toCurrency(entity.getPrice()) : "&7&o---") };
 
 		ItemBuilder itemBuilder = ItemBuilder.inst().fromMap(getChestInventoryData().getCustomFields(), "Entity")
 				.setReplacements(replacements);
 		itemBuilder.getLore().clear();
 
 		if (entity != null) {
-			itemBuilder.fromItem(entity.getInformation().getItem());
+			itemBuilder.fromItem(entity.getItem());
 		} else {
 			itemBuilder.setMaterial(Material.PLAYER_HEAD).setAmount(1).setSkin(
 					"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=");
@@ -90,30 +87,35 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 		List<String> lore = itemBuilder.getLore().size() > 0 ? itemBuilder.getLore() : new ArrayList<>();
 		lore.addAll(getChestInventoryData().getEntityLore());
 		lore.add("&0");
-		lore.add(getChestInventoryData().getCustomFields().get(ENTITY_COPYLORELINE_PATH).toString());
+
+		Object getCopyLore = getChestInventoryData().getCustomFields().getOrDefault(ENTITY_COPYLORELINE_PATH, "");
+		if (getCopyLore != null && !getCopyLore.toString().isEmpty()) {
+			lore.add(getCopyLore.toString());
+		}
 
 		if (canEdit) {
-			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_EDITLORELINE_PATH).toString());
+			Object editLore = getChestInventoryData().getCustomFields().getOrDefault(ENTITY_EDITLORELINE_PATH, "");
+			if (editLore != null && !editLore.toString().isEmpty()) {
+				lore.add(editLore.toString());
+			}
 		}
 
 		if (canDelete) {
-			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_REMOVELORELINE_PATH).toString());
+			Object removeLore = getChestInventoryData().getCustomFields().getOrDefault(ENTITY_REMOVELORELINE_PATH, "");
+			if (removeLore != null && !removeLore.toString().isEmpty()) {
+				lore.add(removeLore.toString());
+			}
 		}
 
-		return itemBuilder.setLore(lore).apply(entity.getInformation().getItem().clone());
+		return itemBuilder.setLore(lore).apply(entity.getItem().clone());
 	}
 
 	@Override
 	protected void onEntityClick(InventoryClickEvent e, ProtectionBlock entity) {
 		if (e.getClick() == ClickType.LEFT && !e.isShiftClick()) {
-			try {
-				e.getWhoClicked().getOpenInventory().setCursor(entity.getInformation().generateItem());
-			} catch (RoyaleProtectionBlocksExceptionImpl e1) {
-				e1.sendError(getPlayer());
-				return;
-			}
+			e.getWhoClicked().getOpenInventory().setCursor(entity.generateItem());
 		} else if (e.getClick() == ClickType.SHIFT_LEFT && canEdit) {
-			new ProtectionBlockManagerInventory(getPlayer(), entity).openInventory();
+			new ProtectionBlockManageInventory(getPlayer(), entity).openInventory();
 		} else if (e.getClick() == ClickType.RIGHT && canDelete) {
 			new ConfirmationInventory(getPlayer(), () -> {
 				try {
@@ -129,6 +131,8 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 
 	@Override
 	protected void onPreUpdate() {
+		super.onPreUpdate();
+
 		canEdit = PermissionsService.BLOCKS_EDIT.hasPermission(getPlayer());
 		canCreate = PermissionsService.BLOCKS_CREATE.hasPermission(getPlayer());
 		canDelete = PermissionsService.BLOCKS_DELETE.hasPermission(getPlayer());
@@ -141,7 +145,7 @@ public class ProtectionBlocksListInventory extends PagedChestInventoryObject<Pro
 
 	@ItemExecutor("Create-block-button")
 	private void executeCreateBlockButton(Item item) {
-		new ProtectionBlockManagerInventory(getPlayer()).openInventory();
+		new ProtectionBlockManageInventory(getPlayer()).openInventory();
 
 	}
 

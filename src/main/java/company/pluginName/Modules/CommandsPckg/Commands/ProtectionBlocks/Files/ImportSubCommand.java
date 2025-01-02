@@ -2,7 +2,6 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Files;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,7 +13,7 @@ import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Utils.ProtectionBlocksUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -22,7 +21,6 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
@@ -38,20 +36,18 @@ import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 		defaultDescription = "Import all the information of an specific type of data from its respective file",
 		defaultUsage = "<blocks>",
 		defaultPermission = "protectionblocks.files.import",
-		defaultAliases = "i"
-)
+		defaultAliases = "i")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class ImportSubCommand extends PandaSubCommand {
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static ProtectionBlocksService protectionBlocksService;
@@ -71,13 +67,12 @@ public class ImportSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
-		switch (args.length) {
-		case 1:
+	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
+		switch (argIndex) {
+		case 0:
 			return DATA_TO_IMPORT_NAMES;
-		default:
-			return Collections.emptyList();
 		}
+		return super.generateAutocompleteList(sender, argIndex);
 	}
 
 	@Override
@@ -115,9 +110,8 @@ public class ImportSubCommand extends PandaSubCommand {
 									try {
 										protectionsService.getProtectionsByWorld().values()
 												.forEach(protections -> protections.stream()
-														.filter(protection -> protection.getProtectionBlock()
-																.getIdentifier()
-																.equals(pair.getFirst().getInformation().getId())
+														.filter(protection -> protection.getProtectionBlockId()
+																.equals(pair.getFirst().getId())
 																&& protection.getUtils().isProtectionBlockShown())
 														.forEach(prot -> {
 															prot.getUtils().hideProtectionBlock();
@@ -146,9 +140,8 @@ public class ImportSubCommand extends PandaSubCommand {
 							MessageTemplate.inst(Messages.MESSAGE_FILES_IMPORTEDWARNING.applyPrefix()).process()
 									.sendMessage(sender);
 							exceptions.forEach(pair -> {
-								MessageTemplate.inst(String.format("&8- &c%s: &e%s",
-										pair.getFirst().getInformation().getId(), pair.getSecond().getMessage()))
-										.process().sendMessage(sender);
+								MessageTemplate.inst(String.format("&8- &c%s: &e%s", pair.getFirst().getId(),
+										pair.getSecond().getMessage())).process().sendMessage(sender);
 								pair.getSecond().printStackTrace();
 							});
 						}

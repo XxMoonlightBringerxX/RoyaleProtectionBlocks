@@ -3,8 +3,8 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -25,19 +25,14 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 		pathName = "Leave",
 		defaultName = "leave",
 		defaultDescription = "Leave a protection, stop being an owner or a member",
-		defaultAliases = "l"
-)
+		defaultAliases = "l")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true
-)
+		permission = true)
 public class LeaveSubCommand extends PandaSubCommand {
-
-	@PandaInject
-	private static ProtectionsService protectionsService;
 
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
@@ -50,7 +45,8 @@ public class LeaveSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
+			Protection protection = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+					.findProtectionParentByLocation(pl.getLocation());
 			if (protection != null) {
 				if (!protection.isMainOwner(pl.getUniqueId())) {
 					try {

@@ -30,17 +30,14 @@ public class ProtectionBlockAllowedWorldsInventory extends PagedChestInventoryOb
 
 	@Override
 	protected String getTitle() {
-		return MessageTemplate.inst(super.getTitle())
-				.setReplacements(new Replacement("{block}",
-						() -> protectionBlock.getInformation().getId() != null
-								? protectionBlock.getInformation().getId()
-								: "???"))
+		return MessageTemplate.inst(super.getTitle()).setReplacements(
+				new Replacement("{block}", () -> protectionBlock.getId() != null ? protectionBlock.getId() : "???"))
 				.process().toString();
 	}
 
 	@Override
 	protected List<String> getEntityList() {
-		return new ArrayList<>(protectionBlock.getAllowedWorlds().get());
+		return new ArrayList<>(protectionBlock.getBlockAllowedWorlds().get());
 	}
 
 	@Override
@@ -52,7 +49,7 @@ public class ProtectionBlockAllowedWorldsInventory extends PagedChestInventoryOb
 	@Override
 	protected void onEntityClick(InventoryClickEvent e, String entity) {
 		new ConfirmationInventory(getPlayer(), () -> {
-			protectionBlock.getAllowedWorlds().remove(entity);
+			protectionBlock.getBlockAllowedWorlds().remove(entity);
 			updateEntityList();
 		}).openInventory();
 	}
@@ -66,7 +63,7 @@ public class ProtectionBlockAllowedWorldsInventory extends PagedChestInventoryOb
 	private void executeSearchButton() {
 		new SearchWorldsInventory(getPlayer(), world -> {
 			if (world != null) {
-				protectionBlock.getAllowedWorlds().add(world.getName());
+				protectionBlock.getBlockAllowedWorlds().add(world.getName());
 				updateEntityList();
 			}
 

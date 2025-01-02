@@ -18,14 +18,14 @@ public class DiscordListener implements Listener {
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionCreation(ProtectionCreationEvent e) {
 		if (e.getCause() == CreationCause.PLAYER) {
-			DiscordUtilities.sendProtectionRegisteredMessage(e.getPlayer(), (Protection) e.getProtection());
+			DiscordUtilities.sendProtectionRegisteredMessage(e.getExecutor(), (Protection) e.getProtection());
 		}
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionRemoval(ProtectionRemovalEvent e) {
 		if (e.getCause() == RemovalCause.PLAYER || e.getCause() == RemovalCause.AUTO_PURGE) {
-			DiscordUtilities.sendProtectionUnregisteredMessage(e.getPlayer(), (Protection) e.getProtection(),
+			DiscordUtilities.sendProtectionUnregisteredMessage(e.getExecutor(), (Protection) e.getProtection(),
 					e.getCause());
 		}
 	}

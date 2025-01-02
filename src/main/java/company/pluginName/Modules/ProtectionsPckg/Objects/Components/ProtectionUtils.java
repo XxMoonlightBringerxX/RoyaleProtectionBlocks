@@ -4,12 +4,12 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.WorldUtilities;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
 
@@ -36,22 +36,20 @@ public class ProtectionUtils {
 
 	public void regenerateProtectionArea() {
 		Location location = protection.getBukkitLocation();
-		ProtectionBlock protectionBlock = protection.getProtectionBlock().getObject();
+		IProtectionBlock protectionBlock = protection.getProtectionBlock();
 
 		if (protectionBlock != null) {
 			Location minLocation = new Location(location.getWorld(),
-					location.getBlockX() - protectionBlock.getInformation().getBlocksX(),
-					protectionBlock.getInformation().getBlocksY() != -1
-							? location.getBlockY() - protectionBlock.getInformation().getBlocksY()
+					location.getBlockX() - protectionBlock.getBlocksX(),
+					protectionBlock.getBlocksY() != -1 ? location.getBlockY() - protectionBlock.getBlocksY()
 							: WorldUtilities.getMinHeight(location.getWorld()),
-					location.getBlockZ() - protectionBlock.getInformation().getBlocksZ());
+					location.getBlockZ() - protectionBlock.getBlocksZ());
 
 			Location maxLocation = new Location(location.getWorld(),
-					location.getBlockX() + protectionBlock.getInformation().getBlocksX() + 1,
-					protectionBlock.getInformation().getBlocksY() != -1
-							? location.getBlockY() + protectionBlock.getInformation().getBlocksY() + 1
+					location.getBlockX() + protectionBlock.getBlocksX() + 1,
+					protectionBlock.getBlocksY() != -1 ? location.getBlockY() + protectionBlock.getBlocksY() + 1
 							: location.getWorld().getMaxHeight(),
-					location.getBlockZ() + protectionBlock.getInformation().getBlocksZ() + 1);
+					location.getBlockZ() + protectionBlock.getBlocksZ() + 1);
 
 			this.protectionArea = SimpleLocationArea.of(minLocation, maxLocation);
 			this.protectionAreaWithoutBorder = new SimpleLocationArea(this.protectionArea.getWorldName(),
@@ -102,13 +100,13 @@ public class ProtectionUtils {
 				return false;
 			}
 
-			ProtectionBlock protectionBlock = this.protection.getProtectionBlock().getObject();
+			IProtectionBlock protectionBlock = this.protection.getProtectionBlock();
 
 			if (protectionBlock == null) {
 				return true;
 			}
 
-			return protectionBlock.getInformation().isSameType(simpleLocation.toLocation().getBlock());
+			return protectionBlock.isSameType(simpleLocation.toLocation().getBlock());
 		}
 		return false;
 	}
@@ -119,7 +117,7 @@ public class ProtectionUtils {
 
 	public void showProtectionBlock() {
 		Block block = this.protection.getBukkitLocation().getBlock();
-		ItemStack item = this.protection.getProtectionBlock().getObject().getInformation().getItem();
+		ItemStack item = this.protection.getProtectionBlock().getItem();
 
 		ProtectionUtilities.showBlock(block, item);
 	}

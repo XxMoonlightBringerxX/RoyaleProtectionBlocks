@@ -8,8 +8,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
@@ -23,18 +25,24 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0000Init;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0001DeleteAutoPurgeLogsTable;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0002AddGuardSystem;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0003AddPriceColumn;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0004AddPublicAccessColumn;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Annotations.PandaSQLConfigV2;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Changelogs.SQLChangelog;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.DeleteStatement;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.InsertStatement;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.SelectStatement;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.UpdateStatement;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.Conditions.AndCondition;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.Conditions.EqualsCondition;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.Conditions.LowerThanCondition;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Column;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Table;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Services.PandaSQLService;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 
 @PandaSQLConfigV2(allowMySQL = true)
@@ -53,7 +61,10 @@ public class SQLService extends PandaSQLService {
 			new Column("LocationY", Types.INTEGER).setNotNull(false),
 			new Column("LocationZ", Types.INTEGER).setNotNull(false),
 			new Column("Blocked", Types.BOOLEAN).setNotNull(false),
-			new Column("BlockReason", Types.VARCHAR, "VARCHAR(64)").setNotNull(false));
+			new Column("BlockReason", Types.VARCHAR, "VARCHAR(64)").setNotNull(false),
+			new Column("GuardExpirationDate", Types.BIGINT).setNotNull(false),
+			new Column("Price", Types.DECIMAL, "DECIMAL(12, 2)").setNotNull(false),
+			new Column("PublicAccess", Types.BOOLEAN, "BOOLEAN", "0").setNotNull(true));
 
 	private static final Table PROTECTION_BANNEDS_TABLE = new Table("ProtectionBanneds").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
@@ -76,12 +87,16 @@ public class SQLService extends PandaSQLService {
 			.addColumns(new Column("ProtectionBlockId", Types.VARCHAR, "VARCHAR(32)").setNotNull(true),
 					new Column("WorldName", Types.VARCHAR, "VARCHAR(256)"));
 
+	private static final Table PLAYER_GUARDS_TABLE = new Table("PlayerGuards").addColumns(
+			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setPrimary(true).setNotNull(true),
+			new Column("GuardExpirationDate", Types.BIGINT, "VARCHAR(256)").setNotNull(true));
+
 	static {
-		PROTECTIONS_TABLE
-				.addUniqueConstraint(new Table.UniqueConstraint().addColumns(PROTECTIONS_TABLE.getColumn("DisplayName"),
-						PROTECTIONS_TABLE.getColumn("OwnerUuid")))
-				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTIONS_TABLE.getColumn("ParentRegionId")));
+		PROTECTIONS_TABLE.addUniqueConstraint(new Table.UniqueConstraint()
+				.addColumns(PROTECTIONS_TABLE.getColumn("DisplayName"), PROTECTIONS_TABLE.getColumn("OwnerUuid")))
+				.addForeignConstraint(
+						new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("ParentRegionId"))
+								.addReferenceColumn(PROTECTIONS_TABLE.getColumn("RegionId")));
 
 		PROTECTION_BANNEDS_TABLE
 				.addUniqueConstraint(
@@ -105,7 +120,9 @@ public class SQLService extends PandaSQLService {
 
 	@Override
 	public Collection<SQLChangelog> getSQLChangelogs() {
-		return Arrays.asList(new Changelog0000Init(), new Changelog0001DeleteAutoPurgeLogsTable());
+		return Arrays.asList(new Changelog0000Init(), new Changelog0001DeleteAutoPurgeLogsTable(),
+				new Changelog0002AddGuardSystem(), new Changelog0003AddPriceColumn(),
+				new Changelog0004AddPublicAccessColumn());
 	}
 
 	/*
@@ -124,6 +141,10 @@ public class SQLService extends PandaSQLService {
 				protection = new Protection(set.getString("RegionId"), UUID.fromString(set.getString("ownerUuid")),
 						new ReferencedProtectionBlock(set.getString("ProtectionBlockId")), set.getString("WorldName"),
 						set.getString("DisplayName"), createdDate > 0 ? createdDate : System.currentTimeMillis());
+
+				protection.setGuardExpirationDate(set.getLong("GuardExpirationDate"));
+				protection.setPrice(set.getDouble("Price"));
+				protection.setPublicAccess(set.getBoolean("PublicAccess"));
 
 				if (set.getString("ParentRegionId") != null) {
 					parentProtections.computeIfAbsent(set.getString("ParentRegionId"), (key) -> new ArrayList<>())
@@ -163,9 +184,16 @@ public class SQLService extends PandaSQLService {
 			e.printStackTrace();
 		}
 
-		protections.stream().filter(parentProtection -> parentProtections.containsKey(parentProtection.getRegionId()))
-				.forEach(parentProtection -> parentProtections.get(parentProtection.getRegionId())
-						.forEach(protection -> protection.setParentProtectionInstance(parentProtection)));
+		protections.stream()
+				.filter(parentProtection -> parentProtections.containsKey(parentProtection.getProtectionId()))
+				.forEach(parentProtection -> parentProtections.get(parentProtection.getProtectionId())
+						.forEach(protection -> {
+							try {
+								protection.setParentProtectionInstance(parentProtection);
+							} catch (RoyaleProtectionBlocksExceptionImpl e) {
+								e.sendError(Bukkit.getConsoleSender());
+							}
+						}));
 
 		return protections;
 	}
@@ -174,20 +202,22 @@ public class SQLService extends PandaSQLService {
 		InsertStatement insertStatement = InsertStatement
 				.inst(PROTECTIONS_TABLE, "RegionId", "ParentRegionId", "OwnerUuid", "ProtectionBlockId", "DisplayItem",
 						"WorldName", "DisplayName", "CreatedDate", "LocationX", "LocationY", "LocationZ", "Blocked",
-						"BlockReason")
-				.addEntry(protection.getRegionId(),
-						(protection.getParentProtection() != protection ? protection.getParentProtection().getRegionId()
+						"BlockReason", "NonExpirable", "GuardExpirationDate", "Price", "PublicAcess")
+				.addEntry(protection.getProtectionId(),
+						(protection.getParentProtection() != protection
+								? protection.getParentProtection().getProtectionId()
 								: null),
-						protection.getOwnerUuid().toString(), protection.getProtectionBlockIdentifier(),
+						protection.getOwnerUuid().toString(), protection.getProtectionBlockId(),
 						(protection.getDisplayItem() != null
 								? ItemStacksUtils.itemsParse(new ItemStack[] { protection.getDisplayItem().get() })
 								: null),
 						protection.getWorldName(), protection.getDisplayName(), protection.getCreatedDate(),
 						protection.getLocation().getX(), protection.getLocation().getY(),
 						protection.getLocation().getZ(), protection.isBlocked(),
-						(protection.getBlockReason() != null ? protection.getBlockReason().name() : null))
+						(protection.getBlockReason() != null ? protection.getBlockReason().name() : null),
+						protection.getGuardExpirationDate(), protection.getPrice(), protection.isPublicAccess())
 				.setConditionIfExists(
-						EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getRegionId()));
+						EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getProtectionId()));
 
 		try {
 			this.getSqlConnection().executeInsert(insertStatement);
@@ -196,12 +226,86 @@ public class SQLService extends PandaSQLService {
 		}
 	}
 
+	public void saveParentProtection(IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		IProtection parent = protection.getParentProtection();
+		try {
+			this.getSqlConnection()
+					.executeUpdate(UpdateStatement.inst(PROTECTIONS_TABLE)
+							.addValue(PROTECTIONS_TABLE.getColumn("ParentRegionId"),
+									parent != protection ? parent.getProtectionId() : null)
+							.setCondition(EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"),
+									protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.SQL.generateException(e);
+		}
+	}
+
+	public void saveBlockStatus(IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeUpdate(UpdateStatement.inst(PROTECTIONS_TABLE)
+							.addValue(PROTECTIONS_TABLE.getColumn("Blocked"), protection.isBlocked())
+							.addValue(PROTECTIONS_TABLE.getColumn("BlockReason"),
+									protection.isBlocked() ? protection.getBlockReason().name() : null)
+							.setCondition(EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"),
+									protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.SQL.generateException(e);
+		}
+	}
+
+	public void saveOwnerUuid(IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeUpdate(UpdateStatement.inst(PROTECTIONS_TABLE)
+							.addValue(PROTECTIONS_TABLE.getColumn("OwnerUuid"), protection.getOwnerUuid().toString())
+							.setCondition(EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"),
+									protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.SQL.generateException(e);
+		}
+	}
+
+	public void savePrice(IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection().executeUpdate(UpdateStatement.inst(PROTECTIONS_TABLE)
+					.addValue(PROTECTIONS_TABLE.getColumn("Price"), protection.getPrice()).setCondition(EqualsCondition
+							.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.SQL.generateException(e);
+		}
+	}
+
+	public void savePublicAccess(IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeUpdate(UpdateStatement.inst(PROTECTIONS_TABLE)
+							.addValue(PROTECTIONS_TABLE.getColumn("PublicAccess"), protection.isPublicAccess())
+							.setCondition(EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"),
+									protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.SQL.generateException(e);
+		}
+	}
+
 	public void deleteProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		try {
 			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTIONS_TABLE).setCondition(
-					EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getRegionId())));
+					EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Delete.SQL.generateException(e);
+		}
+	}
+
+	public void saveProtectionGuardExpirationDate(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		InsertStatement insertStatement = InsertStatement.inst(PROTECTIONS_TABLE, "GuardExpirationDate")
+				.addEntry(protection.getGuardExpirationDate()).setConditionIfExists(
+						EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getProtectionId()));
+
+		try {
+			this.getSqlConnection().executeInsert(insertStatement);
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Save.SQL.generateException(e);
 		}
 	}
 
@@ -233,7 +337,7 @@ public class SQLService extends PandaSQLService {
 	public void saveProtectionBanneds(Protection protection, List<UUID> bannedUuids)
 			throws RoyaleProtectionBlocksExceptionImpl {
 		InsertStatement insert = InsertStatement.inst(PROTECTION_BANNEDS_TABLE);
-		bannedUuids.forEach(bannedUuid -> insert.addEntry(protection.getRegionId(), bannedUuid.toString()));
+		bannedUuids.forEach(bannedUuid -> insert.addEntry(protection.getProtectionId(), bannedUuid.toString()));
 
 		try {
 			this.getSqlConnection().executeInsert(insert);
@@ -249,7 +353,7 @@ public class SQLService extends PandaSQLService {
 					.executeDelete(DeleteStatement.inst(PROTECTION_BANNEDS_TABLE)
 							.setCondition(AndCondition.inst(
 									EqualsCondition.inst(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"),
-											protection.getRegionId()),
+											protection.getProtectionId()),
 									EqualsCondition.inst(PROTECTION_BANNEDS_TABLE.getColumn("BannedUuid"),
 											bannedUuid.toString()))));
 		} catch (Throwable e) {
@@ -259,8 +363,9 @@ public class SQLService extends PandaSQLService {
 
 	public void deleteProtectionBanneds(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		try {
-			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTION_BANNEDS_TABLE).setCondition(
-					EqualsCondition.inst(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"), protection.getRegionId())));
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_BANNEDS_TABLE).setCondition(EqualsCondition
+							.inst(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Banneds.Delete.SQL.generateException(e);
 		}
@@ -309,13 +414,12 @@ public class SQLService extends PandaSQLService {
 	public void saveProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksExceptionImpl {
 		InsertStatement insertStatement = InsertStatement
 				.inst(PROTECTION_BLOCKS_TABLE, "Id", "Item", "BlocksX", "BlocksY", "BlocksZ", "Permission", "Price")
-				.addEntry(protectionBlock.getInformation().getId(),
-						ItemStacksUtils.itemsParse(new ItemStack[] { protectionBlock.getInformation().getItem() }),
-						protectionBlock.getInformation().getBlocksX(), protectionBlock.getInformation().getBlocksY(),
-						protectionBlock.getInformation().getBlocksZ(), protectionBlock.getInformation().getPermission(),
-						protectionBlock.getInformation().getPrice())
-				.setConditionIfExists(EqualsCondition.inst(PROTECTION_BLOCKS_TABLE.getColumn("Id"),
-						protectionBlock.getInformation().getId()));
+				.addEntry(protectionBlock.getId(),
+						ItemStacksUtils.itemsParse(new ItemStack[] { protectionBlock.getItem() }),
+						protectionBlock.getBlocksX(), protectionBlock.getBlocksY(), protectionBlock.getBlocksZ(),
+						protectionBlock.getPermission(), protectionBlock.getPrice())
+				.setConditionIfExists(
+						EqualsCondition.inst(PROTECTION_BLOCKS_TABLE.getColumn("Id"), protectionBlock.getId()));
 
 		try {
 			this.getSqlConnection().executeInsert(insertStatement);
@@ -323,15 +427,15 @@ public class SQLService extends PandaSQLService {
 					.executeDelete(DeleteStatement.inst(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE)
 							.setCondition(EqualsCondition.inst(
 									PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("ProtectionBlockId"),
-									protectionBlock.getInformation().getId())));
+									protectionBlock.getId())));
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Blocks.Save.SQL.generateException(e);
 		}
 
-		if (!protectionBlock.getAllowedWorlds().get().isEmpty()) {
+		if (!protectionBlock.getBlockAllowedWorlds().get().isEmpty()) {
 			InsertStatement worldsInsertStatement = InsertStatement.inst(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE);
-			protectionBlock.getAllowedWorlds().get().forEach(allowedWorld -> worldsInsertStatement
-					.addEntry(protectionBlock.getInformation().getId(), allowedWorld));
+			protectionBlock.getBlockAllowedWorlds().get()
+					.forEach(allowedWorld -> worldsInsertStatement.addEntry(protectionBlock.getId(), allowedWorld));
 
 			try {
 				this.getSqlConnection().executeInsert(worldsInsertStatement);
@@ -343,16 +447,15 @@ public class SQLService extends PandaSQLService {
 
 	public void deleteProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksExceptionImpl {
 		try {
-			this.getSqlConnection()
-					.executeDelete(DeleteStatement.inst(PROTECTION_BLOCKS_TABLE).setCondition(EqualsCondition
-							.inst(PROTECTION_BLOCKS_TABLE.getColumn("Id"), protectionBlock.getInformation().getId())));
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTION_BLOCKS_TABLE).setCondition(
+					EqualsCondition.inst(PROTECTION_BLOCKS_TABLE.getColumn("Id"), protectionBlock.getId())));
 			this.getSqlConnection()
 					.executeDelete(DeleteStatement.inst(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE)
 							.setCondition(EqualsCondition.inst(
 									PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("ProtectionBlockId"),
-									protectionBlock.getInformation().getId())));
-			this.getSqlConnection().executeDelete(DeleteStatement.inst(RECIPES_TABLE).setCondition(EqualsCondition
-					.inst(RECIPES_TABLE.getColumn("ProtectionBlockId"), protectionBlock.getInformation().getId())));
+									protectionBlock.getId())));
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(RECIPES_TABLE).setCondition(
+					EqualsCondition.inst(RECIPES_TABLE.getColumn("ProtectionBlockId"), protectionBlock.getId())));
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Blocks.Delete.SQL.generateException(e);
 		}
@@ -385,10 +488,10 @@ public class SQLService extends PandaSQLService {
 
 	public void saveRecipe(Recipe recipe) throws RoyaleProtectionBlocksExceptionImpl {
 		InsertStatement insertStatement = InsertStatement.inst(RECIPES_TABLE)
-				.addEntry(recipe.getProtectionBlock().getObject().getInformation().getId(),
+				.addEntry(recipe.getProtectionBlock().getObject().getId(),
 						ItemStacksUtils.itemsParse(recipe.getRecipe()), recipe.getPermission())
 				.setConditionIfExists(EqualsCondition.inst(RECIPES_TABLE.getColumn("ProtectionBlockId"),
-						recipe.getProtectionBlock().getObject().getInformation().getId()));
+						recipe.getProtectionBlock().getObject().getId()));
 
 		try {
 			this.getSqlConnection().executeInsert(insertStatement);
@@ -399,12 +502,63 @@ public class SQLService extends PandaSQLService {
 
 	public void deleteRecipe(Recipe recipe) throws RoyaleProtectionBlocksExceptionImpl {
 		try {
-			this.getSqlConnection()
-					.executeDelete(DeleteStatement.inst(RECIPES_TABLE)
-							.setCondition(EqualsCondition.inst(RECIPES_TABLE.getColumn("ProtectionBlockId"),
-									recipe.getProtectionBlock().getObject().getInformation().getId())));
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(RECIPES_TABLE).setCondition(EqualsCondition.inst(
+					RECIPES_TABLE.getColumn("ProtectionBlockId"), recipe.getProtectionBlock().getObject().getId())));
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Blocks.Delete.SQL.generateException(e);
+		}
+	}
+
+	/*
+	 * Guard methods
+	 */
+
+	public Map<UUID, Long> getPlayerGuards() {
+		Map<UUID, Long> playerGuards = new HashMap<>();
+
+		try (ResultSet set = this.getSqlConnection()
+				.executeQuery(SelectStatement.inst().addTable(PLAYER_GUARDS_TABLE))) {
+			while (set.next()) {
+				playerGuards.put(UUID.fromString(set.getString("PlayerUuid")), set.getLong("GuardExpirationDate"));
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+
+		return playerGuards;
+	}
+
+	public void clearExpiredPlayerGuard() throws RoyaleProtectionBlocksExceptionImpl {
+		DeleteStatement deleteStatement = DeleteStatement.inst(PLAYER_GUARDS_TABLE).setCondition(LowerThanCondition
+				.inst(PLAYER_GUARDS_TABLE.getColumn("GuardExpirationDate"), System.currentTimeMillis()));
+
+		try {
+			this.getSqlConnection().executeDelete(deleteStatement);
+		} catch (Throwable e) {
+			throw Exceptions.PlayerGuards.SQL.generateException(e);
+		}
+	}
+
+	public void savePlayerGuard(UUID playerUuid, long guardExpirationDate) throws RoyaleProtectionBlocksExceptionImpl {
+		InsertStatement insertStatement = InsertStatement.inst(PLAYER_GUARDS_TABLE)
+				.addEntry(playerUuid.toString(), guardExpirationDate).setConditionIfExists(
+						EqualsCondition.inst(PLAYER_GUARDS_TABLE.getColumn("PlayerUuid"), playerUuid.toString()));
+
+		try {
+			this.getSqlConnection().executeInsert(insertStatement);
+		} catch (Throwable e) {
+			throw Exceptions.PlayerGuards.SQL.generateException(e);
+		}
+	}
+
+	public void deletePlayerGuard(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+		DeleteStatement deleteStatement = DeleteStatement.inst(PLAYER_GUARDS_TABLE)
+				.setCondition(EqualsCondition.inst(PLAYER_GUARDS_TABLE.getColumn("PlayerUuid"), playerUuid.toString()));
+
+		try {
+			this.getSqlConnection().executeDelete(deleteStatement);
+		} catch (Throwable e) {
+			throw Exceptions.PlayerGuards.SQL.generateException(e);
 		}
 	}
 

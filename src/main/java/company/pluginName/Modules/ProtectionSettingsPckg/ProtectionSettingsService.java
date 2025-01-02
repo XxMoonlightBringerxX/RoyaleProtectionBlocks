@@ -8,8 +8,10 @@ import org.bukkit.Location;
 import org.bukkit.World;
 
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
+import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin.SetSpawnSubCommand;
 import company.pluginName.Modules.FilePckg.FilesService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
@@ -19,6 +21,7 @@ import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
 import darkpanda73.PandaUtils.PandaYaml.Exceptions.YamlException;
 import darkpanda73.PandaUtils.PandaYaml.Objects.YamlSection;
 import darkpanda73.PandaUtils.PandaYaml.Objects.Data.YamlData;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.PandaCommandsService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.Getter;
 import lombok.NonNull;
@@ -31,6 +34,9 @@ public class ProtectionSettingsService {
 
 	@PandaInject
 	private WorldGuardAPI worldGuardApi;
+
+	@PandaInject
+	private PandaCommandsService commandsService;
 
 	private @Getter Location spawn = null;
 
@@ -73,7 +79,9 @@ public class ProtectionSettingsService {
 
 			if (this.spawn == null) {
 				MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(
-						"No spawn setting could be found available in the current configuration. Using the first world spawn as the plugin spawn. Use '/pb setspawn' in-game to set a new spawn for the plugin which will be used as location on kicks or bans in protections."))
+						"No spawn setting could be found available in the current configuration. Using the first world spawn as the plugin spawn. Use '{command}' in-game to set a new spawn for the plugin which will be used as location on kicks or bans in protections."))
+						.setReplacements(new Replacement("{command}",
+								() -> commandsService.getSubCommandByClass(SetSpawnSubCommand.class).getCommandUsage()))
 						.process().sendMessage(Bukkit.getConsoleSender());
 
 				this.spawn = Bukkit.getWorlds().get(0).getSpawnLocation();

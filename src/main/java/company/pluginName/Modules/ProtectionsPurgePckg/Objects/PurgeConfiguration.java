@@ -1,18 +1,24 @@
 package company.pluginName.Modules.ProtectionsPurgePckg.Objects;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Stream;
 
+import company.pluginName.Modules.PlayerGuardPckg.PlayerGuardService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Utils.TimeUtils;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @Data
 @Accessors(chain = true)
 public class PurgeConfiguration {
+
+	@PandaInject
+	private static PlayerGuardService playerGuardService;
 
 	public static final long DAYS_IN_MILLIS = 86400000;
 	public static final long HOURS_IN_MILLIS = 3600000;
@@ -22,7 +28,6 @@ public class PurgeConfiguration {
 	private int hours = 0;
 	private int days = 0;
 	private long millis = 0;
-	private BasedOn basedOn = BasedOn.PLAYER_LAST_TIME;
 	private boolean showIgnoredPlayers = false;
 
 	public void copy(PurgeConfiguration configuration) {
@@ -30,7 +35,6 @@ public class PurgeConfiguration {
 		this.hours = configuration.hours;
 		this.days = configuration.days;
 		this.millis = configuration.millis;
-		this.basedOn = configuration.basedOn;
 	}
 
 	public String toString() {
@@ -39,32 +43,29 @@ public class PurgeConfiguration {
 
 	public long getRemainingTime(IProtection protection) {
 		long currentTime = System.currentTimeMillis();
-		long olderThan = currentTime - (days * DAYS_IN_MILLIS) - (hours * HOURS_IN_MILLIS) - (hours * MINUTES_IN_MILLIS)
-				- millis;
+		long purgeTime = (days * DAYS_IN_MILLIS) + (hours * HOURS_IN_MILLIS) + (hours * MINUTES_IN_MILLIS) + millis;
+		long olderThan = currentTime - purgeTime;
 
-		switch (basedOn) {
-		case PLAYER_LAST_TIME:
-			return Math.max(protection.getOwnerLastPlayed() - olderThan, 0);
-		case REGION_CREATED_DATE:
-			return Math.max(protection.getCreatedDate() - olderThan, 0);
-		}
-		return Long.MAX_VALUE;
+		long guardExpirationDate = Math.max(protection.getGuardExpirationDate(),
+				playerGuardService.getGuardExpirationDate(protection.getOwnerUuid()));
+
+		return Math.max(Math.max(protection.getOwnerLastPlayed(), guardExpirationDate - purgeTime) - olderThan, 0);
 	}
 
 	public Stream<Pair<Protection, Long>> getRemainingTime(Collection<Protection> protections) {
-		return protections.stream().map(protection -> {
-			long currentTime = System.currentTimeMillis();
-			long olderThan = currentTime - (days * DAYS_IN_MILLIS) - (hours * HOURS_IN_MILLIS)
-					- (hours * MINUTES_IN_MILLIS) - millis;
+		long currentTime = System.currentTimeMillis();
+		long purgeTime = (days * DAYS_IN_MILLIS) + (hours * HOURS_IN_MILLIS) + (hours * MINUTES_IN_MILLIS) + millis;
+		long olderThan = currentTime - purgeTime;
 
-			switch (basedOn) {
-			case PLAYER_LAST_TIME:
-				return Pair.of(protection, Math.max(protection.getOwnerLastPlayed() - olderThan, 0));
-			case REGION_CREATED_DATE:
-				return Pair.of(protection, Math.max(protection.getCreatedDate() - olderThan, 0));
-			}
-			return Pair.of(protection, Long.MAX_VALUE);
-		});
+		return protections.stream().map(protection -> {
+			IProtection prot = protection.getParentProtection();
+
+			long guardExpirationDate = Math.max(prot.getGuardExpirationDate(),
+					playerGuardService.getGuardExpirationDate(prot.getOwnerUuid()));
+
+			return Pair.of(protection,
+					Math.max(Math.max(prot.getOwnerLastPlayed(), guardExpirationDate - purgeTime) - olderThan, 0));
+		}).filter(Objects::nonNull);
 	}
 
 	public static enum BasedOn {

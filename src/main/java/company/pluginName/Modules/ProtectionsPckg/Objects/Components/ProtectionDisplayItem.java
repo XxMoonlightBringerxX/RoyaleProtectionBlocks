@@ -7,7 +7,6 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
-import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.SQLPckg.SQLService;
@@ -18,6 +17,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
 
 @RequiredArgsConstructor
 public class ProtectionDisplayItem {
@@ -103,9 +103,9 @@ public class ProtectionDisplayItem {
 			return this.displayItem.clone();
 		} else {
 			if (this.protectionBlockDisplayItem == null) {
-				ProtectionBlock block = this.protection.getProtectionBlock().getObject();
+				IProtectionBlock block = this.protection.getProtectionBlock();
 				if (block != null) {
-					this.protectionBlockDisplayItem = block.getInformation().getItem().clone();
+					this.protectionBlockDisplayItem = block.getItem().clone();
 				}
 			}
 

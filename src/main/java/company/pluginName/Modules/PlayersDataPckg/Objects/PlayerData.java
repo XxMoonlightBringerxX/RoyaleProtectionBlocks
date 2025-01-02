@@ -9,11 +9,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
-import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoubleField;
@@ -26,7 +24,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.CachedQuery;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -41,15 +40,13 @@ public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataM
 	private static final PandaDoubleField SETTINGS_PROTECTION_TELEPORTSTAYSTILLFORSECONDS = new PandaDoubleField(
 			"Settings.Protection.Teleport-stay-still-for-seconds", 0D);
 
-	@PandaInject
-	private static ProtectionsService protectionsService;
-
 	private @Setter(AccessLevel.NONE) Pair<Protection, Long> lastTeleport;
 	private @Setter(AccessLevel.NONE) @Getter(AccessLevel.NONE) BukkitTask task;
-	private List<Protection> currentProtections = new ArrayList<>();
+	private List<? extends IProtection> currentProtections = new ArrayList<>();
 
-	private SimpleLocationArea cachedArea;
-	private List<Protection> cachedProtections;
+	private CachedQuery<?> lastCachedQuery;
+	private long lastBlockedProtectionMessage = 0L;
+	private boolean staffMode = false;
 
 	public PlayerData(UUID uuid) {
 		super(uuid);

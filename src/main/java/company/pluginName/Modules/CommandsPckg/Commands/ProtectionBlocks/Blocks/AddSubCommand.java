@@ -20,7 +20,6 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
@@ -36,16 +35,14 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 		defaultDescription = "Create a new block",
 		defaultUsage = "<id> <x> <y> <z> [permission]",
 		defaultPermission = "protectionblocks.blocks.create",
-		defaultAliases = "a"
-)
+		defaultAliases = "a")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class AddSubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -59,20 +56,20 @@ public class AddSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
-		switch (args.length) {
-		case 1:
+	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
+		switch (argIndex) {
+		case 0:
 			return Arrays.asList("<id>");
-		case 2:
+		case 1:
 			return Arrays.asList("<x>");
-		case 3:
+		case 2:
 			return Arrays.asList("<y>");
-		case 4:
+		case 3:
 			return Arrays.asList("<z>");
-		case 5:
+		case 4:
 			return Arrays.asList("[permission]");
 		default:
-			return super.tabComplete(cmd, sender, args);
+			return super.generateAutocompleteList(sender, argIndex);
 		}
 	}
 
@@ -107,7 +104,7 @@ public class AddSubCommand extends PandaSubCommand {
 										parameters.getParameters().get(0).toLowerCase(), protectionBlockItemstack,
 										x / 2, (y == -1 ? y : y / 2), z / 2, permission, null));
 
-								protectionBlockItemstack = protectionBlock.getInformation().generateItem();
+								protectionBlockItemstack = protectionBlock.generateItem();
 
 								protectionBlock.save(pl);
 								protectionBlockItemstack.setAmount(i.getAmount());

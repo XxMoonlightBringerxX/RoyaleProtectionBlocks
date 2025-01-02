@@ -1,60 +1,139 @@
-package company.pluginName.API.Services;
+package company.pluginName.Modules.PlayerInteractionsPckg;
+
+import java.util.Arrays;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
-import company.pluginName.Debugger;
-import company.pluginName.Debugger.MessageType;
+import company.pluginName.MainPluginClass;
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManageInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
+import company.pluginName.Bukkit.Inventories.Shared.WarningInventory;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Features.PvPPckg.Utils.CombatLogHookUtilities;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
+import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
+import company.pluginName.Utils.EconomyUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
+import darkpanda73.PandaUtils.Services.PandaEconomiesModule.Enums.EconomyService;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
+import lombok.Getter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
+import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.CreationCause;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionMergeAttemptEvent;
-import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionRemovalAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionSplitAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException.Type;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionCreationRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionHideBlockRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionKickRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionMergeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionPriorityChangeRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionPurchaseRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRemovalRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRenameRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSellRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSetHomeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionShowBlockRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSplitRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTeleportHomeRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTogglePublicAccessRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTransferRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Banneds.ProtectionBannedAddRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Banneds.ProtectionBannedRemoveRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberAddRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberRemoveRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerAddRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerRemoveRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionCreationData;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionRemovalData;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionTransferData;
 
-@PandaService
+@PandaService(priority = 1001)
 public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
+	@RegisteredPandaField("lang")
+	private static final PandaStringField MESSAGE_TELEPORT_UNSAFEWARNINGTITLE = new PandaStringField(
+			"Message.Teleport.Unsafe-warning-title", "&cUnsafe location");
+	@RegisteredPandaField("lang")
+	private static final PandaStringListField MESSAGE_TELEPORT_UNSAFEWARNINGDESCRIPTION = new PandaStringListField(
+			"Message.Teleport.Unsafe-warning-description",
+			Arrays.asList("&7Your current home location seems", "&7not to include any solid platform or",
+					"&7contains dangerous elements, which makes it", "&7unsafe. Do you wish to teleport anyway?"));
+
+	@RegisteredPandaField("config")
+	private static final PandaBooleanField SETTINGS_PROTECTION_SHOWUNSAFETELEPORTWARNINGMENU = new PandaBooleanField(
+			"Settings.Protection.Show-unsafe-teleport-warning-menu", true);
+
 	@PandaInject
-	private ProtectionsService protectionsService;
+	private ProtectionsServiceImpl protectionsService;
+
+	@PandaInject
+	private ProtectionBlocksService protectionBlocksService;
+
+	// TODO: Move to ProtectionSettingsService
+	private @Getter EconomyService protectionsStoreEconomyService;
+	private @Getter EconomyService protectionBlocksStoreEconomyService;
+
+	@LoadMethod
+	private void load() {
+		try {
+			protectionsStoreEconomyService = EconomyService
+					.valueOf(Settings.SETTINGS_STORE_PROTECTIONECONOMYSERVICE.getContent().toUpperCase());
+
+			if (!EconomyUtilities.isEconomyEnabled(protectionsStoreEconomyService)) {
+				protectionsStoreEconomyService = null;
+				MainPluginClass.getSimpleLogger().sendWarning(String.format(
+						"The defined economy for the protections store could not be found installed on the server (%s). In order to use the protections store, you must install the economy plugin or switch the defined economy plugin for one of your current economy plugins.",
+						protectionsStoreEconomyService.name()));
+			}
+		} catch (Exception e) {
+			MainPluginClass.getSimpleLogger().sendError(String.format("Invalid protections store economy service: ",
+					Settings.SETTINGS_STORE_PROTECTIONECONOMYSERVICE.getContent().toUpperCase()));
+		}
+		try {
+			protectionBlocksStoreEconomyService = EconomyService
+					.valueOf(Settings.SETTINGS_STORE_PROTECTIONBLOCKECONOMYSERVICE.getContent().toUpperCase());
+
+			if (!EconomyUtilities.isEconomyEnabled(protectionBlocksStoreEconomyService)) {
+				protectionBlocksStoreEconomyService = null;
+				MainPluginClass.getSimpleLogger().sendWarning(String.format(
+						"The defined economy for the protection blocks store could not be found installed on the server (%s). In order to use the protection blocks store, you must install the economy plugin or switch the defined economy plugin for one of your current economy plugins.",
+						protectionBlocksStoreEconomyService.name()));
+			}
+		} catch (Exception e) {
+			MainPluginClass.getSimpleLogger()
+					.sendError(String.format("Invalid protection blocks store economy service: ",
+							Settings.SETTINGS_STORE_PROTECTIONBLOCKECONOMYSERVICE.getContent().toUpperCase()));
+		}
+	}
 
 	@Override
 	public void openProtectionManagementInventoryRequest(OpenProtectionManagementInventoryRequestInput input)
@@ -71,6 +150,57 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	}
 
 	@Override
+	public void protectionCreationRequest(ProtectionCreationRequestInput input) throws RoyaleProtectionBlocksException {
+		Location playerLocation = input.getPlayer().getLocation().clone();
+
+		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
+				&& CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+			throw Exceptions.Protections.INCOMBAT.generateException();
+		}
+
+		if (input.getProtectionBlock().getPermission() != null
+				&& !input.getPlayer().hasPermission(input.getProtectionBlock().getPermission())) {
+			throw Exceptions.Protections.Save.PERMISSIONDENIED.generateException();
+		}
+
+		ProtectionBlock protectionBlock = protectionBlocksService
+				.getProtectionBlockById(input.getProtectionBlock().getId());
+		String worldName = input.getLocation().getWorld().getName();
+		boolean emptyAllowedWorlds = protectionBlock.getBlockAllowedWorlds().get().isEmpty();
+		boolean allowedWorld = protectionBlock.getBlockAllowedWorlds().get().contains(worldName);
+		boolean bannedWorld = Settings.SETTINGS_BANNEDWORLDS.getContent().contains(worldName);
+
+		if (!emptyAllowedWorlds && !allowedWorld) {
+			throw Exceptions.Protections.Save.NOTALLOWEDWORLD.generateException();
+		}
+
+		if (emptyAllowedWorlds && bannedWorld) {
+			throw Exceptions.Protections.Save.BANNEDWORLD.generateException();
+		}
+
+		ProtectionUtilities.checkIfCanBeAdded(input.getPlayer(), input.getProtectionBlock(), 1);
+
+		Protection protection = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+				.create(ProtectionCreationData.inst(input.getPlayer(), input.getOwnerUuid(), input.getProtectionBlock(),
+						input.getLocation(), CreationCause.PLAYER));
+
+		if (Settings.SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION.getContent()) {
+			try {
+				protection.setHome(playerLocation);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (input.getPlayer().isOnline()) {
+			MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_CREATEDSUCCESSFULLY.applyPrefix()).process()
+					.sendMessage(input.getPlayer());
+		}
+
+		TasksUtils.execute(() -> protection.getUtils().showProtectionBlock());
+	}
+
+	@Override
 	public void openProtectionRemovalInventoryRequest(OpenProtectionRemovalInventoryRequestInput input)
 			throws RoyaleProtectionBlocksExceptionImpl {
 		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
@@ -82,17 +212,15 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 		new ConfirmationInventory(input.getPlayer(), () -> {
 			try {
-				protectionRemovalRequest(ProtectionRemovalRequestInput.inst(input.getPlayer(), internalProtection)
-						.setCause(input.getCause()));
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				protectionRemovalRequest(ProtectionRemovalRequestInput.inst(input.getPlayer(), internalProtection));
+			} catch (RoyaleProtectionBlocksException e) {
 				e.sendError(input.getPlayer());
 			}
-		}).openInventory();
+		}, false).openInventory();
 	}
 
 	@Override
-	public void protectionRemovalRequest(ProtectionRemovalRequestInput input)
-			throws RoyaleProtectionBlocksExceptionImpl {
+	public void protectionRemovalRequest(ProtectionRemovalRequestInput input) throws RoyaleProtectionBlocksException {
 		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
 				&& CombatLogHookUtilities.isInCombat(input.getPlayer())) {
 			throw Exceptions.Protections.INCOMBAT.generateException();
@@ -102,67 +230,32 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.Delete.PERMISSIONDENIED.generateException();
 		}
 
-		Protection internalProtection = protectionToInternalProtection(input.getProtection());
-		ProtectionBlock protectionBlock = internalProtection.getProtectionBlock().getObject();
-
-		try {
-			ProtectionRemovalAttemptEvent attemptEvent = new ProtectionRemovalAttemptEvent(input.getPlayer(),
-					internalProtection, RemovalCause.PLAYER);
-			Bukkit.getPluginManager().callEvent(attemptEvent);
-
-			if (attemptEvent.isCancelled()) {
-				throw Exceptions.Protections.Delete.CANCELLED.generateException();
-			}
-
-			if (internalProtection.getUtils().isProtectionBlockShown()) {
-				internalProtection.getUtils().hideProtectionBlock();
-			}
-
-			if (internalProtection.getBoundaries().isProtectionViewActive()) {
-				internalProtection.getBoundaries().toggleProtectionView();
-			}
-
-			ItemStack protectionBlockItem = (protectionBlock != null) ? protectionBlock.getInformation().generateItem()
-					: null;
-
-			TasksUtils.executeOnAsync(() -> {
-				try {
-					internalProtection.delete(input.getPlayer(), input.getCause()).subscribe((deletedProtection) -> {
-						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix()).process()
-								.sendMessage(input.getPlayer());
-
-						TasksUtils.execute(() -> {
-							if (input.getPlayer().isOnline() && protectionBlockItem != null) {
-								input.getPlayer().getInventory().addItem(protectionBlockItem)
-										.forEach((index, remainingItem) -> internalProtection.getBukkitLocation()
-												.getWorld()
-												.dropItem(internalProtection.getBukkitLocation(), remainingItem));
-							}
-
-							if (input.getPlayer().isOnline()
-									&& input.getPlayer().getOpenInventory().getType() != InventoryType.CRAFTING) {
-								input.getPlayer().closeInventory();
-							}
-						});
-					}, (throwable) -> {
-						if (!(throwable instanceof RoyaleProtectionBlocksExceptionImpl)) {
-							throwable = Exceptions.Protections.Delete.UNKNOWN.generateException(throwable);
-						}
-
-						((RoyaleProtectionBlocksExceptionImpl) throwable).sendError(input.getPlayer());
-					});
-				} catch (RoyaleProtectionBlocksExceptionImpl e) {
-					e.sendError(input.getPlayer());
-				}
-			});
-		} catch (RoyaleProtectionBlocksExceptionImpl e1) {
-			if (e1.getExceptionType() == Exceptions.Protections.Delete.CANCELLED) {
-				Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT_CANCELLED,
-						() -> new Object[] { internalProtection.getRegionId() });
-			} else {
-				e1.sendError(input.getPlayer());
-			}
+		if (input.getProtection().isBlocked() && input.getProtection().getBlockReason() == BlockReason.OTHERS
+				&& !PermissionsService.ADMIN_BLOCK_BYPASS.hasPermission(input.getPlayer())) {
+			throw Exceptions.Protections.BLOCKED.generateException();
 		}
+
+		RoyaleProtectionBlocksAPI.getInstance().getProtectionsService().delete(ProtectionRemovalData
+				.inst(input.getPlayer(), input.getProtection().getProtectionId(), RemovalCause.PLAYER));
+
+		MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_REMOVEDSUCCESSFULLY.applyPrefix()).process()
+				.sendMessage(input.getPlayer());
+
+		TasksUtils.execute(() -> {
+			IProtectionBlock protectionBlock = input.getProtection().getProtectionBlock();
+			ItemStack protectionBlockItem = (protectionBlock != null) ? protectionBlock.generateItem() : null;
+
+			if (input.getPlayer().isOnline() && protectionBlockItem != null) {
+				input.getPlayer().getInventory().addItem(protectionBlockItem)
+						.forEach((index, remainingItem) -> input.getProtection().getBukkitLocation().getWorld()
+								.dropItem(input.getProtection().getBukkitLocation(), remainingItem));
+			}
+
+			if (input.getPlayer().isOnline()
+					&& input.getPlayer().getOpenInventory().getType() != InventoryType.CRAFTING) {
+				input.getPlayer().closeInventory();
+			}
+		});
 	}
 
 	@Override
@@ -334,11 +427,28 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
-		if (!ProtectionUtilities.canTeleport(input.getProtection(), input.getPlayer())) {
+		if (!input.getProtection().isForSale()
+				&& !ProtectionUtilities.canTeleport(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 		}
 
-		input.getProtection().teleport(input.getPlayer());
+		try {
+			input.getProtection().teleport(input.getPlayer(), input.isIgnoreCost(), input.isIgnoreUnsafeWarning());
+		} catch (RoyaleProtectionBlocksException e) {
+			if (SETTINGS_PROTECTION_SHOWUNSAFETELEPORTWARNINGMENU.isTrue()
+					&& e.getType() == Type.PROTECTIONS_TELEPORT_UNSAFE) {
+				new WarningInventory(input.getPlayer(), MESSAGE_TELEPORT_UNSAFEWARNINGTITLE.getContent(),
+						MESSAGE_TELEPORT_UNSAFEWARNINGDESCRIPTION.getContent(), () -> {
+							try {
+								input.getProtection().teleport(input.getPlayer(), false, true);
+							} catch (RoyaleProtectionBlocksException e1) {
+								e1.sendError(input.getPlayer());
+							}
+						}, false).openInventory();
+			} else {
+				throw e;
+			}
+		}
 	}
 
 	@Override
@@ -389,6 +499,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		checkIfModifiable(input.getPlayer(), input.getProtection());
 		checkIfModifiable(input.getPlayer(), input.getParentProtection());
 
+		if (!input.getProtection().getOwnerUuid().equals(input.getParentProtection().getOwnerUuid())) {
+			throw Exceptions.Protections.MERGEDIFFERENTOWNERS.generateException();
+		}
+
 		if (!ProtectionUtilities.canMerge(input.getProtection(), input.getPlayer())
 				|| !ProtectionUtilities.canMerge(input.getParentProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
@@ -402,8 +516,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.CANCELLED.generateException();
 		}
 
-		input.getProtection().setParentProtection(input.getParentProtection());
-		((Protection) input.getProtection()).saveData();
+		input.getProtection().setParentProtectionAndSave(input.getParentProtection());
 	}
 
 	@Override
@@ -422,8 +535,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.CANCELLED.generateException();
 		}
 
-		input.getProtection().unsetParentProtection();
-		((Protection) input.getProtection()).saveData();
+		input.getProtection().unsetParentProtectionAndSave();
 	}
 
 	@Override
@@ -499,10 +611,142 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 	}
 
+	@Override
+	public void protectionTransferRequest(ProtectionTransferRequestInput input) throws RoyaleProtectionBlocksException {
+		try {
+			// Preconditions
+
+			if (input.getProtection().getOwnerUuid().equals(input.getNewOwner().getUniqueId())) {
+				throw Exceptions.Protections.Transfer.SAMEOWNER.generateException();
+			}
+
+			checkIfModifiable(input.getPlayer(), input.getProtection());
+
+			if (!ProtectionUtilities.canTransfer(input.getProtection(), input.getPlayer())) {
+				throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+			}
+
+			int amountOfProtections = input.getProtection().getChildProtectionsRecursively().size();
+
+			try {
+				ProtectionUtilities.checkIfCanBeAdded(input.getPlayer(), input.getProtection().getProtectionBlock(),
+						amountOfProtections);
+			} catch (RoyaleProtectionBlocksException e) {
+				if (e.getType() == Type.PROTECTIONS_SAVE_MAXREACHED) {
+					throw Exceptions.Protections.Transfer.MAXREACHED.generateException();
+				} else if (e.getType() == Type.PROTECTIONS_SAVE_BLOCKMAXREACHED) {
+					throw Exceptions.Protections.Transfer.BLOCKMAXREACHED.generateException();
+				} else {
+					throw e;
+				}
+			}
+
+			// Actions
+
+			RoyaleProtectionBlocksAPI.getInstance().getProtectionsService().transfer(ProtectionTransferData
+					.inst(input.getProtection().getProtectionId(), input.getNewOwner().getUniqueId()));
+		} catch (RoyaleProtectionBlocksException e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.UNKNOWN.generateException(e);
+		}
+	}
+
+	@Override
+	public void protectionSellRequest(ProtectionSellRequestInput input) throws RoyaleProtectionBlocksException {
+		// Preconditions
+		if (this.protectionsStoreEconomyService == null) {
+			throw Exceptions.Protections.STOREUNAVAILABLE.generateException();
+		}
+
+		checkIfModifiable(input.getPlayer(), input.getProtection());
+
+		if (!input.getProtection().isForSale() && input.getPrice() <= 0D) {
+			throw Exceptions.Protections.Purchase.ALREADYNOTFORSALE.generateException();
+		}
+
+		if (!ProtectionUtilities.canSell(input.getProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+		}
+
+		// Actions
+
+		input.getProtection().setPriceAndSave(input.getPrice());
+	}
+
+	@Override
+	public void protectionPurchaseRequest(ProtectionPurchaseRequestInput input) throws RoyaleProtectionBlocksException {
+		try {
+			// Preconditions
+			if (this.protectionsStoreEconomyService == null) {
+				throw Exceptions.Protections.STOREUNAVAILABLE.generateException();
+			}
+
+			if (input.getProtection().getOwnerUuid().equals(input.getPlayer().getUniqueId())) {
+				throw Exceptions.Protections.Purchase.SAMEOWNER.generateException();
+			}
+
+			if (!input.getProtection().isForSale()) {
+				throw Exceptions.Protections.Purchase.NOTFORSALE.generateException();
+			}
+
+			checkIfModifiable(input.getPlayer(), input.getProtection());
+
+			if (!ProtectionUtilities.canTransfer(input.getProtection(), input.getPlayer())) {
+				throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+			}
+
+			int amountOfProtections = input.getProtection().getChildProtectionsRecursively().size();
+
+			try {
+				ProtectionUtilities.checkIfCanBeAdded(input.getPlayer(), input.getProtection().getProtectionBlock(),
+						amountOfProtections);
+			} catch (RoyaleProtectionBlocksException e) {
+				if (e.getType() == Type.PROTECTIONS_SAVE_MAXREACHED) {
+					throw Exceptions.Protections.Transfer.MAXREACHED.generateException();
+				} else if (e.getType() == Type.PROTECTIONS_SAVE_BLOCKMAXREACHED) {
+					throw Exceptions.Protections.Transfer.BLOCKMAXREACHED.generateException();
+				} else {
+					throw e;
+				}
+			}
+
+			if (!EconomyUtilities.withdraw(this.protectionsStoreEconomyService, input.getPlayer(),
+					amountOfProtections)) {
+				throw Exceptions.Protections.Purchase.NOTENOUGHBALANCE.generateException();
+			}
+
+			// Actions
+
+			RoyaleProtectionBlocksAPI.getInstance().getProtectionsService().transfer(ProtectionTransferData
+					.inst(input.getProtection().getProtectionId(), input.getPlayer().getUniqueId()));
+		} catch (RoyaleProtectionBlocksException e) {
+			throw e;
+		} catch (Throwable e) {
+			throw Exceptions.Protections.UNKNOWN.generateException(e);
+		}
+	}
+
+	@Override
+	public void protectionTogglePublicAccessRequest(ProtectionTogglePublicAccessRequestInput input)
+			throws RoyaleProtectionBlocksException {
+		// Preconditions
+
+		checkIfModifiable(input.getPlayer(), input.getProtection());
+
+		if (!ProtectionUtilities.canTogglePublicAccess(input.getProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+		}
+
+		// Actions
+
+		input.getProtection().setPublicAccessAndSave(input.isPublicAccess());
+	}
+
 	private Protection protectionToInternalProtection(IProtection protection)
 			throws RoyaleProtectionBlocksExceptionImpl {
 		if (!(protection instanceof Protection)) {
-			Protection internalProtection = protectionsService.findProtectionById(protection.getRegionId());
+			Protection internalProtection = protectionsService.findProtectionById(protection.getProtectionId());
 
 			if (internalProtection == null) {
 				throw Exceptions.Protections.NOTFOUND.generateException();

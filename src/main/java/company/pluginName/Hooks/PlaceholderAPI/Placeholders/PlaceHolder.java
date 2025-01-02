@@ -13,12 +13,13 @@ import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionFlagsPckg.ProtectionFlagsService;
-import company.pluginName.Modules.ProtectionFlagsPckg.Objects.ProtectionFlag;
-import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtectionFlags.FlagRetrieveRequestInput;
 
 public class PlaceHolder extends PlaceholderExpansion {
 
@@ -28,9 +29,6 @@ public class PlaceHolder extends PlaceholderExpansion {
 
 	@PandaInject
 	private static WorldGuardAPI worldGuardApi;
-
-	@PandaInject
-	private static ProtectionsService protectionsService;
 
 	@PandaInject
 	private static ProtectionBlocksService protectionBlocksService;
@@ -65,15 +63,13 @@ public class PlaceHolder extends PlaceholderExpansion {
 	public String onPlaceholderRequest(Player player, String identifier) {
 		if (player != null) {
 			if (identifier.toLowerCase().startsWith(PROTECTION_FLAG_PREFIX)) {
-				Protection protection = getProtectionIn(player);
+				IProtection protection = getProtectionIn(player);
 				if (protection != null) {
 					String flagName = identifier.substring(PROTECTION_FLAG_PREFIX.length());
-					ProtectionFlag protectionFlag = protectionFlagsService.getFlag(flagName);
-
-					if (protectionFlag != null) {
-						String flagValue = ProtectionFlagUtilities
-								.valueToString(protectionFlag.retrieveValue(protection.getProtectedRegion()));
-						return flagValue != null ? flagValue : "";
+					try {
+						return protection.getFlags().getFlagValueAsString(FlagRetrieveRequestInput.inst(flagName));
+					} catch (RoyaleProtectionBlocksException e) {
+						return "";
 					}
 				}
 			} else if (identifier.toLowerCase().startsWith(PROTECTIONBLOCK_MAX_PREFIX)) {
@@ -92,13 +88,13 @@ public class PlaceHolder extends PlaceholderExpansion {
 				if (!blockId.isEmpty()) {
 					ProtectionBlock protectionBlock = protectionBlocksService.getProtectionBlockById(blockId);
 					if (protectionBlock != null) {
-						return String.valueOf(protectionsService.findProtectionsByOwner(player.getUniqueId()).stream()
-								.filter(protection -> protection.getProtectionBlock().getIdentifier().equals(blockId))
-								.count());
+						return String.valueOf(RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+								.findProtectionsByOwner(player.getUniqueId()).stream()
+								.filter(protection -> protection.getProtectionBlockId().equals(blockId)).count());
 					}
 				}
 			} else {
-				Protection protection;
+				IProtection protection;
 				switch (identifier.toLowerCase()) {
 				case "protection_owner":
 					protection = getProtectionIn(player);
@@ -109,30 +105,30 @@ public class PlaceHolder extends PlaceholderExpansion {
 				case "protection_id":
 					protection = getProtectionIn(player);
 					if (protection != null) {
-						return protection.getRegionId();
+						return protection.getProtectionId();
 					}
 					break;
 				case "protection_name":
 					protection = getProtectionIn(player);
 					if (protection != null) {
 						return protection.getDisplayName() != null ? protection.getDisplayName()
-								: protection.getRegionId();
+								: protection.getProtectionId();
 					}
 					break;
 				case "protection_size":
 					protection = getProtectionIn(player);
 					if (protection != null) {
-						ProtectionBlock block = protection.getProtectionBlock().getObject();
-						String blocksX = String.valueOf((block.getInformation().getBlocksX() * 2) + 1);
-						String blocksY = block.getInformation().getBlocksY() == -1
-								? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
-								: String.valueOf((block.getInformation().getBlocksY() * 2) + 1);
-						String blocksZ = String.valueOf((block.getInformation().getBlocksZ() * 2) + 1);
+						IProtectionBlock block = protection.getProtectionBlock();
+						String blocksX = String.valueOf((block.getBlocksX() * 2) + 1);
+						String blocksY = block.getBlocksY() == -1 ? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
+								: String.valueOf((block.getBlocksY() * 2) + 1);
+						String blocksZ = String.valueOf((block.getBlocksZ() * 2) + 1);
 						return String.format("%sx%sx%s", blocksX, blocksY, blocksZ);
 					}
 					break;
 				case "player_current":
-					return String.valueOf(protectionsService.findProtectionsByOwner(player.getUniqueId()).size());
+					return String.valueOf(RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+							.findProtectionsByOwner(player.getUniqueId()).size());
 				case "player_max":
 					Integer maxAmount = PermissionsService.getGeneralMaxCapacity(player);
 					return maxAmount != null ? String.valueOf(maxAmount) : "---";
@@ -142,7 +138,7 @@ public class PlaceHolder extends PlaceholderExpansion {
 		return "";
 	}
 
-	private List<Protection> getProtectionsIn(Player player) {
+	private List<? extends IProtection> getProtectionsIn(Player player) {
 		PlayerData playerData = playerDataService.getPlayerData(player);
 		if (playerData != null) {
 			return playerData.getCurrentProtections();
@@ -150,7 +146,7 @@ public class PlaceHolder extends PlaceholderExpansion {
 		return Collections.emptyList();
 	}
 
-	private Protection getProtectionIn(Player player) {
+	private IProtection getProtectionIn(Player player) {
 		return getProtectionsIn(player).stream().findFirst().orElse(null);
 	}
 

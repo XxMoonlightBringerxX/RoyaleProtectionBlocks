@@ -1,6 +1,5 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,15 +8,14 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
-import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
@@ -33,20 +31,15 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 		defaultName = "removeowner",
 		defaultDescription = "Remove an owner on your current protection",
 		defaultUsage = "<username>",
-		defaultAliases = "ro"
-)
+		defaultAliases = "ro")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class RemoveOwnerSubCommand extends PandaSubCommand {
-
-	@PandaInject
-	private static ProtectionsService protectionsService;
 
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
@@ -56,11 +49,11 @@ public class RemoveOwnerSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public List<String> tabComplete(PandaCommand cmd, CommandSender sender, String[] args) {
-		if (args.length == 1) {
+	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
+		if (argIndex == 0) {
 			return Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
 		}
-		return Collections.emptyList();
+		return super.generateAutocompleteList(sender, argIndex);
 	}
 
 	@Override
@@ -69,7 +62,8 @@ public class RemoveOwnerSubCommand extends PandaSubCommand {
 			Player pl = sender instanceof Player ? (Player) sender : null;
 			if (pl != null) {
 				if (parameters.getParameters().size() > 0) {
-					Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
+					Protection protection = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+							.findProtectionParentByLocation(pl.getLocation());
 					if (protection != null) {
 						OfflinePlayer owner = OfflinePlayerUtilities
 								.getOfflinePlayer(parameters.getParameters().get(0));

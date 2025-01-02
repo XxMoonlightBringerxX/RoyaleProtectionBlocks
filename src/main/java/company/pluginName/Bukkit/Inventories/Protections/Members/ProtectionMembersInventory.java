@@ -49,7 +49,7 @@ public class ProtectionMembersInventory extends PagedChestInventoryObject<UUID> 
 	@Override
 	protected String getTitle() {
 		return MessageTemplate.inst(super.getTitle()).setReplacements(new Replacement("{protection}",
-				() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getRegionId()))
+				() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getProtectionId()))
 				.process().toString();
 	}
 
@@ -77,6 +77,7 @@ public class ProtectionMembersInventory extends PagedChestInventoryObject<UUID> 
 				try {
 					playerInteractionsService.protectionMemberAddRequest(
 							ProtectionMemberAddRequestInput.inst(getPlayer(), protection, player.getUniqueId()));
+					updateEntityList();
 				} catch (RoyaleProtectionBlocksException e) {
 					e.sendError(getPlayer());
 				}
@@ -84,7 +85,8 @@ public class ProtectionMembersInventory extends PagedChestInventoryObject<UUID> 
 			} else {
 				openInventory();
 			}
-		}).openInventory();
+		}, (player) -> !protection.isOwner(player.getUniqueId()) && !protection.isMember(player.getUniqueId()))
+				.openInventory();
 	}
 
 	@Override
@@ -116,6 +118,7 @@ public class ProtectionMembersInventory extends PagedChestInventoryObject<UUID> 
 				try {
 					playerInteractionsService.protectionMemberRemoveRequest(
 							ProtectionMemberRemoveRequestInput.inst(getPlayer(), protection, entity));
+					updateEntityList();
 				} catch (RoyaleProtectionBlocksException ex) {
 					ex.sendError(getPlayer());
 				}

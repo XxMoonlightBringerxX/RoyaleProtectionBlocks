@@ -21,6 +21,7 @@ import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import lombok.Data;
 import lombok.Getter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.ItemType;
 
 @Data
 @Getter(lombok.AccessLevel.NONE)
@@ -42,10 +43,6 @@ public class ProtectionBlocksUtils {
 	private static final String PRICE_SECTION = "Price";
 	private static final String ITEM_TYPE_SECTION = "Item.Type";
 	private static final String ALLOWEDWORLDS_SECTION = "Allowed-worlds";
-
-	public static enum ItemType {
-		VANILLA, ORAXEN, ITEMS_ADDER;
-	}
 
 	public static ItemType getItemType(ItemStack item) {
 		if (itemsAdderApi.getHook().isCustomBlock(item) == ItemsAdderHook.CheckingResult.IS_CUSTOM_ITEM) {
@@ -92,13 +89,12 @@ public class ProtectionBlocksUtils {
 	}
 
 	public static Map<String, Object> protectionBlockToMap(ProtectionBlock protectionBlock) {
-		Map<String, Object> values = ItemBuilder.inst().fromItem(protectionBlock.getInformation().getItem())
-				.toMap("Item.");
+		Map<String, Object> values = ItemBuilder.inst().fromItem(protectionBlock.getItem()).toMap("Item.");
 
-		values.put(BLOCKSX_SECTION, protectionBlock.getInformation().getBlocksX());
-		values.put(BLOCKSY_SECTION, protectionBlock.getInformation().getBlocksY());
-		values.put(BLOCKSZ_SECTION, protectionBlock.getInformation().getBlocksZ());
-		values.put(ALLOWEDWORLDS_SECTION, new ArrayList<>(protectionBlock.getAllowedWorlds().get()));
+		values.put(BLOCKSX_SECTION, (protectionBlock.getBlocksX() * 2) + 1);
+		values.put(BLOCKSY_SECTION, protectionBlock.getBlocksY() > -1 ? (protectionBlock.getBlocksY() * 2) + 1 : -1);
+		values.put(BLOCKSZ_SECTION, (protectionBlock.getBlocksZ() * 2) + 1);
+		values.put(ALLOWEDWORLDS_SECTION, new ArrayList<>(protectionBlock.getBlockAllowedWorlds().get()));
 
 		return values;
 	}
@@ -120,19 +116,22 @@ public class ProtectionBlocksUtils {
 		List<String> allowedWorlds;
 
 		try {
-			blocksX = (int) Long.parseLong(map.get(BLOCKSX_SECTION).toString());
+			blocksX = (int) (Long.parseLong(map.get(BLOCKSX_SECTION).toString()) / 2);
 		} catch (NumberFormatException e) {
 			throw new Exception("The value '%s' is currently not a number.".formatted(map.get(BLOCKSX_SECTION)));
 		}
 
 		try {
 			blocksY = (int) Long.parseLong(map.get(BLOCKSY_SECTION).toString());
+			if (blocksY > -1) {
+				blocksY /= 2;
+			}
 		} catch (NumberFormatException e) {
 			throw new Exception("The value '%s' is currently not a number.".formatted(map.get(BLOCKSY_SECTION)));
 		}
 
 		try {
-			blocksZ = (int) Long.parseLong(map.get(BLOCKSZ_SECTION).toString());
+			blocksZ = (int) (Long.parseLong(map.get(BLOCKSZ_SECTION).toString()) / 2);
 		} catch (NumberFormatException e) {
 			throw new Exception("The value '%s' is currently not a number.".formatted(map.get(BLOCKSZ_SECTION)));
 		}
@@ -162,40 +161,41 @@ public class ProtectionBlocksUtils {
 					"The value '%s' is currently not a string list.".formatted(map.get(ALLOWEDWORLDS_SECTION)));
 		}
 
-		ItemStack item = ItemBuilder.inst().fromMap(map, "Item").build();
+		ItemBuilder builder = ItemBuilder.inst().fromMap(map, "Item");
 
 		ProtectionBlock protectionBlock = protectionBlocksService.getProtectionBlockById(id);
 
 		if (protectionBlock != null) {
 			protectionBlock = new ProtectionBlock(protectionBlock);
 
-			protectionBlock.getInformation().setBlocksX(blocksX);
-			protectionBlock.getInformation().setBlocksY(blocksY);
-			protectionBlock.getInformation().setBlocksZ(blocksZ);
+			protectionBlock.getBlockInformation().setBlocksX(blocksX);
+			protectionBlock.getBlockInformation().setBlocksY(blocksY);
+			protectionBlock.getBlockInformation().setBlocksZ(blocksZ);
 
 			if (map.containsKey(PERMISSION_SECTION)) {
-				protectionBlock.getInformation().setPermission(permission);
+				protectionBlock.getBlockInformation().setPermission(permission);
 			}
 
 			if (map.containsKey(PRICE_SECTION)) {
 				if (price != null && price <= 0D) {
-					protectionBlock.getInformation().setPrice(null);
+					protectionBlock.getBlockInformation().setPrice(null);
 				} else {
-					protectionBlock.getInformation().setPrice(price);
+					protectionBlock.getBlockInformation().setPrice(price);
 				}
 			}
 
 			if (map.containsKey(ALLOWEDWORLDS_SECTION)) {
-				protectionBlock.getAllowedWorlds().clear();
-				allowedWorlds.forEach(protectionBlock.getAllowedWorlds()::add);
+				protectionBlock.getBlockAllowedWorlds().clear();
+				allowedWorlds.forEach(protectionBlock.getBlockAllowedWorlds()::add);
 			}
 
-			protectionBlock.getInformation().setItem(item);
+			protectionBlock.getBlockInformation()
+					.setItem(builder.apply(protectionBlock.getBlockInformation().getItem()));
 
 			return protectionBlock;
 		} else {
 			return new ProtectionBlock(
-					new ProtectionBlockInformation(id, item, blocksX, blocksY, blocksZ, permission, price),
+					new ProtectionBlockInformation(id, builder.build(), blocksX, blocksY, blocksZ, permission, price),
 					allowedWorlds != null ? new ProtectionBlockAllowedWorlds(new HashSet<>(allowedWorlds))
 							: new ProtectionBlockAllowedWorlds());
 		}

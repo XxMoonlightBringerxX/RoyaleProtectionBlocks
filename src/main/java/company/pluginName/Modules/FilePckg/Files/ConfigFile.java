@@ -22,10 +22,12 @@ public class ConfigFile extends PandaConfigFile {
 		if (curYaml != this.getDefaultYaml()) {
 			YamlData<?> purgeExecuteEverySeconds = yaml.getRoot()
 					.getData("Settings.Protection.Auto-purge.Execute-every");
-			if (purgeExecuteEverySeconds != null && purgeExecuteEverySeconds.getString("").isEmpty()) {
-				yaml.getRoot().set("Settings.Protection.Auto-purge.Purge-older-than", "");
+			if (purgeExecuteEverySeconds != null) {
+				if (purgeExecuteEverySeconds.getString("").isEmpty()) {
+					yaml.getRoot().set("Settings.Protection.Auto-purge.Purge-older-than", "");
+				}
+				yaml.getRoot().remove(purgeExecuteEverySeconds.toPath());
 			}
-			yaml.getRoot().remove(purgeExecuteEverySeconds.toPath());
 		}
 
 		return curYaml;

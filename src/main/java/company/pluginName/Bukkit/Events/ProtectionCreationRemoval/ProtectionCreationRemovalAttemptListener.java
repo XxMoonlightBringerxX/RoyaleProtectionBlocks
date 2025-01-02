@@ -18,7 +18,7 @@ public class ProtectionCreationRemovalAttemptListener {
 	public void onProtectionCreationAttempt(ProtectionCreationAttemptEvent event) {
 		if (event.getCause() == CreationCause.PLAYER) {
 			Debugger.log(MessageType.PROTECTION_CREATION_ATTEMPT,
-					() -> new Object[] { event.getPlayer().getName(),
+					() -> new Object[] { event.getExecutor().getName(),
 							String.valueOf(event.getProtection().getBukkitLocation().getX()),
 							String.valueOf(event.getProtection().getBukkitLocation().getY()),
 							String.valueOf(event.getProtection().getBukkitLocation().getZ()) });
@@ -29,9 +29,9 @@ public class ProtectionCreationRemovalAttemptListener {
 	public void onProtectionRemovalAttempt(ProtectionRemovalAttemptEvent event) {
 		if (event.getCause() == RemovalCause.PLAYER) {
 			Debugger.log(MessageType.PROTECTION_REMOVAL_ATTEMPT,
-					() -> new Object[] { event.getPlayer().getName(),
+					() -> new Object[] { event.getExecutor().getName(),
 							event.getProtection().getDisplayName() != null ? event.getProtection().getDisplayName()
-									: event.getProtection().getRegionId(),
+									: event.getProtection().getProtectionId(),
 							String.valueOf(event.getProtection().getBukkitLocation().getX()),
 							String.valueOf(event.getProtection().getBukkitLocation().getY()),
 							String.valueOf(event.getProtection().getBukkitLocation().getZ()) });

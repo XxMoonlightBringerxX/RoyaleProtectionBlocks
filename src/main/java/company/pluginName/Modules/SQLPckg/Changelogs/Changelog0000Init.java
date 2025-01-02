@@ -51,11 +51,11 @@ public class Changelog0000Init extends SQLChangelog {
 			new Column("RemovedProtections", Types.INTEGER).setNotNull(true));
 
 	static {
-		PROTECTIONS_TABLE
-				.addUniqueConstraint(new Table.UniqueConstraint().addColumns(PROTECTIONS_TABLE.getColumn("DisplayName"),
-						PROTECTIONS_TABLE.getColumn("OwnerUuid")))
-				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTIONS_TABLE.getColumn("ParentRegionId")));
+		PROTECTIONS_TABLE.addUniqueConstraint(new Table.UniqueConstraint()
+				.addColumns(PROTECTIONS_TABLE.getColumn("DisplayName"), PROTECTIONS_TABLE.getColumn("OwnerUuid")))
+				.addForeignConstraint(
+						new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("ParentRegionId"))
+								.addReferenceColumn(PROTECTIONS_TABLE.getColumn("RegionId")));
 
 		PROTECTION_BANNEDS_TABLE
 				.addUniqueConstraint(

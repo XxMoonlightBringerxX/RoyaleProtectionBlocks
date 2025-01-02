@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -40,78 +41,87 @@ public class DiscordUtilities {
 	public static final PandaStringListField DISCORD_LOGS_FLAGSMODIFICATION = new PandaStringListField(
 			"Discord.Logs.Flags-modification", Arrays.asList("pvp", "tnt", "chest-access"));
 
-	public static void sendProtectionRegisteredMessage(Player player, Protection protection) {
+	public static void sendProtectionRegisteredMessage(CommandSender commandSender, Protection protection) {
 		if (Boolean.TRUE.equals(DISCORD_LOGS_PROTECTIONREGISTER.getContent()) && pandaDiscordWebhookService != null
 				&& pandaDiscordWebhookService.isWebhookDefined()) {
 			Location location = protection.getBukkitLocation();
 
-			DiscordMessage message = new DiscordMessage().addEmbed(new EmbedObject()
-					.setTitle(String.format("[%s] New registered protection",
-							intoCodeString((player != null ? player.getName() : "Console"))))
-					.setDescription("A new protection has been registered")
-					.addField("World", intoCodeString(protection.getWorldName()))
-					.addField("Coordinates",
-							intoCodeString(String.format("x: %d, y: %d, z: %d", location.getBlockX(),
-									location.getBlockY(), location.getBlockZ())))
-					.addField("Protection ID", intoCodeString(protection.getRegionId()))
-					.addField("Owner", intoCodeString(protection.getOwnerName()))
-					.addField("Protection block ID", intoCodeString(protection.getProtectionBlock().getIdentifier())));
+			DiscordMessage message = new DiscordMessage()
+					.addEmbed(
+							new EmbedObject()
+									.setTitle(String.format("[%s] New registered protection",
+											intoCodeString(
+													(commandSender != null ? commandSender.getName() : "Console"))))
+									.setDescription("A new protection has been registered")
+									.addField("World", intoCodeString(protection.getWorldName()))
+									.addField("Coordinates",
+											intoCodeString(String.format("x: %d, y: %d, z: %d", location.getBlockX(),
+													location.getBlockY(), location.getBlockZ())))
+									.addField("Protection ID", intoCodeString(protection.getProtectionId()))
+									.addField("Owner", intoCodeString(protection.getOwnerName())).addField(
+											"Protection block ID", intoCodeString(protection.getProtectionBlockId())));
 
-			if (player != null) {
-				message.getEmbeds().get(0)
-						.setThumbnail(new Thumbnail(String.format("https://mineskin.eu/helm/%s", player.getName())));
+			if (commandSender != null && commandSender instanceof Player) {
+				message.getEmbeds().get(0).setThumbnail(
+						new Thumbnail(String.format("https://mineskin.eu/helm/%s", commandSender.getName())));
 			}
 
 			pandaDiscordWebhookService.sendMessage(message);
 		}
 	}
 
-	public static void sendProtectionUnregisteredMessage(Player player, Protection protection,
+	public static void sendProtectionUnregisteredMessage(CommandSender commandSender, Protection protection,
 			RemovalCause removalCause) {
 		if (Boolean.TRUE.equals(DISCORD_LOGS_PROTECTIONUNREGISTER.getContent()) && pandaDiscordWebhookService != null
 				&& pandaDiscordWebhookService.isWebhookDefined()) {
 			Location location = protection.getBukkitLocation();
 
-			DiscordMessage message = new DiscordMessage().addEmbed(new EmbedObject()
-					.setTitle(String.format("[%s] Unregistered protection",
-							intoCodeString((player != null ? player.getName() : "Console"))))
-					.setDescription("A protection has been unregistered")
-					.addField("World", intoCodeString(protection.getWorldName()))
-					.addField("Coordinates",
-							intoCodeString(String.format("x: %d, y: %d, z: %d", location.getBlockX(),
-									location.getBlockY(), location.getBlockZ())))
-					.addField("Protection ID", intoCodeString(protection.getRegionId()))
-					.addField("Owner", intoCodeString(protection.getOwnerName()))
-					.addField("Protection block ID", intoCodeString(protection.getProtectionBlock().getIdentifier()))
-					.addField("Removal cause", intoCodeString(removalCause.name())));
+			DiscordMessage message = new DiscordMessage()
+					.addEmbed(
+							new EmbedObject()
+									.setTitle(String.format("[%s] Unregistered protection",
+											intoCodeString(
+													(commandSender != null ? commandSender.getName() : "Console"))))
+									.setDescription("A protection has been unregistered")
+									.addField("World", intoCodeString(protection.getWorldName()))
+									.addField("Coordinates",
+											intoCodeString(String.format("x: %d, y: %d, z: %d", location.getBlockX(),
+													location.getBlockY(), location.getBlockZ())))
+									.addField("Protection ID", intoCodeString(protection.getProtectionId()))
+									.addField("Owner", intoCodeString(protection.getOwnerName()))
+									.addField("Protection block ID", intoCodeString(protection.getProtectionBlockId()))
+									.addField("Removal cause", intoCodeString(removalCause.name())));
 
-			if (player != null) {
-				message.getEmbeds().get(0)
-						.setThumbnail(new Thumbnail(String.format("https://mineskin.eu/helm/%s", player.getName())));
+			if (commandSender != null && commandSender instanceof Player) {
+				message.getEmbeds().get(0).setThumbnail(
+						new Thumbnail(String.format("https://mineskin.eu/helm/%s", commandSender.getName())));
 			}
 
 			pandaDiscordWebhookService.sendMessage(message);
 		}
 	}
 
-	public static void sendFlagModificationMessage(Player player, Protection protection, String flagId,
+	public static void sendFlagModificationMessage(CommandSender commandSender, Protection protection, String flagId,
 			Object previousValue, Object newValue) {
 		if (DISCORD_LOGS_FLAGSMODIFICATION.getContent() != null
 				&& DISCORD_LOGS_FLAGSMODIFICATION.getContent().contains(flagId) && pandaDiscordWebhookService != null
 				&& pandaDiscordWebhookService.isWebhookDefined()) {
-			DiscordMessage message = new DiscordMessage().addEmbed(new EmbedObject()
-					.setTitle(String.format("[%s] Flag modified",
-							intoCodeString((player != null ? player.getName() : "Console"))))
-					.setDescription("A flag on a protection has been modified")
-					.addField("Protection ID", intoCodeString(protection.getRegionId()))
-					.addField("Flag ID", intoCodeString(flagId))
-					.addField("Previous value",
-							intoCodeString(previousValue != null ? previousValue.toString() : "null"))
-					.addField("New value", intoCodeString(newValue.toString())));
+			DiscordMessage message = new DiscordMessage()
+					.addEmbed(
+							new EmbedObject()
+									.setTitle(String.format("[%s] Flag modified",
+											intoCodeString(
+													(commandSender != null ? commandSender.getName() : "Console"))))
+									.setDescription("A flag on a protection has been modified")
+									.addField("Protection ID", intoCodeString(protection.getProtectionId()))
+									.addField("Flag ID", intoCodeString(flagId))
+									.addField("Previous value",
+											intoCodeString(previousValue != null ? previousValue.toString() : "null"))
+									.addField("New value", intoCodeString(newValue.toString())));
 
-			if (player != null) {
-				message.getEmbeds().get(0)
-						.setThumbnail(new Thumbnail(String.format("https://mineskin.eu/helm/%s", player.getName())));
+			if (commandSender != null && commandSender instanceof Player) {
+				message.getEmbeds().get(0).setThumbnail(
+						new Thumbnail(String.format("https://mineskin.eu/helm/%s", commandSender.getName())));
 			}
 
 			pandaDiscordWebhookService.sendMessage(message);
@@ -127,7 +137,7 @@ public class DiscordUtilities {
 
 			String removedProtections = purgedProtections
 					.subList(0, purgedProtections.size() > 10 ? 9 : purgedProtections.size()).stream()
-					.map(protection -> String.format("* %s", protection.getRegionId()))
+					.map(protection -> String.format("* %s", protection.getProtectionId()))
 					.collect(Collectors.joining(lineSeparator));
 
 			if (purgedProtections.size() > 10) {
@@ -138,8 +148,7 @@ public class DiscordUtilities {
 					.setTitle(String.format("[%s] Purged protections",
 							intoCodeString((player != null ? player.getName() : "Console"))))
 					.setDescription("Some protections have been removed due a purge")
-					.addField("Based on", intoCodeString(purgeConfiguration.toString()))
-					.addField("Older than", intoCodeString(purgeConfiguration.getBasedOn().name()))
+					.addField("Older than", intoCodeString(purgeConfiguration.toString()))
 					.addField("Amount of protections", intoCodeString(String.valueOf(purgedProtections.size())))
 					.addField("Protections", intoCodeString(removedProtections)));
 

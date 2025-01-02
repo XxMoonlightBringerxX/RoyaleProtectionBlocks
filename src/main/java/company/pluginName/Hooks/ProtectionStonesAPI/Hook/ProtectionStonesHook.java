@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,19 +17,21 @@ import org.bukkit.World;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
-import company.pluginName.Debugger;
-import company.pluginName.Debugger.MessageType;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
+import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaAPIs.Objects.PandaAbstractHook;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
+import darkpanda73.PandaUtils.PandaUtilities.Java.StringsHelper;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import dev.espi.protectionstones.FlagHandler;
 import dev.espi.protectionstones.PSGroupRegion;
@@ -37,10 +39,11 @@ import dev.espi.protectionstones.PSMergedRegion;
 import dev.espi.protectionstones.PSProtectBlock;
 import dev.espi.protectionstones.PSRegion;
 import dev.espi.protectionstones.ProtectionStones;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.CreationCause;
-import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionCreationAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException.Type;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionCreationData;
 
 public class ProtectionStonesHook extends PandaAbstractHook {
 
@@ -51,7 +54,7 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 	private static ProtectionBlocksService protectionBlocksService;
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@Override
 	public void load() throws Throwable {
@@ -68,11 +71,11 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 	}
 
 	public TransferResult<ProtectionBlock> transferProtectionBlocks() {
-		List<ProtectionBlock> successList = new ArrayList<>();
-		List<Throwable> exceptionsList = new ArrayList<>();
-		AtomicReference<Boolean> errorsInConsole = new AtomicReference<>(false);
+		TransferResult<ProtectionBlock> transferResult = new TransferResult<>(0);
 
 		if (isHooked()) {
+			transferResult.setTotalAmount(ProtectionStones.getInstance().getConfiguredBlocks().size());
+
 			ProtectionStones.getInstance().getConfiguredBlocks().forEach(pb -> {
 				if (protectionBlocksService.getProtectionBlockById(pb.alias) == null) {
 					try {
@@ -84,12 +87,12 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 							Bukkit.getWorlds().stream()
 									.filter(world -> pb.worldListType.equalsIgnoreCase("whitelist") == pb.worlds
 											.contains(world.getName()))
-									.map(World::getName).forEach(block.getAllowedWorlds()::add);
+									.map(World::getName).forEach(block.getBlockAllowedWorlds()::add);
 						}
 
 						block.save();
 
-						successList.add(block);
+						transferResult.addSuccess();
 					} catch (RoyaleProtectionBlocksExceptionImpl e) {
 						MessageTemplate
 								.inst(PandaPrefixedStringField.applyPrefix(
@@ -97,29 +100,40 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 												pb.alias, e.getMessage())))
 								.process().sendMessage(Bukkit.getConsoleSender());
 						e.printStackTrace();
-						exceptionsList.add(e);
-						errorsInConsole.set(true);
+						transferResult.addException();
+						transferResult.setErrorsInConsole(true);
 					}
+				} else {
+					transferResult.addProcessed();
 				}
 			});
+
+			MessageTemplate.inst(Messages.MESSAGE_TRANSFER_PROTECTIONBLOCKSPROGRESS.applyPrefix())
+					.setReplacements(new Replacement("{current_percent}",
+							() -> StringsHelper.toPercentage(
+									(transferResult.getProcessedAmount() / transferResult.getTotalAmount()), 1)))
+					.process().sendMessage(Bukkit.getConsoleSender());
+
+			return transferResult;
 		}
 
-		return new TransferResult<ProtectionBlock>(successList, exceptionsList, errorsInConsole.get());
+		return transferResult;
 	}
 
 	public TransferResult<Protection> transferProtections() {
-		List<Protection> successList = new ArrayList<>();
-		List<Throwable> exceptionsList = new ArrayList<>();
-		AtomicReference<Boolean> errorsInConsole = new AtomicReference<>(false);
+		TransferResult<Protection> transferResult = new TransferResult<>(0);
 
 		if (isHooked()) {
+			Map<World, RegionManager> regionManagers = new HashMap<>();
 			Set<PSRegion> regionsToTransfer = new HashSet<>();
 
 			Bukkit.getWorlds().stream().forEach(world -> {
 				try {
-					RegionManager regionManager = worldGuardApi.getHook().getInternalWorldGuard()
-							.getRegionManager(world);
-					regionManager.getRegions().entrySet().stream()
+					regionManagers
+							.computeIfAbsent(world,
+									(key) -> worldGuardApi.getHook().getInternalWorldGuard()
+											.getRegionManagerSafely(world))
+							.getRegions().entrySet().stream()
 							.filter((entry) -> ProtectionStones.isPSRegion(entry.getValue()))
 							.forEach((entry) -> ProtectionStones.getPSRegions(world, entry.getKey()).stream()
 									.findFirst().ifPresent(regionsToTransfer::add));
@@ -128,29 +142,70 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 							.inst(PandaPrefixedStringField.applyPrefix(String.format(
 									"&cUnable to process regions for world '%s': %s", world.getName(), e.getMessage())))
 							.process().sendMessage(Bukkit.getConsoleSender());
-					errorsInConsole.set(true);
+					e.printStackTrace();
+					transferResult.setErrorsInConsole(true);
 				}
 			});
 
-			regionsToTransfer.stream().filter(Objects::nonNull).forEach(psRegion -> {
-				if (protectionsService.findProtectionById(psRegion.getId()) == null
-						&& !psRegion.getOwners().isEmpty()) {
-					TransferResult<Protection> result = transferRegion(psRegion);
+			transferResult.setTotalAmount(regionsToTransfer.size());
 
-					successList.addAll(result.getSuccessList());
-					exceptionsList.addAll(result.getExceptionsList());
+			TasksUtils.executeOnAsync(() -> {
+				List<PSRegion> regionsToRemoveOnTask = new ArrayList<>();
 
-					if (!errorsInConsole.get() && result.isErrorsInConsole()) {
-						errorsInConsole.set(true);
+				regionsToTransfer.removeIf(regionToTransfer -> {
+					try {
+						transferRegion(transferResult, regionToTransfer);
+
+						regionsToRemoveOnTask.add(regionToTransfer);
+
+						if (regionsToRemoveOnTask.size() >= 10 || regionsToTransfer.size() == 1) {
+							FutureTask<Void> task = new FutureTask<Void>(() -> {
+								regionsToRemoveOnTask.forEach(region -> {
+									region.deleteRegion(false);
+								});
+								regionsToRemoveOnTask.clear();
+								return null;
+							});
+
+							TasksUtils.execute(task::run);
+
+							try {
+								task.get();
+
+								Thread.sleep(10);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				}
-			});
-		}
 
-		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get());
+					return true;
+				});
+			});
+
+			Replacement replacement = new Replacement("{current_percent}",
+					() -> StringsHelper.toPercentage(
+							((float) transferResult.getProcessedAmount() / (float) transferResult.getTotalAmount()),
+							1));
+			replacement.getMessageFragment().setCacheText(false);
+			MessageTemplate template = MessageTemplate.inst(Messages.MESSAGE_TRANSFER_PROTECTIONSPROGRESS.applyPrefix())
+					.setReplacements(replacement);
+
+			while (!regionsToTransfer.isEmpty()) {
+				try {
+					Thread.sleep(1000);
+
+					template.process().sendMessage(Bukkit.getConsoleSender());
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+		return transferResult;
 	}
 
-	private TransferResult<Protection> transferRegion(PSRegion protectionStonesRegion) {
+	private void transferRegion(TransferResult<Protection> transferResult, PSRegion protectionStonesRegion) {
 		Map<Flag<?>, Object> flags = new HashMap<>(protectionStonesRegion.getWGRegion().getFlags());
 
 		List<UUID> owners = protectionStonesRegion.getOwners();
@@ -166,150 +221,144 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 		if (protectionStonesRegion instanceof PSGroupRegion) {
 			((PSGroupRegion) protectionStonesRegion).getMergedRegions().forEach(regions::add);
+			transferResult.setTotalAmount(transferResult.getTotalAmount() + (regions.size() - 1));
 		} else {
 			regions.add(protectionStonesRegion);
 		}
 
-		List<Protection> successList = new ArrayList<>();
-		List<Throwable> exceptionsList = new ArrayList<>();
-		AtomicReference<Boolean> errorsInConsole = new AtomicReference<>(false);
-
 		PSProtectBlock protectBlock = ProtectionStones.getBlockOptions(protectionStonesRegion.getType());
 
 		if (protectBlock != null) {
+			AtomicBoolean exception = new AtomicBoolean(false);
+
 			regions.forEach(region -> {
 				ProtectionBlock protectionBlock = protectionBlocksService.getProtectionBlockById(protectBlock.alias);
 
 				if (protectionBlock != null) {
 					try {
-						Protection protection = new Protection(owners.get(0), region.getProtectBlock().getLocation(),
-								protectionBlock);
 
-						ProtectionCreationAttemptEvent attemptEvent = new ProtectionCreationAttemptEvent(null,
-								protection, CreationCause.IMPORT);
-						Bukkit.getPluginManager().callEvent(attemptEvent);
+						Protection protection = protectionsService.create(ProtectionCreationData
+								.inst(Bukkit.getConsoleSender(), owners.get(0), protectionBlock,
+										region.getProtectBlock().getLocation(), CreationCause.IMPORT)
+								.setCheckOverlap(false).setCheckWorldGuardOverlap(false));
 
-						if (attemptEvent.isCancelled()) {
-							throw Exceptions.Protections.Save.CANCELLED.generateException();
+						if (displayName != null) {
+							protection.setDisplayName(displayName);
 						}
 
-						protection.create().subscribe((createdProtection) -> {
+						if (!(protectionStonesRegion instanceof PSMergedRegion)) {
 							try {
-								createdProtection.getProtectedRegion().getFlags().forEach((flag, value) -> {
-									if (worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag() == flag) {
-										flags.put(flag, value);
-									}
-								});
-
-								createdProtection.getProtectedRegion().setFlags(flags);
-
-								if (displayName != null) {
-									createdProtection.setDisplayName(displayName);
-								}
-
-								if (!(protectionStonesRegion instanceof PSMergedRegion)) {
-									try {
-										createdProtection.setHome(home);
-									} catch (Exception e) {
-										MessageTemplate
-												.inst(PandaPrefixedStringField.applyPrefix(
-														String.format("&cUnable to set home for protection '%s': %s",
-																createdProtection.getRegionId(), e.getMessage())))
-												.process().sendMessage(Bukkit.getConsoleSender());
-										e.printStackTrace();
-										errorsInConsole.set(true);
-									}
-								}
-
-								owners.forEach(owner -> {
-									try {
-										createdProtection.getWorldGuardOwners().add(owner);
-									} catch (RoyaleProtectionBlocksExceptionImpl e) {
-										if (e.getExceptionType() != Exceptions.Protections.Owners.Save.CANNOTADDPROTECTIONOWNER) {
-											MessageTemplate
-													.inst(PandaPrefixedStringField.applyPrefix(String.format(
-															"&cUnable to add owner on protection '%s': %s",
-															createdProtection.getRegionId(), e.getMessage())))
-													.process().sendMessage(Bukkit.getConsoleSender());
-											e.sendError(Bukkit.getConsoleSender());
-											e.printStackTrace();
-											errorsInConsole.set(true);
-										}
-									}
-								});
-
-								members.forEach(member -> {
-									try {
-										createdProtection.getWorldGuardMembers().add(member);
-									} catch (RoyaleProtectionBlocksExceptionImpl e) {
-										if (e.getExceptionType() != Exceptions.Protections.Members.Save.CANNOTADDPROTECTIONOWNER) {
-											MessageTemplate
-													.inst(PandaPrefixedStringField.applyPrefix(String.format(
-															"&cUnable to add member on protection '%s': %s",
-															createdProtection.getRegionId(), e.getMessage())))
-													.process().sendMessage(Bukkit.getConsoleSender());
-											e.sendError(Bukkit.getConsoleSender());
-											e.printStackTrace();
-											errorsInConsole.set(true);
-										}
-									}
-								});
-
-								successList.add(createdProtection);
-
-								ProtectionStones.removePSRegion(protection.getBukkitLocation().getWorld(),
-										protectionStonesRegion.getId());
-							} catch (RoyaleProtectionBlocksExceptionImpl e) {
+								protection.setHome(home);
+							} catch (Exception e) {
 								MessageTemplate
 										.inst(PandaPrefixedStringField.applyPrefix(
-												String.format("&cUnable to save information for protection '%s': %s",
-														region.getId(), e.getMessage())))
+												String.format("&cUnable to set home for protection '%s': %s",
+														protection.getProtectionId(), e.getMessage())))
 										.process().sendMessage(Bukkit.getConsoleSender());
-								e.sendError(Bukkit.getConsoleSender());
-								exceptionsList.add(e);
-								errorsInConsole.set(true);
+								e.printStackTrace();
+								transferResult.setErrorsInConsole(true);
 							}
-						}, (e) -> {
-							MessageTemplate
-									.inst(PandaPrefixedStringField.applyPrefix(
-											String.format("&cUnable to save information for protection '%s': %s",
-													region.getId(), e.getMessage())))
-									.process().sendMessage(Bukkit.getConsoleSender());
-							exceptionsList.add(e);
-							errorsInConsole.set(true);
-						});
-					} catch (RoyaleProtectionBlocksExceptionImpl e) {
-						if (e.getExceptionType() == Exceptions.Protections.Save.CANCELLED) {
-							Debugger.log(MessageType.PROTECTION_CREATION_ATTEMPT_CANCELLED,
-									() -> new Object[] { String.valueOf(region.getProtectBlock().getLocation().getX()),
-											String.valueOf(region.getProtectBlock().getLocation().getY()),
-											String.valueOf(region.getProtectBlock().getLocation().getZ()) });
-						} else {
-							MessageTemplate
-									.inst(PandaPrefixedStringField.applyPrefix(
-											String.format("&cUnable to save information for protection '%s': %s",
-													region.getId(), e.getMessage())))
-									.process().sendMessage(Bukkit.getConsoleSender());
-							e.sendError(Bukkit.getConsoleSender());
 						}
 
-						exceptionsList.add(e);
-						errorsInConsole.set(true);
+						owners.forEach(owner -> {
+							try {
+								protection.getWorldGuardOwners().add(owner);
+							} catch (RoyaleProtectionBlocksExceptionImpl e) {
+								if (e.getExceptionType() != Exceptions.Protections.Owners.Save.CANNOTADDPROTECTIONOWNER) {
+									MessageTemplate
+											.inst(PandaPrefixedStringField.applyPrefix(
+													String.format("&cUnable to add owner on protection '%s': %s",
+															protection.getProtectionId(), e.getMessage())))
+											.process().sendMessage(Bukkit.getConsoleSender());
+									e.printStackTrace();
+									transferResult.setErrorsInConsole(true);
+								}
+							}
+						});
+
+						members.forEach(member -> {
+							try {
+								protection.getWorldGuardMembers().add(member);
+							} catch (RoyaleProtectionBlocksExceptionImpl e) {
+								if (e.getExceptionType() != Exceptions.Protections.Members.Save.CANNOTADDPROTECTIONOWNER) {
+									MessageTemplate
+											.inst(PandaPrefixedStringField.applyPrefix(
+													String.format("&cUnable to add member on protection '%s': %s",
+															protection.getProtectionId(), e.getMessage())))
+											.process().sendMessage(Bukkit.getConsoleSender());
+									e.printStackTrace();
+									transferResult.setErrorsInConsole(true);
+								}
+							}
+						});
+					} catch (RoyaleProtectionBlocksException e) {
+						if (e.getType() != Type.PROTECTIONS_SAVE_CANCELLED) {
+							MessageTemplate
+									.inst(PandaPrefixedStringField.applyPrefix(
+											String.format("&cUnable to save information for protection '%s': %s",
+													region.getId(), e.getMessage())))
+									.process().sendMessage(Bukkit.getConsoleSender());
+							e.printStackTrace();
+						}
+
+						exception.set(true);
+						transferResult.setErrorsInConsole(true);
 					}
 				}
 			});
-		}
 
-		return new TransferResult<Protection>(successList, exceptionsList, errorsInConsole.get());
+			if (!exception.get()) {
+				regions.forEach(region -> {
+					if (region.getParent() != null) {
+						Protection childProtection = protectionsService.findProtectionById(region.getId());
+						if (childProtection != null) {
+							Protection protection = protectionsService
+									.findProtectionById(protectionStonesRegion.getId());
+							if (protection != null) {
+								try {
+									childProtection.setParentProtectionAndSave(protection);
+								} catch (RoyaleProtectionBlocksExceptionImpl e) {
+									e.sendError(Bukkit.getConsoleSender());
+									transferResult.setErrorsInConsole(true);
+								}
+							}
+						}
+					}
+				});
+
+				transferResult.addSuccess();
+			} else {
+				transferResult.addException();
+			}
+		}
 	}
 
 	@Data
-	@AllArgsConstructor
 	public static class TransferResult<T> {
 
-		private List<T> successList;
-		private List<Throwable> exceptionsList;
-		private boolean errorsInConsole;
+		private int totalAmount;
+		private int processedAmount = 0;
+		private int successAmount = 0;
+		private int failedAmount = 0;
+		private boolean errorsInConsole = false;
+
+		public TransferResult(int totalAmount) {
+			this.totalAmount = totalAmount;
+		}
+
+		public synchronized void addProcessed() {
+			this.processedAmount++;
+		}
+
+		public synchronized void addSuccess() {
+			this.successAmount++;
+			this.processedAmount++;
+		}
+
+		public synchronized void addException() {
+			this.failedAmount++;
+			this.processedAmount++;
+		}
 
 	}
 

@@ -22,7 +22,7 @@
 #
 #---
 
-Version: 1
+Version: 2
 
 Commands: 
   Protection-blocks: 
@@ -243,6 +243,45 @@ Commands:
             Aliases: 
             - "b"
             Cooldown: 0
+          Last-login: 
+            Name: "lastlogin"
+            Description: "Shows the last time a player was connected"
+            Permission: "protectionblocks.admin.lastlogin"
+            Aliases: 
+            - "ll"
+            Cooldown: 0
+          Staff-mode: 
+            Name: "staffmode"
+            Description: "Sets yourself or a player into the staff mode, which allows to bypass
+              certain parts of the system like the ban and blocked protections"
+            Permission: "protectionblocks.admin.staffmode"
+            Aliases: 
+            - "sm"
+            Cooldown: 0
+          Guard: 
+            Name: "guard"
+            Description: "Protect players from the auto-purge or manual purges to prevent their
+              protections from being removed."
+            Permission: "protectionblocks.admin.guard"
+            Aliases: 
+            - "g"
+            Cooldown: 0
+            Subcommands: 
+              Protection: 
+                Name: "protection"
+                Description: "Manage the guard status of the current protection, setting a new
+                  guard time."
+                Permission: "protectionblocks.admin.guard.protection"
+                Aliases: 
+                - "pl"
+                Cooldown: 0
+              Player: 
+                Name: "player"
+                Description: "Manage the guard status of a player, setting a new guard time."
+                Permission: "protectionblocks.admin.guard.player"
+                Aliases: 
+                - "pl"
+                Cooldown: 0
       Leave: 
         Name: "leave"
         Description: "Leave a protection, stop being an owner or a member"

@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManageInventory;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -27,7 +27,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 public class ProtectionSplitInventory extends PagedChestInventoryObject<Protection> {
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static PlaceholdersService placeholdersService;
@@ -78,7 +78,7 @@ public class ProtectionSplitInventory extends PagedChestInventoryObject<Protecti
 	protected void onEntityClick(InventoryClickEvent e, Protection entity) {
 		try {
 			playerInteractionsService.protectionSplitRequest(ProtectionSplitRequestInput.inst(getPlayer(), entity));
-			new ProtectionsManageInventory(getPlayer(), entity).openInventory();
+			new ProtectionsManageInventory(getPlayer(), entity).setPreviousInventory(null).openInventory();
 		} catch (RoyaleProtectionBlocksException e1) {
 			e1.sendError(getPlayer());
 		}

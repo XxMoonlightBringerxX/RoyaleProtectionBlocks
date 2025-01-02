@@ -22,7 +22,7 @@
 #
 #---
 
-Version: 7
+Version: 8
 
 #---
 # MySQL database
@@ -41,6 +41,14 @@ MySQL:
   Password: "password"
   Parameters: "sslMode=DISABLED&connectionTimeout=3000&socketTimeout=3000"
   Table-prefix: ""
+
+SQL: 
+  
+  #---
+  # Defines if SQL queries should be shown in console.
+  #---
+
+  Print-queries-in-console: false
   
 #---
 # Enable the Discord logging system. In order to be able to send the information
@@ -75,6 +83,9 @@ Settings:
   #---
   # If enabled, the plugin will start showing the enabled debug messages. On the
   # section below, you can allow the log of some specific messages in console.
+  #
+  # Deprecated: Soon this section will be deprecated and removed, as this will
+  # be replaced with the Logger setting.
   #---
   
   Debug: 
@@ -95,11 +106,11 @@ Settings:
       Protection-creation: true
       Protection-removal-attempt: true
       Protection-removal: true
-      
       Protection-creation-attempt-cancelled: true
       Protection-removal-attempt-cancelled: true
       Player-teleport-to-protection-attempt: true
       Player-teleport-to-protection-attempt-cancelled: true
+    
   #---
   # Specify if the right click should open the management inventory.
   #---
@@ -203,10 +214,86 @@ Settings:
     Allow-regions-inside-another-from-same-owner: true
     
     #---
+    # Allows the usage of multi-threading to speed up queries to find protections
+    # due certain actions.
+    #
+    # Warning: This option is experimental, may cause issues on your server with
+    # specific actions, you can report this issues but backups are suggested.
+    #---
+  
+    Allow-multi-thread-searching: false
+  
+    #---
+    # Defines the size of the radius for the query caches. This caches are intended
+    # to speed of queries for current protections, caching a certain amount of protections
+    # from a radius based on a requested location or area. The bigger the size, the slower
+    # the query will be. The smaller the size, the higher ram consumption it'll cause.
+    #--- 
+
+    Radius-for-search-cache: 50.0
+  
+    #---
+    # Defines the amount of time in milliseconds the query caches will remain in memory.
+    #--- 
+
+    Search-cache-ttl-in-millis: 30000
+  
+    #---
+    # Defines the maximum length of the display names on the plugin. This includes color
+    # and formatting. Due SQL definitions, the maximum is 255.
+    #--- 
+
+    Maximum-display-name-length: 255
+  
+    #---
+    # Defines if protections can be merged only if protections are next to the parent protection.
+    # Disabling this option allows to merge this protections to other protections far away.
+    #--- 
+
+    Must-be-close-for-merge: true
+
+    #---
+    # Defines the default name for the protections which is set on creation.
+    #---
+    Default-display-name: "{protection_world}_{protection_location_x}_{protection_location_y}_{protection_location_z}"
+
+    #---
+    # Defines the default priority for the protections which is set on creation.
+    #---
+
+    Default-priority: 0
+    
+    #---
+    # Drops the item on the ground (close to the player or on the previous protection
+    # location if it's a protection removal) if the player has no space on the inventory.
+    #---
+    
+    Drop-item-on-full-inventory: false
+
+    #---
+    # Enables a system which controls the player's permissions. If the player doesn't have
+    # permissions to manage the current amount of protections, they are blocked until the player
+    # removes some of this protections to unblock them.
+    #---
+
+    Block-protections-if-exceeding-limits: false
+    Check-if-exceeding-limits-every: "30m"
+
+    #---
+    # Defines the configuration for the view system, to manage the available radius
+    # of blocks to show on the player, the speed of the particles and the duration.
+    #---
+
+    View: 
+      Radius: 16
+      Speed: 1.5
+      Duration-in-seconds: 60
+
+    #---
     # Set the purge settings to it will start removing the protections older than
     # a specified amount of time.
     #---
-    
+
     Auto-purge: 
       
       #---
@@ -221,23 +308,34 @@ Settings:
       # - 'y': years
       #---
       
-      Purge-older-than: "7d"
-      
+      Purge-older-than: ""
+    
+    Flight:
+    
       #---
-      # Set a certain amount of time which the plugin will check for expired protections.
-      # Leave empty to disable the auto-purge
-      #
-      # - 's': seconds
-      # - 'm': minutes
-      # - 'h': hours
-      # - 'd': days
-      # - 'w': weeks
-      # - 'M': months (30 days)
-      # - 'y': years
+      # Enables the flight control system, which allows the plugin to control the current
+      # flight status. This system will remove the flight ability to players which are
+      # exiting protections where they are allowed to fly.
       #---
-      
-      Execute-every: ""
-        
+
+      Enable-flight-control: true
+
+      #---
+      # Defines the amount of time in seconds players has to go back to their protections
+      # before removing the flight ability.
+      #---
+
+      Unauthorized-area-remove-after-seconds: 5
+
+      #---
+      # Excludes a list of worlds to prevent flight control on them.
+      #---
+
+      Exclude-worlds: 
+      - "world1"
+      - "world2"
+      - "world3"
+
   Protection-block: 
     
     #---
@@ -252,395 +350,53 @@ Settings:
     #---
     
     Request-confirmation-on-purchase-through-gui: false
-
+    
   #---
   # Change the settings of the hook between RoyaleProtectionBlocks and DeluxeCombat.
   #---
-  
-  Deluxe-combat: 
+    
+  Message-listener: 
+    Listener-priority: "LOWEST"
+
+  Combat-log-hook: 
 
     #---
-    # Disable or enable certain actions to become available while players are in combat.
+    # Enables the hook between combat log plugins and RoyaleProtectionBlocks. If enabled, they'll
+    # be used to check the pvp status of the players.
+    #---
+
+    Deluxe-combat-enabled: true
+    Combat-log-X-enabled: true
+    PvP-manager-enabled: true
+
+    #---
+    # Cancel certain actions if a player is currently in combat.
     #---
 
     Cancel-protection-creation-in-combat: true
     Cancel-protection-removal-in-combat: true
     Cancel-protection-teleport-in-combat: true
 
-Commands: 
-  Protection-blocks: 
-    Name: "protectionblocks"
-    Description: "Open the GUI or execute commands"
-    Permission: ""
-    Usage: "[help|subcommand]"
-    Aliases: 
-    - "pb"
-    Subcommands: 
-      Help: 
-        Name: "help"
-        Description: "Get all the commands"
-        Permission: ""
-        Usage: "[page]"
-        Aliases: 
-        - "h"
-      Info: 
-        Name: "info"
-        Description: "Show the information of a protection"
-        Permission: ""
-        Usage: "[members|owners|banneds]"
-        Aliases: 
-        - "i"
-        Cooldown: 0
-        Subcommands: 
-          Help: 
-            Name: "help"
-            Description: "Get all the commands"
-            Permission: ""
-            Usage: "[page]"
-            Aliases: 
-            - "h"
-          Members: 
-            Name: "members"
-            Description: "Get the members from the current protection"
-            Permission: ""
-            Usage: "[page]"
-            Aliases: 
-            - "m"
-          Owners: 
-            Name: "owners"
-            Description: "Get the owners from the current protection"
-            Permission: ""
-            Usage: "[page]"
-            Aliases: 
-            - "o"
-          Banneds: 
-            Name: "banneds"
-            Description: "Get the banneds from the current protection"
-            Permission: ""
-            Usage: "[page]"
-            Aliases: 
-            - "b"
-      Blocks: 
-        Name: "blocks"
-        Description: "Open a list with all the blocks"
-        Permission: "protectionblocks.blocks"
-        Usage: "[help|subcommand]"
-        Aliases: 
-        - "b"
-        Subcommands: 
-          Help: 
-            Name: "help"
-            Description: "Get all the commands"
-            Permission: ""
-            Usage: "[page]"
-            Aliases: 
-            - "h"
-          Remove: 
-            Name: "remove"
-            Description: "Remove an existing block"
-            Permission: "protectionblocks.blocks.remove"
-            Usage: "<id>"
-            Aliases: 
-            - "r"
-            Cooldown: 0
-          Add: 
-            Name: "add"
-            Description: "Create a new block"
-            Permission: "protectionblocks.blocks.create"
-            Usage: "<id> <x> <y> <z> [permission]"
-            Aliases: 
-            - "a"
-            Cooldown: 0
-          Give: 
-            Name: "give"
-            Description: "Give an existing block to yourself or a player"
-            Permission: "protectionblocks.blocks.give"
-            Usage: "<id> [player]"
-            Aliases: 
-            - "g"
-            Cooldown: 0
-      Files: 
-        Name: "files"
-        Description: "Manage the importation and exportation of data through files"
-        Permission: "protectionblocks.files"
-        Usage: "[help|subcommand]"
-        Aliases: 
-        - "f"
-        Subcommands: 
-          Help: 
-            Name: "help"
-            Description: "Get all the commands"
-            Permission: ""
-            Usage: "[page]"
-            Aliases: 
-            - "h"
-          Import: 
-            Name: "import"
-            Description: "Import all the information of an specific type of data from its respective
-              file"
-            Permission: "protectionblocks.files.import"
-            Usage: "<blocks>"
-            Aliases: 
-            - "i"
-            Cooldown: 0
-          Export: 
-            Name: "export"
-            Description: "Export all the information of an specific type of data to its respective
-              file"
-            Permission: "protectionblocks.files.export"
-            Usage: "<blocks>"
-            Aliases: 
-            - "e"
-            Cooldown: 0
-      Admin: 
-        Name: "admin"
-        Description: "Commands used to manage staff commands"
-        Permission: "protectionblocks.admin"
-        Usage: "[help|subcommand]"
-        Aliases: 
-        - "a"
-        Subcommands: 
-          Help: 
-            Name: "help"
-            Description: "Get all the commands"
-            Permission: ""
-            Usage: "[page]"
-            Aliases: 
-            - "h"
-          Reload: 
-            Name: "reload"
-            Description: "Reload the plugin"
-            Permission: "protectionblocks.admin.reload"
-            Aliases: 
-            - "r"
-            Cooldown: 0
-          Spawn: 
-            Name: "spawn"
-            Description: "Use this command to check whether the spawn has been set properly
-              or not"
-            Permission: "protectionblocks.admin.spawn"
-            Aliases: 
-            - "s"
-            Cooldown: 0
-          Set-spawn: 
-            Name: "setspawn"
-            Description: "Specify the spawn configured for the plugin. This one is mostly used
-              to send players after being kicked or banned from a protection"
-            Permission: "protectionblocks.admin.setspawn"
-            Aliases: 
-            - "ss"
-            Cooldown: 0
-          Purge: 
-            Name: "purge"
-            Description: "Delete protections older than the specified time, based on the last
-              connection of the owner or their creation date"
-            Permission: "protectionblocks.admin.purge"
-            Usage: "[--days <amount of days>] [--hours <amount of hours>] [--minutes
-              <amount of minutes>] [--config] [--show-ignored-players] [--export-only]
-              [confirm]"
-            Aliases: 
-            - "p"
-            Cooldown: 0
-          Reset-flags: 
-            Name: "resetflags"
-            Description: "Reset the flags values to the default ones"
-            Permission: "protectionblocks.admin.resetflags"
-            Aliases: 
-            - "rf"
-            Cooldown: 0
-          Transfer: 
-            Name: "transfer"
-            Description: "Transfer data from a plugin to RoyaleProtectionBlocks"
-            Permission: "protectionblocks.admin.transfer"
-            Usage: "[plugin to transfer] <confirm>"
-            Aliases: 
-            - "t"
-            Cooldown: 0
-      Leave: 
-        Name: "leave"
-        Description: "Leave a protection, stop being an owner or a member"
-        Permission: ""
-        Aliases: 
-        - "l"
-        Cooldown: 0
-      View: 
-        Name: "view"
-        Description: "Show the boundaries of your current protection for a certain time"
-        Permission: ""
-        Aliases: 
-        - "v"
-        Cooldown: 0
-      Hide: 
-        Name: "hide"
-        Description: "Hide the protection block on your current protection"
-        Permission: ""
-        Aliases: 
-        - "h"
-        Cooldown: 0
-      Remove-owner: 
-        Name: "removeowner"
-        Description: "Remove an owner on your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "ro"
-        Cooldown: 0
-      Ban: 
-        Name: "ban"
-        Description: "Ban a player from your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "bn"
-        Cooldown: 0
-      Kick: 
-        Name: "kick"
-        Description: "Kick a player from your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "k"
-        Cooldown: 0
-      List: 
-        Name: "list"
-        Description: "Open a list with all your protections"
-        Permission: ""
-        Usage: "[username]"
-        Aliases: 
-        - "l"
-        Cooldown: 0
-      Remove-member: 
-        Name: "removemember"
-        Description: "Remove a member on your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "rm"
-        Cooldown: 0
-      Unban: 
-        Name: "unban"
-        Description: "Unban a player from your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "ubn"
-        Cooldown: 0
-      Add-owner: 
-        Name: "addowner"
-        Description: "Add an owner on your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "ao"
-        Cooldown: 0
-      Unclaim: 
-        Name: "unclaim"
-        Description: "Remove the protection you're currently in"
-        Permission: ""
-        Aliases: 
-        - "uc"
-        Cooldown: 0
-      Buy: 
-        Name: "buy"
-        Description: "Purchase protection blocks which are on sale"
-        Permission: ""
-        Usage: "[protection block]"
-        Aliases: []
-        Cooldown: 0
-      Set-home: 
-        Name: "sethome"
-        Description: "Set the home on your current protection"
-        Permission: ""
-        Aliases: 
-        - "sh"
-        Cooldown: 0
-      Rename: 
-        Name: "rename"
-        Description: "Rename your current protection name"
-        Permission: ""
-        Usage: "<new name>"
-        Aliases: 
-        - "rn"
-        Cooldown: 0
-      Add-member: 
-        Name: "addmember"
-        Description: "Add a member on your current protection"
-        Permission: ""
-        Usage: "<username>"
-        Aliases: 
-        - "am"
-        Cooldown: 0
-      Show: 
-        Name: "show"
-        Description: "Show the protection block on your current protection"
-        Permission: ""
-        Aliases: 
-        - "sw"
-        Cooldown: 0
-      Home: 
-        Name: "home"
-        Description: "Teleport to the home of the specified protection."
-        Permission: ""
-        Usage: "[region id]"
-        Aliases: 
-        - "l"
-        Cooldown: 0
-
 #---
-# Manage the values of the permissions in the plugin. This permissions only
-# affect to internal checkings, which are using the permission defined here.
-# Other features like commands, which have their own permissions, won't use
-# this values.
-# Specify the next prefixes on the permissions to add the permissions to
-# the players without requiring the permission plugin:
-# - '!' -> Add this to set the permission available for OP players.
-# - '+' -> Add this to set the permission available for all the players.
+# Enables the log system, which replaces the output system on the plugin by a custom one,
+#
+# Warning: This system is experimental and does not controls most part of the messages
+# on the plugin. This system is still in progress.
 #---
 
-Permissions: 
-  Teleport: 
-    Others: "protectionblocks.teleport.others"
-    Bypass: "protectionblocks.teleport.bypass"
-  List: 
-    Others: "protectionblocks.list.others"
-  Delete: 
-    Others: "protectionblocks.delete.others"
-  Manage: 
-    Others: "protectionblocks.manage.others"
-  Members: 
-    Add: 
-      Others: "protectionblocks.members.add.others"
-    Remove: 
-      Others: "protectionblocks.members.remove.others"
-  Banneds: 
-    Add: 
-      Others: "protectionblocks.banneds.add.others"
-    Remove: 
-      Others: "protectionblocks.banneds.remove.others"
-    Bypass: "protectionblocks.banneds.bypass"
-  Kick: 
-    Others: "protectionblocks.kick.others"
-    Bypass: "protectionblocks.kick.bypass"
-  Owners: 
-    Add: 
-      Others: "protectionblocks.owners.add.others"
-    Remove: 
-      Others: "protectionblocks.owners.remove.others"
-  Info: 
-    Others: "protectionblocks.info.others"
-  Overlap: 
-    Bypass: "protectionblocks.overlap.bypass"
-  Economy: 
-    Bypass: "protectionblocks.economy.bypass"
-  Blocks: 
-    Create: "protectionblocks.blocks.create"
-    Edit: "protectionblocks.blocks.edit"
-    Delete: "protectionblocks.blocks.delete"
-    Max: 
-      Template: "protectionblocks.{block}.max.{max}"
-      Bypass: "protectionblocks.{block}.max.bypass"
-  World: 
-    Max: 
-      Template: "protectionblocks.max.{max}"
-  Max: 
-    Bypass: "protectionblocks.max.bypass"
+Logging: 
+  Enabled: false
+  Show-on-console: 
+  - "DEBUG"
+  - "INFO"
+  - "WARNING"
+  - "ERROR"
+  - "NONE"
+  Show-on-logs: 
+  - "DEBUG"
+  - "INFO"
+  - "WARNING"
+  - "ERROR"
+  - "NONE"
+  Console-format: "{prefix}{message}"
+  Logs-format: "[{level}][{class}.{method}()] {datetime} {message}"

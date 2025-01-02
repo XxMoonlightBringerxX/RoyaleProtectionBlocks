@@ -6,11 +6,11 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment.ClickEvent;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment.HoverEvent;
@@ -27,7 +27,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPan
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionPriorityChangeRequestInput;
 
@@ -39,16 +39,14 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 		defaultDescription = "Set the priority of the current protection",
 		defaultAliases = "p",
 		defaultPermission = "protectionblocks.priority",
-		defaultUsage = "<priority> [protection id]"
-)
+		defaultUsage = "<priority> [protection id]")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
 		permission = true,
-		usage = true
-)
+		usage = true)
 public class PrioritySubCommand extends PandaSubCommand {
 
 	@RegisteredPandaField("lang")
@@ -69,9 +67,6 @@ public class PrioritySubCommand extends PandaSubCommand {
 			"Message.Protection.Priority.Multiple-protections-found-line-hover", "&eClick me!");
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
-
-	@PandaInject
 	private static PlayerDataService playerDataService;
 
 	@PandaInject
@@ -90,9 +85,10 @@ public class PrioritySubCommand extends PandaSubCommand {
 		if (pl != null) {
 			if (parameters.getParameters().size() > 0) {
 				if (parameters.getParameters().size() > 1) {
-					Optional<Protection> protection = protectionsService.getAllowedProtections((Player) sender)
+					Optional<Protection> protection = RoyaleProtectionBlocksAPIImpl.getInstance()
+							.getProtectionsService().findAllowedParentProtectionsByPlayer((Player) sender)
 							.filter(p -> (p.getDisplayName() != null ? p.getDisplayNameWithoutFormat()
-									: p.getRegionId()).equalsIgnoreCase(
+									: p.getProtectionId()).equalsIgnoreCase(
 											parameters.getParameters().subList(1, parameters.getParameters().size())
 													.stream().collect(Collectors.joining(" "))))
 							.findFirst();
@@ -110,7 +106,7 @@ public class PrioritySubCommand extends PandaSubCommand {
 									.process().sendMessage(pl);
 							playerData.getCurrentProtections().forEach(protection -> {
 								String displayName = protection.getDisplayName() != null ? protection.getDisplayName()
-										: protection.getRegionId();
+										: protection.getProtectionId();
 								String command = "/" + getCommandPath() + " " + parameters.getParameters().get(0) + " "
 										+ displayName;
 								Replacement[] replacements = placeholdersService.getProtectionReplacements(protection);

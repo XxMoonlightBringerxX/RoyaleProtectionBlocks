@@ -25,7 +25,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPan
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerEnterExitProtectionEvent;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @PandaListener
 public class PlayerRegionMessageListener implements Listener {
@@ -100,6 +100,9 @@ public class PlayerRegionMessageListener implements Listener {
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent e) {
 		lastProtections.remove(e.getPlayer().getUniqueId());
+		lastMessages.remove(e.getPlayer().getUniqueId());
+		lastActionBars.remove(e.getPlayer().getUniqueId());
+		lastTitles.remove(e.getPlayer().getUniqueId());
 	}
 
 	private void sendEnterMessage(Player player, IProtection protection) {

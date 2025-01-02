@@ -5,6 +5,7 @@ import java.util.Arrays;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.PandaFieldDescription;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaFieldContainer;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 
 @RegisteredPandaFieldContainer("lang")
@@ -19,8 +20,12 @@ public class Messages {
 	public static final PandaPrefixedStringField MESSAGE_SETSPAWNSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Set-spawn-successfully", "&aA new spawn has ben set successfully.");
 
-	public static final PandaPrefixedStringField MESSAGE_GENERAL_NOLIMIT = new PandaPrefixedStringField(
+	public static final PandaStringField MESSAGE_GENERAL_NOLIMIT = new PandaPrefixedStringField(
 			"Message.General.No-limit", "No limit");
+	public static final PandaStringField MESSAGE_GENERAL_EMPTY = new PandaStringField("Message.General.Empty",
+			"&7&o(Empty)");
+	public static final PandaStringField MESSAGE_GENERAL_CLICK = new PandaStringField("Message.General.Click",
+			"&8[&7click&8]");
 
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_CREATEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Created-successfully", "&aThe protection has been created successfully!");
@@ -85,6 +90,25 @@ public class Messages {
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Blocks.Removed-successfully", "&aThe protection block has been removed successfully!");
 
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_TRANSFER_ADDEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Transfer.Transfered-successfully",
+			"&aThe protection has been transfered successfully to the new owner!");
+
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_PURCHASE_PRICESETSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Purchase.Price-set-successfully",
+			"&aThe protection has been put on sale successfully for &e{price}$&a!");
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_PURCHASE_PRICEUNSETSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Purchase.Price-unset-successfully", "&aThe protection is no more on sale!");
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_PURCHASE_PURCHASEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Purchase.Purchased-successfully", "&aThe protection has been purchased successfully!");
+
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_PUBLICACCESS_SETTOPUBLICSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Public-access.Set-to-public-successfully",
+			"&aYour protection is now visible and accessible for everyone!");
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_PUBLICACCESS_SETTOPRIVATESUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Public-access.Set-to-private-successfully",
+			"&aYour protection is now only visible for your members through the inventories!");
+
 	public static final PandaPrefixedStringField MESSAGE_TRANSFER_AVAILABLELIST = new PandaPrefixedStringField(
 			"Message.Transfer.Available-list", "&7Available protection plugins to transfer from: &f{list}");
 	public static final PandaPrefixedStringField MESSAGE_TRANSFER_PROTECTIONSTONESNOTLOADED = new PandaPrefixedStringField(
@@ -95,6 +119,10 @@ public class Messages {
 			"&7You're about to transfer all the data from another plugin to RoyaleProtectionBlocks. Once it starts, it's not recomended to stop the server. This process may remove the old regions and lead to losing some in case their transfer fails. Remember to keep a backup of the WorldGuard and desired plugin folder in case something goes wrong. Make sure to remove the plugin you want to transfer from once the transfer finishes, as it can lead to unexpected behaviors if there are two protection plugins. Please, type &e{command} &7to confirm your choice.");
 	public static final PandaPrefixedStringField MESSAGE_TRANSFER_START = new PandaPrefixedStringField(
 			"Message.Transfer.Start", "&7Starting transfer process...");
+	public static final PandaPrefixedStringField MESSAGE_TRANSFER_PROTECTIONBLOCKSPROGRESS = new PandaPrefixedStringField(
+			"Message.Transfer.Protection-blocks-progress", "&7Imported protection blocks at &e{current_percent}");
+	public static final PandaPrefixedStringField MESSAGE_TRANSFER_PROTECTIONSPROGRESS = new PandaPrefixedStringField(
+			"Message.Transfer.Protections-progress", "&7Imported protections at &e{current_percent}");
 	public static final PandaPrefixedStringField MESSAGE_TRANSFER_END = new PandaPrefixedStringField(
 			"Message.Transfer.End",
 			"&7Transfer finished! Remember to check the results and, if everything went okey, remove the old protection plugin.");
@@ -131,6 +159,13 @@ public class Messages {
 			"Message.Files.Imported-warning",
 			"&cThe following blocks couldn't be saved. Check the console for more information:");
 
+	public static final PandaPrefixedStringField MESSAGE_GUARD_MODIFIEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Guard.Modified-successfully", "&aThe guard has been modified successfully. &8[&e{time}&8]");
+	public static final PandaPrefixedStringField MESSAGE_GUARD_MODIFIEDUNLIMITEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Guard.Modified-unlimited-successfully", "&aThe guard has been set to be unlimited successfully.");
+	public static final PandaPrefixedStringField MESSAGE_GUARD_REMOVEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Guard.Removed-successfully", "&aThe guard has been removed successfully.");
+
 	// Errors
 	public static final PandaPrefixedStringField ERROR_ERROR = new PandaPrefixedStringField("Error.Error", "&cError!");
 	public static final PandaPrefixedStringField ERROR_CONSOLEDENIED = new PandaPrefixedStringField(
@@ -141,6 +176,8 @@ public class Messages {
 			"Error.No-item-in-hand", "&cYou must have an item in your hand!");
 	public static final PandaPrefixedStringField ERROR_NOTABLOCK = new PandaPrefixedStringField("Error.Not-a-block",
 			"&cThe item must be a block!");
+	public static final PandaPrefixedStringField ERROR_NOTIMESPECIFIED = new PandaPrefixedStringField(
+			"Error.No-time-specified", "&cYou must specify a valid amount of time!");
 	public static final PandaPrefixedStringField ERROR_INVENTORYFULL = new PandaPrefixedStringField(
 			"Error.Inventory-full", "&cYou don't have enough space on your inventory!");
 	public static final PandaPrefixedStringField ERROR_INSUFFICIENTBALANCE = new PandaPrefixedStringField(
@@ -170,10 +207,6 @@ public class Messages {
 			"Error.Protections.Not-found", "&cThe specified protection could not be found!");
 	public static final PandaPrefixedStringField ERROR_PROTECTIONS_NOTINSIDEPROTECTION = new PandaPrefixedStringField(
 			"Error.Protections.Not-inside-protection", "&cYou're not inside any protection!");
-	public static final PandaPrefixedStringField ERROR_PROTECTIONS_BANNEDWORLD = new PandaPrefixedStringField(
-			"Error.Protections.Banned-world", "&cYou can't use protection blocks in this world!");
-	public static final PandaPrefixedStringField ERROR_PROTECTIONS_NOTALLOWEDWORLD = new PandaPrefixedStringField(
-			"Error.Protections.Not-allowed-world", "&cYou can't use this protection block in this world!");
 	public static final PandaPrefixedStringField ERROR_PROTECTIONS_NOTMAINOWNER = new PandaPrefixedStringField(
 			"Error.Protections.Not-main-owner", "&cYou're not the main owner of this protection!");
 	public static final PandaPrefixedStringField ERROR_PROTECTIONS_NOTOWNER = new PandaPrefixedStringField(

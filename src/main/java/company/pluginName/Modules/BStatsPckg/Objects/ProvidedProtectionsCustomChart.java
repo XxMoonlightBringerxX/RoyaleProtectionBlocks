@@ -2,13 +2,13 @@ package company.pluginName.Modules.BStatsPckg.Objects;
 
 import org.bstats.charts.SingleLineChart;
 
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 
 public class ProvidedProtectionsCustomChart extends SingleLineChart {
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	public ProvidedProtectionsCustomChart() {
 		super("provided_protections", () -> {

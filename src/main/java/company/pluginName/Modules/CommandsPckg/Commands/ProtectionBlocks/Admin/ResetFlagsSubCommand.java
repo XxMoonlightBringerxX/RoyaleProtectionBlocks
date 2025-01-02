@@ -14,7 +14,7 @@ import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionFlagsPckg.ProtectionFlagsService;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -35,16 +35,16 @@ import lombok.Getter;
 		defaultDescription = "Reset the flags values to the default ones",
 		defaultAliases = "rf",
 		defaultPermission = "protectionblocks.admin.resetflags",
-		defaultUsage = "[--all] [--flags (flag-name1;flag-name2;...)]"
-)
+		defaultUsage = "[--all] [--flags (flag-name1;flag-name2;...)]")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true
-)
+		permission = true)
 public class ResetFlagsSubCommand extends PandaSubCommand {
+
+	private static final List<String> ARGS = Arrays.asList("--all", "--flags chest-access;pvp;...");
 
 	@RegisteredPandaField("lang")
 	private static final PandaPrefixedStringField MESSAGE_RESETFALGS_FLAGSRESETTODEFAULTSUCCESSFULLY = new PandaPrefixedStringField(
@@ -55,7 +55,7 @@ public class ResetFlagsSubCommand extends PandaSubCommand {
 			"Error.Reset-flags.No-flags-found", "&cNo flags could be found!");
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static ProtectionSettingsService protectionSettingsService;
@@ -77,6 +77,11 @@ public class ResetFlagsSubCommand extends PandaSubCommand {
 
 	public ResetFlagsSubCommand() throws InstantiationException {
 		super();
+	}
+
+	@Override
+	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
+		return ARGS;
 	}
 
 	@SuppressWarnings("unchecked")

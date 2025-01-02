@@ -1,11 +1,11 @@
 package company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference;
 
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
-import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import relampagorojo93.LibsCollection.Utils.Shared.Java.Objects.ReferencedObject;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
 
-public class ReferencedProtectionBlock extends ReferencedObject<ProtectionBlock> {
+public class ReferencedProtectionBlock extends ReferencedObject<IProtectionBlock> {
 
 	@PandaInject
 	public static ProtectionBlocksService protectionBlocksService;

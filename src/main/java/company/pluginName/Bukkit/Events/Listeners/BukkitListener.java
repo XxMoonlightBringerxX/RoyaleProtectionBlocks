@@ -1,8 +1,6 @@
 package company.pluginName.Bukkit.Events.Listeners;
 
 import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
@@ -13,6 +11,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
@@ -22,15 +21,18 @@ import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
+import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
-import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
+import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionRemovalData;
 
 @PandaListener
 public class BukkitListener implements Listener {
@@ -42,7 +44,7 @@ public class BukkitListener implements Listener {
 	private ProtectionSettingsService protectionSettingsService;
 
 	@PandaInject
-	private ProtectionsService protectionsService;
+	private ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private PlayerDataService playerDataService;
@@ -59,26 +61,22 @@ public class BukkitListener implements Listener {
 			ProtectionBlock block = protectionBlocksService
 					.getProtectionBlockById(Settings.SETTINGS_PROTECTION_STARTERBLOCK.toString());
 			if (block != null) {
-				try {
-					e.getPlayer().getInventory().addItem(block.getInformation().generateItem());
-				} catch (RoyaleProtectionBlocksExceptionImpl e1) {
-					e1.sendError(Bukkit.getConsoleSender());
+				ItemStack item = block.generateItem();
+
+				if (item != null) {
+					e.getPlayer().getInventory().addItem(item);
 				}
 			}
 		}
 
-		protectionsService.findProtectionsByOwner(e.getPlayer().getUniqueId()).forEach(protection -> {
-			protection.setOwnerOfflinePlayer(e.getPlayer());
-			protection.setOwnerLastPlayed(System.currentTimeMillis());
-		});
+		RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+				.findProtectionsByOwner(e.getPlayer().getUniqueId()).forEach(IProtection::updateOwnerData);
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onPlayerExit(PlayerQuitEvent e) {
-		protectionsService.findProtectionsByOwner(e.getPlayer().getUniqueId()).forEach(protection -> {
-			protection.setOwnerOfflinePlayer(null);
-			protection.setOwnerLastPlayed(System.currentTimeMillis());
-		});
+		TasksUtils.execute(() -> RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+				.findProtectionsByOwner(e.getPlayer().getUniqueId()).forEach(IProtection::updateOwnerData));
 	}
 
 	@EventHandler
@@ -96,6 +94,7 @@ public class BukkitListener implements Listener {
 	@EventHandler
 	public void onWorldLoad(WorldLoadEvent e) {
 		protectionsService.getProtectionsByWorld().getOrDefault(e.getWorld().getName(), Collections.emptyList())
+				.stream().filter(protection -> protection.getProtectedRegion() == null).collect(Collectors.toList())
 				.forEach(protection -> {
 					if (protection.getProtectedRegion() == null) {
 						try {
@@ -103,40 +102,17 @@ public class BukkitListener implements Listener {
 						} catch (RoyaleProtectionBlocksExceptionImpl e1) {
 							MessageTemplate
 									.inst(PandaPrefixedStringField
-											.applyPrefix("&7Removing protection '" + protection.getRegionId()
+											.applyPrefix("&7Removing protection '" + protection.getProtectionId()
 													+ "' as it couldn't be found on '" + protection.getWorldName()
 													+ "' and were problems trying to regenerate the region."))
 									.process().sendMessage(Bukkit.getConsoleSender());
 
-							if (protection.getUtils().isProtectionBlockShown()) {
-								protection.getUtils().hideProtectionBlock();
-							}
-
-							if (protection.getBoundaries().isProtectionViewActive()) {
-								protection.getBoundaries().toggleProtectionView();
-							}
-
 							try {
-								protection.delete(RemovalCause.PLAYER).subscribe();
-							} catch (RoyaleProtectionBlocksExceptionImpl e2) {
+								RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+										.delete(ProtectionRemovalData.inst(null, protection.getProtectionId()));
+							} catch (RoyaleProtectionBlocksException e2) {
 								e2.sendError(Bukkit.getConsoleSender());
-								return;
 							}
-						}
-					}
-
-					// TODO: Remove this code after some versions as everything should already be
-					// parsed to the database.
-					Set<String> banneds = protection.getWorldGuardBanneds().get();
-
-					if (!banneds.isEmpty()) {
-						try {
-							sqlService.saveProtectionBanneds(protection,
-									banneds.stream().map(UUID::fromString).collect(Collectors.toList()));
-							ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
-									worldGuardApi.getHook().getBannedPlayersFlag().getWorldGuardFlag(), null);
-						} catch (RoyaleProtectionBlocksExceptionImpl e1) {
-							e1.sendError(Bukkit.getConsoleSender());
 						}
 					}
 				});

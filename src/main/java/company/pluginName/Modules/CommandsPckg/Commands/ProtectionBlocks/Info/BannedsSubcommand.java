@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment;
@@ -28,6 +28,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 
 @PandaCommandAnnotation(
@@ -36,8 +37,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStri
 		defaultName = "banneds",
 		defaultDescription = "Get the banneds from the current protection",
 		defaultUsage = "[page]",
-		defaultAliases = "b"
-)
+		defaultAliases = "b")
 @PandaCommandAnnotation.Customizable(usage = true, permission = true, aliases = true)
 @PandaSubCommandAnnotation(parentCommand = InfoCommand.class)
 public class BannedsSubcommand extends PandaSubCommand {
@@ -47,8 +47,24 @@ public class BannedsSubcommand extends PandaSubCommand {
 			"Message.Protection.Info.Banneds-information",
 			Arrays.asList("", "&a&lBanneds", "{protection_banneds}", "", "{previous_page} {current_page} {next_page}"));
 
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_BANNEDSINFORMATIONPREVIOUSAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Banneds-information-previous-available", "&e[previous]");
+
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_BANNEDSINFORMATIONPREVIOUSUNAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Banneds-information-previous-unavailable", "&8[previous]");
+
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_BANNEDSINFORMATIONNEXTAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Banneds-information-next-available", "&e[next]");
+
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_BANNEDSINFORMATIONNEXTUNAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Banneds-information-next-unavailable", "&8[next]");
+
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	public BannedsSubcommand() throws InstantiationException {
 		super();
@@ -102,30 +118,30 @@ public class BannedsSubcommand extends PandaSubCommand {
 		final int fMaxPage = maxPage;
 
 		List<String> banneds = protection.getBanneds().size() != 0 ? Arrays
-				.stream(Arrays.copyOfRange(protection.getBanneds().toArray(new String[protection.getBanneds().size()]),
+				.stream(Arrays.copyOfRange(protection.getBanneds().toArray(new UUID[protection.getBanneds().size()]),
 						(page - 1) * 5, page * 5))
 				.filter(Objects::nonNull).map(banned -> {
-					OfflinePlayer bannedPlayer = OfflinePlayerUtilities.getOfflinePlayer(UUID.fromString(banned));
+					OfflinePlayer bannedPlayer = OfflinePlayerUtilities.getOfflinePlayer(banned);
 					return "&e".concat(
 							bannedPlayer != null && bannedPlayer.getName() != null ? bannedPlayer.getName() : "???");
-				}).collect(Collectors.toList()) : Arrays.asList("(empty)");
+				}).collect(Collectors.toList()) : Arrays.asList(Messages.MESSAGE_GENERAL_EMPTY.getContent());
 
 		MessageFragment previousPage = page > 1
-				? new MessageFragment(() -> "&e[previous]",
+				? new MessageFragment(() -> MESSAGE_WORLDINFO_BANNEDSINFORMATIONPREVIOUSAVAILABLE.getContent(),
 						new ClickEvent(ClickEvent.Action.RUN_COMMAND,
 								"/".concat(getCommandPath()).concat(" " + (page - 1))))
-				: new MessageFragment(() -> "&8[previous]");
+				: new MessageFragment(() -> MESSAGE_WORLDINFO_BANNEDSINFORMATIONPREVIOUSUNAVAILABLE.getContent());
 
 		MessageFragment nextPage = page < maxPage
-				? new MessageFragment(() -> "&e[next]",
+				? new MessageFragment(() -> MESSAGE_WORLDINFO_BANNEDSINFORMATIONNEXTAVAILABLE.getContent(),
 						new ClickEvent(ClickEvent.Action.RUN_COMMAND,
 								"/".concat(getCommandPath()).concat(" " + (page + 1))))
-				: new MessageFragment(() -> "&8[next]");
+				: new MessageFragment(() -> MESSAGE_WORLDINFO_BANNEDSINFORMATIONNEXTUNAVAILABLE.getContent());
 
 		MessageTemplate.inst(MESSAGE_WORLDINFO_BANNEDSINFORMATION.getContent())
 				.setReplacements(
 						new Replacement("{protection_banneds}",
-								() -> banneds.stream().collect(Collectors.joining(System.lineSeparator(), "&e", ""))),
+								() -> banneds.stream().collect(Collectors.joining(", ", "&e", ""))),
 						new Replacement("{previous_page}", previousPage),
 						new Replacement("{current_page}", () -> ("&7" + fPage + "/" + fMaxPage)),
 						new Replacement("{next_page}", nextPage))

@@ -10,7 +10,7 @@ import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -23,7 +23,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @PandaSubCommandAnnotation(parentCommand = AdminCommand.class)
 @PandaCommandAnnotation(
@@ -51,7 +51,7 @@ public class LastLoginSubCommand extends PandaSubCommand {
 			"Message.Last-login.Offline-message", "&aLast time player &e{player} &awas seen: {last_played}");
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static PlayerDataService playerDataService;
@@ -96,7 +96,7 @@ public class LastLoginSubCommand extends PandaSubCommand {
 	}
 
 	private void sendMessage(Player player, IProtection protection) {
-		if (protection.getOwnerOfflinePlayer().isOnline()) {
+		if (protection.isOwnerOnline()) {
 			MessageTemplate.inst(MESSAGE_LASTLOGIN_ONLINEMESSAGE.applyPrefix())
 					.setReplacements(new Replacement("{player}", () -> protection.getOwnerName())).process()
 					.sendMessage(player);

@@ -18,7 +18,7 @@ import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.RecipesPckg.RecipesService;
 import company.pluginName.Modules.RecipesPckg.Objects.Recipe;
@@ -33,13 +33,13 @@ import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGe
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
-import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Exceptions.PlayerAlreadyListeningException;
+import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Listeners.PandaMessageListener.Callback;
 import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.PandaMessageListenerService;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
 
 @Inventory("protectionblocks_manage")
-public class ProtectionBlockManagerInventory extends ChestInventoryObject {
+public class ProtectionBlockManageInventory extends ChestInventoryObject {
 
 	private static final String PROTECTIONBLOCKITEM_NOTSETITEM_PATH = "Not-set-item";
 	private static final String PROTECTIONBLOCKITEM_REPLACEITEMLORELINE_PATH = "Replace-item-lore-line";
@@ -58,10 +58,10 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	private static PandaMessageListenerService messageListenerService;
 
 	@PandaInject
-	private static RecipesService recipesService;
+	private static ProtectionsServiceImpl protectionsServiceImpl;
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static RecipesService recipesService;
 
 	@PandaInject
 	private static WorldGuardAPI worldGuardApi;
@@ -73,11 +73,11 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	private SimpleRecipe originalRecipe;
 	private SimpleRecipe newRecipe;
 
-	public ProtectionBlockManagerInventory(Player player) {
+	public ProtectionBlockManageInventory(Player player) {
 		this(player, null);
 	}
 
-	public ProtectionBlockManagerInventory(Player player, ProtectionBlock protectionBlock) {
+	public ProtectionBlockManageInventory(Player player, ProtectionBlock protectionBlock) {
 		super(player);
 		this.originalProtectionBlock = protectionBlock;
 		this.copyOriginalProtectionBlock = protectionBlock != null ? new ProtectionBlock(originalProtectionBlock)
@@ -102,16 +102,14 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	protected String getTitle() {
 		return MessageTemplate.inst(super.getTitle())
 				.setReplacements(new Replacement("{block}",
-						() -> newProtectionBlock.getInformation().getId() != null
-								? newProtectionBlock.getInformation().getId()
-								: "???"))
+						() -> newProtectionBlock.getId() != null ? newProtectionBlock.getId() : "???"))
 				.process().toString();
 	}
 
 	@ItemGenerator("Protection-block-item")
 	private ItemStack generateProtectionBlockItem(Item item) {
-		if (newProtectionBlock.getInformation().getItem() != null) {
-			ItemBuilder builder = ItemBuilder.inst().fromItem(newProtectionBlock.getInformation().getItem());
+		if (newProtectionBlock.getItem() != null) {
+			ItemBuilder builder = ItemBuilder.inst().fromItem(newProtectionBlock.getItem());
 
 			List<String> lore = builder.getLore();
 			lore.add("&0");
@@ -119,7 +117,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 			lore.add(item.getData().get(PROTECTIONBLOCKITEM_TAKEITEMLORELINE_PATH).toString());
 			builder.setLore(lore);
 
-			return builder.apply(newProtectionBlock.getInformation().getItem().clone());
+			return builder.apply(newProtectionBlock.getItem().clone());
 		} else {
 			return ItemBuilder.inst().fromMap(item.getData(), PROTECTIONBLOCKITEM_NOTSETITEM_PATH).build();
 		}
@@ -128,8 +126,8 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	@ItemGenerator("Blocks-x-button")
 	private ItemStack generateBlocksXButton(Item item) {
 		return ItemBuilder.inst().fromMap(item.getData(), Item.DISPLAYITEM_KEY)
-				.setReplacements(new Replacement("{blocks_x}",
-						() -> String.valueOf((newProtectionBlock.getInformation().getBlocksX() * 2) + 1)))
+				.setReplacements(
+						new Replacement("{blocks_x}", () -> String.valueOf((newProtectionBlock.getBlocksX() * 2) + 1)))
 				.build();
 	}
 
@@ -137,31 +135,26 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	private ItemStack generateBlocksYButton(Item item) {
 		return ItemBuilder.inst().fromMap(item.getData(), Item.DISPLAYITEM_KEY)
 				.setReplacements(new Replacement("{blocks_y}",
-						() -> newProtectionBlock.getInformation().getBlocksY() == -1
-								? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
-								: String.valueOf((newProtectionBlock.getInformation().getBlocksY() * 2) + 1)))
+						() -> newProtectionBlock.getBlocksY() == -1 ? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
+								: String.valueOf((newProtectionBlock.getBlocksY() * 2) + 1)))
 				.build();
 	}
 
 	@ItemGenerator("Blocks-z-button")
 	private ItemStack generateBlocksZButton(Item item) {
 		return ItemBuilder.inst().fromMap(item.getData(), Item.DISPLAYITEM_KEY)
-				.setReplacements(new Replacement("{blocks_z}",
-						() -> String.valueOf((newProtectionBlock.getInformation().getBlocksZ() * 2) + 1)))
+				.setReplacements(
+						new Replacement("{blocks_z}", () -> String.valueOf((newProtectionBlock.getBlocksZ() * 2) + 1)))
 				.build();
 	}
 
 	@ItemGenerator("Id-button")
 	private ItemStack generateIdButton(Item item) {
 		return ItemBuilder.inst()
-				.fromMap(item.getData(),
-						(this.originalProtectionBlock != null ? IDBUTTON_NOTMODIFIABLEITEM_PATH
-								: (this.newProtectionBlock.getInformation().getId() != null ? Item.DISPLAYITEM_KEY
-										: IDBUTTON_NOTSETITEM_PATH)))
+				.fromMap(item.getData(), (this.originalProtectionBlock != null ? IDBUTTON_NOTMODIFIABLEITEM_PATH
+						: (this.newProtectionBlock.getId() != null ? Item.DISPLAYITEM_KEY : IDBUTTON_NOTSETITEM_PATH)))
 				.setReplacements(new Replacement("{block_id}",
-						() -> newProtectionBlock.getInformation().getId() != null
-								? newProtectionBlock.getInformation().getId()
-								: ""))
+						() -> newProtectionBlock.getId() != null ? newProtectionBlock.getId() : ""))
 				.build();
 	}
 
@@ -169,23 +162,20 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	private ItemStack generatePermissionButton(Item item) {
 		return ItemBuilder.inst()
 				.fromMap(item.getData(),
-						(this.newProtectionBlock.getInformation().getPermission() != null ? Item.DISPLAYITEM_KEY
+						(this.newProtectionBlock.getPermission() != null ? Item.DISPLAYITEM_KEY
 								: PERMISSIONBUTTON_NOTSETITEM_PATH))
 				.setReplacements(new Replacement("{block_permission}",
-						() -> newProtectionBlock.getInformation().getPermission() != null
-								? newProtectionBlock.getInformation().getPermission()
-								: ""))
+						() -> newProtectionBlock.getPermission() != null ? newProtectionBlock.getPermission() : ""))
 				.build();
 	}
 
 	@ItemGenerator("Price-button")
 	private ItemStack generatePriceButton(Item item) {
-		return ItemBuilder.inst().fromMap(item.getData(),
-				(this.newProtectionBlock.getInformation().getPrice() != null ? Item.DISPLAYITEM_KEY
-						: PRICEBUTTON_NOTSETITEM_PATH))
+		return ItemBuilder.inst()
+				.fromMap(item.getData(),
+						this.newProtectionBlock.isForSale() ? Item.DISPLAYITEM_KEY : PRICEBUTTON_NOTSETITEM_PATH)
 				.setReplacements(new Replacement("{block_price}",
-						() -> newProtectionBlock.getInformation().getPrice() != null
-								? StringsHelper.toCurrency(newProtectionBlock.getInformation().getPrice())
+						() -> newProtectionBlock.isForSale() ? StringsHelper.toCurrency(newProtectionBlock.getPrice())
 								: "---"))
 				.build();
 	}
@@ -200,9 +190,8 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 		List<Protection> relatedProtections = new ArrayList<>();
 		try {
 			if (originalProtectionBlock != null) {
-				protectionsService.getProtectionsByWorld().values().forEach(protections -> protections.stream()
-						.filter(protection -> protection.getProtectionBlock().getIdentifier()
-								.equals(originalProtectionBlock.getInformation().getId())
+				protectionsServiceImpl.getProtectionsByWorld().values().forEach(protections -> protections.stream()
+						.filter(protection -> protection.getProtectionBlockId().equals(originalProtectionBlock.getId())
 								&& protection.getUtils().isProtectionBlockShown())
 						.forEach(relatedProtections::add));
 
@@ -217,8 +206,7 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 			if (newRecipe != null) {
 				Recipe recipeToModify = recipesService.findRecipeByProtectionBlock(newProtectionBlock);
 				if (recipeToModify == null) {
-					recipeToModify = new Recipe(
-							new ReferencedProtectionBlock(newProtectionBlock.getInformation().getId()));
+					recipeToModify = new Recipe(new ReferencedProtectionBlock(newProtectionBlock.getId()));
 				}
 				for (int i = 0; i < 9; i++) {
 					recipeToModify.getRecipe()[i] = newRecipe.getRecipe()[i];
@@ -269,12 +257,12 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 		try {
 			if (e.getClick() == ClickType.LEFT) {
 				if (e.getCursor() != null && e.getCursor().getType() != Material.AIR.getMaterial()) {
-					newProtectionBlock.getInformation().setItem(e.getCursor().clone());
+					newProtectionBlock.getBlockInformation().setItem(e.getCursor().clone());
 					e.getWhoClicked().getOpenInventory().setCursor(null);
 					updateInventory();
-				} else if (newProtectionBlock.getInformation().getItem() != null) {
-					e.getWhoClicked().getOpenInventory().setCursor(newProtectionBlock.getInformation().getItem());
-					newProtectionBlock.getInformation().setItem(null);
+				} else if (newProtectionBlock.getItem() != null) {
+					e.getWhoClicked().getOpenInventory().setCursor(newProtectionBlock.getItem());
+					newProtectionBlock.getBlockInformation().setItem(null);
 					updateInventory();
 				}
 			}
@@ -285,20 +273,20 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 
 	@ItemExecutor("Blocks-x-button")
 	private void executeBlocksXButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
-		setBlocks(e, () -> newProtectionBlock.getInformation().getBlocksX(),
-				(blocks) -> newProtectionBlock.getInformation().setBlocksX(blocks));
+		setBlocks(e, () -> newProtectionBlock.getBlocksX(),
+				(blocks) -> newProtectionBlock.getBlockInformation().setBlocksX(blocks));
 	}
 
 	@ItemExecutor("Blocks-y-button")
 	private void executeBlocksYButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
-		setBlocks(e, () -> newProtectionBlock.getInformation().getBlocksY(),
-				(blocks) -> newProtectionBlock.getInformation().setBlocksY(blocks), true);
+		setBlocks(e, () -> newProtectionBlock.getBlocksY(),
+				(blocks) -> newProtectionBlock.getBlockInformation().setBlocksY(blocks), true);
 	}
 
 	@ItemExecutor("Blocks-z-button")
 	private void executeBlocksZButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
-		setBlocks(e, () -> newProtectionBlock.getInformation().getBlocksZ(),
-				(blocks) -> newProtectionBlock.getInformation().setBlocksZ(blocks));
+		setBlocks(e, () -> newProtectionBlock.getBlocksZ(),
+				(blocks) -> newProtectionBlock.getBlockInformation().setBlocksZ(blocks));
 	}
 
 	@ItemExecutor("Allowed-worlds-button")
@@ -309,23 +297,24 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	@ItemExecutor("Id-button")
 	private void executeIdButton() {
 		if (originalProtectionBlock == null) {
-			try {
-				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
-					if (!message.equalsIgnoreCase("cancel")) {
-						newProtectionBlock.getInformation().setId(!message.isEmpty() ? message : null);
-					}
-					openInventory();
+			messageListenerService.getListener().replaceListening(getPlayer().getUniqueId(), new Callback() {
+
+				@Override
+				public boolean message(String message) {
+					newProtectionBlock.getBlockInformation().setId(!message.isEmpty() ? message : null);
 					return true;
-				});
-				closeInventory();
-				MessageTemplate
-						.inst(PandaPrefixedStringField.applyPrefix(
-								getChestInventoryData().getCustomFields().get(MESSAGES_IDSPECIFYINFO_PATH).toString()))
-						.process().sendMessage(getPlayer());
-			} catch (PlayerAlreadyListeningException e1) {
-				MessageTemplate.inst(Messages.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix()).process()
-						.sendMessage(getPlayer());
-			}
+				}
+
+				public void cancel() {
+					openInventory();
+				}
+
+			});
+			closeInventory();
+			MessageTemplate
+					.inst(PandaPrefixedStringField.applyPrefix(
+							getChestInventoryData().getCustomFields().get(MESSAGES_IDSPECIFYINFO_PATH).toString()))
+					.process().sendMessage(getPlayer());
 		}
 	}
 
@@ -338,25 +327,26 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	@ItemExecutor("Permission-button")
 	private void executePermissionButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
 		if (e.getClick() == ClickType.LEFT) {
-			try {
-				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
-					if (!message.equalsIgnoreCase("cancel")) {
-						newProtectionBlock.getInformation().setPermission(!message.isEmpty() ? message : null);
-					}
-					openInventory();
+			messageListenerService.getListener().replaceListening(getPlayer().getUniqueId(), new Callback() {
+
+				@Override
+				public boolean message(String message) {
+					newProtectionBlock.getBlockInformation().setPermission(!message.isEmpty() ? message : null);
 					return true;
-				});
-				closeInventory();
-				MessageTemplate
-						.inst(PandaPrefixedStringField.applyPrefix(getChestInventoryData().getCustomFields()
-								.get(MESSAGES_PERMISSIONSPECIFYINFO_PATH).toString()))
-						.process().sendMessage(e.getWhoClicked());
-			} catch (PlayerAlreadyListeningException e1) {
-				MessageTemplate.inst(Messages.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix()).process()
-						.sendMessage(e.getWhoClicked());
-			}
-		} else if (e.getClick() == ClickType.RIGHT && newProtectionBlock.getInformation().getPermission() != null) {
-			newProtectionBlock.getInformation().setPermission(null);
+				}
+
+				public void cancel() {
+					openInventory();
+				}
+
+			});
+			closeInventory();
+			MessageTemplate
+					.inst(PandaPrefixedStringField.applyPrefix(getChestInventoryData().getCustomFields()
+							.get(MESSAGES_PERMISSIONSPECIFYINFO_PATH).toString()))
+					.process().sendMessage(e.getWhoClicked());
+		} else if (e.getClick() == ClickType.RIGHT && newProtectionBlock.getPermission() != null) {
+			newProtectionBlock.getBlockInformation().setPermission(null);
 			updateInventory();
 		}
 	}
@@ -364,36 +354,37 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	@ItemExecutor("Price-button")
 	private void executePriceButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
 		if (e.getClick() == ClickType.LEFT) {
-			try {
-				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
-					if (!message.equalsIgnoreCase("cancel")) {
-						try {
-							double price = Double.parseDouble(message);
+			messageListenerService.getListener().replaceListening(getPlayer().getUniqueId(), new Callback() {
 
-							if (price <= 0D) {
-								newProtectionBlock.getInformation().setPrice(null);
-							} else {
-								newProtectionBlock.getInformation().setPrice(price);
-							}
-						} catch (NumberFormatException e1) {
-							MessageTemplate.inst(Messages.ERROR_INVALIDNUMBER.applyPrefix()).process()
-									.sendMessage(e.getWhoClicked());
+				@Override
+				public boolean message(String message) {
+					try {
+						double price = Double.parseDouble(message);
+
+						if (price <= 0D) {
+							newProtectionBlock.getBlockInformation().setPrice(null);
+						} else {
+							newProtectionBlock.getBlockInformation().setPrice(price);
 						}
+					} catch (NumberFormatException e1) {
+						MessageTemplate.inst(Messages.ERROR_INVALIDNUMBER.applyPrefix()).process()
+								.sendMessage(e.getWhoClicked());
 					}
-					openInventory();
 					return true;
-				});
-				closeInventory();
-				MessageTemplate
-						.inst(PandaPrefixedStringField.applyPrefix(getChestInventoryData().getCustomFields()
-								.get(MESSAGES_PRICESPECIFYINFO_PATH).toString()))
-						.process().sendMessage(e.getWhoClicked());
-			} catch (PlayerAlreadyListeningException e1) {
-				MessageTemplate.inst(Messages.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix()).process()
-						.sendMessage(e.getWhoClicked());
-			}
-		} else if (e.getClick() == ClickType.RIGHT && newProtectionBlock.getInformation().getPermission() != null) {
-			newProtectionBlock.getInformation().setPrice(null);
+				}
+
+				public void cancel() {
+					openInventory();
+				}
+
+			});
+			closeInventory();
+			MessageTemplate
+					.inst(PandaPrefixedStringField.applyPrefix(
+							getChestInventoryData().getCustomFields().get(MESSAGES_PRICESPECIFYINFO_PATH).toString()))
+					.process().sendMessage(e.getWhoClicked());
+		} else if (e.getClick() == ClickType.RIGHT && newProtectionBlock.getPrice() != null) {
+			newProtectionBlock.getBlockInformation().setPrice(null);
 			updateInventory();
 		}
 	}
@@ -405,36 +396,37 @@ public class ProtectionBlockManagerInventory extends ChestInventoryObject {
 	public void setBlocks(InventoryClickEvent e, IntSupplier getBlocks, IntConsumer setBlocks, boolean allowUnlimited) {
 		int cur = getBlocks.getAsInt();
 		if (e.getClick() == ClickType.SHIFT_LEFT) {
-			try {
-				messageListenerService.getListener().startListening(getPlayer().getUniqueId(), (message) -> {
-					if (!message.equalsIgnoreCase("cancel")) {
-						try {
-							int value = Integer.parseInt(message);
+			messageListenerService.getListener().replaceListening(getPlayer().getUniqueId(), new Callback() {
 
-							if (value < 0 && (value != -1 || !allowUnlimited)) {
-								MessageTemplate.inst(Messages.ERROR_NUMBERBELOWZERO.applyPrefix()).process()
-										.sendMessage(e.getWhoClicked());
-								return true;
-							}
+				@Override
+				public boolean message(String message) {
+					try {
+						int value = Integer.parseInt(message);
 
-							setBlocks.accept(value == -1 ? value : value / 2);
-						} catch (NumberFormatException e1) {
-							MessageTemplate.inst(Messages.ERROR_INVALIDNUMBER.applyPrefix()).process()
+						if (value < 0 && (value != -1 || !allowUnlimited)) {
+							MessageTemplate.inst(Messages.ERROR_NUMBERBELOWZERO.applyPrefix()).process()
 									.sendMessage(e.getWhoClicked());
+							return true;
 						}
+
+						setBlocks.accept(value == -1 ? value : value / 2);
+					} catch (NumberFormatException e1) {
+						MessageTemplate.inst(Messages.ERROR_INVALIDNUMBER.applyPrefix()).process()
+								.sendMessage(e.getWhoClicked());
 					}
-					openInventory();
 					return true;
-				});
-				closeInventory();
-				MessageTemplate
-						.inst(PandaPrefixedStringField.applyPrefix(getChestInventoryData().getCustomFields()
-								.get(MESSAGES_BLOCKSSPECIFYINFO_PATH).toString()))
-						.process().sendMessage(e.getWhoClicked());
-			} catch (PlayerAlreadyListeningException e1) {
-				MessageTemplate.inst(Messages.ERROR_CHATPROMPT_ALREADYPROMPTED.applyPrefix()).process()
-						.sendMessage(e.getWhoClicked());
-			}
+				}
+
+				public void cancel() {
+					openInventory();
+				}
+
+			});
+			closeInventory();
+			MessageTemplate
+					.inst(PandaPrefixedStringField.applyPrefix(
+							getChestInventoryData().getCustomFields().get(MESSAGES_BLOCKSSPECIFYINFO_PATH).toString()))
+					.process().sendMessage(e.getWhoClicked());
 		} else if (e.getClick() == ClickType.LEFT) {
 			setBlocks.accept(++cur);
 			updateInventory();

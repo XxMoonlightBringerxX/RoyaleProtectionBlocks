@@ -14,7 +14,7 @@ import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.IProtection;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @Inventory("searchprotection")
 public class SearchProtectionInventory extends PagedChestInventoryObject<IProtection> {
@@ -22,10 +22,11 @@ public class SearchProtectionInventory extends PagedChestInventoryObject<IProtec
 	@PandaInject
 	private static PlaceholdersService placeholdersService;
 
-	private List<IProtection> protections;
+	private List<? extends IProtection> protections;
 	private Consumer<IProtection> action;
 
-	public SearchProtectionInventory(Player player, List<IProtection> protections, Consumer<IProtection> action) {
+	public SearchProtectionInventory(Player player, List<? extends IProtection> protections,
+			Consumer<IProtection> action) {
 		super(player);
 
 		this.protections = protections;
@@ -33,7 +34,7 @@ public class SearchProtectionInventory extends PagedChestInventoryObject<IProtec
 	}
 
 	@Override
-	protected List<IProtection> getEntityList() {
+	protected List<? extends IProtection> getEntityList() {
 		return this.protections;
 	}
 

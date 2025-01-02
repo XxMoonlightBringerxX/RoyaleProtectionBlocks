@@ -1,12 +1,15 @@
 package company.pluginName.Modules.FilePckg;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.FilePckg.Files.ConfigFile;
 import company.pluginName.Modules.FilePckg.Files.FlagsFile;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject.PostInjectMethod;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Exceptions.ReportResult;
 import darkpanda73.PandaUtils.PandaPlugin.Exceptions.ReportResult.ReportError;
 import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
@@ -43,6 +46,28 @@ public class FilesService extends PandaFilesService {
 		} catch (IOException | YamlException e) {
 			throw new ReportResult.ReportError("Unable to initialize files.", true, e);
 		}
+	}
+
+	@LoadMethod
+	protected void load(ReportResult reportResult) throws Throwable {
+		if (this.getFile("commands").getFile().exists()) {
+			File file = this.getFile("commands").getFile();
+			PandaYaml yaml = new PandaYaml(file);
+
+			if (!yaml.getRoot().has("Commands.Protection-blocks.Subcommands.Store")
+					&& yaml.getRoot().has("Commands.Protection-blocks.Subcommands.Buy")) {
+				yaml.getRoot().getSection("Commands.Protection-blocks.Subcommands.Buy").toMap()
+						.forEach((key, value) -> {
+							yaml.getRoot().set("Commands.Protection-blocks.Subcommands.Store." + key, value);
+						});
+				yaml.getRoot().set("Commands.Protection-blocks.Subcommands.Store.Name", "store");
+				yaml.getRoot().set("Commands.Protection-blocks.Subcommands.Store.Aliases", new ArrayList<>());
+				yaml.getRoot().remove("Commands.Protection-blocks.Subcommands.Buy");
+				yaml.saveYAML(file);
+			}
+		}
+
+		super.load(reportResult);
 	}
 
 }

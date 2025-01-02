@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -25,15 +25,13 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 		defaultName = "unblock",
 		defaultDescription = "Allows to unblock a protection",
 		defaultAliases = "ub",
-		defaultPermission = "protectionblocks.admin.unblock"
-)
+		defaultPermission = "protectionblocks.admin.unblock")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true
-)
+		permission = true)
 public class UnblockSubCommand extends PandaSubCommand {
 
 	@RegisteredPandaField("lang")
@@ -41,7 +39,7 @@ public class UnblockSubCommand extends PandaSubCommand {
 			"Message.Protection.Unblocked-successfully", "&aThe protection has been unblocked successfully.");
 
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
 	private static ProtectionSettingsService protectionSettingService;
@@ -56,8 +54,7 @@ public class UnblockSubCommand extends PandaSubCommand {
 		if (pl != null) {
 			Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 			if (protection != null) {
-				protection.unblock();
-				protection.saveData();
+				protection.unblockAndSave();
 				MessageTemplate.inst(MESSAGE_PROTECTION_UNBLOCKEDSUCCESSFULLY.applyPrefix()).process()
 						.sendMessage(sender);
 			} else {

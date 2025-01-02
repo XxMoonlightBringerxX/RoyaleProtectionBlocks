@@ -11,12 +11,12 @@ import java.util.stream.Stream;
 
 import org.bukkit.entity.Player;
 
-import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import darkpanda73.PandaUtils.Services.PandaPermissionsModule.PandaPermissionsService;
 import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaCustomizablePermission;
 import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaParametizedPermission;
 import darkpanda73.PandaUtils.Services.PandaPermissionsModule.Objects.PandaPermission;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
 
 public class PermissionsService extends PandaPermissionsService {
 
@@ -65,9 +65,6 @@ public class PermissionsService extends PandaPermissionsService {
 	public static final PandaPermission FLY_BYPASS = new PandaCustomizablePermission("Fly.Bypass",
 			"protectionblocks.fly.bypass");
 
-	public static final PandaPermission OVERLAP_BYPASS = new PandaCustomizablePermission("Overlap.Bypass",
-			"protectionblocks.overlap.bypass");
-
 	public static final PandaPermission ECONOMY_BYPASS = new PandaCustomizablePermission("Economy.Bypass",
 			"protectionblocks.economy.bypass");
 
@@ -85,6 +82,12 @@ public class PermissionsService extends PandaPermissionsService {
 
 	public static final PandaPermission SHOW_OTHERS = new PandaCustomizablePermission("Show.Others",
 			"protectionblocks.show.others");
+
+	public static final PandaPermission TRANSFER_OTHERS = new PandaCustomizablePermission("Transfer.Others",
+			"protectionblocks.transfer.others");
+
+	public static final PandaPermission SELL_OTHERS = new PandaCustomizablePermission("Sell.Others",
+			"protectionblocks.sell.others");
 
 	public static final PandaPermission ADMIN_BLOCK_BYPASS = new PandaCustomizablePermission("Admin.Block.Bypass",
 			"protectionblocks.admin.block.bypass");
@@ -133,15 +136,14 @@ public class PermissionsService extends PandaPermissionsService {
 				defaultIfNull);
 	}
 
-	public static Integer getPerBlockMaxCapacity(Player pl, ProtectionBlock block) {
+	public static Integer getPerBlockMaxCapacity(Player pl, IProtectionBlock block) {
 		return getPerBlockMaxCapacity(pl, block, null);
 	}
 
-	public static Integer getPerBlockMaxCapacity(Player pl, ProtectionBlock block, Integer defaultIfNull) {
+	public static Integer getPerBlockMaxCapacity(Player pl, IProtectionBlock block, Integer defaultIfNull) {
 		return getMaxCapacity(
 				BLOCK_MAX_TEMPLATE.findPermissions(pl).entrySet().stream()
-						.filter(entry -> block.getInformation().getId()
-								.equalsIgnoreCase(entry.getValue().getOrDefault("block", null)))
+						.filter(entry -> block.getId().equalsIgnoreCase(entry.getValue().getOrDefault("block", null)))
 						.map(entry -> Pair.of(entry.getValue().get("max"), stringToInt(entry.getValue().get("max")))),
 				defaultIfNull);
 	}

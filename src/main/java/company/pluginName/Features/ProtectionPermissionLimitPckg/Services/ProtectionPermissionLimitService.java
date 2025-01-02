@@ -6,7 +6,6 @@ import org.bukkit.scheduler.BukkitTask;
 import company.pluginName.Features.ProtectionPermissionLimitPckg.Listeners.ProtectionPermissionLimitListener;
 import company.pluginName.Features.ProtectionPermissionLimitPckg.Utils.ProtectionPermissionLimitUtilities;
 import company.pluginName.Features.ProtectionPermissionLimitPckg.Utils.ProtectionPermissionLimitUtilities.Summary;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
 import company.pluginName.Utils.TimeUtils;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
@@ -20,9 +19,6 @@ public class ProtectionPermissionLimitService {
 
 	@PandaInject
 	private ProtectionPermissionLimitListener permissionsListener;
-
-	@PandaInject
-	private ProtectionsService protectionsService;
 
 	private BukkitTask task;
 

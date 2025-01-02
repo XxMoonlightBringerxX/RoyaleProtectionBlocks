@@ -24,9 +24,8 @@ public class ProtectionBlocksService {
 	@LoadMethod
 	private void load() {
 		sqlService.getProtectionBlocks().stream()
-				.filter(block -> block.getInformation().getItem() != null
-						&& block.getInformation().getItem().getType() != Material.AIR)
-				.forEach(block -> protectionBlocks.put(block.getInformation().getId().toLowerCase(), block));
+				.filter(block -> block.getItem() != null && block.getItem().getType() != Material.AIR)
+				.forEach(block -> protectionBlocks.put(block.getId().toLowerCase(), block));
 	}
 
 	@UnloadMethod
@@ -45,11 +44,11 @@ public class ProtectionBlocksService {
 	 */
 
 	public synchronized void registerProtectionBlock(ProtectionBlock protectionBlock) {
-		protectionBlocks.putIfAbsent(protectionBlock.getInformation().getId().toLowerCase(), protectionBlock);
+		protectionBlocks.putIfAbsent(protectionBlock.getId().toLowerCase(), protectionBlock);
 	}
 
 	public synchronized void unregisterProtectionBlock(ProtectionBlock protectionBlock) {
-		protectionBlocks.remove(protectionBlock.getInformation().getId());
+		protectionBlocks.remove(protectionBlock.getId());
 	}
 
 	/*

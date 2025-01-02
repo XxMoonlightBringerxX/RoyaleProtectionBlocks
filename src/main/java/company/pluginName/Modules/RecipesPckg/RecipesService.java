@@ -19,8 +19,8 @@ public class RecipesService extends CustomRecipesService<Recipe> {
 	}
 
 	public Recipe findRecipeByProtectionBlock(ProtectionBlock protectionBlock) {
-		return this.customRecipes.values().stream().filter(
-				recipe -> recipe.getProtectionBlock().getIdentifier().equals(protectionBlock.getInformation().getId()))
+		return this.customRecipes.values().stream()
+				.filter(recipe -> recipe.getProtectionBlock().getIdentifier().equals(protectionBlock.getId()))
 				.findFirst().orElse(null);
 	}
 

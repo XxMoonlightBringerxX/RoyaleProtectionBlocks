@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionsPckg.ProtectionsService;
+import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment;
@@ -28,6 +28,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 
 @PandaCommandAnnotation(
@@ -36,8 +37,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStri
 		defaultName = "members",
 		defaultDescription = "Get the members from the current protection",
 		defaultUsage = "[page]",
-		defaultAliases = "m"
-)
+		defaultAliases = "m")
 @PandaCommandAnnotation.Customizable(usage = true, permission = true, aliases = true)
 @PandaSubCommandAnnotation(parentCommand = InfoCommand.class)
 public class MembersSubcommand extends PandaSubCommand {
@@ -47,8 +47,24 @@ public class MembersSubcommand extends PandaSubCommand {
 			"Message.Protection.Info.Members-information",
 			Arrays.asList("", "&a&lMembers", "{protection_members}", "", "{previous_page} {current_page} {next_page}"));
 
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_MEMBERSINFORMATIONPREVIOUSAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Members-information-previous-available", "&e[previous]");
+
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_MEMBERSINFORMATIONPREVIOUSUNAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Members-information-previous-unavailable", "&8[previous]");
+
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_MEMBERSINFORMATIONNEXTAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Members-information-next-available", "&e[next]");
+
+	@RegisteredPandaField("lang")
+	public static final PandaStringField MESSAGE_WORLDINFO_MEMBERSINFORMATIONNEXTUNAVAILABLE = new PandaStringField(
+			"Message.Protection.Info.Members-information-next-unavailable", "&8[next]");
+
 	@PandaInject
-	private static ProtectionsService protectionsService;
+	private static ProtectionsServiceImpl protectionsService;
 
 	public MembersSubcommand() throws InstantiationException {
 		super();
@@ -108,24 +124,24 @@ public class MembersSubcommand extends PandaSubCommand {
 					OfflinePlayer memberPlayer = OfflinePlayerUtilities.getOfflinePlayer(member);
 					return "&e".concat(
 							memberPlayer != null && memberPlayer.getName() != null ? memberPlayer.getName() : "???");
-				}).collect(Collectors.toList()) : Arrays.asList("(empty)");
+				}).collect(Collectors.toList()) : Arrays.asList(Messages.MESSAGE_GENERAL_EMPTY.getContent());
 
 		MessageFragment previousPage = page > 1
-				? new MessageFragment(() -> "&e[previous]",
+				? new MessageFragment(() -> MESSAGE_WORLDINFO_MEMBERSINFORMATIONPREVIOUSAVAILABLE.getContent(),
 						new ClickEvent(ClickEvent.Action.RUN_COMMAND,
 								"/".concat(getCommandPath()).concat(" " + (page - 1))))
-				: new MessageFragment(() -> "&8[previous]");
+				: new MessageFragment(() -> MESSAGE_WORLDINFO_MEMBERSINFORMATIONPREVIOUSUNAVAILABLE.getContent());
 
 		MessageFragment nextPage = page < maxPage
-				? new MessageFragment(() -> "&e[next]",
+				? new MessageFragment(() -> MESSAGE_WORLDINFO_MEMBERSINFORMATIONNEXTAVAILABLE.getContent(),
 						new ClickEvent(ClickEvent.Action.RUN_COMMAND,
 								"/".concat(getCommandPath()).concat(" " + (page + 1))))
-				: new MessageFragment(() -> "&8[next]");
+				: new MessageFragment(() -> MESSAGE_WORLDINFO_MEMBERSINFORMATIONNEXTUNAVAILABLE.getContent());
 
 		MessageTemplate.inst(MESSAGE_WORLDINFO_MEMBERSINFORMATION.getContent())
 				.setReplacements(
 						new Replacement("{protection_members}",
-								() -> members.stream().collect(Collectors.joining(System.lineSeparator(), "&e", ""))),
+								() -> members.stream().collect(Collectors.joining(", ", "&e", ""))),
 						new Replacement("{previous_page}", previousPage),
 						new Replacement("{current_page}", () -> ("&7" + fPage + "/" + fMaxPage)),
 						new Replacement("{next_page}", nextPage))

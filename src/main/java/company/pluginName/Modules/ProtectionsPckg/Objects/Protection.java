@@ -392,7 +392,7 @@ public class Protection implements IProtection {
 	private List<UUID> banneds = new ArrayList<>();
 
 	@Override
-	public void addBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+	public void addBannedAndSave(UUID bannedUuid) throws RoyaleProtectionBlocksException {
 		if (this.isOwner(bannedUuid)) {
 			throw Exceptions.Protections.Banneds.Save.CANNOTADDPROTECTIONOWNER.generateException();
 		}
@@ -425,7 +425,7 @@ public class Protection implements IProtection {
 	}
 
 	@Override
-	public void removeBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+	public void removeBannedAndSave(UUID bannedUuid) throws RoyaleProtectionBlocksException {
 		this.getBanneds().remove(bannedUuid);
 
 		TasksUtils.executeOnAsync(() -> {
@@ -690,22 +690,22 @@ public class Protection implements IProtection {
 	}
 
 	@Override
-	public void addMember(UUID memberUuid) throws RoyaleProtectionBlocksException {
+	public void addMemberAndSave(UUID memberUuid) throws RoyaleProtectionBlocksException {
 		this.getWorldGuardMembers().add(memberUuid);
 	}
 
 	@Override
-	public void removeMember(UUID memberUuid) throws RoyaleProtectionBlocksException {
+	public void removeMemberAndSave(UUID memberUuid) throws RoyaleProtectionBlocksException {
 		this.getWorldGuardMembers().remove(memberUuid);
 	}
 
 	@Override
-	public void addOwner(UUID ownerUuid) throws RoyaleProtectionBlocksException {
+	public void addOwnerAndSave(UUID ownerUuid) throws RoyaleProtectionBlocksException {
 		this.getWorldGuardOwners().add(ownerUuid);
 	}
 
 	@Override
-	public void removeOwner(UUID ownerUuid) throws RoyaleProtectionBlocksException {
+	public void removeOwnerAndSave(UUID ownerUuid) throws RoyaleProtectionBlocksException {
 		this.getWorldGuardOwners().remove(ownerUuid);
 	}
 

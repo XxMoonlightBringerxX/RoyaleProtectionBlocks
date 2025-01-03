@@ -272,7 +272,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.addMember(input.getMember()));
+			input.getProtection().performAllProtections(prot -> prot.addMemberAndSave(input.getMember()));
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -298,7 +298,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.removeMember(input.getMember()));
+			input.getProtection().performAllProtections(prot -> prot.removeMemberAndSave(input.getMember()));
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -319,7 +319,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.addOwner(input.getOwner()));
+			input.getProtection().performAllProtections(prot -> prot.addOwnerAndSave(input.getOwner()));
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -345,7 +345,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.removeOwner(input.getOwner()));
+			input.getProtection().performAllProtections(prot -> prot.removeOwnerAndSave(input.getOwner()));
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -367,7 +367,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.addBanned(input.getBanned()));
+			input.getProtection().performAllProtections(prot -> prot.addBannedAndSave(input.getBanned()));
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -385,7 +385,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.removeBanned(input.getBanned()));
+			input.getProtection().performAllProtections(prot -> prot.removeBannedAndSave(input.getBanned()));
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {

@@ -214,10 +214,9 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 				protectionsToTransfer.stream().map(prot -> (Protection) prot).forEach(prot -> {
 					try {
 						UUID oldOwner = prot.getOwnerUuid();
+						prot.setOwnerUuidAndSave(protectionTransferData.getNewOwner());
 
 						prot.getWorldGuardOwners().add(protectionTransferData.getNewOwner());
-
-						prot.setOwnerUuid(protectionTransferData.getNewOwner());
 						prot.updateOwnerData();
 						protectionsByOwner.computeIfAbsent(oldOwner, (uuid) -> new ArrayList<>()).remove(prot);
 						protectionsByOwner

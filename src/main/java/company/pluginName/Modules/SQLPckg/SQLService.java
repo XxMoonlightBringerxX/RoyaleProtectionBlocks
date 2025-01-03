@@ -153,7 +153,10 @@ public class SQLService extends PandaSQLService {
 
 				protection.setGuardExpirationDate(set.getLong("GuardExpirationDate"));
 				protection.setPrice(set.getDouble("Price"));
-				protection.setPublicAccess(set.getBoolean("PublicAccess"));
+
+				if (protection.isPublicAccess() != set.getBoolean("PublicAccess")) {
+					protection.setPublicAccess(set.getBoolean("PublicAccess"));
+				}
 
 				if (set.getString("ParentRegionId") != null) {
 					parentProtections.computeIfAbsent(set.getString("ParentRegionId"), (key) -> new ArrayList<>())

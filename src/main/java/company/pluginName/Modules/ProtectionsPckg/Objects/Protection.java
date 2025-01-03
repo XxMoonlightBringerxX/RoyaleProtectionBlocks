@@ -286,12 +286,17 @@ public class Protection implements IProtection {
 	private @Getter @Setter boolean ownerOnline;
 
 	public void setOwnerUuid(UUID ownerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+		UUID oldOwnerUuid = this.ownerUuid;
+		this.ownerUuid = ownerUuid;
+
 		try {
-			this.players.getWorldGuardOwners().remove(this.ownerUuid);
-			this.ownerUuid = ownerUuid;
-			this.players.getWorldGuardOwners().add(this.ownerUuid);
+			this.players.getWorldGuardOwners().remove(oldOwnerUuid);
+			this.players.getWorldGuardOwners().add(ownerUuid);
 			this.updateOwnerData();
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			this.ownerUuid = oldOwnerUuid;
+			this.players.getWorldGuardOwners().remove(ownerUuid);
+			this.players.getWorldGuardOwners().add(oldOwnerUuid);
 			throw Exceptions.Protections.UNKNOWN.generateException(e);
 		}
 	}

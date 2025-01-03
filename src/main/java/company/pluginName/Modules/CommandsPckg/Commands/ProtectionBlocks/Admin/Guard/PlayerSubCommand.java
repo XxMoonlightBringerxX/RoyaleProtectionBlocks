@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -15,7 +14,8 @@ import company.pluginName.Modules.PlayerGuardPckg.PlayerGuardService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
@@ -57,6 +57,9 @@ public class PlayerSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static PlayerGuardService playerGuardService;
 
+	@PandaInject
+	private static PandaCachedPlayersService cachedPlayersService;
+
 	public PlayerSubCommand() throws InstantiationException {
 		super();
 	}
@@ -85,7 +88,7 @@ public class PlayerSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		if (parameters.getParameters().size() > 1) {
 			return CommandResponse.queuedAsync(() -> {
-				OfflinePlayer pl = OfflinePlayerUtilities.getOfflinePlayer(parameters.getParameters().get(0));
+				PandaCachedPlayer pl = cachedPlayersService.getCachedPlayer(parameters.getParameters().get(0));
 
 				if (pl != null) {
 					Action action = Action.find(parameters.getParameters().get(1).toUpperCase());
@@ -100,13 +103,12 @@ public class PlayerSubCommand extends PandaSubCommand {
 									long time = TimeUtilities.stringToSeconds(parameters.getParameters().get(2));
 
 									if (time > 0) {
-										long total = (time * 1000)
-												+ (action == Action.ADD
-														? Math.max(playerGuardService.getGuardExpirationDate(
-																pl.getUniqueId()), currentTimeMillis)
-														: currentTimeMillis);
+										long total = (time * 1000) + (action == Action.ADD
+												? Math.max(playerGuardService.getGuardExpirationDate(pl.getUuid()),
+														currentTimeMillis)
+												: currentTimeMillis);
 
-										playerGuardService.setGuardExpirationDate(pl.getUniqueId(), total);
+										playerGuardService.setGuardExpirationDate(pl.getUuid(), total);
 										MessageTemplate.inst(Messages.MESSAGE_GUARD_MODIFIEDSUCCESSFULLY.applyPrefix())
 												.setReplacements(new Replacement("{time}",
 														() -> TimeUtilities
@@ -126,12 +128,12 @@ public class PlayerSubCommand extends PandaSubCommand {
 							}
 							break;
 						case UNLIMITED:
-							playerGuardService.setGuardExpirationDate(pl.getUniqueId(), Long.MAX_VALUE);
+							playerGuardService.setGuardExpirationDate(pl.getUuid(), Long.MAX_VALUE);
 							MessageTemplate.inst(Messages.MESSAGE_GUARD_MODIFIEDUNLIMITEDSUCCESSFULLY.applyPrefix())
 									.process().sendMessage(sender);
 							break;
 						case REMOVE:
-							playerGuardService.removeGuardExpirationDate(pl.getUniqueId());
+							playerGuardService.removeGuardExpirationDate(pl.getUuid());
 							MessageTemplate.inst(Messages.MESSAGE_GUARD_REMOVEDSUCCESSFULLY.applyPrefix()).process()
 									.sendMessage(sender);
 							break;

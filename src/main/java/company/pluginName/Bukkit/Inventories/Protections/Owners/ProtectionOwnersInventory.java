@@ -2,10 +2,8 @@ package company.pluginName.Bukkit.Inventories.Protections.Owners;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -17,8 +15,9 @@ import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
@@ -38,6 +37,9 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
 
+	@PandaInject
+	private static PandaCachedPlayersService cachedPlayersService;
+
 	private Protection protection;
 
 	public ProtectionOwnersInventory(Player player, Protection protection) {
@@ -55,8 +57,7 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 
 	@Override
 	protected List<UUID> getEntityList() {
-		return protection.getWorldGuardOwners().list().stream().filter(uuid -> !this.protection.isMainOwner(uuid))
-				.collect(Collectors.toList());
+		return protection.getOwners();
 	}
 
 	@ItemGenerator("Search-button")
@@ -77,7 +78,7 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 			if (player != null) {
 				try {
 					playerInteractionsService.protectionOwnerAddRequest(
-							ProtectionOwnerAddRequestInput.inst(getPlayer(), protection, player.getUniqueId()));
+							ProtectionOwnerAddRequestInput.inst(getPlayer(), protection, player.getUuid()));
 					updateEntityList();
 				} catch (RoyaleProtectionBlocksException e1) {
 					e1.sendError(getPlayer());
@@ -86,12 +87,12 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 			} else {
 				openInventory();
 			}
-		}, (player) -> !protection.isOwner(player.getUniqueId())).openInventory();
+		}, (player) -> !protection.isOwner(player.getUuid())).openInventory();
 	}
 
 	@Override
 	protected ItemStack generateEntityItem(UUID entity) {
-		OfflinePlayer pl = OfflinePlayerUtilities.getOfflinePlayer(entity);
+		PandaCachedPlayer pl = cachedPlayersService.getCachedPlayer(entity);
 
 		final boolean canRemove = ProtectionUtilities.canRemoveOwner(protection, getPlayer());
 

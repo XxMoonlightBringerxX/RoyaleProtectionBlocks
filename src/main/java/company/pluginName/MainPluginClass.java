@@ -11,6 +11,7 @@ import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListeners;
 import darkpanda73.PandaUtils.PandaUpdateChecker.Annotations.EnableUpdateChecker;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Annotations.EnableCachedPlayersService;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.EnableCommandsService;
 import darkpanda73.PandaUtils.Services.PandaDiscordWebhook.Annotations.EnableDiscordWebhookService;
 import darkpanda73.PandaUtils.Services.PandaEconomiesModule.Annotations.EnableEconomiesService;
@@ -33,6 +34,7 @@ import darkpanda73.PandaUtils.Services.PandaPlayerDataModule.Listeners.PandaPlay
 @EnableDiscordWebhookService
 @EnableLoggingService
 @EnableEconomiesService
+@EnableCachedPlayersService
 public class MainPluginClass extends PandaPluginClass {
 
 	@RegisteredPandaField("lang")

@@ -336,6 +336,10 @@ public class Exceptions {
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_MEMBERS_DELETE_PERMISSIONDENIED,
 						"Error.Exception.protection.members.delete.PermissionDenied",
 						"&cYou aren't allowed to remove this member!");
+				public static final ThrowableField SQL = new ThrowableField(
+						RoyaleProtectionBlocksException.Type.PROTECTIONS_MEMBERS_DELETE_SQL,
+						"Error.Exception.protection.members.delete.SQL",
+						"&cThere was an error trying to delete the member. Please contact with an administrator!");
 				public static final ThrowableField UNKNOWN = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_MEMBERS_DELETE_UNKNOWN,
 						"Error.Exception.protection.members.delete.Unknown",
@@ -357,6 +361,10 @@ public class Exceptions {
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_MEMBERS_SAVE_PERMISSIONDENIED,
 						"Error.Exception.protection.members.save.PermissionDenied",
 						"&cYou aren't allowed to add members in this protection!");
+				public static final ThrowableField SQL = new ThrowableField(
+						RoyaleProtectionBlocksException.Type.PROTECTIONS_MEMBERS_SAVE_SQL,
+						"Error.Exception.protection.members.save.SQL",
+						"&cThere was an error trying to save the member. Please contact with an administrator!");
 				public static final ThrowableField UNKNOWN = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_MEMBERS_SAVE_UNKNOWN,
 						"Error.Exception.protection.members.save.Unknown",
@@ -378,6 +386,10 @@ public class Exceptions {
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_OWNERS_DELETE_PERMISSIONDENIED,
 						"Error.Exception.protection.owners.delete.PermissionDenied",
 						"&cYou aren't allowed to remove this owner!");
+				public static final ThrowableField SQL = new ThrowableField(
+						RoyaleProtectionBlocksException.Type.PROTECTIONS_OWNERS_DELETE_SQL,
+						"Error.Exception.protection.owners.delete.SQL",
+						"&cThere was an error trying to remove the owner. Please contact with an administrator!");
 				public static final ThrowableField UNKNOWN = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_OWNERS_DELETE_UNKNOWN,
 						"Error.Exception.protection.owners.delete.Unknown",
@@ -399,6 +411,10 @@ public class Exceptions {
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_OWNERS_SAVE_PERMISSIONDENIED,
 						"Error.Exception.protection.owners.save.PermissionDenied",
 						"&cYou aren't allowed to add owners in this protection!");
+				public static final ThrowableField SQL = new ThrowableField(
+						RoyaleProtectionBlocksException.Type.PROTECTIONS_OWNERS_SAVE_SQL,
+						"Error.Exception.protection.owners.save.SQL",
+						"&cThere was an error trying to save the owner. Please contact with an administrator!");
 				public static final ThrowableField UNKNOWN = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_OWNERS_SAVE_UNKNOWN,
 						"Error.Exception.protection.owners.save.Unknown",
@@ -418,7 +434,7 @@ public class Exceptions {
 						"&cYou aren't allowed to remove this banned!");
 				public static final ThrowableField SQL = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_DELETE_SQL,
-						"Error.Exception.protection.blocks.delete.SQL",
+						"Error.Exception.protection.owners.delete.SQL",
 						"&cThere was an error trying to delete the banned user. Please contact with an administrator!");
 				public static final ThrowableField UNKNOWN = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_DELETE_UNKNOWN,
@@ -443,7 +459,7 @@ public class Exceptions {
 						"&cYou aren't allowed to add banneds in this protection!");
 				public static final ThrowableField SQL = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_SQL,
-						"Error.Exception.protection.blocks.delete.SQL",
+						"Error.Exception.protection.owners.save.SQL",
 						"&cThere was an error trying to save the banned user. Please contact with an administrator!");
 				public static final ThrowableField UNKNOWN = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_UNKNOWN,

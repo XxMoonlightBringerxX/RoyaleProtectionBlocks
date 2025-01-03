@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -13,7 +12,8 @@ import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
@@ -47,6 +47,9 @@ public class AddMemberSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
 
+	@PandaInject
+	private static PandaCachedPlayersService cachedPlayersService;
+
 	public AddMemberSubCommand() throws InstantiationException {
 		super();
 	}
@@ -67,12 +70,12 @@ public class AddMemberSubCommand extends PandaSubCommand {
 				if (parameters.getParameters().size() > 0) {
 					Protection protection = protectionsService.findProtectionParentByLocation(pl.getLocation());
 					if (protection != null) {
-						OfflinePlayer member = OfflinePlayerUtilities
-								.getOfflinePlayer(parameters.getParameters().get(0));
+						PandaCachedPlayer member = cachedPlayersService
+								.getCachedPlayer(parameters.getParameters().get(0));
 						if (member != null) {
 							try {
 								playerInteractionsService.protectionMemberAddRequest(
-										ProtectionMemberAddRequestInput.inst(pl, protection, member.getUniqueId()));
+										ProtectionMemberAddRequestInput.inst(pl, protection, member.getUuid()));
 
 								MessageTemplate
 										.inst(Messages.MESSAGE_PROTECTIONS_MEMBERS_ADDEDSUCCESSFULLY.applyPrefix())

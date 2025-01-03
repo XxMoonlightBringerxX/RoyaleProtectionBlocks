@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -21,7 +20,8 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment.Click
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
@@ -66,6 +66,9 @@ public class MembersSubcommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsServiceImpl protectionsService;
 
+	@PandaInject
+	private static PandaCachedPlayersService cachedPlayersService;
+
 	public MembersSubcommand() throws InstantiationException {
 		super();
 	}
@@ -102,7 +105,9 @@ public class MembersSubcommand extends PandaSubCommand {
 	}
 
 	private void sendInformation(Player player, Protection protection, int page) {
-		int maxPage = getMaxPage(protection.getWorldGuardMembers().list(), 5);
+		List<UUID> members = protection.getMembers();
+
+		int maxPage = getMaxPage(members, 5);
 
 		if (maxPage < 1) {
 			maxPage = 1;
@@ -117,14 +122,15 @@ public class MembersSubcommand extends PandaSubCommand {
 		final int fPage = page;
 		final int fMaxPage = maxPage;
 
-		List<String> members = protection.getWorldGuardMembers().list().size() != 0 ? Arrays
-				.stream(Arrays.copyOfRange(protection.getWorldGuardMembers().list()
-						.toArray(new UUID[protection.getWorldGuardMembers().list().size()]), (page - 1) * 5, page * 5))
-				.filter(Objects::nonNull).map(member -> {
-					OfflinePlayer memberPlayer = OfflinePlayerUtilities.getOfflinePlayer(member);
-					return "&e".concat(
-							memberPlayer != null && memberPlayer.getName() != null ? memberPlayer.getName() : "???");
-				}).collect(Collectors.toList()) : Arrays.asList(Messages.MESSAGE_GENERAL_EMPTY.getContent());
+		List<String> memberNames = members.size() != 0
+				? Arrays.stream(Arrays.copyOfRange(members.toArray(new UUID[members.size()]), (page - 1) * 5, page * 5))
+						.filter(Objects::nonNull).map(member -> {
+							PandaCachedPlayer memberPlayer = cachedPlayersService.getCachedPlayer(member);
+							return "&e".concat(
+									memberPlayer != null && memberPlayer.getName() != null ? memberPlayer.getName()
+											: "???");
+						}).collect(Collectors.toList())
+				: Arrays.asList(Messages.MESSAGE_GENERAL_EMPTY.getContent());
 
 		MessageFragment previousPage = page > 1
 				? new MessageFragment(() -> MESSAGE_WORLDINFO_MEMBERSINFORMATIONPREVIOUSAVAILABLE.getContent(),
@@ -141,7 +147,7 @@ public class MembersSubcommand extends PandaSubCommand {
 		MessageTemplate.inst(MESSAGE_WORLDINFO_MEMBERSINFORMATION.getContent())
 				.setReplacements(
 						new Replacement("{protection_members}",
-								() -> members.stream().collect(Collectors.joining(", ", "&e", ""))),
+								() -> memberNames.stream().collect(Collectors.joining(", ", "&e", ""))),
 						new Replacement("{previous_page}", previousPage),
 						new Replacement("{current_page}", () -> ("&7" + fPage + "/" + fMaxPage)),
 						new Replacement("{next_page}", nextPage))

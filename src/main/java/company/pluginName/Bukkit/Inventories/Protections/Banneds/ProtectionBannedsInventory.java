@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -16,8 +15,9 @@ import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
@@ -36,6 +36,9 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
+
+	@PandaInject
+	private static PandaCachedPlayersService cachedPlayersService;
 
 	private Protection protection;
 
@@ -75,7 +78,7 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 			if (player != null) {
 				try {
 					playerInteractionsService.protectionBannedAddRequest(
-							ProtectionBannedAddRequestInput.inst(getPlayer(), protection, player.getUniqueId()));
+							ProtectionBannedAddRequestInput.inst(getPlayer(), protection, player.getUuid()));
 				} catch (RoyaleProtectionBlocksException e1) {
 					e1.sendError(getPlayer());
 				}
@@ -83,12 +86,12 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 			} else {
 				openInventory();
 			}
-		}, (player) -> !protection.isMainOwner(player.getUniqueId())).openInventory();
+		}, (player) -> !protection.isMainOwner(player.getUuid())).openInventory();
 	}
 
 	@Override
 	protected ItemStack generateEntityItem(UUID entity) {
-		OfflinePlayer pl = OfflinePlayerUtilities.getOfflinePlayer(entity);
+		PandaCachedPlayer pl = cachedPlayersService.getCachedPlayer(entity);
 
 		final boolean canRemove = ProtectionUtilities.canRemoveMember(protection, getPlayer());
 

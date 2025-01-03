@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -21,7 +20,8 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment.Click
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
@@ -66,6 +66,9 @@ public class BannedsSubcommand extends PandaSubCommand {
 	@PandaInject
 	private static ProtectionsServiceImpl protectionsService;
 
+	@PandaInject
+	private static PandaCachedPlayersService cachedPlayersService;
+
 	public BannedsSubcommand() throws InstantiationException {
 		super();
 	}
@@ -102,6 +105,8 @@ public class BannedsSubcommand extends PandaSubCommand {
 	}
 
 	private void sendInformation(Player player, Protection protection, int page) {
+		List<UUID> banneds = protection.getBanneds();
+
 		int maxPage = getMaxPage(protection.getBanneds(), 5);
 
 		if (maxPage < 1) {
@@ -117,14 +122,15 @@ public class BannedsSubcommand extends PandaSubCommand {
 		final int fPage = page;
 		final int fMaxPage = maxPage;
 
-		List<String> banneds = protection.getBanneds().size() != 0 ? Arrays
-				.stream(Arrays.copyOfRange(protection.getBanneds().toArray(new UUID[protection.getBanneds().size()]),
-						(page - 1) * 5, page * 5))
-				.filter(Objects::nonNull).map(banned -> {
-					OfflinePlayer bannedPlayer = OfflinePlayerUtilities.getOfflinePlayer(banned);
-					return "&e".concat(
-							bannedPlayer != null && bannedPlayer.getName() != null ? bannedPlayer.getName() : "???");
-				}).collect(Collectors.toList()) : Arrays.asList(Messages.MESSAGE_GENERAL_EMPTY.getContent());
+		List<String> bannedNames = banneds.size() != 0
+				? Arrays.stream(Arrays.copyOfRange(banneds.toArray(new UUID[banneds.size()]), (page - 1) * 5, page * 5))
+						.filter(Objects::nonNull).map(banned -> {
+							PandaCachedPlayer bannedPlayer = cachedPlayersService.getCachedPlayer(banned);
+							return "&e".concat(
+									bannedPlayer != null && bannedPlayer.getName() != null ? bannedPlayer.getName()
+											: "???");
+						}).collect(Collectors.toList())
+				: Arrays.asList(Messages.MESSAGE_GENERAL_EMPTY.getContent());
 
 		MessageFragment previousPage = page > 1
 				? new MessageFragment(() -> MESSAGE_WORLDINFO_BANNEDSINFORMATIONPREVIOUSAVAILABLE.getContent(),
@@ -141,7 +147,7 @@ public class BannedsSubcommand extends PandaSubCommand {
 		MessageTemplate.inst(MESSAGE_WORLDINFO_BANNEDSINFORMATION.getContent())
 				.setReplacements(
 						new Replacement("{protection_banneds}",
-								() -> banneds.stream().collect(Collectors.joining(", ", "&e", ""))),
+								() -> bannedNames.stream().collect(Collectors.joining(", ", "&e", ""))),
 						new Replacement("{previous_page}", previousPage),
 						new Replacement("{current_page}", () -> ("&7" + fPage + "/" + fMaxPage)),
 						new Replacement("{next_page}", nextPage))

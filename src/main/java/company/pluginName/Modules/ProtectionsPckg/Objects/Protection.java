@@ -25,19 +25,15 @@ import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Hooks.VaultAPI.VaultAPI;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
-import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionDisplayItem;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionPlayers;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardBanneds;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardFlags;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardMembers;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardOwners;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Utils.ReflectUtils;
@@ -121,9 +117,7 @@ public class Protection implements IProtection {
 	private @ToString.Include long createdDate;
 	private ReferencedProtectionBlock referencedProtectionBlock;
 
-	private ProtectionWorldGuardMembers worldGuardMembers = new ProtectionWorldGuardMembers(this);
-	private ProtectionWorldGuardOwners worldGuardOwners = new ProtectionWorldGuardOwners(this);
-	private ProtectionWorldGuardBanneds worldGuardBanneds = new ProtectionWorldGuardBanneds(this);
+	private ProtectionPlayers players = new ProtectionPlayers(this);
 	private ProtectionWorldGuardFlags worldGuardFlags = new ProtectionWorldGuardFlags(this);
 	private ProtectionActions actions = new ProtectionActions(this);
 	private ProtectionUtils utils = new ProtectionUtils(this);
@@ -291,9 +285,15 @@ public class Protection implements IProtection {
 	private @Setter long ownerLastPlayed = 0L;
 	private @Getter @Setter boolean ownerOnline;
 
-	public void setOwnerUuid(UUID ownerUuid) {
-		this.ownerUuid = ownerUuid;
-		this.updateOwnerData();
+	public void setOwnerUuid(UUID ownerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.players.getWorldGuardOwners().remove(this.ownerUuid);
+			this.ownerUuid = ownerUuid;
+			this.players.getWorldGuardOwners().add(this.ownerUuid);
+			this.updateOwnerData();
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			throw Exceptions.Protections.UNKNOWN.generateException(e);
+		}
 	}
 
 	public void updateOwnerData() {
@@ -383,58 +383,6 @@ public class Protection implements IProtection {
 	public int getPriority() {
 		return getProtectedRegion() != null ? getProtectedRegion().getPriority()
 				: SETTINGS_PROTECTION_DEFAULTPRIORITY.getContent();
-	}
-
-	/*
-	 * Banneds methods
-	 */
-
-	private List<UUID> banneds = new ArrayList<>();
-
-	@Override
-	public void addBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
-		if (this.isOwner(bannedUuid)) {
-			throw Exceptions.Protections.Banneds.Save.CANNOTADDPROTECTIONOWNER.generateException();
-		}
-
-		this.getBanneds().add(bannedUuid);
-
-		TasksUtils.execute(() -> {
-			Player bannedPlayer = Bukkit.getPlayer(bannedUuid);
-
-			if (bannedPlayer != null) {
-				try {
-					if (PermissionsService.BANNEDS_BYPASS.hasPermission(bannedPlayer)
-							|| this.kickPlayer(bannedPlayer)) {
-						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BANNED.applyPrefix()).process()
-								.sendMessage(bannedPlayer);
-					}
-				} catch (RoyaleProtectionBlocksException e) {
-					e.sendError(Bukkit.getConsoleSender());
-				}
-			}
-		});
-
-		TasksUtils.executeOnAsync(() -> {
-			try {
-				sqlService.saveProtectionBanned(this, bannedUuid);
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
-				e.sendError(Bukkit.getConsoleSender());
-			}
-		});
-	}
-
-	@Override
-	public void removeBanned(UUID bannedUuid) throws RoyaleProtectionBlocksException {
-		this.getBanneds().remove(bannedUuid);
-
-		TasksUtils.executeOnAsync(() -> {
-			try {
-				sqlService.deleteProtectionBanned(this, bannedUuid);
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
-				e.sendError(Bukkit.getConsoleSender());
-			}
-		});
 	}
 
 	/*
@@ -678,35 +626,15 @@ public class Protection implements IProtection {
 	}
 
 	public boolean isOwner(UUID playerUuid) {
-		return this.getWorldGuardOwners().list().contains(playerUuid);
+		return this.players.getOwners().contains(playerUuid);
 	}
 
 	public boolean isMember(UUID playerUuid) {
-		return this.getWorldGuardMembers().list().contains(playerUuid);
+		return this.players.getMembers().contains(playerUuid);
 	}
 
 	public boolean isBanned(UUID playerUuid) {
-		return this.getBanneds().contains(playerUuid);
-	}
-
-	@Override
-	public void addMember(UUID memberUuid) throws RoyaleProtectionBlocksException {
-		this.getWorldGuardMembers().add(memberUuid);
-	}
-
-	@Override
-	public void removeMember(UUID memberUuid) throws RoyaleProtectionBlocksException {
-		this.getWorldGuardMembers().remove(memberUuid);
-	}
-
-	@Override
-	public void addOwner(UUID ownerUuid) throws RoyaleProtectionBlocksException {
-		this.getWorldGuardOwners().add(ownerUuid);
-	}
-
-	@Override
-	public void removeOwner(UUID ownerUuid) throws RoyaleProtectionBlocksException {
-		this.getWorldGuardOwners().remove(ownerUuid);
+		return this.players.getBanneds().contains(playerUuid);
 	}
 
 	@Override
@@ -839,7 +767,7 @@ public class Protection implements IProtection {
 		});
 	}
 
-	public void setOwnerUuidAndSave(UUID ownerUuid) {
+	public void setOwnerUuidAndSave(UUID ownerUuid) throws RoyaleProtectionBlocksExceptionImpl {
 		setOwnerUuid(ownerUuid);
 
 		TasksUtils.executeOnAsync(() -> {
@@ -871,6 +799,99 @@ public class Protection implements IProtection {
 		TasksUtils.executeOnAsync(() -> {
 			try {
 				sqlService.savePublicAccess(this);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	@Override
+	public List<UUID> getMembers() {
+		return new ArrayList<>(this.players.getMembers());
+	}
+
+	@Override
+	public List<UUID> getOwners() {
+		return new ArrayList<>(this.players.getMembers());
+	}
+
+	@Override
+	public List<UUID> getBanneds() {
+		return new ArrayList<>(this.players.getMembers());
+	}
+
+	@Override
+	public void addMemberAndSave(UUID memberUuid) throws RoyaleProtectionBlocksException {
+		this.players.addMember(memberUuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.saveProtectionMember(this, memberUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	@Override
+	public void removeMemberAndSave(UUID memberUuid) throws RoyaleProtectionBlocksException {
+		this.players.removeMember(memberUuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.deleteProtectionMember(this, memberUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	@Override
+	public void addOwnerAndSave(UUID ownerUuid) throws RoyaleProtectionBlocksException {
+		this.players.addOwner(ownerUuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.saveProtectionOwner(this, ownerUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	@Override
+	public void removeOwnerAndSave(UUID ownerUuid) throws RoyaleProtectionBlocksException {
+		this.players.removeOwner(ownerUuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.deleteProtectionOwner(this, ownerUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	@Override
+	public void addBannedAndSave(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+		this.players.addBanned(bannedUuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.saveProtectionBanned(this, bannedUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	@Override
+	public void removeBannedAndSave(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+		this.players.removeBanned(bannedUuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.deleteProtectionBanned(this, bannedUuid);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}

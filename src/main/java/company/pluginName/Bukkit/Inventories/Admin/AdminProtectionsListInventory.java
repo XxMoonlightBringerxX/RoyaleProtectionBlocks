@@ -210,7 +210,7 @@ public class AdminProtectionsListInventory extends PagedChestInventoryObject<Pro
 	private void onClickPlayerButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
 		if (e.isLeftClick()) {
 			new SearchPlayerInventory(getPlayer(), (player) -> {
-				this.owner = player;
+				this.owner = player.toBukkit();
 				this.updateReplacements();
 				this.updateEntityList();
 				this.updateInventory();

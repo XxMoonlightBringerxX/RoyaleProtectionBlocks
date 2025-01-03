@@ -4,14 +4,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Bukkit.Inventories.Admin.AdminProtectionsListInventory;
 import company.pluginName.Modules.FilePckg.Messages;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation.PandaSubCommandAnnotation;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParameters;
@@ -36,6 +37,9 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 		usage = true)
 public class ListSubCommand extends PandaSubCommand {
 
+	@PandaInject
+	private static PandaCachedPlayersService cachedPlayersService;
+
 	public ListSubCommand() throws InstantiationException {
 		super();
 	}
@@ -54,9 +58,9 @@ public class ListSubCommand extends PandaSubCommand {
 			Player pl = sender instanceof Player ? (Player) sender : null;
 			if (pl != null) {
 				if (parameters.getParameters().size() > 0) {
-					OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(parameters.getParameters().get(0));
+					PandaCachedPlayer owner = cachedPlayersService.getCachedPlayer(parameters.getParameters().get(0));
 					if (owner != null) {
-						new AdminProtectionsListInventory(pl, owner).openInventory();
+						new AdminProtectionsListInventory(pl, owner.toBukkit()).openInventory();
 					} else {
 						MessageTemplate.inst(Messages.ERROR_PLAYERNOTFOUND.applyPrefix()).process().sendMessage(sender);
 					}

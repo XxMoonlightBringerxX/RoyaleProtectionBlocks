@@ -154,10 +154,42 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			}
 		});
 
+		sqlService.getProtectionMembers().forEach((id, members) -> {
+			Protection protection = findProtectionById(id);
+			if (protection != null) {
+				protection.getPlayers().setMembers(members);
+			}
+
+			protection.getPlayers().getWorldGuardMembers().list().stream()
+					.filter(member -> !protection.isMember(member)).forEach(missingMember -> {
+						try {
+							protection.addMemberAndSave(missingMember);
+						} catch (RoyaleProtectionBlocksException e) {
+							e.sendError(Bukkit.getConsoleSender());
+						}
+					});
+		});
+
+		sqlService.getProtectionOwners().forEach((id, owners) -> {
+			Protection protection = findProtectionById(id);
+			if (protection != null) {
+				protection.getPlayers().setOwners(owners);
+			}
+
+			protection.getPlayers().getWorldGuardOwners().list().stream().filter(owner -> !protection.isOwner(owner))
+					.forEach(missingOwner -> {
+						try {
+							protection.addOwnerAndSave(missingOwner);
+						} catch (RoyaleProtectionBlocksException e) {
+							e.sendError(Bukkit.getConsoleSender());
+						}
+					});
+		});
+
 		sqlService.getProtectionBanneds().forEach((id, banneds) -> {
 			Protection protection = findProtectionById(id);
 			if (protection != null) {
-				protection.setBanneds(banneds);
+				protection.getPlayers().setBanneds(banneds);
 			}
 		});
 
@@ -214,17 +246,12 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 				protectionsToTransfer.stream().map(prot -> (Protection) prot).forEach(prot -> {
 					try {
 						UUID oldOwner = prot.getOwnerUuid();
+						prot.setOwnerUuidAndSave(protectionTransferData.getNewOwner());
 
-						prot.getWorldGuardOwners().add(protectionTransferData.getNewOwner());
-
-						prot.setOwnerUuid(protectionTransferData.getNewOwner());
-						prot.updateOwnerData();
 						protectionsByOwner.computeIfAbsent(oldOwner, (uuid) -> new ArrayList<>()).remove(prot);
 						protectionsByOwner
 								.computeIfAbsent(protectionTransferData.getNewOwner(), (uuid) -> new ArrayList<>())
 								.add(prot);
-
-						prot.getWorldGuardOwners().remove(oldOwner);
 					} catch (Throwable e) {
 						throw new RuntimeException(e);
 					}
@@ -533,8 +560,7 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 					.stream(protectionByRegion.values().spliterator(),
 							SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
 					.filter(prot -> !prot.isDeleted() && prot.getParentProtection() == prot
-							&& (prot.getWorldGuardOwners().list().contains(uuid)
-									|| prot.getWorldGuardMembers().list().contains(uuid))));
+							&& (prot.getOwners().contains(uuid) || prot.getMembers().contains(uuid))));
 		} catch (Throwable e) {
 			return Collections.<Protection>emptyList().stream();
 		}

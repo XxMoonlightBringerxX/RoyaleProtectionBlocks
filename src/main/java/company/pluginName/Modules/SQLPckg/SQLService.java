@@ -28,6 +28,7 @@ import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0001DeleteAutoPurg
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0002AddGuardSystem;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0003AddPriceColumn;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0004AddPublicAccessColumn;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0005AddMembersAndOwnersTables;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Annotations.PandaSQLConfigV2;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Changelogs.SQLChangelog;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.DeleteStatement;
@@ -65,6 +66,14 @@ public class SQLService extends PandaSQLService {
 			new Column("GuardExpirationDate", Types.BIGINT).setNotNull(false),
 			new Column("Price", Types.DECIMAL, "DECIMAL(12, 2)").setNotNull(false),
 			new Column("PublicAccess", Types.BOOLEAN, "BOOLEAN", "0").setNotNull(true));
+
+	private static final Table PROTECTION_MEMBERS_TABLE = new Table("ProtectionMembers").addColumns(
+			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
+			new Column("MemberUuid", Types.CHAR, "CHAR(36)").setNotNull(true));
+
+	private static final Table PROTECTION_OWNERS_TABLE = new Table("ProtectionOwners").addColumns(
+			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
+			new Column("OwnerUuid", Types.CHAR, "CHAR(36)").setNotNull(true));
 
 	private static final Table PROTECTION_BANNEDS_TABLE = new Table("ProtectionBanneds").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
@@ -122,7 +131,7 @@ public class SQLService extends PandaSQLService {
 	public Collection<SQLChangelog> getSQLChangelogs() {
 		return Arrays.asList(new Changelog0000Init(), new Changelog0001DeleteAutoPurgeLogsTable(),
 				new Changelog0002AddGuardSystem(), new Changelog0003AddPriceColumn(),
-				new Changelog0004AddPublicAccessColumn());
+				new Changelog0004AddPublicAccessColumn(), new Changelog0005AddMembersAndOwnersTables());
 	}
 
 	/*
@@ -292,6 +301,7 @@ public class SQLService extends PandaSQLService {
 		try {
 			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTIONS_TABLE).setCondition(
 					EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
+			this.deleteProtectionBanneds(protection);
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Delete.SQL.generateException(e);
 		}
@@ -306,6 +316,128 @@ public class SQLService extends PandaSQLService {
 			this.getSqlConnection().executeInsert(insertStatement);
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Save.SQL.generateException(e);
+		}
+	}
+
+	/*
+	 * Protection members methods
+	 */
+
+	public HashMap<String, List<UUID>> getProtectionMembers() {
+		HashMap<String, List<UUID>> protectionMembers = new HashMap<>();
+
+		try (ResultSet set = this.getSqlConnection()
+				.executeQuery(SelectStatement.inst().addTable(PROTECTION_MEMBERS_TABLE))) {
+			while (set.next()) {
+				protectionMembers.computeIfAbsent(set.getString("RegionId"), (key) -> new ArrayList<>())
+						.add(UUID.fromString(set.getString("MemberUuid")));
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+
+		return protectionMembers;
+	}
+
+	public void saveProtectionMember(Protection protection, UUID memberUuid)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		this.saveProtectionMembers(protection, Arrays.asList(memberUuid));
+	}
+
+	public void saveProtectionMembers(Protection protection, List<UUID> memberUuids)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		InsertStatement insert = InsertStatement.inst(PROTECTION_MEMBERS_TABLE);
+		memberUuids.forEach(ownerUuid -> insert.addEntry(protection.getProtectionId(), ownerUuid.toString()));
+
+		try {
+			this.getSqlConnection().executeInsert(insert);
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Members.Save.SQL.generateException(e);
+		}
+	}
+
+	public void deleteProtectionMember(Protection protection, UUID memberUuid)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_MEMBERS_TABLE)
+							.setCondition(AndCondition.inst(
+									EqualsCondition.inst(PROTECTION_MEMBERS_TABLE.getColumn("RegionId"),
+											protection.getProtectionId()),
+									EqualsCondition.inst(PROTECTION_MEMBERS_TABLE.getColumn("MemberUuid"),
+											memberUuid.toString()))));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Members.Delete.SQL.generateException(e);
+		}
+	}
+
+	public void deleteProtectionMembers(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_MEMBERS_TABLE).setCondition(EqualsCondition
+							.inst(PROTECTION_MEMBERS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Members.Delete.SQL.generateException(e);
+		}
+	}
+
+	/*
+	 * Protection owners methods
+	 */
+
+	public HashMap<String, List<UUID>> getProtectionOwners() {
+		HashMap<String, List<UUID>> protectionOwners = new HashMap<>();
+
+		try (ResultSet set = this.getSqlConnection()
+				.executeQuery(SelectStatement.inst().addTable(PROTECTION_OWNERS_TABLE))) {
+			while (set.next()) {
+				protectionOwners.computeIfAbsent(set.getString("RegionId"), (key) -> new ArrayList<>())
+						.add(UUID.fromString(set.getString("OwnerUuid")));
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+
+		return protectionOwners;
+	}
+
+	public void saveProtectionOwner(Protection protection, UUID ownerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+		this.saveProtectionOwners(protection, Arrays.asList(ownerUuid));
+	}
+
+	public void saveProtectionOwners(Protection protection, List<UUID> ownerUuids)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		InsertStatement insert = InsertStatement.inst(PROTECTION_OWNERS_TABLE);
+		ownerUuids.forEach(ownerUuid -> insert.addEntry(protection.getProtectionId(), ownerUuid.toString()));
+
+		try {
+			this.getSqlConnection().executeInsert(insert);
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Owners.Save.SQL.generateException(e);
+		}
+	}
+
+	public void deleteProtectionOwner(Protection protection, UUID ownerUuid)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_OWNERS_TABLE)
+							.setCondition(AndCondition.inst(
+									EqualsCondition.inst(PROTECTION_OWNERS_TABLE.getColumn("RegionId"),
+											protection.getProtectionId()),
+									EqualsCondition.inst(PROTECTION_OWNERS_TABLE.getColumn("OwnerUuid"),
+											ownerUuid.toString()))));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Owners.Delete.SQL.generateException(e);
+		}
+	}
+
+	public void deleteProtectionOwners(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTION_OWNERS_TABLE).setCondition(
+					EqualsCondition.inst(PROTECTION_OWNERS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Owners.Delete.SQL.generateException(e);
 		}
 	}
 

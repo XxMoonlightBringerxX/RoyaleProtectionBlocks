@@ -82,26 +82,18 @@ public class PlaceholdersService {
 			Pair.of("{protection_location_z}",
 					(protection) -> String.valueOf(protection.getBukkitLocation().getBlockZ())),
 			Pair.of("{protection_price}", (protection) -> String.valueOf(protection.getPrice())),
-			Pair.of("{protection_owners}",
-					(protection) -> ((Protection) protection).getWorldGuardOwners().list().size() != 0
-							? ((Protection) protection).getWorldGuardOwners().list().stream().filter(Objects::nonNull)
-									.map(member -> {
-										OfflinePlayer memberPlayer = OfflinePlayerUtilities.getOfflinePlayer(member);
-										return memberPlayer != null && memberPlayer.getName() != null
-												? memberPlayer.getName()
-												: "???";
-									}).collect(Collectors.joining(", "))
-							: Messages.MESSAGE_GENERAL_EMPTY.getContent()),
-			Pair.of("{protection_members}",
-					(protection) -> ((Protection) protection).getWorldGuardMembers().list().size() != 0
-							? ((Protection) protection).getWorldGuardMembers().list().stream().filter(Objects::nonNull)
-									.map(member -> {
-										OfflinePlayer memberPlayer = OfflinePlayerUtilities.getOfflinePlayer(member);
-										return memberPlayer != null && memberPlayer.getName() != null
-												? memberPlayer.getName()
-												: "???";
-									}).collect(Collectors.joining(", "))
-							: Messages.MESSAGE_GENERAL_EMPTY.getContent()),
+			Pair.of("{protection_owners}", (protection) -> ((Protection) protection).getOwners().size() != 0
+					? ((Protection) protection).getOwners().stream().filter(Objects::nonNull).map(owner -> {
+						OfflinePlayer ownerPlayer = OfflinePlayerUtilities.getOfflinePlayer(owner);
+						return ownerPlayer != null && ownerPlayer.getName() != null ? ownerPlayer.getName() : "???";
+					}).collect(Collectors.joining(", "))
+					: Messages.MESSAGE_GENERAL_EMPTY.getContent()),
+			Pair.of("{protection_members}", (protection) -> ((Protection) protection).getMembers().size() != 0
+					? ((Protection) protection).getMembers().stream().filter(Objects::nonNull).map(member -> {
+						OfflinePlayer memberPlayer = OfflinePlayerUtilities.getOfflinePlayer(member);
+						return memberPlayer != null && memberPlayer.getName() != null ? memberPlayer.getName() : "???";
+					}).collect(Collectors.joining(", "))
+					: Messages.MESSAGE_GENERAL_EMPTY.getContent()),
 			Pair.of("{protection_banneds}", (protection) -> ((Protection) protection).getBanneds().size() != 0
 					? ((Protection) protection).getBanneds().stream().map(banned -> {
 						OfflinePlayer bannedPlayer = OfflinePlayerUtilities.getOfflinePlayer(banned);

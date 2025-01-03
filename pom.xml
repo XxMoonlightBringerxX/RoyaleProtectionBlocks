@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>1.10.0 Alpha</version>
+	<version>1.11.0 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -184,6 +184,11 @@
 		<dependency>
 			<groupId>PandaUtils</groupId>
 			<artifactId>PandaEconomiesModule</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaCachedPlayersModule</artifactId>
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>

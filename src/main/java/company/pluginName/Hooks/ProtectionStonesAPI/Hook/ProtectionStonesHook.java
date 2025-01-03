@@ -17,7 +17,6 @@ import org.bukkit.World;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
-import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
@@ -262,9 +261,9 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 						owners.forEach(owner -> {
 							try {
-								protection.getWorldGuardOwners().add(owner);
-							} catch (RoyaleProtectionBlocksExceptionImpl e) {
-								if (e.getExceptionType() != Exceptions.Protections.Owners.Save.CANNOTADDPROTECTIONOWNER) {
+								protection.addOwnerAndSave(owner);
+							} catch (RoyaleProtectionBlocksException e) {
+								if (e.getType() != Type.PROTECTIONS_OWNERS_SAVE_CANNOTADDPROTECTIONOWNER) {
 									MessageTemplate
 											.inst(PandaPrefixedStringField.applyPrefix(
 													String.format("&cUnable to add owner on protection '%s': %s",
@@ -278,9 +277,9 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 
 						members.forEach(member -> {
 							try {
-								protection.getWorldGuardMembers().add(member);
-							} catch (RoyaleProtectionBlocksExceptionImpl e) {
-								if (e.getExceptionType() != Exceptions.Protections.Members.Save.CANNOTADDPROTECTIONOWNER) {
+								protection.addMemberAndSave(member);
+							} catch (RoyaleProtectionBlocksException e) {
+								if (e.getType() != Type.PROTECTIONS_MEMBERS_SAVE_CANNOTADDPROTECTIONOWNER) {
 									MessageTemplate
 											.inst(PandaPrefixedStringField.applyPrefix(
 													String.format("&cUnable to add member on protection '%s': %s",

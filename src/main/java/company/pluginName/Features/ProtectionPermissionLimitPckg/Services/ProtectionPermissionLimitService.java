@@ -6,13 +6,13 @@ import org.bukkit.scheduler.BukkitTask;
 import company.pluginName.Features.ProtectionPermissionLimitPckg.Listeners.ProtectionPermissionLimitListener;
 import company.pluginName.Features.ProtectionPermissionLimitPckg.Utils.ProtectionPermissionLimitUtilities;
 import company.pluginName.Features.ProtectionPermissionLimitPckg.Utils.ProtectionPermissionLimitUtilities.Summary;
-import company.pluginName.Utils.TimeUtils;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.ReloadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.UnloadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
+import darkpanda73.PandaUtils.Utilities.Java.Time.TimeUtilities;
 
 @PandaService
 public class ProtectionPermissionLimitService {
@@ -40,7 +40,7 @@ public class ProtectionPermissionLimitService {
 
 	public void startTask() {
 		if (ProtectionPermissionLimitUtilities.SETTINGS_PROTECTION_BLOCKPROTECTIONSIFEXCEEDINGLIMITS.isTrue()) {
-			long seconds = TimeUtils.stringToSeconds(
+			long seconds = TimeUtilities.stringToSeconds(
 					ProtectionPermissionLimitUtilities.SETTINGS_PROTECTION_CHECKIFEXCEEDINGLIMITSEVERY.getContent());
 
 			if (seconds > 0) {

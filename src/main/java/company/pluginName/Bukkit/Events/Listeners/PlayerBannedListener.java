@@ -12,8 +12,8 @@ import org.bukkit.scheduler.BukkitTask;
 
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.SettingsPckg.SettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
@@ -26,7 +26,7 @@ public class PlayerBannedListener implements Listener {
 	private static final long MESSAGE_THRESHOLD = 1000 * 2;
 
 	@PandaInject
-	private ProtectionSettingsService protectionSettingsService;
+	private SettingsService protectionSettingsService;
 
 	private HashMap<UUID, Long> lastMessages = new HashMap<>();
 	private BukkitTask task;

@@ -87,7 +87,8 @@ public class ProtectionOwnersInventory extends PagedChestInventoryObject<UUID> {
 			} else {
 				openInventory();
 			}
-		}, (player) -> !protection.isOwner(player.getUuid())).openInventory();
+		}, (player) -> !protection.isMainOwner(player.getUuid()) && !protection.isOwner(player.getUuid()))
+				.openInventory();
 	}
 
 	@Override

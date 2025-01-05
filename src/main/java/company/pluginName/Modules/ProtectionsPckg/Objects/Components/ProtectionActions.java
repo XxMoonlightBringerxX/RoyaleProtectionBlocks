@@ -13,8 +13,8 @@ import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.SettingsPckg.SettingsService;
 import company.pluginName.Utils.EconomyUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -29,7 +29,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerTeleportToPr
 public class ProtectionActions {
 
 	@PandaInject
-	private static ProtectionSettingsService protectionSettingsService;
+	private static SettingsService protectionSettingsService;
 
 	@PandaInject
 	private static PlayerDataService playerDataService;

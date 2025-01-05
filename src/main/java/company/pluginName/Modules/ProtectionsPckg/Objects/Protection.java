@@ -28,14 +28,15 @@ import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionDisplayItem;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionPlayers;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionSettings;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardFlags;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.SQLPckg.SQLService;
+import company.pluginName.Modules.SettingsPckg.SettingsService;
 import company.pluginName.Utils.ReflectUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -86,7 +87,7 @@ public class Protection implements IProtection {
 			"Settings.Protection.Default-priority", 0);
 
 	@PandaInject
-	private static ProtectionSettingsService protectionSettingsService;
+	private static SettingsService protectionSettingsService;
 
 	@PandaInject
 	private static PlaceholdersService placeholdersService;
@@ -118,6 +119,7 @@ public class Protection implements IProtection {
 	private ReferencedProtectionBlock referencedProtectionBlock;
 
 	private ProtectionPlayers players = new ProtectionPlayers(this);
+	private ProtectionSettings settings = new ProtectionSettings(this);
 	private ProtectionWorldGuardFlags worldGuardFlags = new ProtectionWorldGuardFlags(this);
 	private ProtectionActions actions = new ProtectionActions(this);
 	private ProtectionUtils utils = new ProtectionUtils(this);

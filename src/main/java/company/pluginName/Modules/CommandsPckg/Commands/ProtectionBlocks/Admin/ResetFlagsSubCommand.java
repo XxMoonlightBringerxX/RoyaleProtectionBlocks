@@ -13,9 +13,9 @@ import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionFlagsPckg.ProtectionFlagsService;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.SettingsPckg.SettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
@@ -58,7 +58,7 @@ public class ResetFlagsSubCommand extends PandaSubCommand {
 	private static ProtectionsServiceImpl protectionsService;
 
 	@PandaInject
-	private static ProtectionSettingsService protectionSettingsService;
+	private static SettingsService protectionSettingsService;
 
 	@PandaInject
 	private static ProtectionFlagsService protectionFlagsService;

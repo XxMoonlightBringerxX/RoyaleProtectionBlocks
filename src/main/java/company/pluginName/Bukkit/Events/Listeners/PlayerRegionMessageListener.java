@@ -14,7 +14,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
+import company.pluginName.Modules.SettingsPckg.SettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Message;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -60,7 +60,7 @@ public class PlayerRegionMessageListener implements Listener {
 			"Settings.Protection.Subtitle-on-exit-region", "");
 
 	@PandaInject
-	private ProtectionSettingsService protectionSettingsService;
+	private SettingsService protectionSettingsService;
 
 	@PandaInject
 	private PlaceholdersService placeholdersService;

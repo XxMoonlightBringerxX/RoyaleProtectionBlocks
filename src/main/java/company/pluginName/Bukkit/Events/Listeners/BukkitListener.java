@@ -21,9 +21,9 @@ import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.SQLPckg.SQLService;
+import company.pluginName.Modules.SettingsPckg.SettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
@@ -41,7 +41,7 @@ public class BukkitListener implements Listener {
 	private ProtectionBlocksService protectionBlocksService;
 
 	@PandaInject
-	private ProtectionSettingsService protectionSettingsService;
+	private SettingsService protectionSettingsService;
 
 	@PandaInject
 	private ProtectionsServiceImpl protectionsService;

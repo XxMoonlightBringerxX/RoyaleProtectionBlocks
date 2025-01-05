@@ -3,7 +3,7 @@ package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin.
 import org.bukkit.command.CommandSender;
 
 import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin.AdminCommand;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
+import company.pluginName.Modules.SettingsPckg.SettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
@@ -32,7 +32,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 public class GuardCommand extends PandaCommand {
 
 	@PandaInject
-	private static ProtectionSettingsService protectionSettingService;
+	private static SettingsService protectionSettingService;
 
 	public GuardCommand() throws InstantiationException {
 		super();

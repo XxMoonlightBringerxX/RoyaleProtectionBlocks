@@ -126,11 +126,8 @@ public class ProtectionUtilities {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canTeleport(IProtection protection, Player pl) {
-		return protection.isForSale() || protection.isPublicAccess()
-				|| (protection.isOwner(pl.getUniqueId())
-						|| protection.isMember(pl.getUniqueId()) && PermissionsService.TELEPORT.hasPermission(pl))
-				|| PermissionsService.TELEPORT_OTHERS.hasPermission(pl);
+	public static boolean canSwitchSettings(IProtection protection, Player pl) {
+		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
 
 	public static boolean canAddOwner(IProtection protection, Player pl) {
@@ -163,10 +160,6 @@ public class ProtectionUtilities {
 
 	public static boolean canKick(IProtection protection, Player pl) {
 		return protection.isOwner(pl.getUniqueId()) || PermissionsService.KICK_OTHERS.hasPermission(pl);
-	}
-
-	public static boolean canFly(IProtection protection, Player pl) {
-		return protection.isOwner(pl.getUniqueId());
 	}
 
 	public static boolean canSetHome(IProtection protection, Player pl) {

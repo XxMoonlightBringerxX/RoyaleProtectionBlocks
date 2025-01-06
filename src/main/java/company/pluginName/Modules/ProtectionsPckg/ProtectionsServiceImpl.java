@@ -193,6 +193,15 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			}
 		});
 
+		sqlService.getProtectionSettings().forEach((id, settings) -> {
+			Protection protection = findProtectionById(id);
+			if (protection != null) {
+				protection.getSettings().setNonMembersSettings(settings.getNonMembersSettings());
+				protection.getSettings().setMembersSettings(settings.getMembersSettings());
+				protection.getSettings().setOwnersSettings(settings.getOwnersSettings());
+			}
+		});
+
 		plugin.sendDebug(getClass(),
 				String.format("Loaded a total amount of '%d' protection(s)", this.protectionByRegion.size()));
 		if (regeneratedRegions.get() > 0) {

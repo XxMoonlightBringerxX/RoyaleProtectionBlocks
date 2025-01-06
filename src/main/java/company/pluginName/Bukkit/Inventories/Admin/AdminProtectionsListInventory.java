@@ -101,7 +101,7 @@ public class AdminProtectionsListInventory extends PagedChestInventoryObject<Pro
 
 	@Override
 	protected ItemStack generateEntityItem(Protection protection) {
-		final boolean canTeleport = ProtectionUtilities.canTeleport(protection, getPlayer());
+		final boolean canTeleport = protection.canTeleport(getPlayer());
 		final boolean canManage = ProtectionUtilities.canManage(protection, getPlayer());
 		final boolean canDelete = ProtectionUtilities.canDelete(protection, getPlayer());
 
@@ -149,7 +149,7 @@ public class AdminProtectionsListInventory extends PagedChestInventoryObject<Pro
 		Location homeLocation = protection.getHome();
 
 		if (e.getClick() == ClickType.LEFT) {
-			if (homeLocation != null && ProtectionUtilities.canTeleport(protection, getPlayer())) {
+			if (homeLocation != null && protection.canTeleport(getPlayer())) {
 				try {
 					RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
 							.protectionTeleportHomeRequest(

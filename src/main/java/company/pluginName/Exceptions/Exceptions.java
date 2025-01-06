@@ -532,7 +532,7 @@ public class Exceptions {
 					"Error.Exception.protection.flags.PermissionDenied",
 					"&cYou don't have permissions to modify this flag!");
 			public static final ThrowableField NOTENOUGHBALANCE = new ThrowableField(
-					RoyaleProtectionBlocksException.Type.PROTECTIONS_NOTENOUGHBALANCE,
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_FLAGS_NOTENOUGHBALANCE,
 					"Error.Exception.protection.flags.NotEnoughBalance",
 					"&cYou don't have enough balance to change this flag!");
 			public static final ThrowableField NOTFOUND = new ThrowableField(
@@ -542,6 +542,34 @@ public class Exceptions {
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_FLAGS_UNKNOWN,
 					"Error.Exception.protection.flags.Unknown",
 					"&cAn unknown error happened while trying to modify the flag. Please contact with an administrator!");
+
+		}
+
+		public static class Settings {
+
+			public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_PERMISSIONDENIED,
+					"Error.Exception.protection.settings.PermissionDenied",
+					"&cYou don't have permissions to modify this setting!");
+			public static final ThrowableField NOTENOUGHBALANCE = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_NOTENOUGHBALANCE,
+					"Error.Exception.protection.settings.NotEnoughBalance",
+					"&cYou don't have enough balance to change this setting!");
+			public static final ThrowableField NOTFOUND = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_NOTFOUND,
+					"Error.Exception.protection.settings.NotFound", "&cThe specified setting could not be found!");
+			public static final ThrowableField INVALIDVALUE = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_INVALIDVALUE,
+					"Error.Exception.protection.settings.InvalidValue",
+					"&cThe specified value is not valid for this setting!");
+			public static final ThrowableField INVALIDGROUP = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_INVALIDGROUP,
+					"Error.Exception.protection.settings.InvalidGroup",
+					"&cYou must provide a valid group: &7{options}");
+			public static final ThrowableField UNKNOWN = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_UNKNOWN,
+					"Error.Exception.protection.settings.Unknown",
+					"&cAn unknown error happened while trying to modify the setting. Please contact with an administrator!");
 
 		}
 

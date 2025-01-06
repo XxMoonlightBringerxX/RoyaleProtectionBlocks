@@ -1,5 +1,6 @@
 package company.pluginName.Modules.SQLPckg;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0002AddGuardSystem
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0003AddPriceColumn;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0004AddPublicAccessColumn;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0005AddMembersAndOwnersTables;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0006AddProtectionSettingsTable;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Annotations.PandaSQLConfigV2;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Changelogs.SQLChangelog;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.DeleteStatement;
@@ -40,9 +42,13 @@ import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.Condition
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.Conditions.LowerThanCondition;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Column;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Table;
+import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Table.UniqueConstraint;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Services.PandaSQLService;
+import darkpanda73.PandaUtils.Utilities.Java.Objects.ObjectUtilities;
+import lombok.Data;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.SettingGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 
@@ -79,6 +85,12 @@ public class SQLService extends PandaSQLService {
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
 			new Column("BannedUuid", Types.CHAR, "CHAR(36)").setNotNull(true));
 
+	private static final Table PROTECTION_SETTINGS_TABLE = new Table("ProtectionSettings").addColumns(
+			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
+			new Column("SettingId", Types.VARCHAR, "VARCHAR(32)").setNotNull(true),
+			new Column("SettingGroup", Types.VARCHAR, "VARCHAR(32)").setNotNull(true),
+			new Column("SettingValue", Types.BLOB).setNotNull(true));
+
 	private static final Table PROTECTION_BLOCKS_TABLE = new Table("ProtectionBlocks").addColumns(
 			new Column("Id", Types.VARCHAR, "VARCHAR(32)").setPrimary(true).setUnique(true).setNotNull(true),
 			new Column("Item", Types.BLOB).setNotNull(true), new Column("BlocksX", Types.INTEGER).setNotNull(true),
@@ -107,12 +119,32 @@ public class SQLService extends PandaSQLService {
 						new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("ParentRegionId"))
 								.addReferenceColumn(PROTECTIONS_TABLE.getColumn("RegionId")));
 
+		PROTECTION_MEMBERS_TABLE
+				.addUniqueConstraint(
+						new Table.UniqueConstraint().addColumns(PROTECTION_MEMBERS_TABLE.getColumn("RegionId"),
+								PROTECTION_MEMBERS_TABLE.getColumn("MemberUuid")))
+				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
+						.addReferenceColumn(PROTECTION_MEMBERS_TABLE.getColumn("RegionId")));
+
+		PROTECTION_OWNERS_TABLE
+				.addUniqueConstraint(new Table.UniqueConstraint().addColumns(
+						PROTECTION_OWNERS_TABLE.getColumn("RegionId"), PROTECTION_OWNERS_TABLE.getColumn("OwnerUuid")))
+				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
+						.addReferenceColumn(PROTECTION_OWNERS_TABLE.getColumn("RegionId")));
+
 		PROTECTION_BANNEDS_TABLE
 				.addUniqueConstraint(
 						new Table.UniqueConstraint().addColumns(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"),
 								PROTECTION_BANNEDS_TABLE.getColumn("BannedUuid")))
 				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
 						.addReferenceColumn(PROTECTION_BANNEDS_TABLE.getColumn("RegionId")));
+
+		PROTECTION_SETTINGS_TABLE
+				.addUniqueConstraint(new UniqueConstraint(Arrays.asList(PROTECTION_SETTINGS_TABLE.getColumn("RegionId"),
+						PROTECTION_SETTINGS_TABLE.getColumn("SettingId"),
+						PROTECTION_SETTINGS_TABLE.getColumn("SettingGroup"))))
+				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
+						.addReferenceColumn(PROTECTION_SETTINGS_TABLE.getColumn("RegionId")));
 
 		RECIPES_TABLE.addForeignConstraint(
 				new Table.ForeignConstraint().addColumn(RECIPES_TABLE.getColumn("ProtectionBlockId"))
@@ -131,7 +163,8 @@ public class SQLService extends PandaSQLService {
 	public Collection<SQLChangelog> getSQLChangelogs() {
 		return Arrays.asList(new Changelog0000Init(), new Changelog0001DeleteAutoPurgeLogsTable(),
 				new Changelog0002AddGuardSystem(), new Changelog0003AddPriceColumn(),
-				new Changelog0004AddPublicAccessColumn(), new Changelog0005AddMembersAndOwnersTables());
+				new Changelog0004AddPublicAccessColumn(), new Changelog0005AddMembersAndOwnersTables(),
+				new Changelog0006AddProtectionSettingsTable());
 	}
 
 	/*
@@ -695,6 +728,66 @@ public class SQLService extends PandaSQLService {
 		} catch (Throwable e) {
 			throw Exceptions.PlayerGuards.SQL.generateException(e);
 		}
+	}
+
+	/*
+	 * Protection settings methods
+	 */
+
+	public HashMap<String, DatabaseProtectionSettings> getProtectionSettings() {
+		HashMap<String, DatabaseProtectionSettings> protectionSettings = new HashMap<>();
+
+		try (ResultSet set = this.getSqlConnection()
+				.executeQuery(SelectStatement.inst().addTable(PROTECTION_SETTINGS_TABLE))) {
+			DatabaseProtectionSettings settings;
+			while (set.next()) {
+				settings = protectionSettings.computeIfAbsent(set.getString("RegionId"),
+						(key) -> new DatabaseProtectionSettings());
+
+				switch (SettingGroup.valueOf(set.getString("SettingGroup"))) {
+				case NON_MEMBERS:
+					settings.getNonMembersSettings().put(set.getString("SettingId"),
+							ObjectUtilities.deserialize(set.getBytes("SettingValue")));
+					break;
+				case MEMBERS:
+					settings.getMembersSettings().put(set.getString("SettingId"),
+							ObjectUtilities.deserialize(set.getBytes("SettingValue")));
+					break;
+				case OWNERS:
+					settings.getOwnersSettings().put(set.getString("SettingId"),
+							ObjectUtilities.deserialize(set.getBytes("SettingValue")));
+					break;
+				}
+			}
+		} catch (Throwable e) {
+			// TODO switch with a custom exception
+			e.printStackTrace();
+		}
+
+		return protectionSettings;
+	}
+
+	public void saveProtectionSetting(String protectionId, String settingId, SettingGroup settingGroup,
+			Serializable value) throws RoyaleProtectionBlocksExceptionImpl {
+		InsertStatement insertStatement = InsertStatement.inst(PROTECTION_SETTINGS_TABLE)
+				.addEntry(protectionId, settingId, settingGroup.name(), ObjectUtilities.serialize(value))
+				.setConditionIfExists(
+						EqualsCondition.inst(PROTECTION_SETTINGS_TABLE.getColumn("RegionId"), protectionId));
+
+		try {
+			this.getSqlConnection().executeInsert(insertStatement);
+		} catch (Throwable e) {
+			throw Exceptions.PlayerGuards.SQL.generateException(e);
+		}
+	}
+
+	@Data
+	public static class DatabaseProtectionSettings {
+
+		private HashMap<String, Serializable> nonMembersSettings = new HashMap<>();
+		private HashMap<String, Serializable> membersSettings = new HashMap<>();
+		private HashMap<String, Serializable> ownersSettings = new HashMap<>();
+
 	}
 
 }

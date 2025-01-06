@@ -109,6 +109,10 @@ public class Messages {
 			"Message.Protections.Public-access.Set-to-private-successfully",
 			"&aYour protection is now only visible for your members through the inventories!");
 
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_SETTINGS_SWITCHEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Settings.Switched-successfully",
+			"&aThe value for the setting &e{setting_name} &afor the group &e{group_name} &ahas been switched to &7\"&e{value}&7\" &asuccessfully!");
+
 	public static final PandaPrefixedStringField MESSAGE_TRANSFER_AVAILABLELIST = new PandaPrefixedStringField(
 			"Message.Transfer.Available-list", "&7Available protection plugins to transfer from: &f{list}");
 	public static final PandaPrefixedStringField MESSAGE_TRANSFER_PROTECTIONSTONESNOTLOADED = new PandaPrefixedStringField(

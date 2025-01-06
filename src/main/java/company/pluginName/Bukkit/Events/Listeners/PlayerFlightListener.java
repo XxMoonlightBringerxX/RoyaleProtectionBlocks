@@ -15,8 +15,6 @@ import org.bukkit.scheduler.BukkitTask;
 
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -81,14 +79,14 @@ public class PlayerFlightListener implements Listener {
 		}
 
 		if (!flightRemovalTasks.containsKey(e.getPlayer().getUniqueId())) {
-			if (e.getCurrentProtections().isEmpty() || e.getCurrentProtections().stream()
-					.noneMatch(protection -> ProtectionUtilities.canFly((Protection) protection, e.getPlayer()))) {
+			if (e.getCurrentProtections().isEmpty()
+					|| e.getCurrentProtections().stream().noneMatch(protection -> protection.canFly(e.getPlayer()))) {
 				flightRemovalTasks.put(e.getPlayer().getUniqueId(),
 						TasksUtils.executeWithTimer(getFlightRemovalRunnable(e.getPlayer().getUniqueId()), 0, 20));
 			}
 		} else {
-			if (!e.getCurrentProtections().isEmpty() && e.getCurrentProtections().stream()
-					.anyMatch(protection -> ProtectionUtilities.canFly((Protection) protection, e.getPlayer()))) {
+			if (!e.getCurrentProtections().isEmpty()
+					&& e.getCurrentProtections().stream().anyMatch(protection -> protection.canFly(e.getPlayer()))) {
 				cancelTask(e.getPlayer().getUniqueId());
 			}
 		}

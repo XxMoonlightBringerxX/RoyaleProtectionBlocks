@@ -1,5 +1,6 @@
 package company.pluginName.Modules.ProtectionsPckg.Objects;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,9 +26,12 @@ import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Hooks.VaultAPI.VaultAPI;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
+import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionDisplayItem;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionPlayers;
@@ -55,6 +59,7 @@ import lombok.Setter;
 import lombok.ToString;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.SettingGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionMergeEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionSplitEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
@@ -63,6 +68,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtecti
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtectionFlags;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.AbstractSetting;
 
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -903,6 +909,68 @@ public class Protection implements IProtection {
 				e.sendError(Bukkit.getConsoleSender());
 			}
 		});
+	}
+
+	@Override
+	public <T extends Serializable> T getSettingValue(AbstractSetting<T> setting, Player player)
+			throws RoyaleProtectionBlocksException {
+		return settings.getValue(setting, player);
+	}
+
+	@Override
+	public <T extends Serializable> T getSettingValue(AbstractSetting<T> setting, SettingGroup group)
+			throws RoyaleProtectionBlocksException {
+		return settings.getValue(setting, group);
+	}
+
+	@Override
+	public String getSettingValueAsString(AbstractSetting<?> setting, Player player)
+			throws RoyaleProtectionBlocksException {
+		return settings.getValueAsString(setting, player);
+	}
+
+	@Override
+	public String getSettingValueAsString(AbstractSetting<?> setting, SettingGroup group)
+			throws RoyaleProtectionBlocksException {
+		return settings.getValueAsString(setting, group);
+	}
+
+	@Override
+	public <T extends Serializable> void setSettingValue(AbstractSetting<T> setting, SettingGroup group, T value)
+			throws RoyaleProtectionBlocksException {
+		settings.setValue(setting, group, value);
+	}
+
+	@Override
+	public void setUnparsedSettingValue(AbstractSetting<?> setting, SettingGroup group, String value)
+			throws RoyaleProtectionBlocksException {
+		settings.setUnparsedValue(setting, group, value);
+	}
+
+	@Override
+	public boolean canTeleport(Player player) {
+		try {
+			return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
+					|| this.settings.getValue(ProtectionSettingsService.TELEPORT_SETTING, player)
+					|| PermissionsService.TELEPORT_OTHERS.hasPermission(player);
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean canFly(Player player) {
+		try {
+			return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
+					|| this.settings.getValue(ProtectionSettingsService.FLY_SETTING, player);
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			return false;
+		}
+	}
+
+	private boolean hasStaffMode(Player pl) {
+		PlayerData playerData = playerDataService.getPlayerData(pl);
+		return playerData != null && playerData.isStaffMode();
 	}
 
 }

@@ -1,5 +1,6 @@
 package company.pluginName.Modules.PlayerInteractionsPckg;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import org.bukkit.Bukkit;
@@ -21,6 +22,7 @@ import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
@@ -34,6 +36,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaEconomiesModule.Enums.EconomyService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 import lombok.Getter;
@@ -63,6 +66,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSetHomeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionShowBlockRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSplitRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSwitchSettingRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTeleportHomeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTogglePublicAccessRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTransferRequestInput;
@@ -88,6 +92,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			Arrays.asList("&7Your current home location seems", "&7not to include any solid platform or",
 					"&7contains dangerous elements, which makes it", "&7unsafe. Do you wish to teleport anyway?"));
 
+	@RegisteredPandaField("lang")
+	private static final PandaPrefixedStringField MESSAGE_PROTECTION_SETTINGS_CHARGEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protection.Settings.Charged-successfully", "&aYou've been charged a total amount of &e{amount}$");
+
 	@RegisteredPandaField("config")
 	private static final PandaBooleanField SETTINGS_PROTECTION_SHOWUNSAFETELEPORTWARNINGMENU = new PandaBooleanField(
 			"Settings.Protection.Show-unsafe-teleport-warning-menu", true);
@@ -97,6 +105,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 	@PandaInject
 	private ProtectionBlocksService protectionBlocksService;
+
+	@PandaInject
+	private ProtectionSettingsService protectionSettingsService;
 
 	// TODO: Move to ProtectionSettingsService
 	private @Getter EconomyService protectionsStoreEconomyService;
@@ -427,8 +438,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
-		if (!input.getProtection().isForSale()
-				&& !ProtectionUtilities.canTeleport(input.getProtection(), input.getPlayer())) {
+		if (!input.getProtection().isForSale() && !input.getProtection().canTeleport(input.getPlayer())) {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 		}
 
@@ -741,6 +751,55 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		// Actions
 
 		input.getProtection().setPublicAccessAndSave(input.isPublicAccess());
+	}
+
+	@Override
+	public <T extends Serializable> void protectionSwitchSettingRequest(ProtectionSwitchSettingRequestInput<T> input)
+			throws RoyaleProtectionBlocksException {
+		// Preconditions
+
+		checkIfModifiable(input.getPlayer(), input.getProtection());
+
+		if (!ProtectionUtilities.canSwitchSettings(input.getProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+		}
+
+		if (protectionSettingsService.getSetting(input.getSetting().getId()) == null) {
+			throw Exceptions.Protections.Settings.NOTFOUND.generateException();
+		}
+
+		if (input.getSetting().getPermission() != null
+				&& !input.getPlayer().hasPermission(input.getSetting().getPermission())) {
+			throw Exceptions.Protections.Settings.PERMISSIONDENIED.generateException();
+		}
+
+		if (input.getSetting().getCost() > 0D && EconomyUtilities.isEconomyEnabled(EconomyService.VAULT)) {
+			if (!PermissionsService.ECONOMY_BYPASS.hasPermission(input.getPlayer())) {
+				if (!EconomyUtilities.withdraw(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost())) {
+					throw Exceptions.Protections.Settings.NOTENOUGHBALANCE.generateException();
+				} else {
+					MessageTemplate.inst(MESSAGE_PROTECTION_SETTINGS_CHARGEDSUCCESSFULLY.applyPrefix())
+							.setReplacements(
+									new Replacement("{amount}", () -> String.valueOf(input.getSetting().getCost())))
+							.process().sendMessage(input.getPlayer());
+				}
+			}
+		}
+
+		try {
+			// T previousValue = input.getProtection().getSettingValue(input.getSetting(),
+			// input.getGroup());
+
+			input.getProtection().setSettingValue(input.getSetting(), input.getGroup(), input.getValue());
+
+			// TODO Make changes to include setting modification event for discord
+		} catch (Exception e) {
+			if (input.getPlayer() != null && input.getSetting().getCost() > 0D) {
+				EconomyUtilities.deposit(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost());
+			}
+			throw Exceptions.Protections.Flags.UNKNOWN.generateException(e);
+		}
+
 	}
 
 	private Protection protectionToInternalProtection(IProtection protection)

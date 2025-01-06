@@ -7,7 +7,6 @@ import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
-import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.PandaCommandAnnotation;
@@ -24,15 +23,13 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 		defaultName = "fly",
 		defaultDescription = "Allows to fly around your protections",
 		defaultAliases = "f",
-		defaultPermission = "protectionblocks.fly"
-)
+		defaultPermission = "protectionblocks.fly")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
 		description = true,
 		name = true,
-		permission = true
-)
+		permission = true)
 public class FlySubCommand extends PandaSubCommand {
 
 	@PandaInject
@@ -49,8 +46,7 @@ public class FlySubCommand extends PandaSubCommand {
 			PlayerData playerData = playerDataService.getPlayerData(pl);
 			if (!playerData.getCurrentProtections().isEmpty()) {
 				if (pl.getAllowFlight() || PermissionsService.FLY_BYPASS.hasPermission(pl)
-						|| playerData.getCurrentProtections().stream()
-								.anyMatch(protection -> ProtectionUtilities.canFly(protection, pl))) {
+						|| playerData.getCurrentProtections().stream().anyMatch(protection -> protection.canFly(pl))) {
 					pl.setAllowFlight(!pl.getAllowFlight());
 					MessageTemplate
 							.inst((pl.getAllowFlight() ? Messages.MESSAGE_PROTECTIONS_FLIGHT_ENABLED

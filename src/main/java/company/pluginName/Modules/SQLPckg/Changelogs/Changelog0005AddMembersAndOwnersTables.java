@@ -17,6 +17,23 @@ public class Changelog0005AddMembersAndOwnersTables extends SQLChangelog {
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
 			new Column("OwnerUuid", Types.CHAR, "CHAR(36)").setNotNull(true));
 
+	static {
+		PROTECTION_MEMBERS_TABLE
+				.addUniqueConstraint(
+						new Table.UniqueConstraint().addColumns(PROTECTION_MEMBERS_TABLE.getColumn("RegionId"),
+								PROTECTION_MEMBERS_TABLE.getColumn("MemberUuid")))
+				.addForeignConstraint(new Table.ForeignConstraint()
+						.addColumn(Changelog0000Init.PROTECTIONS_TABLE.getColumn("RegionId"))
+						.addReferenceColumn(PROTECTION_MEMBERS_TABLE.getColumn("RegionId")));
+
+		PROTECTION_OWNERS_TABLE
+				.addUniqueConstraint(new Table.UniqueConstraint().addColumns(
+						PROTECTION_OWNERS_TABLE.getColumn("RegionId"), PROTECTION_OWNERS_TABLE.getColumn("OwnerUuid")))
+				.addForeignConstraint(new Table.ForeignConstraint()
+						.addColumn(Changelog0000Init.PROTECTIONS_TABLE.getColumn("RegionId"))
+						.addReferenceColumn(PROTECTION_OWNERS_TABLE.getColumn("RegionId")));
+	}
+
 	public Changelog0005AddMembersAndOwnersTables() {
 		super(5, "Add members and owners tables", (sqlConnection) -> {
 			sqlConnection.executeCreateTable(CreateTableStatement.inst(PROTECTION_MEMBERS_TABLE));

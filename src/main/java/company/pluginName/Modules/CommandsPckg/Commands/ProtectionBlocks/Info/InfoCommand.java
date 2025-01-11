@@ -52,7 +52,8 @@ public class InfoCommand extends PandaCommand {
 					"&f&l|&r Name: &a{protection_name}",
 					"&f&l|&r Size: &a{protection_size_x}x{protection_size_y}x{protection_size_z}",
 					"&f&l|&r Owner: &a{protection_owner}", "&f&l|&r Members: &a{protection_members}",
-					"&f&l|&r Owners: &a{protection_owners}", "&f&l|&r Banneds: &a{protection_banneds}"));
+					"&f&l|&r Owners: &a{protection_owners}", "&f&l|&r Banneds: &a{protection_banneds}",
+					"&f&l|&r Expires in: &e{protection_expires_in}", "&f&l|&r Is guarded: &e{protection_is_guarded}"));
 
 	@PandaInject
 	private static ProtectionsServiceImpl protectionsService;

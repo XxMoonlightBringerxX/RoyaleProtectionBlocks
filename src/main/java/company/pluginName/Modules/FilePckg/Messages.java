@@ -26,6 +26,10 @@ public class Messages {
 			"&7&o(Empty)");
 	public static final PandaStringField MESSAGE_GENERAL_CLICK = new PandaStringField("Message.General.Click",
 			"&8[&7click&8]");
+	public static final PandaStringField MESSAGE_GENERAL_GUARDED = new PandaStringField("Message.General.Guarded",
+			"&7&o(Guarded)");
+	public static final PandaStringField MESSAGE_GENERAL_YES = new PandaStringField("Message.General.Yes", "&aYes");
+	public static final PandaStringField MESSAGE_GENERAL_NO = new PandaStringField("Message.General.No", "&cNo");
 
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_CREATEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Created-successfully", "&aThe protection has been created successfully!");

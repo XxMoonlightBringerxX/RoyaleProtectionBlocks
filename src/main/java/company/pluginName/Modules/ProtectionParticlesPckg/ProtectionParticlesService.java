@@ -104,6 +104,10 @@ public class ProtectionParticlesService {
 		load();
 	}
 
+	public boolean isActive(Player player) {
+		return this.containers.containsKey(player.getUniqueId());
+	}
+
 	public void toggleView(Player player, boolean showAll) {
 		if (this.containers.containsKey(player.getUniqueId())) {
 			deactivateView(player.getUniqueId());

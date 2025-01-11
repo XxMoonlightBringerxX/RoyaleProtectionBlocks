@@ -75,6 +75,16 @@ Items:
       Amount: 1
       Name: "&eHide protection"
     Slots: "23"
+  Toggle-boundary-button:
+    Show-boundary-item:
+      Type: "ENDER_PEARL"
+      Amount: 1
+      Name: "&eShow the protection boundaries"
+    Hide-boundary-item:
+      Type: "ENDER_EYE"
+      Amount: 1
+      Name: "&eHide the protection boundaries"
+    Slots: "24"
   Merge-button:
     Display-item:
       Type: "SLIME_BLOCK"

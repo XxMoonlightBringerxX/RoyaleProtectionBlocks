@@ -17,6 +17,9 @@ import company.pluginName.Bukkit.Inventories.Protections.Split.ProtectionSplitIn
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
+import company.pluginName.Modules.ProtectionParticlesPckg.ProtectionParticlesService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
@@ -55,6 +58,9 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 	private static final String TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH = "Show-block-item";
 	private static final String TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH = "Hide-block-item";
 
+	private static final String TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH = "Show-boundary-item";
+	private static final String TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH = "Hide-boundary-item";
+
 	private static final String PRICEBUTTON_NOTSETITEM_PATH = "Not-set-item";
 
 	@PandaInject
@@ -65,6 +71,12 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@PandaInject
 	private static PlayerInteractionsService playerInteractionsService;
+
+	@PandaInject
+	private static ProtectionParticlesService protectionParticlesService;
+
+	@PandaInject
+	private static PlayerDataService playerDataService;
 
 	@PandaInject
 	private static PlaceholdersService placeholdersService;
@@ -119,6 +131,14 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH).build());
 	}
 
+	@ItemPregenerator("Toggle-boundary-button")
+	private static void pregenerateToggleBoundaryButton(Item item) {
+		item.getItems().put(TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH,
+				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH).build());
+		item.getItems().put(TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH,
+				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH).build());
+	}
+
 	@ItemGenerator("Protection-info")
 	private ItemStack generateProtectionInfo(Item item) {
 		OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(protection.getOwnerUuid());
@@ -168,6 +188,13 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 	private ItemStack generateDeleteButton(Item item) {
 		return ProtectionUtilities.canDelete(protection, getPlayer()) ? item.getItems().get(Item.DISPLAYITEM_KEY)
 				: null;
+	}
+
+	@ItemGenerator("Toggle-boundary-button")
+	private ItemStack generateToggleBoundaryButton(Item item) {
+		return item.getItems()
+				.get(protectionParticlesService.isActive(getPlayer()) ? TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH
+						: TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH);
 	}
 
 	@ItemExecutor("Close-button")
@@ -312,6 +339,13 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 		} catch (RoyaleProtectionBlocksException e) {
 			e.sendError(getPlayer());
 		}
+	}
+
+	@ItemExecutor("Toggle-boundary-button")
+	private void executeToggleBoundaryButton() {
+		PlayerData pd = playerDataService.getPlayerData(getPlayer());
+		protectionParticlesService.toggleView(getPlayer(), pd.isStaffMode());
+		updateInventory();
 	}
 
 }

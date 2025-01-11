@@ -11,6 +11,7 @@ import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
+import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 
 @PandaService
 public class PlayerGuardService {
@@ -35,11 +36,27 @@ public class PlayerGuardService {
 			removeGuardExpirationDate(uuid);
 		} else {
 			this.guardExpirationDates.put(uuid, guardExpirationDate);
+
+			TasksUtils.executeOnAsync(() -> {
+				try {
+					sqlService.savePlayerGuard(uuid, guardExpirationDate);
+				} catch (RoyaleProtectionBlocksExceptionImpl e) {
+					e.sendError(Bukkit.getConsoleSender());
+				}
+			});
 		}
 	}
 
 	public void removeGuardExpirationDate(UUID uuid) {
 		this.guardExpirationDates.remove(uuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.deletePlayerGuard(uuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
 	}
 
 	public Long getGuardExpirationDate(UUID uuid) {

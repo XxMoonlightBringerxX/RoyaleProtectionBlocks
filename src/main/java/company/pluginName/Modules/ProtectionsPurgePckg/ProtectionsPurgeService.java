@@ -23,7 +23,6 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Utils.DiscordUtilities;
-import company.pluginName.Utils.TimeUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
@@ -39,6 +38,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPref
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Utilities.Java.SleepingLoop;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
+import darkpanda73.PandaUtils.Utilities.Java.Time.TimeUtilities;
 import lombok.Getter;
 import relampagorojo93.LibsCollection.JSONLib.JSONArray;
 import relampagorojo93.LibsCollection.JSONLib.JSONObject;
@@ -80,7 +80,8 @@ public class ProtectionsPurgeService {
 	public void load() throws ReportError {
 		try {
 			if (!SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent().isEmpty()) {
-				long olderThan = TimeUtils.stringToSeconds(SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent());
+				long olderThan = TimeUtilities
+						.stringToSeconds(SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent());
 
 				if (olderThan > 0) {
 					plugin.sendDebug(getClass(),

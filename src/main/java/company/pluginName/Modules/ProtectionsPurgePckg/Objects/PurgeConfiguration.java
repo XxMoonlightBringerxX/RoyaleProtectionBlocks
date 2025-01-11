@@ -6,9 +6,9 @@ import java.util.stream.Stream;
 
 import company.pluginName.Modules.PlayerGuardPckg.PlayerGuardService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
-import company.pluginName.Utils.TimeUtils;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
+import darkpanda73.PandaUtils.Utilities.Java.Time.TimeUtilities;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
@@ -38,7 +38,8 @@ public class PurgeConfiguration {
 	}
 
 	public String toString() {
-		return TimeUtils.secondsToString((long) (millis / 1000) + (minutes * 60L) + (hours * 3600L) + (days * 86400L));
+		return TimeUtilities
+				.secondsToString((long) (millis / 1000) + (minutes * 60L) + (hours * 3600L) + (days * 86400L));
 	}
 
 	public long getRemainingTime(IProtection protection) {
@@ -49,7 +50,9 @@ public class PurgeConfiguration {
 		long guardExpirationDate = Math.max(protection.getGuardExpirationDate(),
 				playerGuardService.getGuardExpirationDate(protection.getOwnerUuid()));
 
-		return Math.max(Math.max(protection.getOwnerLastPlayed(), guardExpirationDate - purgeTime) - olderThan, 0);
+		return guardExpirationDate != Long.MAX_VALUE
+				? Math.max(Math.max(protection.getOwnerLastPlayed(), guardExpirationDate - purgeTime) - olderThan, 0)
+				: Long.MAX_VALUE;
 	}
 
 	public Stream<Pair<Protection, Long>> getRemainingTime(Collection<Protection> protections) {

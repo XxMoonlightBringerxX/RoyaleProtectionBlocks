@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
+import company.pluginName.Modules.PlayerGuardPckg.PlayerGuardService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.ProtectionsPurgeService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -45,6 +46,9 @@ public class PlaceholdersService {
 	@PandaInject
 	private static ProtectionsPurgeService protectionsPurgeService;
 
+	@PandaInject
+	private static PlayerGuardService playerGuardService;
+
 	/*
 	 * Player placeholders
 	 */
@@ -69,11 +73,19 @@ public class PlaceholdersService {
 			Pair.of("{protection_owner}", (protection) -> protection.getOwnerName()),
 			Pair.of("{protection_owner_last_played}",
 					(protection) -> DATE_FORMAT.format(new Date(protection.getOwnerLastPlayed()))),
-			Pair.of("{protection_expires_in}",
-					(protection) -> protectionsPurgeService.isRunning()
-							? TimeUtilities
-									.secondsToString(protectionsPurgeService.calculateExpiresIn(protection) / 1000)
-							: "Never"),
+			Pair.of("{protection_expires_in}", (protection) -> {
+				long expiresIn = protectionsPurgeService.calculateExpiresIn(protection);
+				return (expiresIn != Long.MAX_VALUE ? TimeUtilities.secondsToString(expiresIn / 1000, 2) : "Never")
+						.concat((protection.isGuardActive()
+								|| playerGuardService.isGuardActive(protection.getOwnerUuid()))
+										? (" " + Messages.MESSAGE_GENERAL_GUARDED.getContent())
+										: "");
+			}),
+			Pair.of("{protection_is_guarded}",
+					(protection) -> (protection.isGuardActive()
+							|| playerGuardService.isGuardActive(protection.getOwnerUuid()))
+									? Messages.MESSAGE_GENERAL_YES.getContent()
+									: Messages.MESSAGE_GENERAL_NO.getContent()),
 			Pair.of("{protection_world}", (protection) -> protection.getBukkitLocation().getWorld().getName()),
 			Pair.of("{protection_location_x}",
 					(protection) -> String.valueOf(protection.getBukkitLocation().getBlockX())),

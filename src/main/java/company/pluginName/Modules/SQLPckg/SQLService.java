@@ -136,8 +136,9 @@ public class SQLService extends PandaSQLService {
 				.addUniqueConstraint(
 						new Table.UniqueConstraint().addColumns(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"),
 								PROTECTION_BANNEDS_TABLE.getColumn("BannedUuid")))
-				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTION_BANNEDS_TABLE.getColumn("RegionId")));
+				.addForeignConstraint(
+						new Table.ForeignConstraint().addColumn(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"))
+								.addReferenceColumn(PROTECTIONS_TABLE.getColumn("RegionId")));
 
 		PROTECTION_SETTINGS_TABLE
 				.addUniqueConstraint(new UniqueConstraint(Arrays.asList(PROTECTION_SETTINGS_TABLE.getColumn("RegionId"),

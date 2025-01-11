@@ -453,6 +453,10 @@ public class Exceptions {
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_CANNOTADDYOURSELF,
 						"Error.Exception.protection.banneds.save.CannotAddYourself",
 						"&cYou can't add yourself as a banned!");
+				public static final ThrowableField ALREADYBANNED = new ThrowableField(
+						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_ALREADYBANNED,
+						"Error.Exception.protection.banneds.save.AlreadyBanned",
+						"&cThe player you're trying to ban is already banned from this protection!");
 				public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_BANNEDS_SAVE_PERMISSIONDENIED,
 						"Error.Exception.protection.banneds.save.PermissionDenied",

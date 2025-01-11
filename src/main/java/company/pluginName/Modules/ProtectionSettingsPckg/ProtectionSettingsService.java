@@ -20,6 +20,7 @@ import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
 import darkpanda73.PandaUtils.PandaYaml.Exceptions.YamlException;
 import darkpanda73.PandaUtils.PandaYaml.Objects.YamlSection;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.PandaCommandsService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.PandaYamlFile;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.AbstractSetting;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.BooleanSetting;
@@ -39,25 +40,15 @@ public class ProtectionSettingsService {
 	@PandaInject
 	private FilesService filesService;
 
+	@PandaInject
+	private PandaCommandsService commandsService;
+
 	private PandaYamlFile protectionSettingsFile;
 	private Map<String, AbstractSetting<?>> registeredSettings = new HashMap<>();
 
 	public ProtectionSettingsService() {
 		registerSetting(FLY_SETTING);
 		registerSetting(TELEPORT_SETTING);
-	}
-
-	@PostInjectMethod
-	private void postInject() {
-		try {
-			protectionSettingsFile = new PandaYamlFile("protectionsettings",
-					filesService.getFolder("plugin").getFile().getPath() + "/ProtectionSettings.yml",
-					new PandaYaml(plugin.getResource(plugin.getClass().getPackage().getName().replaceAll("\\.", "/")
-							+ "/Resources/ProtectionSettings.yml")));
-			filesService.addFile(protectionSettingsFile);
-		} catch (IOException | YamlException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@LoadMethod
@@ -69,6 +60,19 @@ public class ProtectionSettingsService {
 
 			yaml.saveYAML(protectionSettingsFile.getFile());
 		} catch (YamlException | IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@PostInjectMethod
+	private void postInject() {
+		try {
+			protectionSettingsFile = new PandaYamlFile("protectionsettings",
+					filesService.getFolder("plugin").getFile().getPath() + "/ProtectionSettings.yml",
+					new PandaYaml(plugin.getResource(plugin.getClass().getPackage().getName().replaceAll("\\.", "/")
+							+ "/Resources/ProtectionSettings.yml")));
+			filesService.addFile(protectionSettingsFile);
+		} catch (IOException | YamlException e) {
 			e.printStackTrace();
 		}
 	}

@@ -73,9 +73,11 @@ public class ProtectionActions {
 			}
 		}
 
-		if (!ignoreCost && Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent() > 0D) {
+		if (!ignoreCost && protectionSettingsService.getProtectionTeleportEconomyService() != null
+				&& Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent() > 0D) {
 			if (!PermissionsService.ECONOMY_BYPASS.hasPermission(pl)
-					&& !EconomyUtilities.withdraw(pl, Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent())) {
+					&& !EconomyUtilities.withdraw(protectionSettingsService.getProtectionTeleportEconomyService(), pl,
+							Settings.SETTINGS_PROTECTION_TELEPORTCOST.getContent())) {
 				throw Exceptions.Protections.NOTENOUGHBALANCE.generateException();
 			}
 		}

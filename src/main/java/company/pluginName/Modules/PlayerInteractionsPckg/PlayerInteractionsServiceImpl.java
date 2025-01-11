@@ -105,32 +105,38 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	@LoadMethod
 	private void load() {
 		try {
-			protectionsStoreEconomyService = EconomyService
-					.valueOf(Settings.SETTINGS_STORE_PROTECTIONECONOMYSERVICE.getContent().toUpperCase());
+			protectionsStoreEconomyService = Settings.SETTINGS_STORE_PROTECTIONECONOMYSERVICE.hasContent()
+					? EconomyService
+							.valueOf(Settings.SETTINGS_STORE_PROTECTIONECONOMYSERVICE.getContent().toUpperCase())
+					: null;
 
-			if (!EconomyUtilities.isEconomyEnabled(protectionsStoreEconomyService)) {
-				protectionsStoreEconomyService = null;
+			if (protectionsStoreEconomyService != null
+					&& !EconomyUtilities.isEconomyEnabled(protectionsStoreEconomyService)) {
 				MainPluginClass.getSimpleLogger().sendWarning(String.format(
 						"The defined economy for the protections store could not be found installed on the server (%s). In order to use the protections store, you must install the economy plugin or switch the defined economy plugin for one of your current economy plugins.",
 						protectionsStoreEconomyService.name()));
+				protectionsStoreEconomyService = null;
 			}
-		} catch (Exception e) {
-			MainPluginClass.getSimpleLogger().sendError(String.format("Invalid protections store economy service: ",
+		} catch (IllegalArgumentException e) {
+			MainPluginClass.getSimpleLogger().sendError(String.format("Invalid protections store economy service (%s)",
 					Settings.SETTINGS_STORE_PROTECTIONECONOMYSERVICE.getContent().toUpperCase()));
 		}
 		try {
-			protectionBlocksStoreEconomyService = EconomyService
-					.valueOf(Settings.SETTINGS_STORE_PROTECTIONBLOCKECONOMYSERVICE.getContent().toUpperCase());
+			protectionBlocksStoreEconomyService = Settings.SETTINGS_STORE_PROTECTIONBLOCKECONOMYSERVICE.hasContent()
+					? EconomyService
+							.valueOf(Settings.SETTINGS_STORE_PROTECTIONBLOCKECONOMYSERVICE.getContent().toUpperCase())
+					: null;
 
-			if (!EconomyUtilities.isEconomyEnabled(protectionBlocksStoreEconomyService)) {
-				protectionBlocksStoreEconomyService = null;
+			if (protectionBlocksStoreEconomyService != null
+					&& !EconomyUtilities.isEconomyEnabled(protectionBlocksStoreEconomyService)) {
 				MainPluginClass.getSimpleLogger().sendWarning(String.format(
 						"The defined economy for the protection blocks store could not be found installed on the server (%s). In order to use the protection blocks store, you must install the economy plugin or switch the defined economy plugin for one of your current economy plugins.",
 						protectionBlocksStoreEconomyService.name()));
+				protectionBlocksStoreEconomyService = null;
 			}
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
 			MainPluginClass.getSimpleLogger()
-					.sendError(String.format("Invalid protection blocks store economy service: ",
+					.sendError(String.format("Invalid protection blocks store economy service (%s)",
 							Settings.SETTINGS_STORE_PROTECTIONBLOCKECONOMYSERVICE.getContent().toUpperCase()));
 		}
 	}
@@ -272,7 +278,11 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.addMemberAndSave(input.getMember()));
+			input.getProtection().performAllProtections(prot -> {
+				if (!prot.isMember(input.getMember())) {
+					prot.addMemberAndSave(input.getMember());
+				}
+			});
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -298,7 +308,11 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.removeMemberAndSave(input.getMember()));
+			input.getProtection().performAllProtections(prot -> {
+				if (prot.isMember(input.getMember())) {
+					prot.removeMemberAndSave(input.getMember());
+				}
+			});
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -319,7 +333,11 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.addOwnerAndSave(input.getOwner()));
+			input.getProtection().performAllProtections(prot -> {
+				if (!prot.isOwner(input.getOwner())) {
+					prot.addOwnerAndSave(input.getOwner());
+				}
+			});
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -345,7 +363,11 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.removeOwnerAndSave(input.getOwner()));
+			input.getProtection().performAllProtections(prot -> {
+				if (prot.isOwner(input.getOwner())) {
+					prot.removeOwnerAndSave(input.getOwner());
+				}
+			});
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -367,7 +389,11 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.addBannedAndSave(input.getBanned()));
+			input.getProtection().performAllProtections(prot -> {
+				if (!prot.isBanned(input.getBanned())) {
+					prot.addBannedAndSave(input.getBanned());
+				}
+			});
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -385,7 +411,11 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().performAllProtections(prot -> prot.removeBannedAndSave(input.getBanned()));
+			input.getProtection().performAllProtections(prot -> {
+				if (prot.isBanned(input.getBanned())) {
+					prot.removeBannedAndSave(input.getBanned());
+				}
+			});
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {

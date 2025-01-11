@@ -61,8 +61,9 @@ public class Changelog0000Init extends SQLChangelog {
 				.addUniqueConstraint(
 						new Table.UniqueConstraint().addColumns(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"),
 								PROTECTION_BANNEDS_TABLE.getColumn("BannedUuid")))
-				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTION_BANNEDS_TABLE.getColumn("RegionId")));
+				.addForeignConstraint(
+						new Table.ForeignConstraint().addColumn(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"))
+								.addReferenceColumn(PROTECTIONS_TABLE.getColumn("RegionId")));
 
 		RECIPES_TABLE.addForeignConstraint(
 				new Table.ForeignConstraint().addColumn(RECIPES_TABLE.getColumn("ProtectionBlockId"))

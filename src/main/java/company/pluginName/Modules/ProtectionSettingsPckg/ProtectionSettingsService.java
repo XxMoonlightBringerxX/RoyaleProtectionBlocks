@@ -7,9 +7,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
+import company.pluginName.MainPluginClass;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.Admin.SetSpawnSubCommand;
 import company.pluginName.Modules.FilePckg.FilesService;
+import company.pluginName.Modules.FilePckg.Settings;
+import company.pluginName.Utils.EconomyUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -22,6 +25,7 @@ import darkpanda73.PandaUtils.PandaYaml.Exceptions.YamlException;
 import darkpanda73.PandaUtils.PandaYaml.Objects.YamlSection;
 import darkpanda73.PandaUtils.PandaYaml.Objects.Data.YamlData;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.PandaCommandsService;
+import darkpanda73.PandaUtils.Services.PandaEconomiesModule.Enums.EconomyService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.Getter;
 import lombok.NonNull;
@@ -40,9 +44,29 @@ public class ProtectionSettingsService {
 
 	private @Getter Location spawn = null;
 
+	private @Getter EconomyService protectionTeleportEconomyService;
+
 	@LoadMethod
 	private void load() {
 		loadSpawn();
+
+		try {
+			protectionTeleportEconomyService = Settings.SETTINGS_PROTECTION_TELEPORTECONOMY.hasContent()
+					? EconomyService.valueOf(Settings.SETTINGS_PROTECTION_TELEPORTECONOMY.getContent().toUpperCase())
+					: null;
+
+			if (protectionTeleportEconomyService != null
+					&& !EconomyUtilities.isEconomyEnabled(protectionTeleportEconomyService)) {
+				MainPluginClass.getSimpleLogger().sendWarning(String.format(
+						"The defined economy for the protections teleport could not be found installed on the server (%s). In order to add cost to teleports, you must install the economy plugin or switch the defined economy plugin for one of your current economy plugins.",
+						protectionTeleportEconomyService.name()));
+				protectionTeleportEconomyService = null;
+			}
+		} catch (IllegalArgumentException e) {
+			MainPluginClass.getSimpleLogger()
+					.sendError(String.format("Invalid protections teleport economy service (%s)",
+							Settings.SETTINGS_PROTECTION_TELEPORTECONOMY.getContent().toUpperCase()));
+		}
 	}
 
 	@UnloadMethod

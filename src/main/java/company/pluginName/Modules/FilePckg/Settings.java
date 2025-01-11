@@ -25,6 +25,8 @@ public class Settings {
 			"Settings.Protection.Starter-block", "Settings.Protection.Stater-block", "");
 	public static final PandaIntegerField SETTINGS_PROTECTION_BOUNDARIESVIEWDURATIONINSECONDS = new PandaIntegerField(
 			"Settings.Protection.Boundaries-view-duration-in-seconds", 30);
+	public static final PandaStringField SETTINGS_PROTECTION_TELEPORTECONOMY = new PandaStringField(
+			"Settings.Protection.Teleport-economy", EconomyService.VAULT.name());
 	public static final PandaDoubleField SETTINGS_PROTECTION_TELEPORTCOST = new PandaDoubleField(
 			"Settings.Protection.Teleport-cost", 0D);
 	public static final PandaLongField SETTINGS_PROTECTION_TELEPORTCOOLDOWN = new PandaLongField(

@@ -397,6 +397,10 @@ public class Protection implements IProtection {
 			throw Exceptions.Protections.Banneds.Save.CANNOTADDPROTECTIONOWNER.generateException();
 		}
 
+		if (this.isBanned(bannedUuid)) {
+			throw Exceptions.Protections.Banneds.Save.ALREADYBANNED.generateException();
+		}
+
 		this.getBanneds().add(bannedUuid);
 
 		TasksUtils.execute(() -> {

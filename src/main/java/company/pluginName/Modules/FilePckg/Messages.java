@@ -21,7 +21,7 @@ public class Messages {
 			"Message.Set-spawn-successfully", "&aA new spawn has ben set successfully.");
 
 	public static final PandaStringField MESSAGE_GENERAL_NOLIMIT = new PandaPrefixedStringField(
-			"Message.General.No-limit", "No limit");
+			"Message.General.No-limit", "No-limit");
 	public static final PandaStringField MESSAGE_GENERAL_EMPTY = new PandaStringField("Message.General.Empty",
 			"&7&o(Empty)");
 	public static final PandaStringField MESSAGE_GENERAL_CLICK = new PandaStringField("Message.General.Click",

@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
@@ -106,8 +107,8 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 			}
 
 			List<IProtection> newProtections = cachedQuery.getProtections().stream()
-					.filter((prot) -> !prot.isDeleted() && prot.getParentProtection() == prot
-							&& prot.isInsideAny(simpleToLocation, true))
+					.map(prot -> (Protection) prot.getParentProtection()).distinct()
+					.filter((prot) -> !prot.isDeleted() && prot.isInsideAny(simpleToLocation, true))
 					.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()))
 					.collect(Collectors.toList());
 

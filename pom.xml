@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>1.10.1 Alpha</version>
+	<version>1.10.2 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -13,7 +13,7 @@
 	    <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
 		<project.author>DarkPanda73</project.author>
 		<project.package>royale</project.package>
-		<project.spigotVersion>${project.version} HOTFIX</project.spigotVersion>
+		<project.spigotVersion>${project.version} FIX</project.spigotVersion>
 	</properties>
 	<repositories>
 		<repository>

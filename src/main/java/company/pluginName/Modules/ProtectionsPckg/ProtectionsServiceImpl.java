@@ -513,8 +513,8 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 	public Stream<Protection> findProtectionParentsByArea(SimpleLocationArea locationArea, boolean includeBorder) {
 		try {
 			return executeSynchronizedWithReturn(() -> query(locationArea, includeBorder).getProtections().stream()
-					.filter((prot) -> !prot.isDeleted()
-							&& (prot.getParentProtection() == prot && prot.isInsideAny(locationArea, includeBorder)))
+					.map(prot -> (Protection) prot.getParentProtection()).distinct()
+					.filter((prot) -> !prot.isDeleted() && prot.isInsideAny(locationArea, includeBorder))
 					.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority())));
 		} catch (Throwable e) {
 			return Collections.<Protection>emptyList().stream();
@@ -531,9 +531,9 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			return executeSynchronizedWithReturn(() -> StreamSupport
 					.stream(protectionByRegion.values().spliterator(),
 							SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
-					.filter(prot -> !prot.isDeleted() && prot.getParentProtection() == prot
-							&& (prot.getWorldGuardOwners().list().contains(uuid)
-									|| prot.getWorldGuardMembers().list().contains(uuid))));
+					.map(prot -> (Protection) prot.getParentProtection()).distinct()
+					.filter(prot -> !prot.isDeleted() && (prot.getWorldGuardOwners().list().contains(uuid)
+							|| prot.getWorldGuardMembers().list().contains(uuid))));
 		} catch (Throwable e) {
 			return Collections.<Protection>emptyList().stream();
 		}

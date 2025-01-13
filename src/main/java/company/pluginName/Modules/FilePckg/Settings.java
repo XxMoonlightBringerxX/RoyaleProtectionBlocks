@@ -14,6 +14,9 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStri
 @RegisteredPandaFieldContainer("config")
 public class Settings {
 
+	public static final PandaStringField SETTINGS_GENERAL_DATEFORMAT = new PandaStringField(
+			"Settings.General.Date-format", "dd/MM/yyyy HH:mm aa");
+
 	public static final PandaStringListField SETTINGS_BANNEDWORLDS = new PandaStringListField(
 			"Settings.Protection.Banned-worlds", Arrays.asList("World1", "World2", "World3"));
 	public static final PandaStringListField SETTINGS_COMMANDSONCREATION = new PandaStringListField(

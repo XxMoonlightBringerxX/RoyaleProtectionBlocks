@@ -1,8 +1,9 @@
-package company.pluginName.Bukkit.Inventories.Protections;
+package company.pluginName.Bukkit.Inventories.v2.Protections;
 
-import org.bukkit.Location;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -12,7 +13,6 @@ import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBanne
 import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Merge.ProtectionMergeInventory;
-import company.pluginName.Bukkit.Inventories.Protections.Owners.ProtectionOwnersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Split.ProtectionSplitInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
@@ -26,7 +26,6 @@ import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
@@ -41,7 +40,6 @@ import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.Panda
 import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionHideBlockRequestInput;
@@ -49,16 +47,17 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSellRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionShowBlockRequestInput;
 
-@Inventory("protections_manage")
+@Inventory("protections_manage_v2")
 public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	private static final String MESSAGES_TYPENEWNAMEINFO_PATH = "Messages.Type-new-name-info";
 	private static final String MESSAGES_PRICESPECIFYINFO_PATH = "Messages.Price-specify-info";
 
-	private static final String TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH = "Show-block-item";
-	private static final String TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH = "Hide-block-item";
+	private static final String PROTECTIONINFO_CHANGEDISPLAYITEMLORELINE = "Change-display-item-lore-line";
+	private static final String PROTECTIONINFO_RESETDISPLAYITEMLORELINE = "Reset-display-item-lore-line";
 
-	private static final String TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH = "Show-boundary-item";
+	private static final String TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH = "Show-block-item";
+
 	private static final String TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH = "Hide-boundary-item";
 
 	private static final String PRICEBUTTON_NOTSETITEM_PATH = "Not-set-item";
@@ -88,34 +87,15 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 		this.protection = protection;
 
-		Location loc = protection.getBukkitLocation();
-		IProtectionBlock block = protection.getProtectionBlock();
-
-		Replacement protectionDisplayName = new Replacement("{protection}",
-				() -> protection.getDisplayName() != null ? protection.getDisplayName() : protection.getProtectionId());
-		protectionDisplayName.getMessageFragment().setCacheText(false);
-
 		Replacement[] playerReplacements = placeholdersService.getPlayerReplacements(getPlayer());
 		Replacement[] protectionReplacements = placeholdersService.getProtectionReplacements(protection);
 		Replacement[] protectionBlockReplacements = placeholdersService
 				.getProtectionBlockReplacements(protection.getProtectionBlock());
-		Replacement[] customReplacements = new Replacement[] { protectionDisplayName,
-				new Replacement("{owner}", () -> protection.getOwnerName()),
-				new Replacement("{world}", () -> protection.getWorldName()),
-				new Replacement("{location_x}", () -> loc != null ? String.valueOf(loc.getBlockX()) : "???"),
-				new Replacement("{location_y}", () -> loc != null ? String.valueOf(loc.getBlockY()) : "???"),
-				new Replacement("{location_z}", () -> loc != null ? String.valueOf(loc.getBlockZ()) : "???"),
-				new Replacement("{size_x}", () -> block != null ? String.valueOf((block.getBlocksX() * 2) + 1) : "???"),
-				new Replacement("{size_y}",
-						() -> block != null ? (block.getBlocksY() == -1 ? Messages.MESSAGE_GENERAL_NOLIMIT.toString()
-								: String.valueOf((block.getBlocksY() * 2) + 1)) : "???"),
-				new Replacement("{size_z}",
-						() -> block != null ? String.valueOf((block.getBlocksZ() * 2) + 1) : "???") };
 
 		setReplacements(ArrayUtilities.join(
 				new Replacement[playerReplacements.length + protectionReplacements.length
-						+ protectionBlockReplacements.length + customReplacements.length],
-				playerReplacements, protectionReplacements, protectionBlockReplacements, customReplacements));
+						+ protectionBlockReplacements.length],
+				playerReplacements, protectionReplacements, protectionBlockReplacements));
 	}
 
 	@Override
@@ -125,40 +105,46 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@ItemPregenerator("Toggle-block-button")
 	private static void pregenerateToggleBlockButton(Item item) {
+		item.getItems().put(Item.DISPLAYITEM_KEY,
+				ItemBuilder.inst().fromMap(item.getData(), Item.DISPLAYITEM_KEY).build());
 		item.getItems().put(TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH,
 				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH).build());
-		item.getItems().put(TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH,
-				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH).build());
 	}
 
 	@ItemPregenerator("Toggle-boundary-button")
 	private static void pregenerateToggleBoundaryButton(Item item) {
-		item.getItems().put(TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH,
-				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH).build());
+		item.getItems().put(Item.DISPLAYITEM_KEY,
+				ItemBuilder.inst().fromMap(item.getData(), Item.DISPLAYITEM_KEY).build());
 		item.getItems().put(TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH,
 				ItemBuilder.inst().fromMap(item.getData(), TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH).build());
 	}
 
 	@ItemGenerator("Protection-info")
-	private ItemStack generateProtectionInfo(Item item) {
-		OfflinePlayer owner = OfflinePlayerUtilities.getOfflinePlayer(protection.getOwnerUuid());
-
-		return processPlayerHead(ItemBuilder.inst().setMaterial(Material.PLAYER_HEAD)
-				.fromMap(item.getData(), Item.DISPLAYITEM_KEY).setReplacements(getReplacements()), owner.getUniqueId());
-	}
-
-	@ItemGenerator("Change-display-item-button")
 	private ItemStack generateDisplayItemButton(Item item) {
-		return ItemBuilder.inst().fromMap(item.getData(), Item.DISPLAYITEM_KEY)
-				.apply(this.protection.getDisplayItem().getOrDefault().clone());
-	}
+		ItemBuilder builder = ItemBuilder.inst().fromMap(item.getData(), Item.DISPLAYITEM_KEY);
 
-	@ItemGenerator("Close-button")
-	private ItemStack generateCloseButton(Item item) {
-		return getPreviousInventory() != null
-				&& !(getPreviousInventory().getHolder() instanceof ProtectionsManageInventory)
-						? item.getItems().get(Item.DISPLAYITEM_KEY)
-						: null;
+		if (ProtectionUtilities.canChangeDisplayItem(protection, getPlayer())) {
+			List<String> extraLore = new ArrayList<>();
+
+			Object changeLine = item.getData().get(PROTECTIONINFO_CHANGEDISPLAYITEMLORELINE);
+			if (changeLine != null) {
+				extraLore.add(changeLine.toString());
+			}
+
+			if (this.protection.getDisplayItem() != null) {
+				Object resetLine = item.getData().get(PROTECTIONINFO_RESETDISPLAYITEMLORELINE);
+				if (resetLine != null) {
+					extraLore.add(resetLine.toString());
+				}
+			}
+
+			if (!extraLore.isEmpty()) {
+				builder.getLore().add("&0");
+				builder.getLore().addAll(extraLore);
+			}
+		}
+
+		return builder.apply(this.protection.getDisplayItem().getOrDefault().clone());
 	}
 
 	@ItemGenerator("Toggle-block-button")
@@ -166,10 +152,8 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 		return (protection.getUtils().isProtectionBlockShown()
 				? ProtectionUtilities.canHideBlock(protection, getPlayer())
 				: ProtectionUtilities.canShowBlock(protection, getPlayer()))
-						? item.getItems()
-								.get(protection.getUtils().isProtectionBlockShown()
-										? TOGGLEBLOCKBUTTON_HIDEBLOCKITEM_PATH
-										: TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH)
+						? item.getItems().get(protection.getUtils().isProtectionBlockShown() ? Item.DISPLAYITEM_KEY
+								: TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH)
 						: null;
 	}
 
@@ -194,7 +178,7 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 	private ItemStack generateToggleBoundaryButton(Item item) {
 		return item.getItems()
 				.get(protectionParticlesService.isActive(getPlayer()) ? TOGGLEBOUNDARYBUTTON_HIDEBOUNDARYITEM_PATH
-						: TOGGLEBOUNDARYBUTTON_SHOWBOUNDARYITEM_PATH);
+						: Item.DISPLAYITEM_KEY);
 	}
 
 	@ItemExecutor("Close-button")
@@ -202,24 +186,21 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 		goToPreviousInventory();
 	}
 
-	@ItemExecutor("Change-display-item-button")
+	@ItemExecutor("Protection-info")
 	private void executeChangeDisplayItemButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
-		try {
-			if (e.getCursor() != null && e.getCursor().getType() != Material.AIR) {
-				protection.getDisplayItem().setAndSave(e.getCursor());
-				updateInventory();
-			} else if (protection.getDisplayItem() != null) {
-				protection.getDisplayItem().resetAndSave(getPlayer());
-				updateInventory();
+		if (ProtectionUtilities.canChangeDisplayItem(protection, getPlayer())) {
+			try {
+				if (e.getCursor() != null && e.getCursor().getType() != Material.AIR) {
+					protection.getDisplayItem().setAndSave(e.getCursor());
+					updateInventory();
+				} else if (protection.getDisplayItem() != null) {
+					protection.getDisplayItem().resetAndSave(getPlayer());
+					updateInventory();
+				}
+			} catch (RoyaleProtectionBlocksExceptionImpl e1) {
+				e1.sendError(getPlayer());
 			}
-		} catch (RoyaleProtectionBlocksExceptionImpl e1) {
-			e1.sendError(getPlayer());
 		}
-	}
-
-	@ItemExecutor("Owners-button")
-	private void executeOwnersButton() {
-		new ProtectionOwnersInventory(getPlayer(), protection).openInventory();
 	}
 
 	@ItemExecutor("Members-button")

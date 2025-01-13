@@ -11,9 +11,9 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
-import company.pluginName.Bukkit.Inventories.Protections.ProtectionsManageInventory;
 import company.pluginName.Bukkit.Inventories.Shared.ConfirmationInventory;
 import company.pluginName.Bukkit.Inventories.Shared.WarningInventory;
+import company.pluginName.Bukkit.Inventories.v2.Protections.ProtectionsManageInventory;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Features.PvPPckg.Utils.CombatLogHookUtilities;

@@ -20,6 +20,7 @@ import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayerGuardPckg.PlayerGuardService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.ProtectionsPurgeService;
+import company.pluginName.Modules.SettingsPckg.SettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
@@ -48,6 +49,9 @@ public class PlaceholdersService {
 
 	@PandaInject
 	private static PlayerGuardService playerGuardService;
+
+	@PandaInject
+	private static SettingsService settingsService;
 
 	/*
 	 * Player placeholders
@@ -94,6 +98,8 @@ public class PlaceholdersService {
 			Pair.of("{protection_location_z}",
 					(protection) -> String.valueOf(protection.getBukkitLocation().getBlockZ())),
 			Pair.of("{protection_price}", (protection) -> String.valueOf(protection.getPrice())),
+			Pair.of("{protection_createddate}",
+					(protection) -> settingsService.getDateFormat().format(new Date(protection.getCreatedDate()))),
 			Pair.of("{protection_owners}", (protection) -> ((Protection) protection).getOwners().size() != 0
 					? ((Protection) protection).getOwners().stream().filter(Objects::nonNull).map(owner -> {
 						OfflinePlayer ownerPlayer = OfflinePlayerUtilities.getOfflinePlayer(owner);
@@ -106,12 +112,16 @@ public class PlaceholdersService {
 						return memberPlayer != null && memberPlayer.getName() != null ? memberPlayer.getName() : "???";
 					}).collect(Collectors.joining(", "))
 					: Messages.MESSAGE_GENERAL_EMPTY.getContent()),
+			Pair.of("{protection_members_size}",
+					(protection) -> String.valueOf(((Protection) protection).getMembers().size())),
 			Pair.of("{protection_banneds}", (protection) -> ((Protection) protection).getBanneds().size() != 0
 					? ((Protection) protection).getBanneds().stream().map(banned -> {
 						OfflinePlayer bannedPlayer = OfflinePlayerUtilities.getOfflinePlayer(banned);
 						return bannedPlayer != null && bannedPlayer.getName() != null ? bannedPlayer.getName() : "???";
 					}).collect(Collectors.joining(", "))
-					: Messages.MESSAGE_GENERAL_EMPTY.getContent()));
+					: Messages.MESSAGE_GENERAL_EMPTY.getContent()),
+			Pair.of("{protection_owners_size}",
+					(protection) -> String.valueOf(((Protection) protection).getOwners().size())));
 
 	/*
 	 * Protection blocks placeholders

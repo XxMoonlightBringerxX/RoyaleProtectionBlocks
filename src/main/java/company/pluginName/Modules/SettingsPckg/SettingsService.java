@@ -2,6 +2,7 @@ package company.pluginName.Modules.SettingsPckg;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -44,11 +45,13 @@ public class SettingsService {
 
 	private @Getter Location spawn = null;
 	private @Getter EconomyService protectionTeleportEconomyService;
+	private @Getter SimpleDateFormat dateFormat;
 
 	@LoadMethod
 	private void load() {
 		loadSpawn();
 		loadProtectionTeleportEconomy();
+		loadDateFormat();
 	}
 
 	@UnloadMethod
@@ -116,6 +119,15 @@ public class SettingsService {
 			MainPluginClass.getSimpleLogger()
 					.sendError(String.format("Invalid protections teleport economy service (%s)",
 							Settings.SETTINGS_PROTECTION_TELEPORTECONOMY.getContent().toUpperCase()));
+		}
+	}
+
+	private void loadDateFormat() {
+		try {
+			this.dateFormat = new SimpleDateFormat(Settings.SETTINGS_GENERAL_DATEFORMAT.getContent());
+		} catch (Exception e) {
+			MainPluginClass.getSimpleLogger().sendError(String.format("Invalid date format specified (%s)",
+					Settings.SETTINGS_GENERAL_DATEFORMAT.getContent()));
 		}
 	}
 

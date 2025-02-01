@@ -8,9 +8,9 @@
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
-    	<maven.test.skip>true</maven.test.skip>
-	    <timestamp>${maven.build.timestamp}</timestamp>
-	    <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
+		<maven.test.skip>true</maven.test.skip>
+		<timestamp>${maven.build.timestamp}</timestamp>
+		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
 		<project.author>DarkPanda73</project.author>
 		<project.package>royale</project.package>
 		<project.spigotVersion>${project.version} {timestamp}</project.spigotVersion>
@@ -24,13 +24,13 @@
 			<id>jitpack-repo</id>
 			<url>https://jitpack.io</url>
 		</repository>
-	    <repository>
-	        <id>sirblobman-public</id>
-	        <url>https://nexus.sirblobman.xyz/public/</url>
-	    </repository>
-	    <repository>
-		    <id>CodeMC</id>
-		    <url>https://repo.codemc.org/repository/maven-public/</url>
+		<repository>
+			<id>sirblobman-public</id>
+			<url>https://nexus.sirblobman.xyz/public/</url>
+		</repository>
+		<repository>
+			<id>CodeMC</id>
+			<url>https://repo.codemc.org/repository/maven-public/</url>
 		</repository>
 		<repository>
 			<id>essentials-releases</id>
@@ -67,11 +67,11 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-	        <groupId>com.github.relampagorojo93</groupId>
-	        <artifactId>RoyaleProtectionBlocksAPI</artifactId>
-	        <version>0.0.1-Alpha</version>
-	        <scope>compile</scope>
-	    </dependency>
+			<groupId>com.github.relampagorojo93</groupId>
+			<artifactId>RoyaleProtectionBlocksAPI</artifactId>
+			<version>0.0.1-Alpha</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>RelaUtils</groupId>
 			<artifactId>RelaUtils</artifactId>
@@ -199,41 +199,41 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-		  <groupId>com.github.timderspieler</groupId>
-		  <artifactId>DeluxeCombat-API</artifactId>
-		  <version>1.5.0</version>
-		  <scope>provided</scope>
+			<groupId>com.github.timderspieler</groupId>
+			<artifactId>DeluxeCombat-API</artifactId>
+			<version>1.5.0</version>
+			<scope>provided</scope>
 		</dependency>
-	    <dependency>
-	        <groupId>net.luckperms</groupId>
-	        <artifactId>api</artifactId>
-	        <version>5.4</version>
-	        <scope>provided</scope>
-	    </dependency>
-	    <dependency>
-		    <groupId>com.github.Realizedd</groupId>
-		    <artifactId>TokenManager</artifactId>
-		    <version>3.2.4</version>
-	        <scope>provided</scope>
-		    <exclusions>
-		        <exclusion>
-		            <groupId>*</groupId>
-		            <artifactId>*</artifactId>
-		        </exclusion>
-		    </exclusions>
+		<dependency>
+			<groupId>net.luckperms</groupId>
+			<artifactId>api</artifactId>
+			<version>5.4</version>
+			<scope>provided</scope>
 		</dependency>
-	    <dependency>
-	        <groupId>com.github.sirblobman.api</groupId>
-	        <artifactId>core</artifactId>
-	        <version>2.9-SNAPSHOT</version>
-	        <scope>provided</scope>
-	    </dependency>
-	    <dependency>
-	        <groupId>com.github.sirblobman.combatlogx</groupId>
-	        <artifactId>api</artifactId>
-	        <version>11.4-SNAPSHOT</version>
-	        <scope>provided</scope>
-	    </dependency>
+		<dependency>
+			<groupId>com.github.Realizedd</groupId>
+			<artifactId>TokenManager</artifactId>
+			<version>3.2.4</version>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.github.sirblobman.api</groupId>
+			<artifactId>core</artifactId>
+			<version>2.9-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.sirblobman.combatlogx</groupId>
+			<artifactId>api</artifactId>
+			<version>11.4-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.github.oraxen</groupId>
 			<artifactId>oraxen</artifactId>
@@ -263,22 +263,22 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-		    <groupId>me.NoChance.PvPManager</groupId>
-		    <artifactId>pvpmanager</artifactId>
-		    <version>3.18.5</version>
-		    <scope>provided</scope>
+			<groupId>me.NoChance.PvPManager</groupId>
+			<artifactId>pvpmanager</artifactId>
+			<version>3.18.5</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>net.essentialsx</groupId>
 			<artifactId>EssentialsX</artifactId>
 			<version>2.19.0</version>
 			<scope>provided</scope>
-		    <exclusions>
-		        <exclusion>
-		            <groupId>org.bstats</groupId>
-		            <artifactId>bstats-bukkit</artifactId>
-		        </exclusion>
-		    </exclusions>
+			<exclusions>
+				<exclusion>
+					<groupId>org.bstats</groupId>
+					<artifactId>bstats-bukkit</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 	<build>

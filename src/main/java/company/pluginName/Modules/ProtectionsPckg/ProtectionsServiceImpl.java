@@ -253,16 +253,18 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 				protectionsToTransfer.add(existentProtection);
 
 				protectionsToTransfer.stream().map(prot -> (Protection) prot).forEach(prot -> {
-					try {
+					if (!prot.getOwnerUuid().equals(protectionTransferData.getNewOwner())) {
 						UUID oldOwner = prot.getOwnerUuid();
-						prot.setOwnerUuidAndSave(protectionTransferData.getNewOwner());
 
-						protectionsByOwner.computeIfAbsent(oldOwner, (uuid) -> new ArrayList<>()).remove(prot);
-						protectionsByOwner
-								.computeIfAbsent(protectionTransferData.getNewOwner(), (uuid) -> new ArrayList<>())
-								.add(prot);
-					} catch (Throwable e) {
-						throw new RuntimeException(e);
+						try {
+							prot.setOwnerUuidAndSave(protectionTransferData.getNewOwner());
+							protectionsByOwner.computeIfAbsent(oldOwner, (uuid) -> new ArrayList<>()).remove(prot);
+							protectionsByOwner
+									.computeIfAbsent(protectionTransferData.getNewOwner(), (uuid) -> new ArrayList<>())
+									.add(prot);
+						} catch (Throwable e) {
+							throw new RuntimeException(e);
+						}
 					}
 				});
 			});

@@ -17,6 +17,7 @@ import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import company.pluginName.MainPluginClass;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.ProtectionFlagsPckg.Objects.ProtectionFlag;
 import company.pluginName.Utils.EconomyUtilities;
@@ -227,6 +228,19 @@ public class ProtectionFlagUtilities {
 		Double costPerChange = getCostPerChange(section);
 		EconomyService economyService = getEconomyService(section);
 
+		if (costPerChange != null && costPerChange > 0D) {
+			if (economyService == null) {
+				economyService = EconomyUtilities.getFirstAvailable();
+				if (economyService == null) {
+					throw new NullPointerException("No compatible economy plugin is currently attached");
+				}
+				MainPluginClass.getSimpleLogger()
+						.sendWarning(String.format(
+								"&eNo economy was specified on flag '&7%s&e', using &7%s &eas the economy service.",
+								section.getName(), economyService.name().toLowerCase()));
+			}
+		}
+
 		ProtectionFlag protectionFlag = new ProtectionFlag(section.getName());
 		YamlData<?> value = section.getDataOrDefault("Default-value", YamlData.empty());
 
@@ -320,13 +334,7 @@ public class ProtectionFlagUtilities {
 	}
 
 	private static Double getCostPerChange(YamlSection section) {
-		Double costPerChange = section.getDataOrDefault("Cost-per-change", YamlData.empty()).getDouble();
-
-		if (costPerChange != null) {
-			throw new NullPointerException("No compatible economy plugin is currently attached");
-		}
-
-		return costPerChange;
+		return section.getDataOrDefault("Cost-per-change", YamlData.empty()).getDouble();
 	}
 
 	private static EconomyService getEconomyService(YamlSection section) {

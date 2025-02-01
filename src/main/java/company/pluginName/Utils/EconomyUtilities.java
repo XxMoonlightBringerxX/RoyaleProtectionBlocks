@@ -1,5 +1,7 @@
 package company.pluginName.Utils;
 
+import java.util.Arrays;
+
 import org.bukkit.entity.Player;
 
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
@@ -11,6 +13,11 @@ public class EconomyUtilities {
 
 	@PandaInject
 	private static PandaEconomiesService service;
+
+	public static EconomyService getFirstAvailable() {
+		return Arrays.stream(EconomyService.values()).filter((econ) -> service.isEconomyEnabled(econ)).findFirst()
+				.orElse(null);
+	}
 
 	public static boolean withdraw(Player player, double amount) {
 		return withdraw(null, player, amount);

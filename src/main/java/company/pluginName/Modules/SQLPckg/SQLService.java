@@ -336,6 +336,7 @@ public class SQLService extends PandaSQLService {
 
 	public void deleteProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		try {
+			this.deleteProtectionBanneds(protection);
 			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTIONS_TABLE).setCondition(
 					EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
 			this.deleteProtectionBanneds(protection);

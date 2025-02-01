@@ -212,20 +212,37 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 				protectionsToTransfer.add(existentProtection);
 
 				protectionsToTransfer.stream().map(prot -> (Protection) prot).forEach(prot -> {
-					try {
+					if (!prot.getOwnerUuid().equals(protectionTransferData.getNewOwner())) {
 						UUID oldOwner = prot.getOwnerUuid();
-						prot.setOwnerUuidAndSave(protectionTransferData.getNewOwner());
 
-						prot.getWorldGuardOwners().add(protectionTransferData.getNewOwner());
-						prot.updateOwnerData();
-						protectionsByOwner.computeIfAbsent(oldOwner, (uuid) -> new ArrayList<>()).remove(prot);
-						protectionsByOwner
-								.computeIfAbsent(protectionTransferData.getNewOwner(), (uuid) -> new ArrayList<>())
-								.add(prot);
+						try {
+							if (!prot.isOwner(protectionTransferData.getNewOwner())) {
+								prot.getWorldGuardOwners().add(protectionTransferData.getNewOwner());
+							}
 
-						prot.getWorldGuardOwners().remove(oldOwner);
-					} catch (Throwable e) {
-						throw new RuntimeException(e);
+							prot.setOwnerUuidAndSave(protectionTransferData.getNewOwner());
+							prot.updateOwnerData();
+							protectionsByOwner.computeIfAbsent(oldOwner, (uuid) -> new ArrayList<>()).remove(prot);
+							protectionsByOwner
+									.computeIfAbsent(protectionTransferData.getNewOwner(), (uuid) -> new ArrayList<>())
+									.add(prot);
+
+							prot.getWorldGuardOwners().remove(oldOwner);
+						} catch (Throwable e) {
+							try {
+								if (!prot.isMainOwner(oldOwner)) {
+									prot.setOwnerUuidAndSave(oldOwner);
+								}
+
+								if (prot.isOwner(protectionTransferData.getNewOwner())) {
+									prot.getWorldGuardOwners().remove(protectionTransferData.getNewOwner());
+								}
+							} catch (RoyaleProtectionBlocksExceptionImpl e1) {
+								throw new RuntimeException(e);
+							}
+
+							throw new RuntimeException(e);
+						}
 					}
 				});
 			});

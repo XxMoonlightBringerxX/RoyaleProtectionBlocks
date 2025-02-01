@@ -22,8 +22,9 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="E:/Eclipse/Others/Libs/PlaceholderAPI-2.9.2.jar"/>
-	<classpathentry kind="lib" path="E:/Eclipse/Others/Libs/worldedit-bukkit-7.1.0.jar"/>
-	<classpathentry kind="lib" path="E:/Eclipse/Others/Libs/worldguard-legacy-7.0.0-rc-1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/Panda/libs/ProtocolLib.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/Panda/libs/PlaceholderAPI-2.9.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/Panda/libs/worldedit-bukkit-7.0.0-rc-2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/Panda/libs/worldguard-legacy-7.0.0-rc-1.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

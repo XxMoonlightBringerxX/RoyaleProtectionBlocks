@@ -103,8 +103,8 @@ public class ProtectionBlocksUtils {
 	public static ProtectionBlock mapToProtectionBlock(String id, Map<String, Object> map) throws Exception {
 		for (String section : new String[] { BLOCKSX_SECTION, BLOCKSY_SECTION, BLOCKSZ_SECTION, ITEM_TYPE_SECTION }) {
 			if (!map.containsKey(section)) {
-				throw new Exception(
-						"The section '%s' must be present on the protection block configuration.".formatted(section));
+				throw new Exception(String
+						.format("The section '%s' must be present on the protection block configuration.", section));
 			}
 		}
 
@@ -118,7 +118,7 @@ public class ProtectionBlocksUtils {
 		try {
 			blocksX = (int) (Long.parseLong(map.get(BLOCKSX_SECTION).toString()) / 2);
 		} catch (NumberFormatException e) {
-			throw new Exception("The value '%s' is currently not a number.".formatted(map.get(BLOCKSX_SECTION)));
+			throw new Exception(String.format("The value '%s' is currently not a number.", map.get(BLOCKSX_SECTION)));
 		}
 
 		try {
@@ -127,13 +127,13 @@ public class ProtectionBlocksUtils {
 				blocksY /= 2;
 			}
 		} catch (NumberFormatException e) {
-			throw new Exception("The value '%s' is currently not a number.".formatted(map.get(BLOCKSY_SECTION)));
+			throw new Exception(String.format("The value '%s' is currently not a number.", map.get(BLOCKSY_SECTION)));
 		}
 
 		try {
 			blocksZ = (int) (Long.parseLong(map.get(BLOCKSZ_SECTION).toString()) / 2);
 		} catch (NumberFormatException e) {
-			throw new Exception("The value '%s' is currently not a number.".formatted(map.get(BLOCKSZ_SECTION)));
+			throw new Exception(String.format("The value '%s' is currently not a number.", map.get(BLOCKSZ_SECTION)));
 		}
 
 		try {
@@ -141,7 +141,8 @@ public class ProtectionBlocksUtils {
 					? (String) map.get(PERMISSION_SECTION)
 					: null;
 		} catch (ClassCastException e) {
-			throw new Exception("The value '%s' is currently not a string.".formatted(map.get(PERMISSION_SECTION)));
+			throw new Exception(
+					String.format("The value '%s' is currently not a string.", map.get(PERMISSION_SECTION)));
 		}
 
 		try {
@@ -149,7 +150,7 @@ public class ProtectionBlocksUtils {
 					? Double.parseDouble(map.get(PRICE_SECTION).toString())
 					: null;
 		} catch (ClassCastException e) {
-			throw new Exception("The value '%s' is currently not a decimal.".formatted(map.get(PRICE_SECTION)));
+			throw new Exception(String.format("The value '%s' is currently not a decimal.", map.get(PRICE_SECTION)));
 		}
 
 		try {
@@ -158,7 +159,7 @@ public class ProtectionBlocksUtils {
 					: null;
 		} catch (ClassCastException e) {
 			throw new Exception(
-					"The value '%s' is currently not a string list.".formatted(map.get(ALLOWEDWORLDS_SECTION)));
+					String.format("The value '%s' is currently not a string list.", map.get(ALLOWEDWORLDS_SECTION)));
 		}
 
 		ItemBuilder builder = ItemBuilder.inst().fromMap(map, "Item");

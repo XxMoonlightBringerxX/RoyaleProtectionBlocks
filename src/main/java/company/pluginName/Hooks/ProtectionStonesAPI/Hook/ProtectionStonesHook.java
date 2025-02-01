@@ -83,7 +83,7 @@ public class ProtectionStonesHook extends PandaAbstractHook {
 								pb.createItem(), pb.xRadius, pb.yRadius, pb.zRadius,
 								pb.permission != null && !pb.permission.isEmpty() ? pb.permission : null, pb.price));
 
-						if (pb.worlds.size() > 0 && pb.worldListType != null && !pb.worldListType.isBlank()) {
+						if (pb.worlds.size() > 0 && pb.worldListType != null && !pb.worldListType.isEmpty()) {
 							Bukkit.getWorlds().stream()
 									.filter(world -> pb.worldListType.equalsIgnoreCase("whitelist") == pb.worlds
 											.contains(world.getName()))

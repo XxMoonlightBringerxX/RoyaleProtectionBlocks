@@ -11,7 +11,6 @@ import company.pluginName.Bukkit.Inventories.Protections.ProtectionsListInventor
 import company.pluginName.Bukkit.Inventories.Shared.SearchProtectionInventory;
 import company.pluginName.Bukkit.Inventories.Store.ProtectionBlocksStoreInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
-import company.pluginName.Hooks.VaultAPI.VaultAPI;
 import company.pluginName.Modules.PlayerInteractionsPckg.PlayerInteractionsServiceImpl;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
@@ -24,18 +23,13 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.FalseResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import darkpanda73.PandaUtils.Services.PandaEconomiesModule.EconomyServices.Vault.VaultAPI;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
 
-@PandaCommandAnnotation(
-		id = "protectionblocks",
-		pathName = "Protection-blocks",
-		defaultName = "protectionblocks",
-		defaultDescription = "Open the GUI or execute commands",
-		defaultUsage = "[help|subcommand]",
-		defaultAliases = "pb")
+@PandaCommandAnnotation(id = "protectionblocks", pathName = "Protection-blocks", defaultName = "protectionblocks", defaultDescription = "Open the GUI or execute commands", defaultUsage = "[help|subcommand]", defaultAliases = "pb")
 @PandaCommandAnnotation.Customizable(aliases = true, description = true, name = true, permission = true, usage = true)
 public class ProtectionBlocksCommand extends PandaCommand {
 

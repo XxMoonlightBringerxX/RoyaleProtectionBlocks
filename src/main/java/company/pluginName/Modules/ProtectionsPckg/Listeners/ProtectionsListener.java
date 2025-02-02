@@ -120,11 +120,9 @@ public class ProtectionsListener implements Listener {
 					protectionBlockId = ItemStackDataUtilities.getPersistentData(e.getItem(), plugin,
 							ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
 				} catch (Exception e1) {
-					MessageTemplate
-							.inst(PandaPrefixedStringField.applyPrefix(
-									"An error has ocurred trying to retrieve the Protection Block ID from an item: %s"
-											.formatted(e1.getMessage())))
-							.process().sendMessage(Bukkit.getConsoleSender());
+					MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(String.format(
+							"An error has ocurred trying to retrieve the Protection Block ID from an item: %s",
+							e1.getMessage()))).process().sendMessage(Bukkit.getConsoleSender());
 					e1.printStackTrace();
 				}
 

@@ -182,7 +182,7 @@ public class ProtectionParticlesService {
 
 			Player player = Bukkit.getPlayer(this.playerUuid);
 
-			if (player != null) {
+			if (player != null && this.service.protocolLibApi.isHooked()) {
 				this.service.protocolLibApi.getHook().removeGlowingMagmaCubes(player,
 						new ArrayList<>(magmacubes.values()));
 			}

@@ -129,7 +129,7 @@ public class ProtectionSettings {
 
 	public <T extends Serializable> T getValue(AbstractSetting<T> setting, Player player)
 			throws RoyaleProtectionBlocksExceptionImpl {
-		if (protection.isOwner(player.getUniqueId()) || protection.isMainOwner(player.getUniqueId())) {
+		if (protection.isMainOwner(player.getUniqueId()) || protection.isOwner(player.getUniqueId())) {
 			return getValue(setting, SettingGroup.OWNERS);
 		} else if (protection.isMember(player.getUniqueId())) {
 			return getValue(setting, SettingGroup.MEMBERS);
@@ -168,7 +168,7 @@ public class ProtectionSettings {
 
 	public String getValueAsString(AbstractSetting<?> setting, Player player)
 			throws RoyaleProtectionBlocksExceptionImpl {
-		if (protection.isOwner(player.getUniqueId()) || protection.isMainOwner(player.getUniqueId())) {
+		if (protection.isMainOwner(player.getUniqueId()) || protection.isOwner(player.getUniqueId())) {
 			return getValueAsString(setting, SettingGroup.OWNERS);
 		} else if (protection.isMember(player.getUniqueId())) {
 			return getValueAsString(setting, SettingGroup.MEMBERS);

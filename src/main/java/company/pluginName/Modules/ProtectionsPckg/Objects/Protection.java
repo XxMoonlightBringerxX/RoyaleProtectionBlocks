@@ -24,7 +24,6 @@ import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
 import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
-import company.pluginName.Hooks.VaultAPI.VaultAPI;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
@@ -112,9 +111,6 @@ public class Protection implements IProtection {
 
 	@PandaInject
 	private static WorldGuardAPI worldGuardApi;
-
-	@PandaInject
-	private static VaultAPI vaultApi;
 
 	@PandaInject
 	private static PlayerDataService playerDataService;

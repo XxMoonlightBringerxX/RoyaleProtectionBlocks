@@ -80,10 +80,9 @@ public class EventsUtils {
 				protectionBlockId = ItemStackDataUtilities.getPersistentData(item, plugin,
 						ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
 			} catch (Exception e) {
-				MessageTemplate.inst(PandaPrefixedStringField
-						.applyPrefix("An error has ocurred trying to retrieve the Protection Block ID from an item: %s"
-								.formatted(e.getMessage())))
-						.process().sendMessage(Bukkit.getConsoleSender());
+				MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(String.format(
+						"An error has ocurred trying to retrieve the Protection Block ID from an item: %s",
+						e.getMessage()))).process().sendMessage(Bukkit.getConsoleSender());
 				e.printStackTrace();
 			}
 

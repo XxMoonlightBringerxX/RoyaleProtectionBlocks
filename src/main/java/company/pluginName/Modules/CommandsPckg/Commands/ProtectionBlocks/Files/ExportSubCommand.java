@@ -77,7 +77,8 @@ public class ExportSubCommand extends PandaSubCommand {
 
 					protectionBlocksService.getProtectionBlocks().forEach((id, block) -> {
 						ProtectionBlocksUtils.protectionBlockToMap(block)
-								.forEach((key, value) -> yaml.getRoot().set("%s.%s".formatted(id, key), value));
+								.forEach((key, value) -> yaml.getRoot().set(String
+										.format("%s.%s", id, key), value));
 					});
 
 					try {

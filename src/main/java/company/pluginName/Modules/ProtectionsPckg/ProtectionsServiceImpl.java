@@ -572,7 +572,7 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 							SETTINGS_PROTECTION_ALLOWMULTITHREADSEARCHING.isTrue())
 					.map(prot -> (Protection) prot.getParentProtection()).distinct()
 					.filter(prot -> !prot.isDeleted() && prot.getParentProtection() == prot
-							&& (prot.getOwners().contains(uuid) || prot.getMembers().contains(uuid))));
+							&& (prot.isMainOwner(uuid) || prot.isOwner(uuid) || prot.isMember(uuid))));
 		} catch (Throwable e) {
 			return Collections.<Protection>emptyList().stream();
 		}

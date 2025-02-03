@@ -84,7 +84,7 @@ Items:
       - "&0"
       - "&fWorld: &a{protection_world}"
       - "&fCoords: &eX={protection_location_x} Y={protection_location_y} Z={protection_location_z}"
-      - "&fSize: &c{protectionblock_size_x}x{protectionblock_size_y}x{protectionblock_size_z}"
+      - "&fSize: &c{protectionblock_blocks_x}x{protectionblock_blocks_y}x{protectionblock_blocks_z}"
       - "&fCreation: &b{protection_createddate}"
       - "&fMembers: &d{protection_members_size}"
       - "&fOwner: &3{protection_owner}"

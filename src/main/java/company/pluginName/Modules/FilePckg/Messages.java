@@ -243,4 +243,7 @@ public class Messages {
 	public static final PandaPrefixedStringField ERROR_PROTECTIONS_BLOCKS_NOTFORSALE = new PandaPrefixedStringField(
 			"Error.Protections.Blocks.Not-for-sale", "&cThis protection block is currently not for sale!");
 
+	public static final PandaPrefixedStringField ERROR_UNAVAILABLESTORE = new PandaPrefixedStringField(
+			"Error.Unavailable-store", "&cThis store is currently not available!");
+
 }

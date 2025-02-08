@@ -1,5 +1,9 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -19,13 +23,15 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
 		id = "store",
 		pathName = "Store",
 		defaultName = "store",
-		defaultDescription = "Open the store to purchase protections or protection blocks")
+		defaultDescription = "Open the store to purchase protections or protection blocks",
+		defaultUsage = "['protections'|'blocks']")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
@@ -51,6 +57,32 @@ public class StoreSubCommand extends PandaSubCommand {
 	}
 
 	@Override
+	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
+		if (argIndex == 0) {
+			List<StoreOption> options = new ArrayList<>();
+
+			boolean protectionStoreAvailable = SETTINGS_STORE_ENABLEPROTECTIONSSTORE.isTrue()
+					&& RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+							.getProtectionsStoreEconomyService() != null;
+			boolean protectionBlocksStoreAvailable = SETTINGS_STORE_ENABLEPROTECTIONBLOCKSSTORE.isTrue()
+					&& RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+							.getProtectionBlocksStoreEconomyService() != null;
+
+			if (protectionStoreAvailable) {
+				options.add(StoreOption.PROTECTIONS);
+			}
+
+			if (protectionBlocksStoreAvailable) {
+				options.add(StoreOption.BLOCKS);
+			}
+
+			return options.stream().map(option -> option.name().toLowerCase()).collect(Collectors.toList());
+
+		}
+		return super.generateAutocompleteList(sender, argIndex);
+	}
+
+	@Override
 	public boolean precondition() {
 		boolean protectionStoreAvailable = SETTINGS_STORE_ENABLEPROTECTIONSSTORE.isTrue()
 				&& RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
@@ -65,25 +97,65 @@ public class StoreSubCommand extends PandaSubCommand {
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		Player pl = sender instanceof Player ? (Player) sender : null;
 		if (pl != null) {
-			boolean protectionStoreAvailable = SETTINGS_STORE_ENABLEPROTECTIONSSTORE.isTrue()
-					&& RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
-							.getProtectionsStoreEconomyService() != null;
-			boolean protectionBlocksStoreAvailable = SETTINGS_STORE_ENABLEPROTECTIONBLOCKSSTORE.isTrue()
-					&& RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
-							.getProtectionBlocksStoreEconomyService() != null;
+			if (parameters.getParameters().isEmpty()) {
+				boolean protectionBlocksStoreAvailable = SETTINGS_STORE_ENABLEPROTECTIONBLOCKSSTORE.isTrue()
+						&& RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+								.getProtectionBlocksStoreEconomyService() != null;
+				boolean protectionStoreAvailable = SETTINGS_STORE_ENABLEPROTECTIONSSTORE.isTrue()
+						&& RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+								.getProtectionsStoreEconomyService() != null;
 
-			if (protectionStoreAvailable && protectionBlocksStoreAvailable) {
-				new StoreInventory(pl).openInventory();
-			} else if (protectionStoreAvailable) {
-				new ProtectionsStoreInventory(pl).openInventory();
-			} else if (protectionBlocksStoreAvailable) {
-				new ProtectionBlocksStoreInventory(pl).openInventory();
+				if (protectionStoreAvailable && protectionBlocksStoreAvailable) {
+					new StoreInventory(pl).openInventory();
+				} else if (protectionBlocksStoreAvailable) {
+					new ProtectionBlocksStoreInventory(pl).openInventory();
+				} else if (protectionStoreAvailable) {
+					new ProtectionsStoreInventory(pl).openInventory();
+				} else {
+					MessageTemplate.inst(Messages.ERROR_UNAVAILABLESTORE.applyPrefix()).process().sendMessage(sender);
+				}
 			} else {
-				MessageTemplate.inst(Messages.ERROR_ERROR.applyPrefix()).process().sendMessage(sender);
+				try {
+					StoreOption option = StoreOption.valueOf(parameters.getParameters().get(0).toUpperCase());
+
+					boolean protectionBlocksStoreAvailable = SETTINGS_STORE_ENABLEPROTECTIONBLOCKSSTORE.isTrue()
+							&& RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+									.getProtectionBlocksStoreEconomyService() != null;
+					boolean protectionStoreAvailable = SETTINGS_STORE_ENABLEPROTECTIONSSTORE.isTrue()
+							&& RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+									.getProtectionsStoreEconomyService() != null;
+
+					switch (option) {
+					case BLOCKS:
+						if (protectionBlocksStoreAvailable) {
+							new ProtectionBlocksStoreInventory(pl).openInventory();
+						} else {
+							MessageTemplate.inst(Messages.ERROR_UNAVAILABLESTORE.applyPrefix()).process()
+									.sendMessage(sender);
+						}
+						break;
+					case PROTECTIONS:
+						if (protectionStoreAvailable) {
+							new ProtectionsStoreInventory(pl).openInventory();
+						} else {
+							MessageTemplate.inst(Messages.ERROR_UNAVAILABLESTORE.applyPrefix()).process()
+									.sendMessage(sender);
+						}
+						break;
+					}
+				} catch (IllegalArgumentException e) {
+					MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(getCommandUsage())).process()
+							.sendMessage(sender);
+				}
 			}
 		} else {
 			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 		}
 		return new TrueResponse();
 	}
+
+	public static enum StoreOption {
+		PROTECTIONS, BLOCKS
+	}
+
 }

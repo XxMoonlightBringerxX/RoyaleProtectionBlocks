@@ -617,8 +617,6 @@ public class SQLService extends PandaSQLService {
 
 	public void deleteProtectionBlock(ProtectionBlock protectionBlock) throws RoyaleProtectionBlocksExceptionImpl {
 		try {
-			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTION_BLOCKS_TABLE).setCondition(
-					EqualsCondition.inst(PROTECTION_BLOCKS_TABLE.getColumn("Id"), protectionBlock.getId())));
 			this.getSqlConnection()
 					.executeDelete(DeleteStatement.inst(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE)
 							.setCondition(EqualsCondition.inst(
@@ -626,6 +624,8 @@ public class SQLService extends PandaSQLService {
 									protectionBlock.getId())));
 			this.getSqlConnection().executeDelete(DeleteStatement.inst(RECIPES_TABLE).setCondition(
 					EqualsCondition.inst(RECIPES_TABLE.getColumn("ProtectionBlockId"), protectionBlock.getId())));
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTION_BLOCKS_TABLE).setCondition(
+					EqualsCondition.inst(PROTECTION_BLOCKS_TABLE.getColumn("Id"), protectionBlock.getId())));
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Blocks.Delete.SQL.generateException(e);
 		}

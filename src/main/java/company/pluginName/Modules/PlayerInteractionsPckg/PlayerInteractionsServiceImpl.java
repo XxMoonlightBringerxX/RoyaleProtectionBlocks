@@ -166,7 +166,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 		if (input.getProtectionBlock().getPermission() != null
 				&& !input.getPlayer().hasPermission(input.getProtectionBlock().getPermission())) {
-			throw Exceptions.Protections.Save.PERMISSIONDENIED.generateException();
+			throw Exceptions.Protections.Save.PERMISSIONDENIEDPROTECTIONBLOCK.generateException();
 		}
 
 		ProtectionBlock protectionBlock = protectionBlocksService
@@ -720,10 +720,12 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 				throw Exceptions.Protections.Purchase.NOTFORSALE.generateException();
 			}
 
-			checkIfModifiable(input.getPlayer(), input.getProtection());
+			if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+				throw Exceptions.Protections.INCOMBAT.generateException();
+			}
 
-			if (!ProtectionUtilities.canTransfer(input.getProtection(), input.getPlayer())) {
-				throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+			if (input.getProtection().isDeleted()) {
+				throw Exceptions.Protections.NOTFOUND.generateException();
 			}
 
 			int amountOfProtections = input.getProtection().getChildProtectionsRecursively().size();

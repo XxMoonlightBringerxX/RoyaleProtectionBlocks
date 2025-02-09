@@ -30,6 +30,10 @@ public class Messages {
 			"&7&o(Guarded)");
 	public static final PandaStringField MESSAGE_GENERAL_YES = new PandaStringField("Message.General.Yes", "&aYes");
 	public static final PandaStringField MESSAGE_GENERAL_NO = new PandaStringField("Message.General.No", "&cNo");
+	public static final PandaStringField MESSAGE_GENERAL_TRUE = new PandaStringField("Message.General.True", "&aTrue");
+	public static final PandaStringField MESSAGE_GENERAL_FALSE = new PandaStringField("Message.General.False",
+			"&cFalse");
+	public static final PandaStringField MESSAGE_GENERAL_NULL = new PandaStringField("Message.General.Null", "&7&o");
 
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_CREATEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Created-successfully", "&aThe protection has been created successfully!");
@@ -116,6 +120,10 @@ public class Messages {
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_SETTINGS_SWITCHEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Settings.Switched-successfully",
 			"&aThe value for the setting &e{setting_name} &afor the group &e{group_name} &ahas been switched to &7\"&e{value}&7\" &asuccessfully!");
+
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_PERMISSIONS_SWITCHEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Permissions.Switched-successfully",
+			"&aThe value for the permission &e{permission_name} &afor the group &e{group_name} &ahas been switched to &7\"&e{value}&7\" &asuccessfully!");
 
 	public static final PandaPrefixedStringField MESSAGE_TRANSFER_AVAILABLELIST = new PandaPrefixedStringField(
 			"Message.Transfer.Available-list", "&7Available protection plugins to transfer from: &f{list}");

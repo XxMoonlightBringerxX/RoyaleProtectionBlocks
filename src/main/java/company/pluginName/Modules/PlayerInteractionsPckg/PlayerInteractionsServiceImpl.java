@@ -22,6 +22,7 @@ import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -66,6 +67,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSetHomeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionShowBlockRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSplitRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSwitchPermissionRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSwitchSettingRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTeleportHomeRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionTogglePublicAccessRequestInput;
@@ -108,6 +110,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 	@PandaInject
 	private ProtectionSettingsService protectionSettingsService;
+
+	@PandaInject
+	private ProtectionPermissionsService protectionPermissionsService;
 
 	// TODO: Move to ProtectionSettingsService
 	private @Getter EconomyService protectionsStoreEconomyService;
@@ -788,6 +793,56 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	@Override
 	public <T extends Serializable> void protectionSwitchSettingRequest(ProtectionSwitchSettingRequestInput<T> input)
 			throws RoyaleProtectionBlocksException {
+		throw new UnsupportedOperationException();
+
+//		// Preconditions
+//
+//		checkIfModifiable(input.getPlayer(), input.getProtection());
+//
+//		if (!ProtectionUtilities.canSwitchSettings(input.getProtection(), input.getPlayer())) {
+//			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+//		}
+//
+//		if (protectionSettingsService.getSetting(input.getSetting().getId()) == null) {
+//			throw Exceptions.Protections.Settings.NOTFOUND.generateException();
+//		}
+//
+//		if (input.getSetting().getPermission() != null
+//				&& !input.getPlayer().hasPermission(input.getSetting().getPermission())) {
+//			throw Exceptions.Protections.Settings.PERMISSIONDENIED.generateException();
+//		}
+//
+//		if (input.getSetting().getCost() > 0D && EconomyUtilities.isEconomyEnabled(EconomyService.VAULT)) {
+//			if (!PermissionsService.ECONOMY_BYPASS.hasPermission(input.getPlayer())) {
+//				if (!EconomyUtilities.withdraw(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost())) {
+//					throw Exceptions.Protections.Settings.NOTENOUGHBALANCE.generateException();
+//				} else {
+//					MessageTemplate.inst(MESSAGE_PROTECTION_SETTINGS_CHARGEDSUCCESSFULLY.applyPrefix())
+//							.setReplacements(
+//									new Replacement("{amount}", () -> String.valueOf(input.getSetting().getCost())))
+//							.process().sendMessage(input.getPlayer());
+//				}
+//			}
+//		}
+//
+//		try {
+//			// T previousValue = input.getProtection().getSettingValue(input.getSetting(),
+//			// input.getGroup());
+//
+//			input.getProtection().setSettingValue(input.getSetting(), input.getGroup(), input.getValue());
+//
+//			// TODO Make changes to include setting modification event for discord
+//		} catch (Exception e) {
+//			if (input.getPlayer() != null && input.getSetting().getCost() > 0D) {
+//				EconomyUtilities.deposit(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost());
+//			}
+//			throw Exceptions.Protections.Settings.UNKNOWN.generateException(e);
+//		}
+	}
+
+	@Override
+	public void protectionSwitchPermissionRequest(ProtectionSwitchPermissionRequestInput input)
+			throws RoyaleProtectionBlocksException {
 		// Preconditions
 
 		checkIfModifiable(input.getPlayer(), input.getProtection());
@@ -796,40 +851,38 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 		}
 
-		if (protectionSettingsService.getSetting(input.getSetting().getId()) == null) {
-			throw Exceptions.Protections.Settings.NOTFOUND.generateException();
+		if (protectionPermissionsService.getPermission(input.getPermission().getId()) == null) {
+			throw Exceptions.Protections.Permissions.NOTFOUND.generateException();
 		}
 
-		if (input.getSetting().getPermission() != null
-				&& !input.getPlayer().hasPermission(input.getSetting().getPermission())) {
-			throw Exceptions.Protections.Settings.PERMISSIONDENIED.generateException();
+		if (input.getPermission().getPermission() != null
+				&& !input.getPlayer().hasPermission(input.getPermission().getPermission())) {
+			throw Exceptions.Protections.Permissions.PERMISSIONDENIED.generateException();
 		}
 
-		if (input.getSetting().getCost() > 0D && EconomyUtilities.isEconomyEnabled(EconomyService.VAULT)) {
+		if (input.getPermission().getCost() != null && input.getPermission().getCost() > 0D
+				&& EconomyUtilities.isEconomyEnabled(EconomyService.VAULT)) {
 			if (!PermissionsService.ECONOMY_BYPASS.hasPermission(input.getPlayer())) {
-				if (!EconomyUtilities.withdraw(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost())) {
+				if (!EconomyUtilities.withdraw(EconomyService.VAULT, input.getPlayer(),
+						input.getPermission().getCost())) {
 					throw Exceptions.Protections.Settings.NOTENOUGHBALANCE.generateException();
 				} else {
 					MessageTemplate.inst(MESSAGE_PROTECTION_SETTINGS_CHARGEDSUCCESSFULLY.applyPrefix())
 							.setReplacements(
-									new Replacement("{amount}", () -> String.valueOf(input.getSetting().getCost())))
+									new Replacement("{amount}", () -> String.valueOf(input.getPermission().getCost())))
 							.process().sendMessage(input.getPlayer());
 				}
 			}
 		}
 
 		try {
-			// T previousValue = input.getProtection().getSettingValue(input.getSetting(),
-			// input.getGroup());
-
-			input.getProtection().setSettingValue(input.getSetting(), input.getGroup(), input.getValue());
-
-			// TODO Make changes to include setting modification event for discord
+			input.getProtection().setPermissionValue(input.getPermission(), input.getGroup(), input.getValue());
 		} catch (Exception e) {
-			if (input.getPlayer() != null && input.getSetting().getCost() > 0D) {
-				EconomyUtilities.deposit(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost());
+			if (input.getPlayer() != null && input.getPermission().getCost() != null
+					&& input.getPermission().getCost() > 0D) {
+				EconomyUtilities.deposit(EconomyService.VAULT, input.getPlayer(), input.getPermission().getCost());
 			}
-			throw Exceptions.Protections.Flags.UNKNOWN.generateException(e);
+			throw Exceptions.Protections.Permissions.UNKNOWN.generateException(e);
 		}
 
 	}

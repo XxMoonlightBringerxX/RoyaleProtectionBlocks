@@ -30,12 +30,13 @@ import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
+import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionDisplayItem;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionPlayers;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionSettings;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Permissions.ProtectionPermissionManager;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardFlags;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.SQLPckg.SQLService;
@@ -58,6 +59,7 @@ import lombok.Setter;
 import lombok.ToString;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.SettingGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionMergeEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionSplitEvent;
@@ -67,6 +69,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtecti
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtectionFlags;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.AbstractSetting;
 
 @Data
@@ -122,6 +125,7 @@ public class Protection implements IProtection {
 
 	private ProtectionPlayers players = new ProtectionPlayers(this);
 	private ProtectionSettings settings = new ProtectionSettings(this);
+	private ProtectionPermissionManager permissions = new ProtectionPermissionManager(this);
 	private ProtectionWorldGuardFlags worldGuardFlags = new ProtectionWorldGuardFlags(this);
 	private ProtectionActions actions = new ProtectionActions(this);
 	private ProtectionUtils utils = new ProtectionUtils(this);
@@ -944,24 +948,35 @@ public class Protection implements IProtection {
 	}
 
 	@Override
+	public Boolean getPermissionValue(AbstractPermission setting, Player player)
+			throws RoyaleProtectionBlocksException {
+		return this.permissions.getValue(setting, player);
+	}
+
+	@Override
+	public Boolean getPermissionValue(AbstractPermission setting, PermissionGroup group)
+			throws RoyaleProtectionBlocksException {
+		return this.permissions.getValue(setting, group);
+	}
+
+	@Override
+	public void setPermissionValue(AbstractPermission permission, PermissionGroup group, Boolean value)
+			throws RoyaleProtectionBlocksException {
+		this.permissions.setValue(permission, group, value);
+	}
+
+	@Override
 	public boolean canTeleport(Player player) {
-		try {
-			return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-					|| this.settings.getValue(ProtectionSettingsService.TELEPORT_SETTING, player)
-					|| PermissionsService.TELEPORT_OTHERS.hasPermission(player);
-		} catch (RoyaleProtectionBlocksExceptionImpl e) {
-			return false;
-		}
+		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
+				|| Boolean.TRUE
+						.equals(this.permissions.getValue(ProtectionPermissionsService.TELEPORT_PERMISSION, player))
+				|| PermissionsService.TELEPORT_OTHERS.hasPermission(player);
 	}
 
 	@Override
 	public boolean canFly(Player player) {
-		try {
-			return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-					|| this.settings.getValue(ProtectionSettingsService.FLY_SETTING, player);
-		} catch (RoyaleProtectionBlocksExceptionImpl e) {
-			return false;
-		}
+		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
+				|| Boolean.TRUE.equals(this.permissions.getValue(ProtectionPermissionsService.FLY_PERMISSION, player));
 	}
 
 	private boolean hasStaffMode(Player pl) {

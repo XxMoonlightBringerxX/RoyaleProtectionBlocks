@@ -570,10 +570,42 @@ public class Exceptions {
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_INVALIDGROUP,
 					"Error.Exception.protection.settings.InvalidGroup",
 					"&cYou must provide a valid group: &7{options}");
+			public static final ThrowableField SQL = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_SQL,
+					"Error.Exception.protection.settings.SQL",
+					"&cAn unknown error happened while trying to save the permission in the database. Please contact with an administrator!");
 			public static final ThrowableField UNKNOWN = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_UNKNOWN,
 					"Error.Exception.protection.settings.Unknown",
 					"&cAn unknown error happened while trying to modify the setting. Please contact with an administrator!");
+
+		}
+
+		public static class Permissions {
+
+			public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_PERMISSIONDENIED,
+					"Error.Exception.protection.permissions.PermissionDenied",
+					"&cYou don't have permissions to modify this permission!");
+			public static final ThrowableField NOTENOUGHBALANCE = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_NOTENOUGHBALANCE,
+					"Error.Exception.protection.permissions.NotEnoughBalance",
+					"&cYou don't have enough balance to change this permission!");
+			public static final ThrowableField NOTFOUND = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_NOTFOUND,
+					"Error.Exception.protection.permissions.NotFound", "&cThe specified setting could not be found!");
+			public static final ThrowableField INVALIDGROUP = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_INVALIDGROUP,
+					"Error.Exception.protection.permissions.InvalidGroup",
+					"&cYou must provide a valid group: &7{options}");
+			public static final ThrowableField SQL = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_SQL,
+					"Error.Exception.protection.permissions.SQL",
+					"&cAn unknown error happened while trying to save the permission in the database. Please contact with an administrator!");
+			public static final ThrowableField UNKNOWN = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_UNKNOWN,
+					"Error.Exception.protection.permissions.Unknown",
+					"&cAn unknown error happened while trying to modify the permission. Please contact with an administrator!");
 
 		}
 

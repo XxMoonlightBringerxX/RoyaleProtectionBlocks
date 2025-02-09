@@ -131,6 +131,10 @@ public class ProtectionUtilities {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
 	}
 
+	public static boolean canSwitchPermissions(IProtection protection, Player pl) {
+		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MANAGE_OTHERS.hasPermission(pl);
+	}
+
 	public static boolean canAddOwner(IProtection protection, Player pl) {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.OWNERS_ADD_OTHERS.hasPermission(pl);
 	}

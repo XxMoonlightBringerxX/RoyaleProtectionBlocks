@@ -1,6 +1,5 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,7 +10,7 @@ import org.bukkit.entity.Player;
 import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
+import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -23,20 +22,19 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubComma
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
-import royale.RoyaleProtectionBlocks.Plugin.API.Enums.SettingGroup;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.AbstractSetting;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.BooleanSetting;
-import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSwitchSettingRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSwitchPermissionRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
-		id = "settings",
-		pathName = "Settings",
-		defaultName = "settings",
-		defaultDescription = "Edit the settings of your protection",
-		defaultUsage = "[<setting id> <group> <value> ]",
-		defaultAliases = "st")
+		id = "permissions",
+		pathName = "Permissions",
+		defaultName = "permissions",
+		defaultDescription = "Edit the permissions of your protection",
+		defaultUsage = "[<permission id> <group> <value> ]",
+		defaultAliases = "pe")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
@@ -44,29 +42,28 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 		name = true,
 		permission = true,
 		usage = true)
-public class SettingsSubCommand extends PandaSubCommand {
+public class PermissionsSubCommand extends PandaSubCommand {
 
-	private static final List<String> SETTING_GROUP_VALUES = Arrays.stream(SettingGroup.values())
+	private static final List<String> PERMISSION_GROUP_VALUES = Arrays.stream(PermissionGroup.values())
 			.map(group -> group.name().toLowerCase()).collect(Collectors.toList());
 
+	private static final List<String> PERMISSION_VALUES = Arrays.asList("default", "true", "false");
+
 	@PandaInject
-	private static ProtectionSettingsService protectionSettingsService;
+	private static ProtectionPermissionsService protectionPermissionsService;
 
-	public SettingsSubCommand() throws InstantiationException {
+	public PermissionsSubCommand() throws InstantiationException {
 		super();
-	}
-
-	@Override
-	public boolean precondition() {
-		return false;
 	}
 
 	@Override
 	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
 		if (argIndex == 0) {
-			return protectionSettingsService.getSettingIds();
+			return protectionPermissionsService.getPermissionIds();
 		} else if (argIndex == 1) {
-			return SETTING_GROUP_VALUES;
+			return PERMISSION_GROUP_VALUES;
+		} else if (argIndex == 2) {
+			return PERMISSION_VALUES;
 		}
 		return super.generateAutocompleteList(sender, argIndex);
 	}
@@ -80,36 +77,50 @@ public class SettingsSubCommand extends PandaSubCommand {
 						.findProtectionParentByLocation(pl.getLocation());
 				if (protection != null) {
 					try {
-						AbstractSetting<?> setting = protectionSettingsService
-								.getSetting(parameters.getParameters().get(0));
-						if (setting != null) {
+						AbstractPermission permission = protectionPermissionsService
+								.getPermission(parameters.getParameters().get(0));
+						if (permission != null) {
 							try {
-								SettingGroup group = SettingGroup
+								PermissionGroup group = PermissionGroup
 										.valueOf(parameters.getParameters().get(1).toUpperCase());
 
-								requestSwitch(pl, protection, setting, group,
-										parameters.getParameters().subList(2, parameters.getParameters().size())
-												.stream().collect(Collectors.joining("")));
+								Boolean value = parameters.getParameters().get(2).toLowerCase().equals("default") ? null
+										: Boolean.valueOf(parameters.getParameters().get(2));
 
-								MessageTemplate
-										.inst(Messages.MESSAGE_PROTECTIONS_SETTINGS_SWITCHEDSUCCESSFULLY.applyPrefix())
-										.setReplacements(new Replacement("{setting_name}", () -> setting.getName()),
-												new Replacement("{group_name}", () -> group.name().toLowerCase()),
-												new Replacement("{value}", () -> {
-													try {
-														return protection.getSettingValueAsString(setting, group);
-													} catch (RoyaleProtectionBlocksException e) {
-														return "???";
-													}
-												}))
-										.process().sendMessage(pl);
+								RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+										.protectionSwitchPermissionRequest(ProtectionSwitchPermissionRequestInput
+												.inst(pl, protection, permission, group, value));
+
+								try {
+									Boolean currentValue = protection.getPermissionValue(permission, group);
+
+									MessageTemplate
+											.inst(Messages.MESSAGE_PROTECTIONS_PERMISSIONS_SWITCHEDSUCCESSFULLY
+													.applyPrefix())
+											.setReplacements(
+													new Replacement("{permission_name}",
+															() -> permission.getDisplayName() != null
+																	? permission.getDisplayName()
+																	: permission.getId()),
+													new Replacement("{group_name}", () -> group.name().toLowerCase()),
+													new Replacement("{value}",
+															() -> currentValue != null
+																	? (Boolean.TRUE.equals(currentValue)
+																			? Messages.MESSAGE_GENERAL_TRUE.getContent()
+																			: Messages.MESSAGE_GENERAL_FALSE
+																					.getContent())
+																	: Messages.MESSAGE_GENERAL_NULL.getContent()))
+											.process().sendMessage(pl);
+								} catch (RoyaleProtectionBlocksException e) {
+									e.sendError(sender);
+								}
 							} catch (IllegalArgumentException e) {
 								throw Exceptions.Protections.Settings.INVALIDVALUE.generateException()
-										.setReplacements(new Replacement("{options}",
-												() -> SETTING_GROUP_VALUES.stream().collect(Collectors.joining(", "))));
+										.setReplacements(new Replacement("{options}", () -> PERMISSION_GROUP_VALUES
+												.stream().collect(Collectors.joining(", "))));
 							}
 						} else {
-							throw Exceptions.Protections.Settings.NOTFOUND.generateException();
+							throw Exceptions.Protections.Permissions.NOTFOUND.generateException();
 						}
 					} catch (RoyaleProtectionBlocksException e) {
 						e.sendError(pl);
@@ -125,17 +136,6 @@ public class SettingsSubCommand extends PandaSubCommand {
 			MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
 		}
 		return new TrueResponse();
-	}
-
-	private <T extends Serializable> void requestSwitch(Player pl, Protection protection, AbstractSetting<T> setting,
-			SettingGroup group, String value) throws RoyaleProtectionBlocksException {
-		if (setting instanceof BooleanSetting) {
-			RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
-					.protectionSwitchSettingRequest(ProtectionSwitchSettingRequestInput.inst(pl, protection, setting,
-							group, setting.parseStringToValue(value)));
-		} else {
-			throw Exceptions.Protections.Settings.NOTFOUND.generateException();
-		}
 	}
 
 }

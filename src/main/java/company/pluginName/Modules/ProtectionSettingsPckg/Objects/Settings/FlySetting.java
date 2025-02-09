@@ -1,4 +1,4 @@
-package company.pluginName.Modules.ProtectionSettingsPckg.Objects;
+package company.pluginName.Modules.ProtectionSettingsPckg.Objects.Settings;
 
 import java.util.Arrays;
 

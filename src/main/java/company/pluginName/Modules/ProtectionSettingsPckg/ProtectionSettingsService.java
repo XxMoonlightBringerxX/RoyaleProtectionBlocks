@@ -9,13 +9,11 @@ import java.util.Map;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.FilePckg.FilesService;
-import company.pluginName.Modules.ProtectionSettingsPckg.Objects.FlySetting;
-import company.pluginName.Modules.ProtectionSettingsPckg.Objects.TeleportSetting;
+import company.pluginName.Modules.ProtectionSettingsPckg.Objects.Settings.FlySetting;
+import company.pluginName.Modules.ProtectionSettingsPckg.Objects.Settings.TeleportSetting;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject.PostInjectMethod;
-import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
-import darkpanda73.PandaUtils.PandaPlugin.Enums.LoadStep;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
 import darkpanda73.PandaUtils.PandaYaml.Exceptions.YamlException;
@@ -28,7 +26,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.DoubleSetting;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.StringListSetting;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.StringSetting;
 
-@PandaService(loadOn = LoadStep.ENABLE, priority = 998)
+//@PandaService(loadOn = LoadStep.ENABLE, priority = 998)
 public class ProtectionSettingsService {
 
 	public static final FlySetting FLY_SETTING = new FlySetting();

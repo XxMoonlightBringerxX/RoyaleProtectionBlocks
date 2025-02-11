@@ -190,16 +190,6 @@ public class ProtectionUtilities {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.SPLIT_OTHERS.hasPermission(pl);
 	}
 
-	public static boolean canHideBlock(IProtection protection, Player pl) {
-		return protection.isMainOwner(pl.getUniqueId()) || protection.isOwner(pl.getUniqueId())
-				|| PermissionsService.HIDE_OTHERS.hasPermission(pl);
-	}
-
-	public static boolean canShowBlock(IProtection protection, Player pl) {
-		return protection.isMainOwner(pl.getUniqueId()) || protection.isOwner(pl.getUniqueId())
-				|| PermissionsService.SHOW_OTHERS.hasPermission(pl);
-	}
-
 	public static boolean canTransfer(IProtection protection, Player pl) {
 		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.TRANSFER_OTHERS.hasPermission(pl);
 	}

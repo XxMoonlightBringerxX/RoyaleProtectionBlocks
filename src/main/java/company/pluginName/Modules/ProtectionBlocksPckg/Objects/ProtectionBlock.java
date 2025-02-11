@@ -43,7 +43,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.Pro
 public class ProtectionBlock implements IProtectionBlock {
 
 	@RegisteredPandaField("lang")
-	private static final PandaPrefixedStringField MESSAGE_PROTECTION_FLAGS_CHARGEDSUCCESSFULLY = new PandaPrefixedStringField(
+	private static final PandaPrefixedStringField MESSAGE_PROTECTION_BLOCKS_CHARGEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protection.Blocks.Charged-successfully", "&aYou've been charged a total amount of &e{amount}$");
 
 	@PandaInject
@@ -92,7 +92,7 @@ public class ProtectionBlock implements IProtectionBlock {
 					if (EconomyUtilities.withdraw(RoyaleProtectionBlocksAPIImpl.getInstance()
 							.getPlayerInteractionsService().getProtectionBlocksStoreEconomyService(), pl, getPrice())) {
 						pl.getInventory().addItem(item);
-						MessageTemplate.inst(MESSAGE_PROTECTION_FLAGS_CHARGEDSUCCESSFULLY.applyPrefix())
+						MessageTemplate.inst(MESSAGE_PROTECTION_BLOCKS_CHARGEDSUCCESSFULLY.applyPrefix())
 								.setReplacements(new Replacement("{amount}", () -> String.valueOf(getPrice())))
 								.process().sendMessage(pl);
 					} else {

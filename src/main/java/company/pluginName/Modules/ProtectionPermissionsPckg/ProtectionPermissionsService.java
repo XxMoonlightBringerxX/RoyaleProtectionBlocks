@@ -1,4 +1,4 @@
-package company.pluginName.Modules.ProtectionSettingsPckg;
+package company.pluginName.Modules.ProtectionPermissionsPckg;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -9,9 +9,10 @@ import java.util.Map;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.FilePckg.FilesService;
-import company.pluginName.Modules.ProtectionSettingsPckg.Objects.Permissions.AbstractPermissionImpl;
-import company.pluginName.Modules.ProtectionSettingsPckg.Objects.Permissions.FlyPermission;
-import company.pluginName.Modules.ProtectionSettingsPckg.Objects.Permissions.TeleportPermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.AbstractPermissionImpl;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.FlyPermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.TeleportPermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.ToggleBlockVisibilityPermission;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject.PostInjectMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
@@ -30,6 +31,7 @@ public class ProtectionPermissionsService {
 
 	public static final FlyPermission FLY_PERMISSION = new FlyPermission();
 	public static final TeleportPermission TELEPORT_PERMISSION = new TeleportPermission();
+	public static final ToggleBlockVisibilityPermission TOGGLEBLOCKVISIBILITY_PERMISSION = new ToggleBlockVisibilityPermission();
 
 	@PandaInject
 	private MainPluginClass plugin;
@@ -47,6 +49,7 @@ public class ProtectionPermissionsService {
 	public ProtectionPermissionsService() {
 		registerPermission(FLY_PERMISSION);
 		registerPermission(TELEPORT_PERMISSION);
+		registerPermission(TOGGLEBLOCKVISIBILITY_PERMISSION);
 	}
 
 	@PostInjectMethod
@@ -106,8 +109,7 @@ public class ProtectionPermissionsService {
 		if (!loaded) {
 			this.registeredPermissions.put(permission.getId(), permission);
 		} else {
-			throw new UnsupportedOperationException(
-					"You can't reqgister permissions when the plugin is already loaded");
+			throw new UnsupportedOperationException("You can't register permissions when the plugin is already loaded");
 		}
 	}
 
@@ -115,7 +117,7 @@ public class ProtectionPermissionsService {
 		return new ArrayList<>(this.registeredPermissions.keySet());
 	}
 
-	public List<AbstractPermission> getPermission() {
+	public List<AbstractPermission> getPermissions() {
 		return new ArrayList<>(this.registeredPermissions.values());
 	}
 

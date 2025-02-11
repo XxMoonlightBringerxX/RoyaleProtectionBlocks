@@ -7,7 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionPermissionsService;
+import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;

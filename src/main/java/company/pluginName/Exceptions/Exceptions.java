@@ -593,7 +593,16 @@ public class Exceptions {
 					"&cYou don't have enough balance to change this permission!");
 			public static final ThrowableField NOTFOUND = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_NOTFOUND,
-					"Error.Exception.protection.permissions.NotFound", "&cThe specified setting could not be found!");
+					"Error.Exception.protection.permissions.NotFound",
+					"&cThe specified permission could not be found!");
+			public static final ThrowableField NOTEDITABLE = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_NOTEDITABLE,
+					"Error.Exception.protection.permissions.NotEditable",
+					"&cThe specified permission cannot be edited!");
+			public static final ThrowableField NOTEDITABLEGROUP = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_NOTEDITABLEGROUP,
+					"Error.Exception.protection.permissions.NotEditableGroup",
+					"&cThe specified group cannot be edited!");
 			public static final ThrowableField INVALIDGROUP = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_PERMISSIONS_INVALIDGROUP,
 					"Error.Exception.protection.permissions.InvalidGroup",

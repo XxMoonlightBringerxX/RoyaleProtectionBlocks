@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionPermissionsService;
+import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
@@ -59,7 +59,8 @@ public class PermissionsSubCommand extends PandaSubCommand {
 	@Override
 	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
 		if (argIndex == 0) {
-			return protectionPermissionsService.getPermissionIds();
+			return protectionPermissionsService.getPermissions().stream().filter(AbstractPermission::isEditable)
+					.map(AbstractPermission::getId).collect(Collectors.toList());
 		} else if (argIndex == 1) {
 			return PERMISSION_GROUP_VALUES;
 		} else if (argIndex == 2) {
@@ -91,29 +92,22 @@ public class PermissionsSubCommand extends PandaSubCommand {
 										.protectionSwitchPermissionRequest(ProtectionSwitchPermissionRequestInput
 												.inst(pl, protection, permission, group, value));
 
-								try {
-									Boolean currentValue = protection.getPermissionValue(permission, group);
+								Boolean currentValue = protection.getPermissionValue(permission, group);
 
-									MessageTemplate
-											.inst(Messages.MESSAGE_PROTECTIONS_PERMISSIONS_SWITCHEDSUCCESSFULLY
-													.applyPrefix())
-											.setReplacements(
-													new Replacement("{permission_name}",
-															() -> permission.getDisplayName() != null
-																	? permission.getDisplayName()
-																	: permission.getId()),
-													new Replacement("{group_name}", () -> group.name().toLowerCase()),
-													new Replacement("{value}",
-															() -> currentValue != null
-																	? (Boolean.TRUE.equals(currentValue)
-																			? Messages.MESSAGE_GENERAL_TRUE.getContent()
-																			: Messages.MESSAGE_GENERAL_FALSE
-																					.getContent())
-																	: Messages.MESSAGE_GENERAL_NULL.getContent()))
-											.process().sendMessage(pl);
-								} catch (RoyaleProtectionBlocksException e) {
-									e.sendError(sender);
-								}
+								MessageTemplate
+										.inst(Messages.MESSAGE_PROTECTIONS_PERMISSIONS_SWITCHEDSUCCESSFULLY
+												.applyPrefix())
+										.setReplacements(new Replacement("{permission_name}",
+												() -> permission.getDisplayName() != null ? permission.getDisplayName()
+														: permission.getId()),
+												new Replacement("{group_name}", () -> group.name().toLowerCase()),
+												new Replacement("{value}",
+														() -> currentValue != null
+																? (Boolean.TRUE.equals(currentValue)
+																		? Messages.MESSAGE_GENERAL_TRUE.getContent()
+																		: Messages.MESSAGE_GENERAL_FALSE.getContent())
+																: Messages.MESSAGE_GENERAL_NULL.getContent()))
+										.process().sendMessage(pl);
 							} catch (IllegalArgumentException e) {
 								throw Exceptions.Protections.Settings.INVALIDVALUE.generateException()
 										.setReplacements(new Replacement("{options}", () -> PERMISSION_GROUP_VALUES

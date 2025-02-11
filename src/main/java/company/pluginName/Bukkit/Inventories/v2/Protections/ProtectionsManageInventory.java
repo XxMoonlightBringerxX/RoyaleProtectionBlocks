@@ -13,6 +13,7 @@ import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBanne
 import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Merge.ProtectionMergeInventory;
+import company.pluginName.Bukkit.Inventories.Protections.Permissions.ProtectionsPermissionsListInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Split.ProtectionSplitInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
@@ -149,12 +150,10 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@ItemGenerator("Toggle-block-button")
 	private ItemStack generateToggleBlockButton(Item item) {
-		return (protection.getUtils().isProtectionBlockShown()
-				? ProtectionUtilities.canHideBlock(protection, getPlayer())
-				: ProtectionUtilities.canShowBlock(protection, getPlayer()))
-						? item.getItems().get(protection.getUtils().isProtectionBlockShown() ? Item.DISPLAYITEM_KEY
-								: TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH)
-						: null;
+		return protection.canToggleBlockVisibility(getPlayer())
+				? item.getItems().get(protection.getUtils().isProtectionBlockShown() ? Item.DISPLAYITEM_KEY
+						: TOGGLEBLOCKBUTTON_SHOWBLOCKITEM_PATH)
+				: null;
 	}
 
 	@ItemGenerator("Price-button")
@@ -327,6 +326,11 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 		PlayerData pd = playerDataService.getPlayerData(getPlayer());
 		protectionParticlesService.toggleView(getPlayer(), pd.isStaffMode());
 		updateInventory();
+	}
+
+	@ItemExecutor("Permissions-button")
+	private void executePermissionsButton() {
+		new ProtectionsPermissionsListInventory(getPlayer(), protection).openInventory();
 	}
 
 }

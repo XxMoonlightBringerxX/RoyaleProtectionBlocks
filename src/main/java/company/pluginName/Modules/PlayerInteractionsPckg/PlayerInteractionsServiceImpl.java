@@ -22,7 +22,7 @@ import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionPermissionsService;
+import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -593,7 +593,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 				throw Exceptions.Protections.INCOMBAT.generateException();
 			}
 
-			if (!ProtectionUtilities.canHideBlock(input.getProtection(), input.getPlayer())) {
+			if (!input.getProtection().canToggleBlockVisibility(input.getPlayer())) {
 				throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 			}
 
@@ -625,7 +625,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		try {
 			checkIfModifiable(input.getPlayer(), input.getProtection());
 
-			if (!ProtectionUtilities.canHideBlock(input.getProtection(), input.getPlayer())) {
+			if (!input.getProtection().canToggleBlockVisibility(input.getPlayer())) {
 				throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 			}
 
@@ -853,6 +853,14 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 		if (protectionPermissionsService.getPermission(input.getPermission().getId()) == null) {
 			throw Exceptions.Protections.Permissions.NOTFOUND.generateException();
+		}
+
+		if (!input.getPermission().isEditable()) {
+			throw Exceptions.Protections.Permissions.NOTEDITABLE.generateException();
+		}
+
+		if (!input.getPermission().isEditable(input.getGroup())) {
+			throw Exceptions.Protections.Permissions.NOTEDITABLEGROUP.generateException();
 		}
 
 		if (input.getPermission().getPermission() != null

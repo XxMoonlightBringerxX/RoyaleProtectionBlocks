@@ -30,7 +30,7 @@ import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
-import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionPermissionsService;
+import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionDisplayItem;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionPlayers;
@@ -52,6 +52,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPan
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -123,13 +124,13 @@ public class Protection implements IProtection {
 	private @ToString.Include long createdDate;
 	private ReferencedProtectionBlock referencedProtectionBlock;
 
-	private ProtectionPlayers players = new ProtectionPlayers(this);
-	private ProtectionSettings settings = new ProtectionSettings(this);
-	private ProtectionPermissionManager permissions = new ProtectionPermissionManager(this);
-	private ProtectionWorldGuardFlags worldGuardFlags = new ProtectionWorldGuardFlags(this);
-	private ProtectionActions actions = new ProtectionActions(this);
-	private ProtectionUtils utils = new ProtectionUtils(this);
-	private ProtectionDisplayItem displayItem = new ProtectionDisplayItem(this);
+	private @Setter(AccessLevel.NONE) ProtectionPlayers players = new ProtectionPlayers(this);
+	private @Setter(AccessLevel.NONE) ProtectionSettings settings = new ProtectionSettings(this);
+	private @Setter(AccessLevel.NONE) ProtectionPermissionManager permissions = new ProtectionPermissionManager(this);
+	private @Setter(AccessLevel.NONE) ProtectionWorldGuardFlags worldGuardFlags = new ProtectionWorldGuardFlags(this);
+	private @Setter(AccessLevel.NONE) ProtectionActions actions = new ProtectionActions(this);
+	private @Setter(AccessLevel.NONE) ProtectionUtils utils = new ProtectionUtils(this);
+	private @Setter(AccessLevel.NONE) ProtectionDisplayItem displayItem = new ProtectionDisplayItem(this);
 
 	private boolean deleted = false;
 
@@ -948,20 +949,17 @@ public class Protection implements IProtection {
 	}
 
 	@Override
-	public Boolean getPermissionValue(AbstractPermission setting, Player player)
-			throws RoyaleProtectionBlocksException {
+	public Boolean getPermissionValue(AbstractPermission setting, Player player) {
 		return this.permissions.getValue(setting, player);
 	}
 
 	@Override
-	public Boolean getPermissionValue(AbstractPermission setting, PermissionGroup group)
-			throws RoyaleProtectionBlocksException {
+	public Boolean getPermissionValue(AbstractPermission setting, PermissionGroup group) {
 		return this.permissions.getValue(setting, group);
 	}
 
 	@Override
-	public void setPermissionValue(AbstractPermission permission, PermissionGroup group, Boolean value)
-			throws RoyaleProtectionBlocksException {
+	public void setPermissionValue(AbstractPermission permission, PermissionGroup group, Boolean value) {
 		this.permissions.setValue(permission, group, value);
 	}
 
@@ -977,6 +975,13 @@ public class Protection implements IProtection {
 	public boolean canFly(Player player) {
 		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
 				|| Boolean.TRUE.equals(this.permissions.getValue(ProtectionPermissionsService.FLY_PERMISSION, player));
+	}
+
+	@Override
+	public boolean canToggleBlockVisibility(Player player) {
+		return this.isMainOwner(player.getUniqueId()) || hasStaffMode(player)
+				|| this.permissions.getValue(ProtectionPermissionsService.TOGGLEBLOCKVISIBILITY_PERMISSION, player)
+				|| PermissionsService.HIDE_OTHERS.hasPermission(player);
 	}
 
 	private boolean hasStaffMode(Player pl) {

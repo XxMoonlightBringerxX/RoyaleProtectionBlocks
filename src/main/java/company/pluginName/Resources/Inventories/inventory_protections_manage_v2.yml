@@ -61,6 +61,12 @@ Items:
       Amount: 1
       Name: "&eShow protection"
     Slots: "20"
+  Permissions-button:
+    Display-item:
+      Type: "OAK_FENCE_GATE"
+      Amount: 1
+      Name: "&ePermissions"
+    Slots: "21"
   # Temporary button, upgrade on next updates
   Toggle-boundary-button:
     Display-item:

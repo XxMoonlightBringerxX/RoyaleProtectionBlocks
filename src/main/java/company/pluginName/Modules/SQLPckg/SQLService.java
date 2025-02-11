@@ -834,8 +834,10 @@ public class SQLService extends PandaSQLService {
 		InsertStatement insertStatement = InsertStatement.inst(PROTECTION_PERMISSIONS_TABLE)
 				.addEntry(protectionId, protectionPermission.getId(), protectionPermission.getNonMembersValue(),
 						protectionPermission.getMembersValue(), protectionPermission.getOwnersValue())
-				.setConditionIfExists(
-						EqualsCondition.inst(PROTECTION_PERMISSIONS_TABLE.getColumn("RegionId"), protectionId));
+				.setConditionIfExists(AndCondition.inst(
+						EqualsCondition.inst(PROTECTION_PERMISSIONS_TABLE.getColumn("RegionId"), protectionId),
+						EqualsCondition.inst(PROTECTION_PERMISSIONS_TABLE.getColumn("PermissionId"),
+								protectionPermission.getId())));
 
 		try {
 			this.getSqlConnection().executeInsert(insertStatement);

@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -49,6 +50,11 @@ public class RemoveOwnerSubCommand extends PandaSubCommand {
 
 	public RemoveOwnerSubCommand() throws InstantiationException {
 		super();
+	}
+
+	@Override
+	public boolean precondition() {
+		return Settings.SETTINGS_PROTECTION_ALLOWMEMBERPROMOTIONS.isTrue();
 	}
 
 	@Override

@@ -40,6 +40,8 @@ public class ProtectionCreationRemovalListener implements Listener {
 
 	@EventHandler
 	public void onProtectionCreation(ProtectionCreationEvent e) {
+		e.getProtection().showBlock();
+
 		if (e.getCause() == CreationCause.PLAYER) {
 			Debugger.log(MessageType.PROTECTION_CREATION,
 					() -> new Object[] { e.getExecutor().getName(),

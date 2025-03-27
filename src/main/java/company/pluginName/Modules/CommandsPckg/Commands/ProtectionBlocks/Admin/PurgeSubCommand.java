@@ -30,8 +30,8 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 		id = "purge",
 		pathName = "Purge",
 		defaultName = "purge",
-		defaultDescription = "Delete protections older than the specified time, based on the last connection of the owner or their creation date",
-		defaultUsage = "[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--show-ignored-players] [--export-only] [confirm]",
+		defaultDescription = "Delete protections older than the specified time, based on the last connection of the owner.",
+		defaultUsage = "[--days <amount of days>] [--hours <amount of hours>] [--minutes <amount of minutes>] [--worlds <world1;world2;...>] [--show-ignored-players] [--export-only] [confirm]",
 		defaultAliases = "p",
 		defaultPermission = "protectionblocks.admin.purge")
 @PandaCommandAnnotation.Customizable(
@@ -43,8 +43,8 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Enums.RemovalCause;
 		usage = true)
 public class PurgeSubCommand extends PandaSubCommand {
 
-	private static final List<String> ARGS = Arrays.asList("--export-only", "--show-ignored-players", "--days",
-			"--hours", "--minutes", "confirm");
+	private static final List<String> ARGS = Arrays.asList("--export-only", "--show-ignored-players", "--wolds",
+			"--days", "--hours", "--minutes", "confirm");
 
 	@PandaInject
 	private static ProtectionsPurgeService protectionsPurgeService;
@@ -110,6 +110,17 @@ public class PurgeSubCommand extends PandaSubCommand {
 									.process().sendMessage(sender);
 						}
 					});
+				case "--worlds":
+					if (parameters.getParameters().size() > i + 1) {
+						String worlds = parameters.getParameters().get(++i);
+
+						purgeConfiguration.getWorldsNames().addAll(Arrays.asList(worlds.split(";")));
+					} else {
+						MessageTemplate.inst(Messages.ERROR_PURGE_NOVALUEFORPARAMETER.applyPrefix()).process()
+								.sendMessage(sender);
+						return new TrueResponse();
+					}
+					break;
 				case "--show-ignored-players":
 					purgeConfiguration.setShowIgnoredPlayers(true);
 					break;
@@ -143,6 +154,7 @@ public class PurgeSubCommand extends PandaSubCommand {
 					} else {
 						MessageTemplate.inst(Messages.ERROR_PURGE_NOVALUEFORPARAMETER.applyPrefix()).process()
 								.sendMessage(sender);
+						return new TrueResponse();
 					}
 					break;
 				default:

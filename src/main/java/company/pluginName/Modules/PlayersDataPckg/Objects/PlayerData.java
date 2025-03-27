@@ -8,12 +8,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoubleField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
@@ -40,6 +44,13 @@ public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataM
 	private static final PandaDoubleField SETTINGS_PROTECTION_TELEPORTSTAYSTILLFORSECONDS = new PandaDoubleField(
 			"Settings.Protection.Teleport-stay-still-for-seconds", 0D);
 
+	@RegisteredPandaField("config")
+	private static final PandaBooleanField SETTINGS_PLAYERSETTINGS_DEFAULTS_AUTOFLIGHT = new PandaBooleanField(
+			"Settings.Player-settings.Defaults.Auto-flight", false);
+
+	@PandaInject
+	private static SQLService sqlService;
+
 	private @Setter(AccessLevel.NONE) Pair<Protection, Long> lastTeleport;
 	private @Setter(AccessLevel.NONE) @Getter(AccessLevel.NONE) BukkitTask task;
 	private List<? extends IProtection> currentProtections = new ArrayList<>();
@@ -48,8 +59,22 @@ public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataM
 	private long lastBlockedProtectionMessage = 0L;
 	private boolean staffMode = false;
 
+	private boolean autoFlight = SETTINGS_PLAYERSETTINGS_DEFAULTS_AUTOFLIGHT.isTrue();
+
 	public PlayerData(UUID uuid) {
 		super(uuid);
+	}
+
+	public void setAutoFlightAndSave(boolean autoFlight) {
+		this.setAutoFlight(autoFlight);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.savePlayerData(this);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
 	}
 
 	public void setLastTeleport(Protection protection) {

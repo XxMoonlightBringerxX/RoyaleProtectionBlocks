@@ -103,8 +103,7 @@ Message:
     - ""
   
   Purge: 
-    Warning: "&7You're about to delete a total amount of &e{amount} &7protection=
-      new PandaPrefixedStringField(s) depending on the player's last playtime,
+    Warning: "&7You're about to delete a total amount of &e{amount} &7protection(s) depending on the player's last playtime,
       some protections may be lost if any error occurs. If there may be
       some important protections you want to prevent from being removed,
       remember to make a backup just in case. Please, type &e{command}
@@ -114,8 +113,7 @@ Message:
     End: "&aPurge finished! A total amount of &e{amount} &aprotection(s) has been purged."
     Error: "&7A total amount of &e{amount} protection(s)
       couldn't be purged. Check the console to see the related errors."
-    Export-end: "&aExportation finished! A total amount of &e{amount} &aprotection=
-      new PandaPrefixedStringField(s) has been found and exported to a
+    Export-end: "&aExportation finished! A total amount of &e{amount} &aprotection(s) has been found and exported to a
       new JSON file called '&e{file}' on your plugin's directory."
   
   Files: 

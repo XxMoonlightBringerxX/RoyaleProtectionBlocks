@@ -82,10 +82,9 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 				} catch (RoyaleProtectionBlocksException e1) {
 					e1.sendError(getPlayer());
 				}
-				openInventory();
-			} else {
-				openInventory();
+				updateEntityList();
 			}
+			openInventory();
 		}, (player) -> !protection.isMainOwner(player.getUuid())).openInventory();
 	}
 
@@ -97,7 +96,7 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 
 		ItemBuilder builder = ItemBuilder.inst().setMaterial(Material.PLAYER_HEAD)
 				.fromMap(getChestInventoryData().getCustomFields(), PagedChestInventoryData.ENTITY_PATH)
-				.setReplacements(new Replacement("{player}", () -> pl.getName()));
+				.setReplacements(new Replacement("{player}", () -> pl != null ? pl.getName() : "???"));
 
 		List<String> lore = builder.getLore();
 		if (canRemove) {
@@ -121,11 +120,8 @@ public class ProtectionBannedsInventory extends PagedChestInventoryObject<UUID> 
 				} catch (RoyaleProtectionBlocksException e1) {
 					e1.sendError(getPlayer());
 				}
-
-				if (!entity.equals(getPlayer().getUniqueId())) {
-					openInventory();
-				}
-			}).setPreviousInventory(null).openInventory();
+				updateEntityList();
+			}).openInventory();
 		}
 	}
 

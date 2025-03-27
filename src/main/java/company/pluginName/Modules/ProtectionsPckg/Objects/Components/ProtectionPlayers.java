@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -32,6 +31,17 @@ public class ProtectionPlayers {
 		this.worldGuardOwners = new ProtectionWorldGuardOwners(protection);
 	}
 
+	public void clearAll() {
+		this.members.clear();
+		this.owners.clear();
+		this.banneds.clear();
+
+		this.worldGuardMembers.clear();
+		this.worldGuardOwners.clear();
+
+		this.worldGuardOwners.add(this.protection.getOwnerUuid());
+	}
+
 	/*
 	 * Members methods
 	 */
@@ -46,18 +56,18 @@ public class ProtectionPlayers {
 		this.members.add(memberUuid);
 		this.worldGuardMembers.add(memberUuid);
 
-		if (this.owners.contains(memberUuid)) {
-			this.protection.removeOwnerAndSave(memberUuid);
-		}
-
 		if (this.banneds.contains(memberUuid)) {
 			this.protection.removeBannedAndSave(memberUuid);
 		}
 	}
 
-	public void removeMember(UUID memberUuid) throws RoyaleProtectionBlocksExceptionImpl {
+	public void removeMember(UUID memberUuid) throws RoyaleProtectionBlocksException {
 		this.members.remove(memberUuid);
 		this.worldGuardMembers.remove(memberUuid);
+
+		if (this.owners.contains(memberUuid)) {
+			this.protection.removeOwnerAndSave(memberUuid);
+		}
 	}
 
 	/*
@@ -74,8 +84,8 @@ public class ProtectionPlayers {
 		this.owners.add(ownerUuid);
 		this.worldGuardOwners.add(ownerUuid);
 
-		if (this.members.contains(ownerUuid)) {
-			this.protection.removeMemberAndSave(ownerUuid);
+		if (!this.members.contains(ownerUuid)) {
+			this.protection.addMemberAndSave(ownerUuid);
 		}
 
 		if (this.banneds.contains(ownerUuid)) {
@@ -83,7 +93,11 @@ public class ProtectionPlayers {
 		}
 	}
 
-	public void removeOwner(UUID ownerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+	public void removeOwner(UUID ownerUuid) throws RoyaleProtectionBlocksException {
+		if (this.protection.isMainOwner(ownerUuid)) {
+			throw Exceptions.Protections.Owners.Delete.CANNOTDELETEPROTECTIONOWNER.generateException();
+		}
+
 		this.owners.remove(ownerUuid);
 		this.worldGuardOwners.remove(ownerUuid);
 	}
@@ -106,7 +120,7 @@ public class ProtectionPlayers {
 		}
 
 		if (this.owners.contains(bannedUuid)) {
-			this.protection.removeMemberAndSave(bannedUuid);
+			this.protection.removeOwnerAndSave(bannedUuid);
 		}
 
 		Player bannedPlayer = Bukkit.getPlayer(bannedUuid);

@@ -11,6 +11,7 @@ import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.AbstractPermissionImpl;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.FlyPermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.RideVehiclesPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.TeleportPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.ToggleBlockVisibilityPermission;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -32,6 +33,7 @@ public class ProtectionPermissionsService {
 	public static final FlyPermission FLY_PERMISSION = new FlyPermission();
 	public static final TeleportPermission TELEPORT_PERMISSION = new TeleportPermission();
 	public static final ToggleBlockVisibilityPermission TOGGLEBLOCKVISIBILITY_PERMISSION = new ToggleBlockVisibilityPermission();
+	public static final RideVehiclesPermission RIDEVEHICLES_PERMISSION = new RideVehiclesPermission();
 
 	@PandaInject
 	private MainPluginClass plugin;
@@ -50,6 +52,7 @@ public class ProtectionPermissionsService {
 		registerPermission(FLY_PERMISSION);
 		registerPermission(TELEPORT_PERMISSION);
 		registerPermission(TOGGLEBLOCKVISIBILITY_PERMISSION);
+		registerPermission(RIDEVEHICLES_PERMISSION);
 	}
 
 	@PostInjectMethod

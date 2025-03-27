@@ -56,7 +56,8 @@ public class SearchPlayerInventory extends PagedChestInventoryObject<PandaCached
 	protected List<? extends PandaCachedPlayer> getEntityList() {
 		return Bukkit.getOnlinePlayers().stream().filter(p -> getPlayer().canSee(p))
 				.map(p -> cachedPlayersService.getCachedPlayer(p))
-				.filter(p -> filterFunction == null || filterFunction.apply(p)).collect(Collectors.toList());
+				.filter(p -> p != null && (filterFunction == null || filterFunction.apply(p)))
+				.collect(Collectors.toList());
 	}
 
 	@Override

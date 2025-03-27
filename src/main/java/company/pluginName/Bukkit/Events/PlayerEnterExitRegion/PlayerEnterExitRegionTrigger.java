@@ -1,5 +1,6 @@
 package company.pluginName.Bukkit.Events.PlayerEnterExitRegion;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,7 +38,7 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 	@PandaInject
 	private PlayerDataService playerDataService;
 
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
 	public void onPlayerMove(PlayerMoveEvent e) {
 		Block fromBlock = e.getFrom().getBlock();
 		Block toBlock = e.getTo().getBlock();
@@ -48,7 +49,7 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 		}
 	}
 
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
 	public void onPlayerTeleport(PlayerTeleportEvent e) {
 		Block fromBlock = e.getFrom().getBlock();
 		Block toBlock = e.getTo().getBlock();
@@ -66,28 +67,28 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionCreation(ProtectionCreationEvent e) {
-		Bukkit.getOnlinePlayers().stream()
+		new ArrayList<>(Bukkit.getOnlinePlayers()).stream()
 				.filter(pl -> e.getProtection().isInsideAny(SimpleLocation.of(pl.getLocation()), true))
 				.forEach(pl -> processMovement(e, pl, pl.getLocation(), false));
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionRemoval(ProtectionRemovalEvent e) {
-		Bukkit.getOnlinePlayers().stream()
+		new ArrayList<>(Bukkit.getOnlinePlayers()).stream()
 				.filter(pl -> e.getProtection().isInsideAny(SimpleLocation.of(pl.getLocation()), true))
 				.forEach(pl -> processMovement(e, pl, pl.getLocation(), false));
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionMerge(ProtectionMergeEvent e) {
-		Bukkit.getOnlinePlayers().stream()
+		new ArrayList<>(Bukkit.getOnlinePlayers()).stream()
 				.filter(pl -> e.getParentProtection().isInsideAny(SimpleLocation.of(pl.getLocation()), true))
 				.forEach(pl -> processMovement(e, pl, pl.getLocation(), false));
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onProtectionSplit(ProtectionSplitEvent e) {
-		Bukkit.getOnlinePlayers().stream()
+		new ArrayList<>(Bukkit.getOnlinePlayers()).stream()
 				.filter(pl -> e.getProtection().isInsideAny(SimpleLocation.of(pl.getLocation()), true)
 						|| e.getOldParentProtection().isInsideAny(SimpleLocation.of(pl.getLocation()), true))
 				.forEach(pl -> processMovement(e, pl, pl.getLocation(), false));
@@ -107,6 +108,7 @@ public class PlayerEnterExitRegionTrigger implements Listener {
 			}
 
 			List<IProtection> newProtections = cachedQuery.getProtections().stream()
+					.filter((prot) -> !((Protection) prot).isCreationInProgress())
 					.map(prot -> (Protection) prot.getParentProtection()).distinct()
 					.filter((prot) -> !prot.isDeleted() && prot.isInsideAny(simpleToLocation, true))
 					.sorted((p1, p2) -> Integer.compare(p2.getPriority(), p1.getPriority()))

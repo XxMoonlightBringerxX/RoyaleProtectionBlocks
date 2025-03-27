@@ -2,6 +2,7 @@ package company.pluginName.Modules.PlayerInteractionsPckg;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,6 +20,7 @@ import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Features.PvPPckg.Utils.CombatLogHookUtilities;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.FilePckg.Settings;
+import company.pluginName.Modules.PendingPaymentsPckg.PendingPaymentsService;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
@@ -113,6 +115,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 	@PandaInject
 	private ProtectionPermissionsService protectionPermissionsService;
+
+	@PandaInject
+	private PendingPaymentsService pendingPaymentsService;
 
 	// TODO: Move to ProtectionSettingsService
 	private @Getter EconomyService protectionsStoreEconomyService;
@@ -721,6 +726,8 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 	@Override
 	public void protectionPurchaseRequest(ProtectionPurchaseRequestInput input) throws RoyaleProtectionBlocksException {
+		UUID oldOwner = input.getProtection().getOwnerUuid();
+
 		try {
 			// Preconditions
 			if (this.protectionsStoreEconomyService == null) {
@@ -743,30 +750,40 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 				throw Exceptions.Protections.NOTFOUND.generateException();
 			}
 
-			int amountOfProtections = input.getProtection().getChildProtectionsRecursively().size();
+			int amountOfProtections = 1 + input.getProtection().getChildProtectionsRecursively().size();
 
 			try {
 				ProtectionUtilities.checkIfCanBeAdded(input.getPlayer(), input.getProtection().getProtectionBlock(),
 						amountOfProtections);
 			} catch (RoyaleProtectionBlocksException e) {
 				if (e.getType() == Type.PROTECTIONS_SAVE_MAXREACHED) {
-					throw Exceptions.Protections.Transfer.MAXREACHED.generateException();
+					throw Exceptions.Protections.Purchase.MAXREACHED.generateException();
 				} else if (e.getType() == Type.PROTECTIONS_SAVE_BLOCKMAXREACHED) {
-					throw Exceptions.Protections.Transfer.BLOCKMAXREACHED.generateException();
+					throw Exceptions.Protections.Purchase.BLOCKMAXREACHED.generateException();
 				} else {
 					throw e;
 				}
 			}
 
 			if (!EconomyUtilities.withdraw(this.protectionsStoreEconomyService, input.getPlayer(),
-					amountOfProtections)) {
+					input.getProtection().getPrice())) {
 				throw Exceptions.Protections.Purchase.NOTENOUGHBALANCE.generateException();
 			}
 
-			// Actions
+			pendingPaymentsService.deposit(this.protectionsStoreEconomyService, oldOwner,
+					input.getProtection().getPrice());
 
-			RoyaleProtectionBlocksAPI.getInstance().getProtectionsService().transfer(ProtectionTransferData
-					.inst(input.getProtection().getProtectionId(), input.getPlayer().getUniqueId()));
+			try {
+				// Actions
+
+				RoyaleProtectionBlocksAPI.getInstance().getProtectionsService().transfer(ProtectionTransferData
+						.inst(input.getProtection().getProtectionId(), input.getPlayer().getUniqueId()));
+
+				input.getProtection().setPriceAndSave(0);
+			} catch (Throwable e) {
+				pendingPaymentsService.removeDeposit(oldOwner, this.protectionsStoreEconomyService);
+				throw e;
+			}
 		} catch (RoyaleProtectionBlocksException e) {
 			throw e;
 		} catch (Throwable e) {

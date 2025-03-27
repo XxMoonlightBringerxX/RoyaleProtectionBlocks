@@ -125,9 +125,11 @@ public class ProtectionsStoreInventory extends PagedChestInventoryObject<Protect
 			extraLore.add(getChestInventoryData().getCustomFields().get(ENTITY_PURCHASELORELINE_PATH).toString());
 		}
 
-		extraLore.add(homeLocation != null
-				? getChestInventoryData().getCustomFields().get(ENTITY_TELEPORTLORELINE_PATH).toString()
-				: getChestInventoryData().getCustomFields().get(ENTITY_TELEPORTNOTSETLORELINE_PATH).toString());
+		if (Settings.SETTINGS_STORE_ALLOWTELEPORT.isTrue()) {
+			extraLore.add(homeLocation != null
+					? getChestInventoryData().getCustomFields().get(ENTITY_TELEPORTLORELINE_PATH).toString()
+					: getChestInventoryData().getCustomFields().get(ENTITY_TELEPORTNOTSETLORELINE_PATH).toString());
+		}
 
 		if (isMainOwner) {
 			extraLore.add(getChestInventoryData().getCustomFields().get(ENTITY_REMOVEPRICELORELINE_PATH).toString());
@@ -146,7 +148,7 @@ public class ProtectionsStoreInventory extends PagedChestInventoryObject<Protect
 		boolean isMainOwner = entity.getOwnerUuid().equals(getPlayer().getUniqueId());
 
 		if (e.isLeftClick()) {
-			if (e.isShiftClick()) {
+			if (e.isShiftClick() && Settings.SETTINGS_STORE_ALLOWTELEPORT.isTrue()) {
 				Location homeLocation = entity.getHome();
 				if (homeLocation != null) {
 					try {
@@ -169,6 +171,8 @@ public class ProtectionsStoreInventory extends PagedChestInventoryObject<Protect
 							MessageTemplate
 									.inst(Messages.MESSAGE_PROTECTIONS_PURCHASE_PURCHASEDSUCCESSFULLY.applyPrefix())
 									.process().sendMessage(getPlayer());
+
+							updateEntityList();
 						} catch (RoyaleProtectionBlocksException e1) {
 							e1.sendError(getPlayer());
 						}
@@ -180,6 +184,9 @@ public class ProtectionsStoreInventory extends PagedChestInventoryObject<Protect
 
 						MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_PURCHASE_PURCHASEDSUCCESSFULLY.applyPrefix())
 								.process().sendMessage(getPlayer());
+
+						updateEntityList();
+						updateInventory();
 					} catch (RoyaleProtectionBlocksException e1) {
 						e1.sendError(getPlayer());
 					}

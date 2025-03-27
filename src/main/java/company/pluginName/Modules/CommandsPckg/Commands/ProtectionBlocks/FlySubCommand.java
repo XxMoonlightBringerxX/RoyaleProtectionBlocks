@@ -46,7 +46,8 @@ public class FlySubCommand extends PandaSubCommand {
 			PlayerData playerData = playerDataService.getPlayerData(pl);
 			if (!playerData.getCurrentProtections().isEmpty()) {
 				if (pl.getAllowFlight() || PermissionsService.FLY_BYPASS.hasPermission(pl)
-						|| playerData.getCurrentProtections().stream().anyMatch(protection -> protection.canFly(pl))) {
+						|| (PermissionsService.FLY.hasPermission(pl) && playerData.getCurrentProtections().stream()
+								.anyMatch(protection -> protection.canFly(pl)))) {
 					pl.setAllowFlight(!pl.getAllowFlight());
 					MessageTemplate
 							.inst((pl.getAllowFlight() ? Messages.MESSAGE_PROTECTIONS_FLIGHT_ENABLED

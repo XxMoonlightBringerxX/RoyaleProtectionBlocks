@@ -1,4 +1,4 @@
-package company.pluginName.Bukkit.Events.Listeners;
+package company.pluginName.Modules.ProtectionsPckg.Listeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -97,6 +97,7 @@ public class OraxenListener implements Listener {
 
 		if (!e.isCancelled()) {
 			switch (EventsUtils.onOraxenBlockPlaceEvent(e.getPlayer(), e.getBlock(), null, e.getItemInHand())) {
+			case SUCCESS:
 			case CANCEL:
 				e.setCancelled(true);
 				break;

@@ -182,6 +182,12 @@ public class Messages {
 	public static final PandaPrefixedStringField MESSAGE_GUARD_REMOVEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Guard.Removed-successfully", "&aThe guard has been removed successfully.");
 
+	// Player data
+	public static final PandaPrefixedStringField MESSAGE_PLAYERDATA_AUTOFLIGHT_ENABLEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Player-data.Auto-flight.Enabled-successfully", "&aAuto-flight has been enabled successfully.");
+	public static final PandaPrefixedStringField MESSAGE_PLAYERDATA_AUTOFLIGHT_DISABLEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Player-data.Auto-flight.Disabled-successfully", "&aAuto-flight has been disabled successfully.");
+
 	// Errors
 	public static final PandaPrefixedStringField ERROR_ERROR = new PandaPrefixedStringField("Error.Error", "&cError!");
 	public static final PandaPrefixedStringField ERROR_CONSOLEDENIED = new PandaPrefixedStringField(

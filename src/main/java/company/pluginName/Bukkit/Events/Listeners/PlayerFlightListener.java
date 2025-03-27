@@ -14,10 +14,8 @@ import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
-import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
-import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
@@ -50,9 +48,6 @@ public class PlayerFlightListener implements Listener {
 	public static PandaStringField MESSAGE_PROTECTION_FLIGHT_REMOVEINDONE = new PandaStringField(
 			"Message.Protection.Flight.Remove-in-done", "&cUnauthorized flight zone. Removing flight in: &eNow");
 
-	@PandaInject
-	private PlayerDataService playerDataService;
-
 	private HashMap<UUID, BukkitTask> flightRemovalTasks = new HashMap<>();
 
 	@EventHandler
@@ -80,9 +75,13 @@ public class PlayerFlightListener implements Listener {
 
 		if (!flightRemovalTasks.containsKey(e.getPlayer().getUniqueId())) {
 			if (e.getCurrentProtections().isEmpty()
-					|| e.getCurrentProtections().stream().noneMatch(protection -> protection.canFly(e.getPlayer()))) {
-				flightRemovalTasks.put(e.getPlayer().getUniqueId(),
-						TasksUtils.executeWithTimer(getFlightRemovalRunnable(e.getPlayer().getUniqueId()), 0, 20));
+					&& e.getCurrentProtections().stream().noneMatch(protection -> protection.canFly(e.getPlayer()))) {
+				if (e.getPlayer().isFlying()) {
+					flightRemovalTasks.put(e.getPlayer().getUniqueId(),
+							TasksUtils.executeWithTimer(getFlightRemovalRunnable(e.getPlayer().getUniqueId()), 0, 20));
+				} else {
+					e.getPlayer().setAllowFlight(false);
+				}
 			}
 		} else {
 			if (!e.getCurrentProtections().isEmpty()

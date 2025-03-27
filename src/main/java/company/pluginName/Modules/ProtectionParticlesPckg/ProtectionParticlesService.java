@@ -348,8 +348,8 @@ public class ProtectionParticlesService {
 
 		private void updateProtections(Player player, Location location) {
 			List<Protection> newProtections = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
-					.findProtectionsByArea(currentMinLocation, currentMaxLocation)
-					.filter(prot -> showAll || prot.isMember(playerUuid) || prot.isOwner(playerUuid))
+					.findProtectionsByArea(currentMinLocation, currentMaxLocation).filter(prot -> showAll
+							|| prot.isMember(playerUuid) || prot.isOwner(playerUuid) || prot.isMainOwner(playerUuid))
 					.collect(Collectors.toList());
 
 			if (this.service.protocolLibApi.isHooked()) {

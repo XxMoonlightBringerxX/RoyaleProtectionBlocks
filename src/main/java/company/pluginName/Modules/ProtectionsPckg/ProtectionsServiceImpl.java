@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -26,9 +27,12 @@ import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Permissions.ProtectionPermission;
+import company.pluginName.Modules.ProtectionsPckg.Utils.FlagsUtilities;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
@@ -159,11 +163,17 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			if (protection != null) {
 				protection.getPlayers().setMembers(members);
 			}
+		});
 
+		PandaPluginClass.getSimpleLogger()
+				.sendDebug("Checking for missing members on the database (This process may take a while).");
+
+		this.protectionByRegion.forEach((key, protection) -> {
 			protection.getPlayers().getWorldGuardMembers().list().stream()
-					.filter(member -> !protection.isMember(member)).forEach(missingMember -> {
+					.filter(member -> !protection.isMainOwner(member) && !protection.isMember(member))
+					.forEach(missingMember -> {
 						try {
-							protection.addMemberAndSave(missingMember);
+							protection.addMemberAndSave(missingMember, false);
 						} catch (RoyaleProtectionBlocksException e) {
 							e.sendError(Bukkit.getConsoleSender());
 						}
@@ -175,16 +185,37 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			if (protection != null) {
 				protection.getPlayers().setOwners(owners);
 			}
+		});
 
-			protection.getPlayers().getWorldGuardOwners().list().stream().filter(owner -> !protection.isOwner(owner))
+		PandaPluginClass.getSimpleLogger().sendDebug("Checking completed!");
+
+		PandaPluginClass.getSimpleLogger()
+				.sendDebug("Checking for missing owners on the database (This process may take a while).");
+
+		this.protectionByRegion.forEach((key, protection) -> {
+			protection.getPlayers().getWorldGuardOwners().list().stream()
+					.filter(owner -> !protection.isMainOwner(owner) && !protection.isOwner(owner))
 					.forEach(missingOwner -> {
 						try {
-							protection.addOwnerAndSave(missingOwner);
+							protection.addOwnerAndSave(missingOwner, false);
 						} catch (RoyaleProtectionBlocksException e) {
 							e.sendError(Bukkit.getConsoleSender());
 						}
 					});
 		});
+		this.protectionByRegion.forEach((key, protection) -> {
+			protection.getPlayers().getWorldGuardOwners().list().stream()
+					.filter(owner -> !protection.isMainOwner(owner) && !protection.isMember(owner))
+					.forEach(missingMember -> {
+						try {
+							protection.addMemberAndSave(missingMember, false);
+						} catch (RoyaleProtectionBlocksException e) {
+							e.sendError(Bukkit.getConsoleSender());
+						}
+					});
+		});
+
+		PandaPluginClass.getSimpleLogger().sendDebug("Checking completed!");
 
 		sqlService.getProtectionBanneds().forEach((id, banneds) -> {
 			Protection protection = findProtectionById(id);
@@ -199,6 +230,15 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 				protection.getSettings().setNonMembersSettings(settings.getNonMembersSettings());
 				protection.getSettings().setMembersSettings(settings.getMembersSettings());
 				protection.getSettings().setOwnersSettings(settings.getOwnersSettings());
+			}
+		});
+
+		sqlService.getProtectionPermissions().forEach((id, permissions) -> {
+			Protection protection = findProtectionById(id);
+			if (protection != null) {
+				Map<String, ProtectionPermission> map = new HashMap<>();
+				permissions.forEach(permission -> map.put(permission.getId(), permission));
+				protection.getPermissions().setPermissions(map);
 			}
 		});
 
@@ -253,6 +293,8 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 				protectionsToTransfer.add(existentProtection);
 
 				protectionsToTransfer.stream().map(prot -> (Protection) prot).forEach(prot -> {
+					prot.clearPlayersAndSave();
+
 					if (!prot.getOwnerUuid().equals(protectionTransferData.getNewOwner())) {
 						UUID oldOwner = prot.getOwnerUuid();
 
@@ -262,6 +304,9 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 							protectionsByOwner
 									.computeIfAbsent(protectionTransferData.getNewOwner(), (uuid) -> new ArrayList<>())
 									.add(prot);
+
+							FlagsUtilities.resetFlags(existentProtection, prot.getOwnerUuid());
+							prot.getPermissions();
 						} catch (Throwable e) {
 							throw new RuntimeException(e);
 						}
@@ -291,51 +336,44 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			Protection protection = new Protection(protectionCreationData.getOwnerUuid(),
 					protectionCreationData.getLocation(), protectionCreationData.getProtectionBlock());
 
+			ProtectionCreationAttemptEvent attemptEvent = new ProtectionCreationAttemptEvent(
+					protectionCreationData.getExecutor(), protection, protectionCreationData.getCreationCause());
+			Bukkit.getPluginManager().callEvent(attemptEvent);
+
+			if (attemptEvent.isCancelled()) {
+				throw Exceptions.Protections.Save.CANCELLED.generateException();
+			}
+
+			ProtectionUtilities.checkCreationConditions(protection, protectionCreationData);
+
 			try {
-				ProtectionCreationAttemptEvent attemptEvent = new ProtectionCreationAttemptEvent(
-						protectionCreationData.getExecutor(), protection, protectionCreationData.getCreationCause());
-				Bukkit.getPluginManager().callEvent(attemptEvent);
-
-				if (attemptEvent.isCancelled()) {
-					throw Exceptions.Protections.Save.CANCELLED.generateException();
-				}
-
 				executeSynchronized(() -> {
-					ProtectionUtilities.checkCreationConditions(protection, protectionCreationData);
-
-					protection.init();
-
-					protection.setCreatedDate(System.currentTimeMillis());
+					load(protection);
 				});
 
-				try {
-					load(protection);
+				protection.setCreationInProgress(true);
 
-					TasksUtils.execute(() -> Bukkit.getPluginManager()
-							.callEvent(new ProtectionCreationEvent(protectionCreationData.getExecutor(), protection,
-									protectionCreationData.getCreationCause())));
+				protection.init();
 
-					TasksUtils.executeOnAsync(() -> {
-						try {
-							sqlService.saveProtection(protection);
-						} catch (RoyaleProtectionBlocksException e) {
-							e.sendError(Bukkit.getConsoleSender());
-						}
-					});
-				} catch (Throwable e) {
-					unload(protection);
+				protection.setCreatedDate(System.currentTimeMillis());
 
-					throw e;
-				}
+				TasksUtils.execute(() -> Bukkit.getPluginManager().callEvent(new ProtectionCreationEvent(
+						protectionCreationData.getExecutor(), protection, protectionCreationData.getCreationCause())));
 
-				return protection;
+				TasksUtils.executeOnAsync(() -> {
+					try {
+						sqlService.saveProtection(protection);
+					} catch (RoyaleProtectionBlocksException e) {
+						e.sendError(Bukkit.getConsoleSender());
+					}
+				});
 			} catch (RoyaleProtectionBlocksException e) {
-				if (protection != null) {
-					protection.remove(true);
-				}
+				unload(protection);
 
 				throw e;
 			}
+
+			return protection;
 		} catch (RoyaleProtectionBlocksException e) {
 			throw e;
 		} catch (Throwable e) {
@@ -350,6 +388,10 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 
 			if (protection == null) {
 				throw Exceptions.Protections.Delete.NOTFOUND.generateException();
+			}
+
+			if (protection.isCreationInProgress()) {
+				throw Exceptions.Protections.Delete.CREATIONINPROGRESS.generateException();
 			}
 
 			ProtectionRemovalAttemptEvent attemptEvent = new ProtectionRemovalAttemptEvent(
@@ -430,8 +472,10 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 				});
 			});
 		} catch (RoyaleProtectionBlocksException e) {
+			unload(protection);
 			throw e;
 		} catch (Throwable e) {
+			unload(protection);
 			throw Exceptions.Protections.UNKNOWN.generateException(e);
 		}
 	}

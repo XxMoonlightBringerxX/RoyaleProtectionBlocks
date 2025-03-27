@@ -1,4 +1,4 @@
-package company.pluginName.Bukkit.Events.Listeners;
+package company.pluginName.Modules.ProtectionsPckg.Listeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

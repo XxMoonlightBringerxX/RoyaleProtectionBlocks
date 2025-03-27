@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
+import company.pluginName.Exceptions.Exceptions.Protections;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Modules.FilePckg.Messages;
@@ -70,8 +71,7 @@ public class EventsUtils {
 
 	private static BlockPlaceResult onBlockPlaceEvent(EventOrigin eventOrigin, Player player, Block block,
 			EquipmentSlot hand, ItemStack defaultItem) {
-		ItemStack item = eventOrigin != EventOrigin.VANILLA ? ItemStacksUtils.getItemByHand(player, hand, defaultItem)
-				: defaultItem;
+		ItemStack item = ItemStacksUtils.getItemByHand(player, hand, defaultItem);
 
 		if (item != null) {
 			String protectionBlockId = null;
@@ -86,12 +86,22 @@ public class EventsUtils {
 				e.printStackTrace();
 			}
 
+			Protection prot = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+					.findProtectionBySourceBlock(block);
+
 			if (protectionBlockId != null && !protectionBlockId.isEmpty()) {
 				ProtectionBlock protectionBlock = protectionBlocksService.getProtectionBlockById(protectionBlockId);
 
 				if (protectionBlock == null) {
 					return BlockPlaceResult.IGNORE;
 				}
+
+				if (prot != null) {
+					Protections.Save.ALREADYEXISTS.generateException().sendError(player);
+					return BlockPlaceResult.CANCEL;
+				}
+
+				Location playerLocation = player.getLocation();
 
 				if (player.getGameMode() != GameMode.CREATIVE) {
 					if (item.getAmount() > 1) {
@@ -104,8 +114,6 @@ public class EventsUtils {
 						}
 					}
 				}
-
-				Location playerLocation = player.getLocation();
 
 				TasksUtils.executeOnAsync(() -> {
 					try {
@@ -138,9 +146,6 @@ public class EventsUtils {
 				return BlockPlaceResult.SUCCESS;
 
 			}
-
-			Protection prot = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
-					.findProtectionBySourceBlock(block);
 
 			if (prot != null) {
 				if (!prot.getUtils().isProtectionBlockShown()) {
@@ -213,6 +218,10 @@ public class EventsUtils {
 	private static BlockInteractResult onBlockInteractEvent(EventOrigin eventOrigin, Player player,
 			IProtection protection) {
 		IProtectionBlock protectionBlock = protection.getProtectionBlock();
+
+		if (protection.isCreationInProgress()) {
+			return BlockInteractResult.CANCEL;
+		}
 
 		if (protectionBlock != null && protectionBlock.getItemType() != eventOrigin.itemType) {
 			return BlockInteractResult.IGNORE;

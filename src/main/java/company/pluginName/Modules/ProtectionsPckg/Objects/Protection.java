@@ -403,10 +403,16 @@ public class Protection implements IProtection {
 	 * Init/Remove methods
 	 */
 
+	private boolean creationInProgress = false;
+
 	public void init() throws RoyaleProtectionBlocksExceptionImpl {
+		this.creationInProgress = true;
+
 		this.setDisplayName(MessageTemplate.inst(SETTINGS_PROTECTION_DEFAULTDISPLAYNAME.getContent())
 				.setReplacements(placeholdersService.getProtectionReplacements(this)).toString(), false);
 		this.initProtectedRegion();
+
+		this.creationInProgress = false;
 	}
 
 	private void initProtectedRegion() throws RoyaleProtectionBlocksExceptionImpl {
@@ -826,86 +832,173 @@ public class Protection implements IProtection {
 
 	@Override
 	public List<UUID> getOwners() {
-		return new ArrayList<>(this.players.getMembers());
+		return new ArrayList<>(this.players.getOwners());
 	}
 
 	@Override
 	public List<UUID> getBanneds() {
-		return new ArrayList<>(this.players.getMembers());
+		return new ArrayList<>(this.players.getBanneds());
 	}
 
 	@Override
 	public void addMemberAndSave(UUID memberUuid) throws RoyaleProtectionBlocksException {
+		addMemberAndSave(memberUuid, true);
+	}
+
+	public void addMemberAndSave(UUID memberUuid, boolean sqlAsyncSave) throws RoyaleProtectionBlocksException {
 		this.players.addMember(memberUuid);
 
-		TasksUtils.executeOnAsync(() -> {
+		Runnable runnable = () -> {
 			try {
 				sqlService.saveProtectionMember(this, memberUuid);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
-		});
+		};
+
+		if (sqlAsyncSave) {
+			TasksUtils.executeOnAsync(runnable);
+		} else {
+			runnable.run();
+		}
 	}
 
 	@Override
 	public void removeMemberAndSave(UUID memberUuid) throws RoyaleProtectionBlocksException {
+		removeMemberAndSave(memberUuid, true);
+	}
+
+	public void removeMemberAndSave(UUID memberUuid, boolean sqlAsyncSave) throws RoyaleProtectionBlocksException {
 		this.players.removeMember(memberUuid);
 
-		TasksUtils.executeOnAsync(() -> {
+		Runnable runnable = () -> {
 			try {
 				sqlService.deleteProtectionMember(this, memberUuid);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
-		});
+		};
+
+		if (sqlAsyncSave) {
+			TasksUtils.executeOnAsync(runnable);
+		} else {
+			runnable.run();
+		}
 	}
 
 	@Override
 	public void addOwnerAndSave(UUID ownerUuid) throws RoyaleProtectionBlocksException {
+		addOwnerAndSave(ownerUuid, true);
+	}
+
+	public void addOwnerAndSave(UUID ownerUuid, boolean sqlAsyncSave) throws RoyaleProtectionBlocksException {
 		this.players.addOwner(ownerUuid);
 
-		TasksUtils.executeOnAsync(() -> {
+		Runnable runnable = () -> {
 			try {
 				sqlService.saveProtectionOwner(this, ownerUuid);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
-		});
+		};
+
+		if (sqlAsyncSave) {
+			TasksUtils.executeOnAsync(runnable);
+		} else {
+			runnable.run();
+		}
 	}
 
 	@Override
 	public void removeOwnerAndSave(UUID ownerUuid) throws RoyaleProtectionBlocksException {
+		removeOwnerAndSave(ownerUuid, true);
+	}
+
+	public void removeOwnerAndSave(UUID ownerUuid, boolean sqlAsyncSave) throws RoyaleProtectionBlocksException {
 		this.players.removeOwner(ownerUuid);
 
-		TasksUtils.executeOnAsync(() -> {
+		Runnable runnable = () -> {
 			try {
 				sqlService.deleteProtectionOwner(this, ownerUuid);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
-		});
+		};
+
+		if (sqlAsyncSave) {
+			TasksUtils.executeOnAsync(runnable);
+		} else {
+			runnable.run();
+		}
 	}
 
 	@Override
 	public void addBannedAndSave(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+		addBannedAndSave(bannedUuid, true);
+	}
+
+	public void addBannedAndSave(UUID bannedUuid, boolean sqlAsyncSave) throws RoyaleProtectionBlocksException {
 		this.players.addBanned(bannedUuid);
+
+		Runnable runnable = () -> {
+			try {
+				sqlService.saveProtectionBanned(this, bannedUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		};
+
+		if (sqlAsyncSave) {
+			TasksUtils.executeOnAsync(runnable);
+		} else {
+			runnable.run();
+		}
+	}
+
+	@Override
+	public void removeBannedAndSave(UUID bannedUuid) throws RoyaleProtectionBlocksException {
+		removeBannedAndSave(bannedUuid, true);
+	}
+
+	public void removeBannedAndSave(UUID bannedUuid, boolean sqlAsyncSave) throws RoyaleProtectionBlocksException {
+		this.players.removeBanned(bannedUuid);
+
+		Runnable runnable = () -> {
+			try {
+				sqlService.deleteProtectionBanned(this, bannedUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		};
+
+		if (sqlAsyncSave) {
+			TasksUtils.executeOnAsync(runnable);
+		} else {
+			runnable.run();
+		}
+
+	}
+
+	public void clearPlayersAndSave() {
+		this.players.clearAll();
 
 		TasksUtils.executeOnAsync(() -> {
 			try {
-				sqlService.saveProtectionBanned(this, bannedUuid);
+				sqlService.deleteProtectionMembers(this);
+				sqlService.deleteProtectionOwners(this);
+				sqlService.deleteProtectionBanneds(this);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}
 		});
 	}
 
-	@Override
-	public void removeBannedAndSave(UUID bannedUuid) throws RoyaleProtectionBlocksException {
-		this.players.removeBanned(bannedUuid);
+	public void clearPermissionsAndSave() {
+		this.permissions.resetPermissions();
 
 		TasksUtils.executeOnAsync(() -> {
 			try {
-				sqlService.deleteProtectionBanned(this, bannedUuid);
+				sqlService.deleteProtectionPermissions(this);
 			} catch (RoyaleProtectionBlocksExceptionImpl e) {
 				e.sendError(Bukkit.getConsoleSender());
 			}

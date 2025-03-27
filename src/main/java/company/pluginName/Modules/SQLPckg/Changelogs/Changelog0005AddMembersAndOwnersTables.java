@@ -22,16 +22,16 @@ public class Changelog0005AddMembersAndOwnersTables extends SQLChangelog {
 				.addUniqueConstraint(
 						new Table.UniqueConstraint().addColumns(PROTECTION_MEMBERS_TABLE.getColumn("RegionId"),
 								PROTECTION_MEMBERS_TABLE.getColumn("MemberUuid")))
-				.addForeignConstraint(new Table.ForeignConstraint()
-						.addColumn(Changelog0000Init.PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTION_MEMBERS_TABLE.getColumn("RegionId")));
+				.addForeignConstraint(
+						new Table.ForeignConstraint().addColumn(PROTECTION_MEMBERS_TABLE.getColumn("RegionId"))
+								.addReferenceColumn(Changelog0000Init.PROTECTIONS_TABLE.getColumn("RegionId")));
 
 		PROTECTION_OWNERS_TABLE
 				.addUniqueConstraint(new Table.UniqueConstraint().addColumns(
 						PROTECTION_OWNERS_TABLE.getColumn("RegionId"), PROTECTION_OWNERS_TABLE.getColumn("OwnerUuid")))
-				.addForeignConstraint(new Table.ForeignConstraint()
-						.addColumn(Changelog0000Init.PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTION_OWNERS_TABLE.getColumn("RegionId")));
+				.addForeignConstraint(
+						new Table.ForeignConstraint().addColumn(PROTECTION_OWNERS_TABLE.getColumn("RegionId"))
+								.addReferenceColumn(Changelog0000Init.PROTECTIONS_TABLE.getColumn("RegionId")));
 	}
 
 	public Changelog0005AddMembersAndOwnersTables() {

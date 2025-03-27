@@ -19,6 +19,7 @@ import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
@@ -87,6 +88,11 @@ public class AdminProtectionsListInventory extends PagedChestInventoryObject<Pro
 		super(player);
 		this.owner = owner;
 		this.updateReplacements();
+	}
+
+	@Override
+	protected String getTitle() {
+		return MessageTemplate.inst(super.getTitle()).setReplacements(getReplacements()).process().toString();
 	}
 
 	@Override

@@ -22,9 +22,9 @@ public class Changelog0006AddProtectionSettingsTable extends SQLChangelog {
 				.addUniqueConstraint(new UniqueConstraint(Arrays.asList(PROTECTION_SETTINGS_TABLE.getColumn("RegionId"),
 						PROTECTION_SETTINGS_TABLE.getColumn("SettingId"),
 						PROTECTION_SETTINGS_TABLE.getColumn("SettingGroup"))))
-				.addForeignConstraint(new Table.ForeignConstraint()
-						.addColumn(Changelog0000Init.PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTION_SETTINGS_TABLE.getColumn("RegionId")));
+				.addForeignConstraint(
+						new Table.ForeignConstraint().addColumn(PROTECTION_SETTINGS_TABLE.getColumn("RegionId"))
+								.addReferenceColumn(Changelog0000Init.PROTECTIONS_TABLE.getColumn("RegionId")));
 	}
 
 	public Changelog0006AddProtectionSettingsTable() {

@@ -164,7 +164,9 @@ public class ProtectionsPurgeService {
 
 	public List<Protection> retrieveProtectionsToPurge(PurgeConfiguration configuration) {
 		return configuration.getRemainingTime(protectionsService.getProtectionByRegion().values())
-				.filter(pair -> pair.getSecond() <= 0).map(Pair::getFirst).collect(Collectors.toList());
+				.filter(pair -> pair.getSecond() <= 0 && (configuration.getWorldsNames().isEmpty()
+						|| configuration.getWorldsNames().contains(pair.getFirst().getWorldName())))
+				.map(Pair::getFirst).collect(Collectors.toList());
 	}
 
 	public List<Protection> purgeProtections(List<Protection> protectionsToPurge, RemovalCause removalCause) {

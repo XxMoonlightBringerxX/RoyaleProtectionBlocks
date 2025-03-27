@@ -6,8 +6,6 @@ import java.util.UUID;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.Exceptions.Exceptions;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,16 +21,16 @@ public class ProtectionWorldGuardMembers {
 		return region != null ? region.getMembers().getUniqueIds() : Collections.emptySet();
 	}
 
-	public void add(UUID member) throws RoyaleProtectionBlocksExceptionImpl {
-		if (this.protection.isMainOwner(member)) {
-			throw Exceptions.Protections.Members.Save.CANNOTADDPROTECTIONOWNER.generateException();
-		}
-
+	public void add(UUID member) {
 		this.protection.getProtectedRegion().getMembers().addPlayer(member);
 	}
 
-	public void remove(UUID member) throws RoyaleProtectionBlocksExceptionImpl {
+	public void remove(UUID member) {
 		this.protection.getProtectedRegion().getMembers().removePlayer(member);
+	}
+
+	public void clear() {
+		this.protection.getProtectedRegion().getMembers().clear();
 	}
 
 }

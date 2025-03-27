@@ -18,6 +18,7 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockAllowedWorlds;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
@@ -33,6 +34,10 @@ import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0004AddPublicAcces
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0005AddMembersAndOwnersTables;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0006AddProtectionSettingsTable;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0007AddProtectionPermissionsTable;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0008RegenerateMembersAndOwnersConstraint;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0009AddOwnersAsMembersConstraint;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0010AddPlayerDataTable;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0011AddPendingPaymentsTable;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Annotations.PandaSQLConfigV2;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Changelogs.SQLChangelog;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.DeleteStatement;
@@ -44,8 +49,8 @@ import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.Condition
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.Conditions.LowerThanCondition;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Column;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Table;
-import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Table.UniqueConstraint;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Services.PandaSQLService;
+import darkpanda73.PandaUtils.Services.PandaEconomiesModule.Enums.EconomyService;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.ObjectUtilities;
 import lombok.Data;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
@@ -120,68 +125,24 @@ public class SQLService extends PandaSQLService {
 			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setPrimary(true).setNotNull(true),
 			new Column("GuardExpirationDate", Types.BIGINT, "VARCHAR(256)").setNotNull(true));
 
-	static {
-		PROTECTIONS_TABLE.addUniqueConstraint(new Table.UniqueConstraint()
-				.addColumns(PROTECTIONS_TABLE.getColumn("DisplayName"), PROTECTIONS_TABLE.getColumn("OwnerUuid")))
-				.addForeignConstraint(
-						new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("ParentRegionId"))
-								.addReferenceColumn(PROTECTIONS_TABLE.getColumn("RegionId")));
+	private static final Table PLAYER_DATA_TABLE = new Table("PlayerData").addColumns(
+			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setPrimary(true).setNotNull(true),
+			new Column("AutoFlight", Types.BOOLEAN, "BOOLEAN", "0").setNotNull(true));
 
-		PROTECTION_MEMBERS_TABLE
-				.addUniqueConstraint(
-						new Table.UniqueConstraint().addColumns(PROTECTION_MEMBERS_TABLE.getColumn("RegionId"),
-								PROTECTION_MEMBERS_TABLE.getColumn("MemberUuid")))
-				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTION_MEMBERS_TABLE.getColumn("RegionId")));
-
-		PROTECTION_OWNERS_TABLE
-				.addUniqueConstraint(new Table.UniqueConstraint().addColumns(
-						PROTECTION_OWNERS_TABLE.getColumn("RegionId"), PROTECTION_OWNERS_TABLE.getColumn("OwnerUuid")))
-				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTION_OWNERS_TABLE.getColumn("RegionId")));
-
-		PROTECTION_BANNEDS_TABLE
-				.addUniqueConstraint(
-						new Table.UniqueConstraint().addColumns(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"),
-								PROTECTION_BANNEDS_TABLE.getColumn("BannedUuid")))
-				.addForeignConstraint(
-						new Table.ForeignConstraint().addColumn(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"))
-								.addReferenceColumn(PROTECTIONS_TABLE.getColumn("RegionId")));
-
-		PROTECTION_SETTINGS_TABLE
-				.addUniqueConstraint(new UniqueConstraint(Arrays.asList(PROTECTION_SETTINGS_TABLE.getColumn("RegionId"),
-						PROTECTION_SETTINGS_TABLE.getColumn("SettingId"),
-						PROTECTION_SETTINGS_TABLE.getColumn("SettingGroup"))))
-				.addForeignConstraint(new Table.ForeignConstraint().addColumn(PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTION_SETTINGS_TABLE.getColumn("RegionId")));
-
-		PROTECTION_PERMISSIONS_TABLE
-				.addUniqueConstraint(
-						new UniqueConstraint(Arrays.asList(PROTECTION_PERMISSIONS_TABLE.getColumn("RegionId"),
-								PROTECTION_PERMISSIONS_TABLE.getColumn("PermissionId"))))
-				.addForeignConstraint(new Table.ForeignConstraint()
-						.addColumn(Changelog0000Init.PROTECTIONS_TABLE.getColumn("RegionId"))
-						.addReferenceColumn(PROTECTION_PERMISSIONS_TABLE.getColumn("RegionId")));
-
-		RECIPES_TABLE.addForeignConstraint(
-				new Table.ForeignConstraint().addColumn(RECIPES_TABLE.getColumn("ProtectionBlockId"))
-						.addReferenceColumn(PROTECTION_BLOCKS_TABLE.getColumn("Id")));
-
-		PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE
-				.addUniqueConstraint(new Table.UniqueConstraint().addColumns(
-						PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("ProtectionBlockId"),
-						PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("WorldName")))
-				.addForeignConstraint(new Table.ForeignConstraint()
-						.addColumn(PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE.getColumn("ProtectionBlockId"))
-						.addReferenceColumn(PROTECTION_BLOCKS_TABLE.getColumn("Id")));
-	}
+	private static final Table PENDING_PAYMENTS_TABLE = new Table("PendingPayments").addColumns(
+			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setNotNull(true),
+			new Column("EconomyService", Types.VARCHAR, "VARCHAR(36)").setNotNull(true),
+			new Column("Amount", Types.DECIMAL, "DECIMAL(12, 2)").setUnsigned(true).setNotNull(true));
 
 	@Override
 	public Collection<SQLChangelog> getSQLChangelogs() {
 		return Arrays.asList(new Changelog0000Init(), new Changelog0001DeleteAutoPurgeLogsTable(),
 				new Changelog0002AddGuardSystem(), new Changelog0003AddPriceColumn(),
 				new Changelog0004AddPublicAccessColumn(), new Changelog0005AddMembersAndOwnersTables(),
-				new Changelog0006AddProtectionSettingsTable(), new Changelog0007AddProtectionPermissionsTable());
+				new Changelog0006AddProtectionSettingsTable(), new Changelog0007AddProtectionPermissionsTable(),
+				new Changelog0008RegenerateMembersAndOwnersConstraint(),
+				new Changelog0009AddOwnersAsMembersConstraint(), new Changelog0011AddPendingPaymentsTable(),
+				new Changelog0010AddPlayerDataTable());
 	}
 
 	/*
@@ -353,9 +314,11 @@ public class SQLService extends PandaSQLService {
 	public void deleteProtection(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		try {
 			this.deleteProtectionBanneds(protection);
+			this.deleteProtectionMembers(protection);
+			this.deleteProtectionOwners(protection);
+			this.deleteProtectionPermissions(protection);
 			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTIONS_TABLE).setCondition(
 					EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
-			this.deleteProtectionBanneds(protection);
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Delete.SQL.generateException(e);
 		}
@@ -818,9 +781,24 @@ public class SQLService extends PandaSQLService {
 		try (ResultSet set = this.getSqlConnection()
 				.executeQuery(SelectStatement.inst().addTable(PROTECTION_PERMISSIONS_TABLE))) {
 			while (set.next()) {
+				Boolean nonMembersValue = set.getBoolean("NonMembersValue");
+				if (set.wasNull()) {
+					nonMembersValue = null;
+				}
+
+				Boolean membersValue = set.getBoolean("MembersValue");
+				if (set.wasNull()) {
+					membersValue = null;
+				}
+
+				Boolean ownersValue = set.getBoolean("OwnersValue");
+				if (set.wasNull()) {
+					ownersValue = null;
+				}
+
 				protectionPermissions.computeIfAbsent(set.getString("RegionId"), (regionId) -> new ArrayList<>())
-						.add(new ProtectionPermission(set.getString("PermissionId"), set.getBoolean("NonMembersValue"),
-								set.getBoolean("MembersValue"), set.getBoolean("OwnersValue")));
+						.add(new ProtectionPermission(set.getString("PermissionId"), nonMembersValue, membersValue,
+								ownersValue));
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -843,6 +821,105 @@ public class SQLService extends PandaSQLService {
 			this.getSqlConnection().executeInsert(insertStatement);
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Permissions.SQL.generateException(e);
+		}
+	}
+
+	public void deleteProtectionPermissions(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_PERMISSIONS_TABLE).setCondition(EqualsCondition
+							.inst(PROTECTION_PERMISSIONS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Permissions.SQL.generateException(e);
+		}
+	}
+
+	/*
+	 * Player data methods
+	 */
+
+	public PlayerData getPlayerData(UUID uuid) throws RoyaleProtectionBlocksExceptionImpl {
+		PlayerData playerData = new PlayerData(uuid);
+
+		try (ResultSet set = this.getSqlConnection().executeQuery(SelectStatement.inst().addTable(PLAYER_DATA_TABLE)
+				.setCondition(EqualsCondition.inst(PLAYER_DATA_TABLE.getColumn("PlayerUuid"), uuid.toString())))) {
+			if (set.next()) {
+				playerData.setAutoFlight(set.getBoolean("AutoFlight"));
+			}
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Permissions.SQL.generateException(e);
+		}
+
+		return playerData;
+	}
+
+	public void savePlayerData(PlayerData playerData) throws RoyaleProtectionBlocksExceptionImpl {
+		InsertStatement insertStatement = InsertStatement.inst(PLAYER_DATA_TABLE)
+				.addEntry(playerData.getUuid().toString(), playerData.isAutoFlight())
+				.setConditionIfExists(EqualsCondition.inst(PLAYER_DATA_TABLE.getColumn("PlayerUuid"),
+						playerData.getUuid().toString()));
+
+		try {
+			this.getSqlConnection().executeInsert(insertStatement);
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Permissions.SQL.generateException(e);
+		}
+	}
+
+	/*
+	 * Player data methods
+	 */
+
+	public Map<UUID, Map<EconomyService, Double>> getPendingPayments() throws RoyaleProtectionBlocksExceptionImpl {
+		Map<UUID, Map<EconomyService, Double>> pendingPayments = new HashMap<>();
+
+		try (ResultSet set = this.getSqlConnection()
+				.executeQuery(SelectStatement.inst().addTable(PENDING_PAYMENTS_TABLE))) {
+			while (set.next()) {
+				UUID uuid = UUID.fromString(set.getString("PlayerUuid"));
+
+				pendingPayments.computeIfAbsent(uuid, (uuidKey) -> new HashMap<>())
+						.put(EconomyService.valueOf(set.getString("EconomyService")), set.getDouble("Amount"));
+			}
+		} catch (Throwable e) {
+			throw Exceptions.PendingPayments.Load.SQL.generateException(e);
+		}
+
+		return pendingPayments;
+	}
+
+	public void savePendingPayment(UUID uuid, EconomyService economyService, Double amount)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		InsertStatement insertStatement = InsertStatement.inst(PENDING_PAYMENTS_TABLE)
+				.addEntry(uuid.toString(), economyService.name(), amount).setConditionIfExists(
+						EqualsCondition.inst(PENDING_PAYMENTS_TABLE.getColumn("PlayerUuid"), uuid.toString()));
+
+		try {
+			this.getSqlConnection().executeInsert(insertStatement);
+		} catch (Throwable e) {
+			throw Exceptions.PendingPayments.Save.SQL.generateException(e);
+		}
+	}
+
+	public void deletePendingPayments(UUID uuid) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(PENDING_PAYMENTS_TABLE).setCondition(
+					EqualsCondition.inst(PENDING_PAYMENTS_TABLE.getColumn("PlayerUuid"), uuid.toString())));
+		} catch (Throwable e) {
+			throw Exceptions.PendingPayments.Delete.SQL.generateException(e);
+		}
+	}
+
+	public void deletePendingPayment(UUID uuid, EconomyService economyService)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection().executeDelete(DeleteStatement.inst(PENDING_PAYMENTS_TABLE)
+					.setCondition(AndCondition.inst(
+							EqualsCondition.inst(PENDING_PAYMENTS_TABLE.getColumn("PlayerUuid"), uuid.toString()),
+							EqualsCondition.inst(PENDING_PAYMENTS_TABLE.getColumn("EconomyService"),
+									economyService.name()))));
+		} catch (Throwable e) {
+			throw Exceptions.PendingPayments.Delete.SQL.generateException(e);
 		}
 	}
 

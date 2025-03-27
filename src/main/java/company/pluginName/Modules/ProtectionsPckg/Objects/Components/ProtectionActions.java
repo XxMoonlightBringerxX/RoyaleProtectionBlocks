@@ -23,6 +23,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerTeleportToProtectionAttemptEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerTeleportToProtectionEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 
 @Data
 @AllArgsConstructor
@@ -40,8 +41,7 @@ public class ProtectionActions {
 	private Protection protection;
 
 	public boolean kickPlayer(Player playerToKick) throws RoyaleProtectionBlocksExceptionImpl {
-		Location loc = playerToKick.getLocation();
-		if (protection.getProtectedRegion().contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) {
+		if (protection.isInsideAny(SimpleLocation.of(playerToKick.getLocation()), true)) {
 			TasksUtils.execute(() -> playerToKick.teleport(protectionSettingsService.getSpawn()));
 			return true;
 		}

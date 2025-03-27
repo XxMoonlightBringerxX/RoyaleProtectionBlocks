@@ -21,7 +21,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IPro
 public class PermissionsService extends PandaPermissionsService {
 
 	// Normal user permissions
-	public static final PandaPermission TELEPORT = new PandaCustomizablePermission("Teleport",
+	public static final PandaPermission TELEPORT = new PandaCustomizablePermission("Teleport.Value",
 			"protectionblocks.teleport");
 	public static final PandaPermission TELEPORT_OTHERS = new PandaCustomizablePermission("Teleport.Others",
 			"protectionblocks.teleport.others");
@@ -62,6 +62,7 @@ public class PermissionsService extends PandaPermissionsService {
 	public static final PandaPermission INFO_OTHERS = new PandaCustomizablePermission("Info.Others",
 			"protectionblocks.info.others");
 
+	public static final PandaPermission FLY = new PandaCustomizablePermission("Fly.Value", "protectionblocks.fly");
 	public static final PandaPermission FLY_BYPASS = new PandaCustomizablePermission("Fly.Bypass",
 			"protectionblocks.fly.bypass");
 
@@ -98,6 +99,9 @@ public class PermissionsService extends PandaPermissionsService {
 			"protectionblocks.blocks.edit");
 	public static final PandaPermission BLOCKS_DELETE = new PandaCustomizablePermission("Blocks.Delete",
 			"protectionblocks.blocks.delete");
+
+	public static final PandaPermission STAFFMODE = new PandaCustomizablePermission("Staff-mode",
+			"protectionblocks.staffmode");
 
 	public static final PandaParametizedPermission PRIORITY_MAX_TEMPLATE = new PandaParametizedPermission(
 			"Priority.Max.Template", "protectionblocks.priority.max.{max}");

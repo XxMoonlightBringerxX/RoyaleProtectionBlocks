@@ -73,6 +73,10 @@ Items:
       Type: "ENDER_PEARL"
       Amount: 1
       Name: "&eShow the protection boundaries"
+    Hide-boundary-item:
+      Type: "ENDER_EYE"
+      Amount: 1
+      Name: "&eHide the protection boundaries"
     Commands:
     - "pb view"
     Slots: "24"

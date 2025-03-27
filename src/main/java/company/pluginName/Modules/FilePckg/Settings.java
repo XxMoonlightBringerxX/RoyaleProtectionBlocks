@@ -34,6 +34,8 @@ public class Settings {
 			"Settings.Protection.Teleport-cost", 0D);
 	public static final PandaLongField SETTINGS_PROTECTION_TELEPORTCOOLDOWN = new PandaLongField(
 			"Settings.Protection.Teleport-cooldown", 30L);
+	public static final PandaBooleanField SETTINGS_PROTECTION_ALLOWMEMBERPROMOTIONS = new PandaBooleanField(
+			"Settings.Protection.Allow-member-promotions", true);
 
 	public static final PandaBooleanField SETTINGS_PROTECTION_SETPLAYERPOSITIONASHOMEONCREATION = new PandaBooleanField(
 			"Settings.Protection.Set-player-position-as-home-on-creation", true);
@@ -50,6 +52,8 @@ public class Settings {
 	public static final PandaBooleanField SETTINGS_STORE_REQUESTCONFIRMATIONONPURCHASETHROUGHGUI = new PandaBooleanField(
 			"Settings.Store.Request-confirmation-on-purchase-through-gui",
 			"Settings.Protection-block.Request-confirmation-on-purchase-through-gui", false);
+	public static final PandaBooleanField SETTINGS_STORE_ALLOWTELEPORT = new PandaBooleanField(
+			"Settings.Store.Allow-teleport", true);
 	public static final PandaBooleanField SETTINGS_STORE_IGNORETELEPORTCOST = new PandaBooleanField(
 			"Settings.Store.Ignore-teleport-cost", true);
 	public static final PandaStringField SETTINGS_STORE_PROTECTIONECONOMYSERVICE = new PandaStringField(

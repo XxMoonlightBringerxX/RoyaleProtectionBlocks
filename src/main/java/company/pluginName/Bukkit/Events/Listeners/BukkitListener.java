@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -12,7 +13,9 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
+import org.spigotmc.event.entity.EntityMountEvent;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
@@ -21,7 +24,9 @@ import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Modules.SettingsPckg.SettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -116,6 +121,21 @@ public class BukkitListener implements Listener {
 						}
 					}
 				});
+	}
+
+	@EventHandler
+	public void onPlayerMount(EntityMountEvent e) {
+		if (e.getEntity() instanceof Player) {
+			Player player = (Player) e.getEntity();
+
+			Protection protection = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+					.findProtectionByLocation(e.getEntity().getLocation());
+
+			if (protection != null && Boolean.FALSE.equals(
+					protection.getPermissionValue(ProtectionPermissionsService.RIDEVEHICLES_PERMISSION, player))) {
+				e.setCancelled(true);
+			}
+		}
 	}
 
 }

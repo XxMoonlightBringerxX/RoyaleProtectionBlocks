@@ -178,6 +178,10 @@ public class Exceptions {
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_DELETE_UNKNOWN,
 					"Error.Exception.protection.delete.Unknown",
 					"&cAn unknown error happened while trying to delete this protection. Please contact with an administrator!");
+			public static final ThrowableField CREATIONINPROGRESS = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_DELETE_INPROGRESS,
+					"Error.Exception.protection.delete.CreationInProgress",
+					"&cYou can't remove this protection while is being created!");
 			public static final ThrowableField INPROGRESS = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_DELETE_INPROGRESS,
 					"Error.Exception.protection.delete.InProgress",
@@ -321,6 +325,13 @@ public class Exceptions {
 			public static final ThrowableField SAMEOWNER = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_PURCHASE_SAMEOWNER,
 					"Error.Exception.protection.purchase.SameOwner", "&cYou can't purchase your own protections!");
+			public static final ThrowableField MAXREACHED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PURCHASE_MAXREACHED,
+					"Error.Exception.protection.purchase.MaxReached", "&cYou aren't allowed to buy more protections!");
+			public static final ThrowableField BLOCKMAXREACHED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_PURCHASE_BLOCKMAXREACHED,
+					"Error.Exception.protection.purchase.BlockMaxReached",
+					"&cYou aren't allowed to buy more protections using this specific protection block!");
 			public static final ThrowableField NOTENOUGHBALANCE = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_PURCHASE_NOTENOUGHBALANCE,
 					"Error.Exception.protection.purchase.NotEnoughBalance",
@@ -625,6 +636,37 @@ public class Exceptions {
 		public static final ThrowableField SQL = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PLAYERGUARDS_SQL, "Error.Exception.playerGuards.SQL",
 				"&cAn unknown error happened while trying to modify the player guard on the database. Please contact with an administrator!");
+
+	}
+
+	public static class PendingPayments {
+
+		public static class Load {
+
+			public static final ThrowableField SQL = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PENDINGPAYMENTS_LOAD_SQL,
+					"Error.Exception.protection.pendingPayments.load.SQL",
+					"&cAn unknown error happened while trying to load the current pending payments from the database. Please contact with an administrator!");
+
+		}
+
+		public static class Save {
+
+			public static final ThrowableField SQL = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PENDINGPAYMENTS_SAVE_SQL,
+					"Error.Exception.protection.pendingPayments.save.SQL",
+					"&cAn unknown error happened while trying to save the pending payment in the database. Please contact with an administrator!");
+
+		}
+
+		public static class Delete {
+
+			public static final ThrowableField SQL = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PENDINGPAYMENTS_DELETE_SQL,
+					"Error.Exception.protection.pendingPayments.delete.SQL",
+					"&cAn unknown error happened while trying to delete the pending payment from the database. Please contact with an administrator!");
+
+		}
 
 	}
 

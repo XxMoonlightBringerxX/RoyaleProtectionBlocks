@@ -1,6 +1,8 @@
 package company.pluginName.Modules.ProtectionsPurgePckg.Objects;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -9,7 +11,9 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 import darkpanda73.PandaUtils.Utilities.Java.Time.TimeUtilities;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
@@ -29,12 +33,14 @@ public class PurgeConfiguration {
 	private int days = 0;
 	private long millis = 0;
 	private boolean showIgnoredPlayers = false;
+	private @Setter(AccessLevel.NONE) List<String> worldsNames = new ArrayList<>();
 
 	public void copy(PurgeConfiguration configuration) {
 		this.minutes = configuration.minutes;
 		this.hours = configuration.hours;
 		this.days = configuration.days;
 		this.millis = configuration.millis;
+		this.worldsNames = new ArrayList<>(configuration.worldsNames);
 	}
 
 	public String toString() {

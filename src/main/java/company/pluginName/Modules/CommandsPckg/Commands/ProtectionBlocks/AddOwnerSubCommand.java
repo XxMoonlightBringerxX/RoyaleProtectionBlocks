@@ -8,6 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -52,6 +53,11 @@ public class AddOwnerSubCommand extends PandaSubCommand {
 
 	public AddOwnerSubCommand() throws InstantiationException {
 		super();
+	}
+
+	@Override
+	public boolean precondition() {
+		return Settings.SETTINGS_PROTECTION_ALLOWMEMBERPROMOTIONS.isTrue();
 	}
 
 	@Override

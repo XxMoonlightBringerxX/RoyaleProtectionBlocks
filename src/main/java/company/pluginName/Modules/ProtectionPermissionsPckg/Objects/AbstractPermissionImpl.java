@@ -9,7 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
 
-public class AbstractPermissionImpl extends AbstractPermission {
+public abstract class AbstractPermissionImpl extends AbstractPermission {
 
 	private boolean defaultEditable;
 	private String defaultPermission;

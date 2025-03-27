@@ -47,17 +47,20 @@ public class ProtectionsPermissionsManageInventory extends ChestInventoryObject 
 						() -> Boolean.TRUE
 								.equals(this.protection.getPermissionValue(permission, PermissionGroup.NON_MEMBERS))
 										? Messages.MESSAGE_GENERAL_TRUE.getContent()
-										: Messages.MESSAGE_GENERAL_FALSE.getContent()),
+										: Messages.MESSAGE_GENERAL_FALSE.getContent())
+						.cacheText(false),
 				new Replacement("{permission_membersvalue}",
 						() -> Boolean.TRUE
 								.equals(this.protection.getPermissionValue(permission, PermissionGroup.MEMBERS))
 										? Messages.MESSAGE_GENERAL_TRUE.getContent()
-										: Messages.MESSAGE_GENERAL_FALSE.getContent()),
+										: Messages.MESSAGE_GENERAL_FALSE.getContent())
+						.cacheText(false),
 				new Replacement("{permission_ownersvalue}",
 						() -> Boolean.TRUE
 								.equals(this.protection.getPermissionValue(permission, PermissionGroup.OWNERS))
 										? Messages.MESSAGE_GENERAL_TRUE.getContent()
-										: Messages.MESSAGE_GENERAL_FALSE.getContent()) };
+										: Messages.MESSAGE_GENERAL_FALSE.getContent())
+						.cacheText(false) };
 
 		setReplacements(ArrayUtilities.join(
 				new Replacement[playerReplacements.length + protectionReplacements.length + customReplacements.length],

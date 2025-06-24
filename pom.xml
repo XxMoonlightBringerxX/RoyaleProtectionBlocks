@@ -244,6 +244,10 @@
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
+					<groupId>io.papermc</groupId>
+					<artifactId>paperlib</artifactId>
+				</exclusion>
+				<exclusion>
 					<groupId>gs.mclo</groupId>
 					<artifactId>mclogs</artifactId>
 				</exclusion>
@@ -278,6 +282,10 @@
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
+					<groupId>io.papermc</groupId>
+					<artifactId>paperlib</artifactId>
+				</exclusion>
+				<exclusion>
 					<groupId>org.bstats</groupId>
 					<artifactId>bstats-bukkit</artifactId>
 				</exclusion>
@@ -306,7 +314,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.2.0</version>
 				<configuration>
-					<outputDirectory>C:/Users/relam/Documents/Eclipse/Exports</outputDirectory>
+					<outputDirectory>${projects.exportFolder}</outputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>

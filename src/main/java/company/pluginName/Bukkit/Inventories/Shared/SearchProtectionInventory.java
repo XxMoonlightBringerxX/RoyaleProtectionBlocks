@@ -42,7 +42,7 @@ public class SearchProtectionInventory extends PagedChestInventoryObject<IProtec
 	protected ItemStack generateEntityItem(IProtection protection) {
 		return ItemBuilder.inst().fromMap(getChestInventoryData().getCustomFields(), "Entity")
 				.setReplacements(placeholdersService.getProtectionReplacements(protection))
-				.apply(((Protection) protection).getDisplayItem().getOrDefault().clone());
+				.apply(((Protection) protection).getDisplayItemOrDefault().clone());
 	}
 
 	@Override

@@ -1,13 +1,16 @@
- <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+ <project xmlns="https://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>1.12.1 Alpha</version>
+	<version>1.13.0 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.test.skip>true</maven.test.skip>
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
@@ -37,8 +40,13 @@
 			<url>https://repo.essentialsx.net/releases/</url>
 		</repository>
 		<repository>
-			<id>paper-repo</id>
-			<url>https://papermc.io/repo/repository/maven-public/</url>
+			<id>papermc</id>
+			<url>https://repo.papermc.io/repository/maven-public/</url>
+		</repository>
+		<repository>
+			<id>oraxen-releases</id>
+			<name>Oraxen Repository</name>
+			<url>https://repo.oraxen.com/releases</url>
 		</repository>
 	</repositories>
 	<dependencies>
@@ -75,11 +83,6 @@
 		<dependency>
 			<groupId>RelaUtils</groupId>
 			<artifactId>RelaUtils</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>SpigotPlugin</groupId>
-			<artifactId>SpigotPlugin</artifactId>
 			<version>1.0</version>
 		</dependency>
 		<dependency>
@@ -235,9 +238,9 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.github.oraxen</groupId>
+			<groupId>io.th0rgal</groupId>
 			<artifactId>oraxen</artifactId>
-			<version>1.159.0</version>
+			<version>1.189.0</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
@@ -303,7 +306,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.2.0</version>
 				<configuration>
-					<outputDirectory>E:/Eclipse/Exports</outputDirectory>
+					<outputDirectory>C:/Users/relam/Documents/Eclipse/Exports</outputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>

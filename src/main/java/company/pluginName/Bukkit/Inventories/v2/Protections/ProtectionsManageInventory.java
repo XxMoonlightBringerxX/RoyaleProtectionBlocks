@@ -9,6 +9,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Bukkit.Inventories.Protections.Banneds.ProtectionBannedsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
@@ -43,6 +44,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionChangeDisplayItemRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionHideBlockRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRenameRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSellRequestInput;
@@ -145,7 +147,7 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 			}
 		}
 
-		return builder.apply(this.protection.getDisplayItem().getOrDefault().clone());
+		return builder.apply(this.protection.getDisplayItemOrDefault().clone());
 	}
 
 	@ItemGenerator("Toggle-block-button")
@@ -190,13 +192,17 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 		if (ProtectionUtilities.canChangeDisplayItem(protection, getPlayer())) {
 			try {
 				if (e.getCursor() != null && e.getCursor().getType() != Material.AIR) {
-					protection.getDisplayItem().setAndSave(e.getCursor());
+					RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+							.protectionChangeDisplayItemRequest(ProtectionChangeDisplayItemRequestInput
+									.inst(getPlayer(), protection, e.getCursor()));
 					updateInventory();
 				} else if (protection.getDisplayItem() != null) {
-					protection.getDisplayItem().resetAndSave(getPlayer());
+					RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
+							.protectionChangeDisplayItemRequest(
+									ProtectionChangeDisplayItemRequestInput.inst(getPlayer(), protection, null));
 					updateInventory();
 				}
-			} catch (RoyaleProtectionBlocksExceptionImpl e1) {
+			} catch (RoyaleProtectionBlocksException e1) {
 				e1.sendError(getPlayer());
 			}
 		}
@@ -304,10 +310,14 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 
 	@ItemExecutor("Merge-button")
 	private void executeMergeButton(Item item, GeneratedItem generatedItem, InventoryClickEvent e) {
-		if (e.isLeftClick()) {
-			new ProtectionMergeInventory(getPlayer(), protection).openInventory();
-		} else if (e.isRightClick()) {
-			new ProtectionSplitInventory(getPlayer(), protection).openInventory();
+		try {
+			if (e.isLeftClick()) {
+				new ProtectionMergeInventory(getPlayer(), protection).openInventory();
+			} else if (e.isRightClick()) {
+				new ProtectionSplitInventory(getPlayer(), protection).openInventory();
+			}
+		} catch (RoyaleProtectionBlocksExceptionImpl e1) {
+			e1.sendError(getPlayer());
 		}
 	}
 

@@ -42,7 +42,7 @@ public class ProtectionBlocksStoreInventory extends PagedChestInventoryObject<Pr
 		private BiFunction<Player, ProtectionBlock, Boolean> filterFunction;
 
 		public Filter previous() {
-			return values()[(values().length + ordinal() + 1) % values().length];
+			return values()[(values().length + ordinal() - 1) % values().length];
 		}
 
 		public Filter next() {
@@ -58,7 +58,7 @@ public class ProtectionBlocksStoreInventory extends PagedChestInventoryObject<Pr
 		private Comparator<ProtectionBlock> sortFunction;
 
 		public Sort previous() {
-			return values()[(values().length + ordinal() + 1) % values().length];
+			return values()[(values().length + ordinal() - 1) % values().length];
 		}
 
 		public Sort next() {

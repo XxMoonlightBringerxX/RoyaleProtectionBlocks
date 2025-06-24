@@ -222,6 +222,11 @@ public class ProtectionBlockManageInventory extends ChestInventoryObject {
 				MessageTemplate.inst(Messages.MESSAGE_PROTECTIONS_BLOCKS_CREATEDSUCCESSFULLY.applyPrefix()).process()
 						.sendMessage(getPlayer());
 			}
+
+			if (getPreviousInventory() != null
+					&& getPreviousInventory().getHolder() instanceof ProtectionBlocksListInventory) {
+				((ProtectionBlocksListInventory) getPreviousInventory().getHolder()).updateEntityList();
+			}
 			goToPreviousInventory();
 		} catch (RoyaleProtectionBlocksExceptionImpl ex) {
 			if (originalProtectionBlock != null) {

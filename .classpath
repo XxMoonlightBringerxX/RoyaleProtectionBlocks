@@ -22,9 +22,9 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="E:/Descargas/ProtocolLib (3).jar"/>
-	<classpathentry kind="lib" path="E:/Eclipse/Others/Libs/PlaceholderAPI-2.9.2.jar"/>
-	<classpathentry kind="lib" path="E:/Eclipse/Others/Libs/worldedit-bukkit-7.0.0-rc-2.jar"/>
-	<classpathentry kind="lib" path="E:/Eclipse/Others/Libs/worldguard-legacy-7.0.0-rc-1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/relam/Documents/Eclipse/Others/Libs/ProtocolLib.jar"/>
+	<classpathentry kind="lib" path="C:/Users/relam/Documents/Eclipse/Others/Libs/PlaceholderAPI-2.9.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/relam/Documents/Eclipse/Others/Libs/worldedit-bukkit-7.0.0-rc-2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/relam/Documents/Eclipse/Others/Libs/worldguard-legacy-7.0.0-rc-1.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

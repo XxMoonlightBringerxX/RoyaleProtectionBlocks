@@ -19,6 +19,7 @@ import company.pluginName.Debugger;
 import company.pluginName.Debugger.MessageType;
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Utils.EventUtilitiesV2;
 import company.pluginName.Utils.EventsUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -26,6 +27,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackData.ItemStackDataUtilities;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.ItemType;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @PandaListener
@@ -108,8 +110,7 @@ public class ProtectionsListener implements Listener {
 				IProtection protection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
 						.findProtectionBySourceBlock(e.getClickedBlock());
 				if (protection != null) {
-					e.setCancelled(true);
-					EventsUtils.onVanillaBlockInteractEvent(e.getPlayer(), protection);
+					EventUtilitiesV2.onPlayerInteract(e, ItemType.VANILLA, e.getPlayer(), protection, e.getAction());
 					return;
 				}
 				break;

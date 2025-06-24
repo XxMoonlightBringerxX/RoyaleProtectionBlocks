@@ -14,6 +14,7 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.FlagsUtilities;
 import company.pluginName.Utils.DiscordUtilities;
 import company.pluginName.Utils.EconomyUtilities;
+import company.pluginName.Utils.LogUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -86,6 +87,8 @@ public class ProtectionWorldGuardFlags implements IProtectionFlags {
 
 			if (this.protection.getParentProtection() == this.protection) {
 				DiscordUtilities.sendFlagModificationMessage(input.getExecutor(), protection,
+						protectionFlag.getWorldGuardFlag().getName(), previousValue, input.getValue());
+				LogUtilities.sendFlagModificationDebugLog(input.getExecutor(), protection,
 						protectionFlag.getWorldGuardFlag().getName(), previousValue, input.getValue());
 			}
 		} catch (Exception e) {

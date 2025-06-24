@@ -11,10 +11,8 @@ import org.bukkit.inventory.ItemStack;
 import company.pluginName.MainPluginClass;
 import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Exceptions.Exceptions.Protections;
-import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Modules.FilePckg.Messages;
-import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PlayerInteractionsPckg.PlayerInteractionsServiceImpl;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
@@ -31,9 +29,6 @@ import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.ItemType;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
-import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
-import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
-import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionRemovalInventoryRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionCreationRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionRemovalRequestInput;
 
@@ -201,49 +196,6 @@ public class EventsUtils {
 			return BlockBreakResult.SUCCESS;
 		}
 		return BlockBreakResult.IGNORE;
-	}
-
-	public static BlockInteractResult onVanillaBlockInteractEvent(Player player, IProtection protection) {
-		return onBlockInteractEvent(EventOrigin.VANILLA, player, protection);
-	}
-
-	public static BlockInteractResult onOraxenBlockInteractEvent(Player player, IProtection protection) {
-		return onBlockInteractEvent(EventOrigin.ORAXEN, player, protection);
-	}
-
-	public static BlockInteractResult onItemsAdderBlockInteractEvent(Player player, IProtection protection) {
-		return onBlockInteractEvent(EventOrigin.ITEMS_ADDER, player, protection);
-	}
-
-	private static BlockInteractResult onBlockInteractEvent(EventOrigin eventOrigin, Player player,
-			IProtection protection) {
-		IProtectionBlock protectionBlock = protection.getProtectionBlock();
-
-		if (protection.isCreationInProgress()) {
-			return BlockInteractResult.CANCEL;
-		}
-
-		if (protectionBlock != null && protectionBlock.getItemType() != eventOrigin.itemType) {
-			return BlockInteractResult.IGNORE;
-		}
-
-		if (player.isSneaking() && ProtectionUtilities.canDelete(protection, player)) {
-			try {
-				playerInteractionsService.openProtectionRemovalInventoryRequest(
-						OpenProtectionRemovalInventoryRequestInput.inst(player, protection));
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
-				e.sendError(player);
-			}
-		} else if (Settings.SETTINGS_PROTECTION_OPENINVENTORYONINTERACT.getContent()
-				&& ProtectionUtilities.canManage(protection, player)) {
-			try {
-				playerInteractionsService.openProtectionManagementInventoryRequest(
-						OpenProtectionManagementInventoryRequestInput.inst(player, protection));
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
-				e.sendError(player);
-			}
-		}
-		return BlockInteractResult.SUCCESS;
 	}
 
 	@AllArgsConstructor

@@ -52,7 +52,7 @@ public class ProtectionsPublicListInventory extends PagedChestInventoryObject<Pr
 		private BiFunction<Player, Protection, Boolean> filterFunction;
 
 		public Filter previous() {
-			return values()[(values().length + ordinal() + 1) % values().length];
+			return values()[(values().length + ordinal() - 1) % values().length];
 		}
 
 		public Filter next() {
@@ -71,7 +71,7 @@ public class ProtectionsPublicListInventory extends PagedChestInventoryObject<Pr
 		private Comparator<Protection> sortFunction;
 
 		public Sort previous() {
-			return values()[(values().length + ordinal() + 1) % values().length];
+			return values()[(values().length + ordinal() - 1) % values().length];
 		}
 
 		public Sort next() {
@@ -126,7 +126,7 @@ public class ProtectionsPublicListInventory extends PagedChestInventoryObject<Pr
 
 		itemBuilder.getLore().addAll(extraLore);
 
-		return itemBuilder.apply(protection.getDisplayItem().getOrDefault().clone());
+		return itemBuilder.apply(protection.getDisplayItemOrDefault().clone());
 	}
 
 	@Override

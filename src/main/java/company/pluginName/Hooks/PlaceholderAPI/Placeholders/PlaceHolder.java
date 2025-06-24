@@ -13,17 +13,46 @@ import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionFlagsPckg.ProtectionFlagsService;
+import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtectionFlags.FlagRetrieveRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
 
 public class PlaceHolder extends PlaceholderExpansion {
 
+	@RegisteredPandaField("lang")
+	private static final PandaStringField PLACEHOLDER_COMMON_ALLOWED = new PandaStringField(
+			"Placeholder.Common.Allowed", "Allowed");
+
+	@RegisteredPandaField("lang")
+	private static final PandaStringField PLACEHOLDER_COMMON_DENIED = new PandaStringField("Placeholder.Common.Denied",
+			"Denied");
+
+	@RegisteredPandaField("lang")
+	private static final PandaStringField PLACEHOLDER_ROLES_FORAGER = new PandaStringField("Placeholder.Roles.Forager",
+			"Forager");
+
+	@RegisteredPandaField("lang")
+	private static final PandaStringField PLACEHOLDER_ROLES_MEMBER = new PandaStringField("Placeholder.Common.Member",
+			"Member");
+
+	@RegisteredPandaField("lang")
+	private static final PandaStringField PLACEHOLDER_ROLES_OWNER = new PandaStringField("Placeholder.Common.Owner",
+			"Owner");
+
+	@RegisteredPandaField("lang")
+	private static final PandaStringField PLACEHOLDER_ROLES_MAINOWNER = new PandaStringField(
+			"Placeholder.Common.Main-owner", "Main Owner");
+
 	private static final String PROTECTION_FLAG_PREFIX = "protection_flag_";
+	private static final String PROTECTION_PERMISSION_PREFIX = "protection_permission_";
 	private static final String PROTECTIONBLOCK_CURRENT_PREFIX = "protectionblock_current_";
 	private static final String PROTECTIONBLOCK_MAX_PREFIX = "protectionblock_max_";
 
@@ -38,6 +67,9 @@ public class PlaceHolder extends PlaceholderExpansion {
 
 	@PandaInject
 	private static PlayerDataService playerDataService;
+
+	@PandaInject
+	private static ProtectionPermissionsService protectionPermissionsService;
 
 	@Override
 	public String getAuthor() {
@@ -70,6 +102,20 @@ public class PlaceHolder extends PlaceholderExpansion {
 						return protection.getFlags().getFlagValueAsString(FlagRetrieveRequestInput.inst(flagName));
 					} catch (RoyaleProtectionBlocksException e) {
 						return "";
+					}
+				}
+			} else if (identifier.toLowerCase().startsWith(PROTECTION_PERMISSION_PREFIX)) {
+				String permissionId = identifier.substring(PROTECTION_PERMISSION_PREFIX.length());
+				if (!permissionId.isEmpty()) {
+					IProtection protection = getProtectionIn(player);
+					if (protection != null) {
+						AbstractPermission permission = protectionPermissionsService.getPermission(permissionId);
+
+						if (permission != null) {
+							return Boolean.TRUE.equals(protection.getPermissionValue(permission, player))
+									? PLACEHOLDER_COMMON_ALLOWED.getContent()
+									: PLACEHOLDER_COMMON_DENIED.getContent();
+						}
 					}
 				}
 			} else if (identifier.toLowerCase().startsWith(PROTECTIONBLOCK_MAX_PREFIX)) {
@@ -124,6 +170,20 @@ public class PlaceHolder extends PlaceholderExpansion {
 								: String.valueOf((block.getBlocksY() * 2) + 1);
 						String blocksZ = String.valueOf((block.getBlocksZ() * 2) + 1);
 						return String.format("%sx%sx%s", blocksX, blocksY, blocksZ);
+					}
+					break;
+				case "protection_role":
+					protection = getProtectionIn(player);
+					if (protection != null) {
+						if (protection.isMainOwner(player.getUniqueId())) {
+							return PLACEHOLDER_ROLES_MAINOWNER.getContent();
+						} else if (protection.isOwner(player.getUniqueId())) {
+							return PLACEHOLDER_ROLES_OWNER.getContent();
+						} else if (protection.isMember(player.getUniqueId())) {
+							return PLACEHOLDER_ROLES_MEMBER.getContent();
+						} else {
+							return PLACEHOLDER_ROLES_FORAGER.getContent();
+						}
 					}
 					break;
 				case "player_current":

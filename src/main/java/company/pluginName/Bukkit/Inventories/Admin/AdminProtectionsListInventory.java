@@ -59,7 +59,7 @@ public class AdminProtectionsListInventory extends PagedChestInventoryObject<Pro
 		private Comparator<Protection> sortFunction;
 
 		public Sort previous() {
-			return values()[(values().length + ordinal() + 1) % values().length];
+			return values()[(values().length + ordinal() - 1) % values().length];
 		}
 
 		public Sort next() {
@@ -147,7 +147,7 @@ public class AdminProtectionsListInventory extends PagedChestInventoryObject<Pro
 			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_DELETELORELINE_PATH).toString());
 		}
 
-		return itemBuilder.setLore(lore).apply(protection.getDisplayItem().getOrDefault().clone());
+		return itemBuilder.setLore(lore).apply(protection.getDisplayItemOrDefault());
 	}
 
 	@Override

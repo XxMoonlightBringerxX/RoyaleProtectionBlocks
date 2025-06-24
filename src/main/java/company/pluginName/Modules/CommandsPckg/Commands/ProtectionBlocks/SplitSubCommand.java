@@ -11,6 +11,7 @@ import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Bukkit.Inventories.Shared.SearchProtectionInventory;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
@@ -65,6 +66,11 @@ public class SplitSubCommand extends PandaSubCommand {
 
 	public SplitSubCommand() throws InstantiationException {
 		super();
+	}
+
+	@Override
+	public boolean precondition() {
+		return Settings.SETTINGS_PROTECTION_MERGE_ENABLED.isTrue();
 	}
 
 	@Override
@@ -132,7 +138,7 @@ public class SplitSubCommand extends PandaSubCommand {
 				MessageTemplate.inst(MESSAGE_PROTECTION_MERGE_PARENTREMOVEDSUCCESSFULLY.applyPrefix()).process()
 						.sendMessage(player);
 			} else {
-				throw Exceptions.Protections.NOTMERGED.generateException();
+				throw Exceptions.Protections.Merge.NOTMERGED.generateException();
 			}
 		} catch (RoyaleProtectionBlocksException e) {
 			e.sendError(player);

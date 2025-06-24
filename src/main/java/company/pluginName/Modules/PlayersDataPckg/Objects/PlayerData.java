@@ -30,11 +30,24 @@ import lombok.experimental.Accessors;
 import relampagorojo93.LibsCollection.Utils.Shared.Java.StringsHelper;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.CachedQuery;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionInvitation;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Accessors(chain = true)
 public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataModule.Objects.PlayerData {
+
+	public static enum InvitationRequirement {
+		ALL_DENIED, INVITATION_REQUIRED, ALL_ACCEPTED;
+
+		public InvitationRequirement previous() {
+			return values()[(values().length + ordinal() - 1) % values().length];
+		}
+
+		public InvitationRequirement next() {
+			return values()[(values().length + ordinal() + 1) % values().length];
+		}
+	}
 
 	@RegisteredPandaField("lang")
 	private static final PandaPrefixedStringField MESSAGE_TELEPORT_STAYONSITE = new PandaPrefixedStringField(
@@ -55,11 +68,18 @@ public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataM
 	private @Setter(AccessLevel.NONE) @Getter(AccessLevel.NONE) BukkitTask task;
 	private List<? extends IProtection> currentProtections = new ArrayList<>();
 
+	// Player settings
+
+	private boolean autoFlight = SETTINGS_PLAYERSETTINGS_DEFAULTS_AUTOFLIGHT.isTrue();
+	private InvitationRequirement invitationRequirement = InvitationRequirement.ALL_ACCEPTED;
+
+	// Cache fields
+
 	private CachedQuery<?> lastCachedQuery;
 	private long lastBlockedProtectionMessage = 0L;
 	private boolean staffMode = false;
 
-	private boolean autoFlight = SETTINGS_PLAYERSETTINGS_DEFAULTS_AUTOFLIGHT.isTrue();
+	private List<ProtectionInvitation> protectionInvitations = new ArrayList<>();
 
 	public PlayerData(UUID uuid) {
 		super(uuid);
@@ -67,6 +87,18 @@ public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataM
 
 	public void setAutoFlightAndSave(boolean autoFlight) {
 		this.setAutoFlight(autoFlight);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.savePlayerData(this);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	public void setInvitationRequirementAndSave(InvitationRequirement invitationRequirement) {
+		this.setInvitationRequirement(invitationRequirement);
 
 		TasksUtils.executeOnAsync(() -> {
 			try {

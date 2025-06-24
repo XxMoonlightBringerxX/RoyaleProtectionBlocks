@@ -98,7 +98,7 @@ public class Messages {
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_BLOCKS_REMOVEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Blocks.Removed-successfully", "&aThe protection block has been removed successfully!");
 
-	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_TRANSFER_ADDEDSUCCESSFULLY = new PandaPrefixedStringField(
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_TRANSFER_TRANSFEREDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Transfer.Transfered-successfully",
 			"&aThe protection has been transfered successfully to the new owner!");
 
@@ -124,6 +124,10 @@ public class Messages {
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_PERMISSIONS_SWITCHEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Permissions.Switched-successfully",
 			"&aThe value for the permission &e{permission_name} &afor the group &e{group_name} &ahas been switched to &7\"&e{value}&7\" &asuccessfully!");
+
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_INVITATIONS_INVITEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protections.Invitations.Invited-successfully",
+			"&aThe player has been invited to the protection successfully! &7&o(The player must accept the invitation to become a member)");
 
 	public static final PandaPrefixedStringField MESSAGE_TRANSFER_AVAILABLELIST = new PandaPrefixedStringField(
 			"Message.Transfer.Available-list", "&7Available protection plugins to transfer from: &f{list}");

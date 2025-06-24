@@ -2,10 +2,12 @@ package company.pluginName.Modules.ProtectionsPckg.Listeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.inventory.EquipmentSlot;
 
 import company.pluginName.Debugger;
 import company.pluginName.Debugger.MessageType;
+import company.pluginName.Utils.EventUtilitiesV2;
 import company.pluginName.Utils.EventsUtils;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import io.th0rgal.oraxen.api.events.noteblock.OraxenNoteBlockBreakEvent;
@@ -17,6 +19,7 @@ import io.th0rgal.oraxen.api.events.stringblock.OraxenStringBlockDamageEvent;
 import io.th0rgal.oraxen.api.events.stringblock.OraxenStringBlockInteractEvent;
 import io.th0rgal.oraxen.api.events.stringblock.OraxenStringBlockPlaceEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.ItemType;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @PandaListener(optional = true)
@@ -43,16 +46,6 @@ public class OraxenListener implements Listener {
 			}
 		} else {
 			Debugger.log(MessageType.BLOCK_PLACE_CANCELLED);
-		}
-	}
-
-	@EventHandler
-	public void onNoteBlockInteract(OraxenNoteBlockInteractEvent e) {
-		IProtection protection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
-				.findProtectionBySourceBlock(e.getBlock());
-		if (protection != null) {
-			e.setCancelled(true);
-			EventsUtils.onOraxenBlockInteractEvent(e.getPlayer(), protection);
 		}
 	}
 
@@ -110,16 +103,6 @@ public class OraxenListener implements Listener {
 	}
 
 	@EventHandler
-	public void onStringBlockInteract(OraxenStringBlockInteractEvent e) {
-		IProtection protection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
-				.findProtectionBySourceBlock(e.getBlock());
-		if (protection != null) {
-			e.setCancelled(true);
-			EventsUtils.onOraxenBlockInteractEvent(e.getPlayer(), protection);
-		}
-	}
-
-	@EventHandler
 	public void onStringBlockDamage(OraxenStringBlockDamageEvent e) {
 		IProtection protection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
 				.findProtectionBySourceBlock(e.getBlock());
@@ -144,6 +127,28 @@ public class OraxenListener implements Listener {
 			}
 		} else {
 			Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
+		}
+	}
+
+	/*
+	 * Interact events
+	 */
+
+	@EventHandler
+	public void onNoteBlockInteract(OraxenNoteBlockInteractEvent e) {
+		IProtection protection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+				.findProtectionBySourceBlock(e.getBlock());
+		if (protection != null) {
+			EventUtilitiesV2.onPlayerInteract(e, ItemType.ORAXEN, e.getPlayer(), protection, e.getAction());
+		}
+	}
+
+	@EventHandler
+	public void onStringBlockInteract(OraxenStringBlockInteractEvent e) {
+		IProtection protection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+				.findProtectionBySourceBlock(e.getBlock());
+		if (protection != null) {
+			EventUtilitiesV2.onPlayerInteract(e, ItemType.ORAXEN, e.getPlayer(), protection, Action.LEFT_CLICK_BLOCK);
 		}
 	}
 

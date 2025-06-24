@@ -61,4 +61,7 @@ public class Settings {
 	public static final PandaStringField SETTINGS_STORE_PROTECTIONBLOCKECONOMYSERVICE = new PandaStringField(
 			"Settings.Store.Protection-block-economy-service", EconomyService.VAULT.name());
 
+	public static final PandaBooleanField SETTINGS_PROTECTION_MERGE_ENABLED = new PandaBooleanField(
+			"Settings.Protection.Merge.Enabled", true);
+
 }

@@ -8,6 +8,7 @@ import company.pluginName.Debugger;
 import company.pluginName.Debugger.MessageType;
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Utils.EventUtilitiesV2;
 import company.pluginName.Utils.EventsUtils;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
@@ -16,6 +17,7 @@ import dev.lone.itemsadder.api.Events.CustomBlockBreakEvent;
 import dev.lone.itemsadder.api.Events.CustomBlockInteractEvent;
 import dev.lone.itemsadder.api.Events.CustomBlockPlaceEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.ItemType;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @PandaListener(optional = true)
@@ -66,16 +68,6 @@ public class ItemsAdderListener implements Listener {
 	}
 
 	@EventHandler
-	public void onCustomBlockInteractEvent(CustomBlockInteractEvent e) {
-		IProtection protection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
-				.findProtectionBySourceBlock(e.getBlockClicked());
-		if (protection != null) {
-			e.setCancelled(true);
-			EventsUtils.onItemsAdderBlockInteractEvent(e.getPlayer(), protection);
-		}
-	}
-
-	@EventHandler
 	public void onCustomBlockBreakEvent(CustomBlockBreakEvent e) {
 		Debugger.log(MessageType.ITEMSADDER_BLOCK_BREAK,
 				() -> new Object[] { e.getPlayer().getName(), String.valueOf(e.getBlock().getX()),
@@ -92,6 +84,19 @@ public class ItemsAdderListener implements Listener {
 			}
 		} else {
 			Debugger.log(MessageType.BLOCK_BREAK_CANCELLED);
+		}
+	}
+
+	/*
+	 * Interact events
+	 */
+
+	@EventHandler
+	public void onCustomBlockInteractEvent(CustomBlockInteractEvent e) {
+		IProtection protection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+				.findProtectionBySourceBlock(e.getBlockClicked());
+		if (protection != null) {
+			EventUtilitiesV2.onPlayerInteract(e, ItemType.ITEMS_ADDER, e.getPlayer(), protection, e.getAction());
 		}
 	}
 

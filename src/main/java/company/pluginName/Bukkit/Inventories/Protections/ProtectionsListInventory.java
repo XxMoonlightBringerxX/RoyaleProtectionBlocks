@@ -12,9 +12,11 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import company.pluginName.Bukkit.Inventories.Protections.Invitations.ProtectionInvitationsInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayerInteractionsPckg.PlayerInteractionsServiceImpl;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
@@ -54,7 +56,7 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 		private BiFunction<Player, Protection, Boolean> filterFunction;
 
 		public Filter previous() {
-			return values()[(values().length + ordinal() + 1) % values().length];
+			return values()[(values().length + ordinal() - 1) % values().length];
 		}
 
 		public Filter next() {
@@ -73,7 +75,7 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 		private Comparator<Protection> sortFunction;
 
 		public Sort previous() {
-			return values()[(values().length + ordinal() + 1) % values().length];
+			return values()[(values().length + ordinal() - 1) % values().length];
 		}
 
 		public Sort next() {
@@ -89,6 +91,9 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 
 	@PandaInject
 	private static PlayerInteractionsServiceImpl playerInteractionsService;
+
+	@PandaInject
+	private static PlayerDataService playerDataService;
 
 	private Filter currentFilter = Filter.ALL;
 	private Sort currentSort = Sort.CREATION_DATE;
@@ -155,7 +160,7 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 			lore.add(getChestInventoryData().getCustomFields().get(ENTITY_DELETELORELINE_PATH).toString());
 		}
 
-		return itemBuilder.setLore(lore).apply(protection.getDisplayItem().getOrDefault().clone());
+		return itemBuilder.setLore(lore).apply(protection.getDisplayItemOrDefault().clone());
 	}
 
 	@Override
@@ -236,6 +241,11 @@ public class ProtectionsListInventory extends PagedChestInventoryObject<Protecti
 		this.currentSort = this.currentSort.next();
 		updateEntityList();
 		updateInventory();
+	}
+
+	@ItemExecutor("Invitations-button")
+	private void onClickInvitationsButton() {
+		new ProtectionInvitationsInventory(getPlayer(), playerDataService.getPlayerData(getPlayer())).openInventory();
 	}
 
 }

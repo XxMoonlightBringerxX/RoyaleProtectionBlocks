@@ -1,13 +1,17 @@
 package company.pluginName.Bukkit.Events.Listeners;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
+import org.bukkit.block.Furnace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.FurnaceBurnEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -15,6 +19,7 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.spigotmc.event.entity.EntityMountEvent;
 
+import company.pluginName.MainPluginClass;
 import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
@@ -30,9 +35,11 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Modules.SettingsPckg.SettingsService;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
+import darkpanda73.PandaUtils.PandaCraftableItems.Utils.RecipeUtilities;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListener;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackData.ItemStackDataUtilities;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
@@ -59,6 +66,9 @@ public class BukkitListener implements Listener {
 
 	@PandaInject
 	private WorldGuardAPI worldGuardApi;
+
+	@PandaInject
+	private MainPluginClass plugin;
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onPlayerJoin(PlayerJoinEvent e) {
@@ -135,6 +145,69 @@ public class BukkitListener implements Listener {
 					protection.getPermissionValue(ProtectionPermissionsService.RIDEVEHICLES_PERMISSION, player))) {
 				e.setCancelled(true);
 			}
+		}
+	}
+
+	@EventHandler
+	public void onPlayerConsumeOnFurnace(FurnaceBurnEvent event) {
+		Furnace furnace = (Furnace) event.getBlock().getState();
+
+		String protectionBlockId = null;
+
+		try {
+			protectionBlockId = ItemStackDataUtilities.getPersistentData(furnace.getInventory().getSmelting(), plugin,
+					ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
+		} catch (Exception e) {
+			MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(
+					String.format("An error has ocurred trying to retrieve the Protection Block ID from an item: %s",
+							e.getMessage())))
+					.process().sendMessage(Bukkit.getConsoleSender());
+			e.printStackTrace();
+		}
+
+		if (protectionBlockId != null && !protectionBlockId.isEmpty()) {
+			event.setCancelled(true);
+			return;
+		}
+
+		try {
+			protectionBlockId = ItemStackDataUtilities.getPersistentData(furnace.getInventory().getFuel(), plugin,
+					ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
+		} catch (Exception e) {
+			MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(
+					String.format("An error has ocurred trying to retrieve the Protection Block ID from an item: %s",
+							e.getMessage())))
+					.process().sendMessage(Bukkit.getConsoleSender());
+			e.printStackTrace();
+		}
+
+		if (protectionBlockId != null && !protectionBlockId.isEmpty()) {
+			event.setCancelled(true);
+			return;
+		}
+	}
+
+	@EventHandler
+	public void onPlayerConsumeOnFurnace(PrepareItemCraftEvent event) {
+		String recipeKey = event.getRecipe() != null ? RecipeUtilities.getKey(event.getRecipe()) : null;
+
+		if (recipeKey != null && !recipeKey.isEmpty() && !recipeKey.startsWith("royaleprotectionblocks:")
+				&& Arrays.stream(event.getInventory().getMatrix()).anyMatch(item -> {
+					String protectionBlockId = null;
+
+					try {
+						protectionBlockId = ItemStackDataUtilities.getPersistentData(item, plugin,
+								ProtectionBlock.PROTECTION_BLOCK_ID_KEY, String.class);
+					} catch (Exception e) {
+						MessageTemplate.inst(PandaPrefixedStringField.applyPrefix(String.format(
+								"An error has ocurred trying to retrieve the Protection Block ID from an item: %s",
+								e.getMessage()))).process().sendMessage(Bukkit.getConsoleSender());
+						e.printStackTrace();
+					}
+
+					return protectionBlockId != null && !protectionBlockId.isEmpty();
+				})) {
+			event.getInventory().setResult(null);
 		}
 	}
 

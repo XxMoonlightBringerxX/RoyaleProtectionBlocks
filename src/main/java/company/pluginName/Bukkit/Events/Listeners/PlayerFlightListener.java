@@ -1,7 +1,9 @@
 package company.pluginName.Bukkit.Events.Listeners;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -9,8 +11,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
@@ -49,6 +56,7 @@ public class PlayerFlightListener implements Listener {
 			"Message.Protection.Flight.Remove-in-done", "&cUnauthorized flight zone. Removing flight in: &eNow");
 
 	private HashMap<UUID, BukkitTask> flightRemovalTasks = new HashMap<>();
+	private List<UUID> fallDamagePrevention = new ArrayList<>();
 
 	@EventHandler
 	public void onPlayerEnterExitProtection(PlayerEnterExitProtectionEvent e) {
@@ -83,11 +91,9 @@ public class PlayerFlightListener implements Listener {
 					e.getPlayer().setAllowFlight(false);
 				}
 			}
-		} else {
-			if (!e.getCurrentProtections().isEmpty()
-					&& e.getCurrentProtections().stream().anyMatch(protection -> protection.canFly(e.getPlayer()))) {
-				cancelTask(e.getPlayer().getUniqueId());
-			}
+		} else if (!e.getCurrentProtections().isEmpty()
+				&& e.getCurrentProtections().stream().anyMatch(protection -> protection.canFly(e.getPlayer()))) {
+			cancelTask(e.getPlayer().getUniqueId());
 		}
 	}
 
@@ -107,6 +113,7 @@ public class PlayerFlightListener implements Listener {
 			if (player != null && player.getAllowFlight()) {
 				if (atomicInteger.decrementAndGet() == 0) {
 					player.setAllowFlight(false);
+					fallDamagePrevention.add(player.getUniqueId());
 					cancelTask(uuid);
 
 					MessageTemplate.inst(MESSAGE_PROTECTION_FLIGHT_REMOVEINDONE.getContent())
@@ -128,6 +135,26 @@ public class PlayerFlightListener implements Listener {
 
 		if (task != null) {
 			task.cancel();
+		}
+	}
+
+	@EventHandler(ignoreCancelled = true)
+	public void onPlayerQuit(PlayerQuitEvent e) {
+		fallDamagePrevention.remove(e.getPlayer().getUniqueId());
+	}
+
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	public void onPlayerStopFalling(PlayerMoveEvent e) {
+		if (e.getTo().getY() - e.getFrom().getY() >= 0D) {
+			fallDamagePrevention.remove(e.getPlayer().getUniqueId());
+		}
+	}
+
+	@EventHandler(ignoreCancelled = true)
+	public void onPlayerFallDamage(EntityDamageEvent e) {
+		if (e.getEntity() instanceof Player && e.getCause() == DamageCause.FALL
+				&& fallDamagePrevention.remove(e.getEntity().getUniqueId())) {
+			e.setCancelled(true);
 		}
 	}
 

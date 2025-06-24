@@ -19,6 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData.InvitationRequirement;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockAllowedWorlds;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Components.ProtectionBlockInformation;
@@ -38,6 +39,8 @@ import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0008RegenerateMemb
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0009AddOwnersAsMembersConstraint;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0010AddPlayerDataTable;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0011AddPendingPaymentsTable;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0012AddInvitationsTable;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0013AddInvitationRequirementColumn;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Annotations.PandaSQLConfigV2;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Changelogs.SQLChangelog;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.DeleteStatement;
@@ -58,6 +61,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.SettingGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionInvitation;
 
 @PandaSQLConfigV2(allowMySQL = true)
 public class SQLService extends PandaSQLService {
@@ -112,6 +116,11 @@ public class SQLService extends PandaSQLService {
 			new Column("Permission", Types.VARCHAR, "VARCHAR(64)"), new Column("Price", Types.DECIMAL, "DECIMAL(11,2)"),
 			new Column("Recipe", Types.BLOB), new Column("RecipePermission", Types.VARCHAR, "VARCHAR(64)"));
 
+	private static final Table PROTECTION_INVITATIONS_TABLE = new Table("ProtectionInvitations").addColumns(
+			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
+			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setNotNull(true),
+			new Column("CreatedDate", Types.BIGINT).setNotNull(true));
+
 	private static final Table RECIPES_TABLE = new Table("Recipes").addColumns(
 			new Column("ProtectionBlockId", Types.VARCHAR, "VARCHAR(32)").setPrimary(true).setUnique(true)
 					.setNotNull(true),
@@ -127,7 +136,8 @@ public class SQLService extends PandaSQLService {
 
 	private static final Table PLAYER_DATA_TABLE = new Table("PlayerData").addColumns(
 			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setPrimary(true).setNotNull(true),
-			new Column("AutoFlight", Types.BOOLEAN, "BOOLEAN", "0").setNotNull(true));
+			new Column("AutoFlight", Types.BOOLEAN, "BOOLEAN", "0").setNotNull(true),
+			new Column("InvitationRequirement", Types.VARCHAR, "VARCHAR(64)"));
 
 	private static final Table PENDING_PAYMENTS_TABLE = new Table("PendingPayments").addColumns(
 			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setNotNull(true),
@@ -141,8 +151,9 @@ public class SQLService extends PandaSQLService {
 				new Changelog0004AddPublicAccessColumn(), new Changelog0005AddMembersAndOwnersTables(),
 				new Changelog0006AddProtectionSettingsTable(), new Changelog0007AddProtectionPermissionsTable(),
 				new Changelog0008RegenerateMembersAndOwnersConstraint(),
-				new Changelog0009AddOwnersAsMembersConstraint(), new Changelog0011AddPendingPaymentsTable(),
-				new Changelog0010AddPlayerDataTable());
+				new Changelog0009AddOwnersAsMembersConstraint(), new Changelog0010AddPlayerDataTable(),
+				new Changelog0011AddPendingPaymentsTable(), new Changelog0012AddInvitationsTable(),
+				new Changelog0013AddInvitationRequirementColumn());
 	}
 
 	/*
@@ -176,7 +187,7 @@ public class SQLService extends PandaSQLService {
 
 				if (set.getString("DisplayItem") != null) {
 					try {
-						protection.getDisplayItem().set(ItemStacksUtils.itemsParse(set.getBytes("DisplayItem"),
+						protection.setDisplayItem(ItemStacksUtils.itemsParse(set.getBytes("DisplayItem"),
 								new ItemStack[] { new ItemStack(Material.STONE) })[0]);
 					} catch (IllegalArgumentException e) {
 					}
@@ -232,7 +243,7 @@ public class SQLService extends PandaSQLService {
 								: null),
 						protection.getOwnerUuid().toString(), protection.getProtectionBlockId(),
 						(protection.getDisplayItem() != null
-								? ItemStacksUtils.itemsParse(new ItemStack[] { protection.getDisplayItem().get() })
+								? ItemStacksUtils.itemsParse(new ItemStack[] { protection.getDisplayItem() })
 								: null),
 						protection.getWorldName(), protection.getDisplayName(), protection.getCreatedDate(),
 						protection.getLocation().getX(), protection.getLocation().getY(),
@@ -317,6 +328,7 @@ public class SQLService extends PandaSQLService {
 			this.deleteProtectionMembers(protection);
 			this.deleteProtectionOwners(protection);
 			this.deleteProtectionPermissions(protection);
+			this.deleteProtectionInvitations(protection);
 			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTIONS_TABLE).setCondition(
 					EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
 		} catch (Throwable e) {
@@ -517,6 +529,65 @@ public class SQLService extends PandaSQLService {
 							.inst(PROTECTION_BANNEDS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Banneds.Delete.SQL.generateException(e);
+		}
+	}
+
+	/*
+	 * Protection invitations methods
+	 */
+
+	public HashMap<String, List<ProtectionInvitation>> getProtectionInvitations() {
+		HashMap<String, List<ProtectionInvitation>> protectionInvitations = new HashMap<>();
+
+		try (ResultSet set = this.getSqlConnection()
+				.executeQuery(SelectStatement.inst().addTable(PROTECTION_INVITATIONS_TABLE))) {
+			while (set.next()) {
+				protectionInvitations.computeIfAbsent(set.getString("RegionId"), (key) -> new ArrayList<>())
+						.add(new ProtectionInvitation(null, UUID.fromString(set.getString("PlayerUuid")),
+								set.getLong("CreatedDate")));
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+
+		return protectionInvitations;
+	}
+
+	public void saveProtectionInvitation(Protection protection, ProtectionInvitation invitation)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		InsertStatement insert = InsertStatement.inst(PROTECTION_INVITATIONS_TABLE);
+		insert.addEntry(protection.getProtectionId(), invitation.getPlayerUuid().toString(),
+				invitation.getCreatedDate());
+
+		try {
+			this.getSqlConnection().executeInsert(insert);
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Invitations.SAVESQL.generateException(e);
+		}
+	}
+
+	public void deleteProtectionInvitation(Protection protection, UUID playerUuid)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_INVITATIONS_TABLE)
+							.setCondition(AndCondition.inst(
+									EqualsCondition.inst(PROTECTION_INVITATIONS_TABLE.getColumn("RegionId"),
+											protection.getProtectionId()),
+									EqualsCondition.inst(PROTECTION_INVITATIONS_TABLE.getColumn("PlayerUuid"),
+											playerUuid.toString()))));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Invitations.DELETESQL.generateException(e);
+		}
+	}
+
+	public void deleteProtectionInvitations(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_INVITATIONS_TABLE).setCondition(EqualsCondition
+							.inst(PROTECTION_INVITATIONS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Invitations.DELETESQL.generateException(e);
 		}
 	}
 
@@ -844,7 +915,18 @@ public class SQLService extends PandaSQLService {
 		try (ResultSet set = this.getSqlConnection().executeQuery(SelectStatement.inst().addTable(PLAYER_DATA_TABLE)
 				.setCondition(EqualsCondition.inst(PLAYER_DATA_TABLE.getColumn("PlayerUuid"), uuid.toString())))) {
 			if (set.next()) {
-				playerData.setAutoFlight(set.getBoolean("AutoFlight"));
+				boolean autoFlight = set.getBoolean("AutoFlight");
+
+				if (!set.wasNull()) {
+					playerData.setAutoFlight(autoFlight);
+				}
+
+				String invitationRequirement = set.getString("InvitationRequirement");
+
+				if (invitationRequirement != null) {
+					playerData.setInvitationRequirement(
+							InvitationRequirement.valueOf(invitationRequirement.toUpperCase()));
+				}
 			}
 		} catch (Throwable e) {
 			throw Exceptions.Protections.Permissions.SQL.generateException(e);
@@ -855,7 +937,8 @@ public class SQLService extends PandaSQLService {
 
 	public void savePlayerData(PlayerData playerData) throws RoyaleProtectionBlocksExceptionImpl {
 		InsertStatement insertStatement = InsertStatement.inst(PLAYER_DATA_TABLE)
-				.addEntry(playerData.getUuid().toString(), playerData.isAutoFlight())
+				.addEntry(playerData.getUuid().toString(), playerData.isAutoFlight(),
+						playerData.getInvitationRequirement().name())
 				.setConditionIfExists(EqualsCondition.inst(PLAYER_DATA_TABLE.getColumn("PlayerUuid"),
 						playerData.getUuid().toString()));
 

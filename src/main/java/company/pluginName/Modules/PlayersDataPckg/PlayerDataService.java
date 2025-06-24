@@ -1,10 +1,12 @@
 package company.pluginName.Modules.PlayersDataPckg;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
@@ -26,6 +28,9 @@ public class PlayerDataService extends PandaPlayerDataService<PlayerData> {
 			if (pl != null) {
 				playerData.setStaffMode(PermissionsService.STAFFMODE.hasPermission(pl));
 			}
+
+			playerData.setProtectionInvitations(RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
+					.findAllProtectionInvitationsByPlayerUuid(uuid).collect(Collectors.toList()));
 
 			return playerData;
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {

@@ -11,7 +11,9 @@ import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Bukkit.Inventories.Protections.Merge.ProtectionMergeInventory;
 import company.pluginName.Bukkit.Inventories.Shared.SearchProtectionInventory;
 import company.pluginName.Exceptions.Exceptions;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
+import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
@@ -65,6 +67,11 @@ public class MergeSubCommand extends PandaSubCommand {
 
 	public MergeSubCommand() throws InstantiationException {
 		super();
+	}
+
+	@Override
+	public boolean precondition() {
+		return Settings.SETTINGS_PROTECTION_MERGE_ENABLED.isTrue();
 	}
 
 	@Override
@@ -145,7 +152,11 @@ public class MergeSubCommand extends PandaSubCommand {
 							new ProtectionMergeInventory(pl, (Protection) allowedProtections.get(0)).openInventory();
 						} else {
 							new SearchProtectionInventory(pl, allowedProtections, (prot) -> {
-								new ProtectionMergeInventory(pl, (Protection) prot).openInventory();
+								try {
+									new ProtectionMergeInventory(pl, (Protection) prot).openInventory();
+								} catch (RoyaleProtectionBlocksExceptionImpl e) {
+									e.sendError(sender);
+								}
 							}).openInventory();
 						}
 					} else {

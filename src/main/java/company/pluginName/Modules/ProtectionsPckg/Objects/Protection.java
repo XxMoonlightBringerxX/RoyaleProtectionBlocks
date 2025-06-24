@@ -2,14 +2,17 @@ package company.pluginName.Modules.ProtectionsPckg.Objects;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.domains.DefaultDomain;
@@ -20,11 +23,13 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import company.pluginName.Exceptions.Exceptions;
+import company.pluginName.Exceptions.Exceptions.Protections;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
 import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
+import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.InvitationsSubCommand;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
@@ -32,7 +37,6 @@ import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.ReferencedProtectionBlock;
 import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionDisplayItem;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionPlayers;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionSettings;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils;
@@ -42,15 +46,19 @@ import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import company.pluginName.Modules.SettingsPckg.SettingsService;
 import company.pluginName.Utils.ReflectUtils;
+import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageFragment.ClickEvent;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.PandaUtilities.Java.MathUtilities;
+import darkpanda73.PandaUtils.Services.PandaCommandsModule.PandaCommandsService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaIntegerField;
+import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -72,19 +80,26 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.AbstractSetting;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionInvitation;
 
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
 public class Protection implements IProtection {
 
+	private static final ItemStack UNKNOWN_DISPLAY_ITEM = ItemBuilder.inst().setMaterial(Material.PLAYER_HEAD)
+			.setAmount(1)
+			.setSkin(
+					"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=")
+			.build();
+
 	@RegisteredPandaField("config")
 	public static PandaIntegerField SETTINGS_PROTECTION_MAXIMUMDISPLAYNAMELENGTH = new PandaIntegerField(
 			"Settings.Protection.Maximum-display-name-length", 255);
 
 	@RegisteredPandaField("config")
-	public static PandaBooleanField SETTINGS_PROTECTION_MUSTBECLOSEFORMERGE = new PandaBooleanField(
-			"Settings.Protection.Must-be-close-for-merge", true);
+	public static PandaBooleanField SETTINGS_PROTECTION_MERGE_MUSTBECLOSEFORMERGE = new PandaBooleanField(
+			"Settings.Protection.Merge.Must-be-close-for-merge", "Settings.Protection.Must-be-close-for-merge", true);
 
 	@RegisteredPandaField("config")
 	public static PandaStringField SETTINGS_PROTECTION_DEFAULTDISPLAYNAME = new PandaStringField(
@@ -94,6 +109,11 @@ public class Protection implements IProtection {
 	@RegisteredPandaField("config")
 	public static PandaIntegerField SETTINGS_PROTECTION_DEFAULTPRIORITY = new PandaIntegerField(
 			"Settings.Protection.Default-priority", 0);
+
+	@RegisteredPandaField("lang")
+	public static PandaPrefixedStringField MESSAGE_PROTECTIONS_INVITATIONS_INVITATIONRECEIVED = new PandaPrefixedStringField(
+			"Message.Protections.Invitations.Invitation-received",
+			"&eYou've received a new invitation to a protection! Use &a{command} &eto accept/reject the invitation.");
 
 	@PandaInject
 	private static SettingsService protectionSettingsService;
@@ -119,6 +139,9 @@ public class Protection implements IProtection {
 	@PandaInject
 	private static PlayerDataService playerDataService;
 
+	@PandaInject
+	private static PandaCommandsService commandsService;
+
 	private @ToString.Include @EqualsAndHashCode.Include String protectionId;
 	private @ToString.Include @EqualsAndHashCode.Include String worldName;
 	private @ToString.Include long createdDate;
@@ -130,7 +153,6 @@ public class Protection implements IProtection {
 	private @Setter(AccessLevel.NONE) ProtectionWorldGuardFlags worldGuardFlags = new ProtectionWorldGuardFlags(this);
 	private @Setter(AccessLevel.NONE) ProtectionActions actions = new ProtectionActions(this);
 	private @Setter(AccessLevel.NONE) ProtectionUtils utils = new ProtectionUtils(this);
-	private @Setter(AccessLevel.NONE) ProtectionDisplayItem displayItem = new ProtectionDisplayItem(this);
 
 	private boolean deleted = false;
 
@@ -232,6 +254,55 @@ public class Protection implements IProtection {
 			this.displayNameWithoutFormat = MessageTemplate.inst(this.displayName).setColor(false).process().toString();
 		}
 		return this.displayNameWithoutFormat;
+	}
+
+	/*
+	 * Display item methods
+	 */
+
+	private ItemStack displayItem;
+	private @Getter(lombok.AccessLevel.NONE) @Setter(lombok.AccessLevel.NONE) ItemStack protectionBlockDisplayItem;
+
+	public ItemStack getDisplayItem() {
+		return this.displayItem != null ? this.displayItem.clone() : null;
+	}
+
+	public ItemStack getDisplayItemOrDefault() {
+		if (this.displayItem != null) {
+			return this.displayItem.clone();
+		} else {
+			if (this.protectionBlockDisplayItem == null) {
+				IProtectionBlock block = this.getProtectionBlock();
+				if (block != null) {
+					this.protectionBlockDisplayItem = block.getItem().clone();
+				}
+			}
+
+			if (this.protectionBlockDisplayItem != null) {
+				return this.protectionBlockDisplayItem;
+			}
+		}
+		return UNKNOWN_DISPLAY_ITEM.clone();
+	}
+
+	public void setDisplayItemAndSave(ItemStack displayItem) {
+		this.setDisplayItem(displayItem);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.saveProtection(this);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	public void setDisplayItem(ItemStack displayItem) {
+		this.displayItem = displayItem != null ? displayItem.clone() : null;
+
+		if (this.displayItem != null) {
+			this.displayItem.setAmount(1);
+		}
 	}
 
 	/*
@@ -536,15 +607,15 @@ public class Protection implements IProtection {
 
 	public void setParentProtectionInstance(IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		if (this.getChildProtectionsRecursively().contains(protection)) {
-			throw Exceptions.Protections.MERGECHILDPROTECTION.generateException();
+			throw Exceptions.Protections.Merge.CHILDPROTECTION.generateException();
 		}
 
 		if (this.parentProtection == protection) {
-			throw Exceptions.Protections.ALREADYMERGED.generateException();
+			throw Exceptions.Protections.Merge.ALREADYMERGED.generateException();
 		}
 
 		if (this == protection) {
-			throw Exceptions.Protections.MERGESAMEPROTECTION.generateException();
+			throw Exceptions.Protections.Merge.SAMEPROTECTION.generateException();
 		}
 
 		this.parentProtection = protection;
@@ -556,9 +627,9 @@ public class Protection implements IProtection {
 	}
 
 	public void setParentProtection(Player player, IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
-		if (SETTINGS_PROTECTION_MUSTBECLOSEFORMERGE.isTrue()) {
+		if (SETTINGS_PROTECTION_MERGE_MUSTBECLOSEFORMERGE.isTrue()) {
 			if (!protection.isInsideAny(this.getUtils().getProtectionArea(), true)) {
-				throw Exceptions.Protections.MERGETOOFAR.generateException();
+				throw Exceptions.Protections.Merge.TOOFAR.generateException();
 			}
 		}
 
@@ -635,6 +706,96 @@ public class Protection implements IProtection {
 		}
 
 		this.publicAccess = publicAccess;
+	}
+
+	/*
+	 * Invitations system
+	 */
+
+	private Map<UUID, ProtectionInvitation> invitedPlayers = new HashMap<>();
+
+	public ProtectionInvitation getInvitedPlayer(UUID playerUuid) {
+		return invitedPlayers.get(playerUuid);
+	}
+
+	public ProtectionInvitation addInvitedPlayer(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+		if (isInvitedPlayer(playerUuid)) {
+			throw Protections.Invitations.ALREADYINVITED.generateException();
+		}
+
+		ProtectionInvitation invitation = new ProtectionInvitation(this, playerUuid);
+
+		this.invitedPlayers.put(playerUuid, invitation);
+
+		Player pl = Bukkit.getPlayer(playerUuid);
+
+		if (pl != null) {
+			playerDataService.getPlayerData(pl).getProtectionInvitations().add(invitation);
+
+			InvitationsSubCommand command = commandsService.getSubCommandByClass(InvitationsSubCommand.class);
+
+			MessageTemplate.inst(MESSAGE_PROTECTIONS_INVITATIONS_INVITATIONRECEIVED.applyPrefix())
+					.setReplacements(new Replacement("{command}", () -> "/" + command.getCommandPath(),
+							new ClickEvent(ClickEvent.Action.RUN_COMMAND, command.getCommandPath())))
+					.process().sendMessage(pl);
+		}
+
+		return invitation;
+	}
+
+	public ProtectionInvitation addInvitedPlayerAndSave(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+		ProtectionInvitation invitation = this.addInvitedPlayer(playerUuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.saveProtectionInvitation(this, invitation);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+
+		return invitation;
+	}
+
+	public void acceptInvitation(UUID playerUuid) throws RoyaleProtectionBlocksException {
+		removeInvitedPlayer(playerUuid);
+		this.players.addMember(playerUuid);
+	}
+
+	@Override
+	public void acceptInvitationAndSave(UUID playerUuid) throws RoyaleProtectionBlocksException {
+		removeInvitedPlayerAndSave(playerUuid);
+		addMemberAndSave(playerUuid, true);
+	}
+
+	public void removeInvitedPlayer(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+		if (!isInvitedPlayer(playerUuid)) {
+			throw Protections.Invitations.NOTINVITED.generateException();
+		}
+
+		ProtectionInvitation invitation = this.invitedPlayers.remove(playerUuid);
+
+		Player pl = Bukkit.getPlayer(playerUuid);
+
+		if (pl != null) {
+			playerDataService.getPlayerData(pl).getProtectionInvitations().remove(invitation);
+		}
+	}
+
+	public void removeInvitedPlayerAndSave(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+		this.removeInvitedPlayer(playerUuid);
+
+		TasksUtils.executeOnAsync(() -> {
+			try {
+				sqlService.deleteProtectionInvitation(this, playerUuid);
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				e.sendError(Bukkit.getConsoleSender());
+			}
+		});
+	}
+
+	public boolean isInvitedPlayer(UUID playerUuid) {
+		return this.invitedPlayers.containsKey(playerUuid);
 	}
 
 	/*
@@ -1042,7 +1203,7 @@ public class Protection implements IProtection {
 	}
 
 	@Override
-	public Boolean getPermissionValue(AbstractPermission setting, Player player) {
+	public Boolean getPermissionValue(AbstractPermission setting, OfflinePlayer player) {
 		return this.permissions.getValue(setting, player);
 	}
 

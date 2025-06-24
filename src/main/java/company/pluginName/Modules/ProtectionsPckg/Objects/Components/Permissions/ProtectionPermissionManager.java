@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
@@ -64,7 +64,7 @@ public class ProtectionPermissionManager {
 		});
 	}
 
-	public Boolean getValue(AbstractPermission setting, Player player) {
+	public Boolean getValue(AbstractPermission setting, OfflinePlayer player) {
 		if (protection.isMainOwner(player.getUniqueId()) || protection.isOwner(player.getUniqueId())) {
 			return getValue(setting, PermissionGroup.OWNERS);
 		} else if (protection.isMember(player.getUniqueId())) {

@@ -68,7 +68,7 @@ public class PendingPaymentsService {
 	public void processPendingPayments(Player player) {
 		try {
 			executeSynchronized(() -> {
-				Map<EconomyService, Double> pendingPayments = this.pendingPayments.get(player.getUniqueId());
+				Map<EconomyService, Double> pendingPayments = this.pendingPayments.remove(player.getUniqueId());
 
 				if (pendingPayments != null) {
 					pendingPayments

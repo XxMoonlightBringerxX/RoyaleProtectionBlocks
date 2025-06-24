@@ -8,6 +8,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Bukkit.Inventories.v2.Protections.ProtectionsManageInventory;
+import company.pluginName.Exceptions.Exceptions;
+import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
@@ -37,8 +40,12 @@ public class ProtectionSplitInventory extends PagedChestInventoryObject<Protecti
 
 	private Protection protection;
 
-	public ProtectionSplitInventory(Player player, Protection protection) {
+	public ProtectionSplitInventory(Player player, Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
 		super(player);
+
+		if (Settings.SETTINGS_PROTECTION_MERGE_ENABLED.isFalse()) {
+			throw Exceptions.Protections.Merge.DISABLED.generateException();
+		}
 
 		this.protection = protection;
 
@@ -71,7 +78,7 @@ public class ProtectionSplitInventory extends PagedChestInventoryObject<Protecti
 		ItemBuilder itemBuilder = ItemBuilder.inst().fromMap(getChestInventoryData().getCustomFields(), "Entity")
 				.setReplacements(protectionReplacements);
 
-		return itemBuilder.apply(entity.getDisplayItem().getOrDefault().clone());
+		return itemBuilder.apply(entity.getDisplayItemOrDefault().clone());
 	}
 
 	@Override

@@ -68,7 +68,7 @@ public class TransferSubCommand extends PandaSubCommand {
 												ProtectionTransferRequestInput.inst(pl, protection, newOwner));
 
 								MessageTemplate
-										.inst(Messages.MESSAGE_PROTECTIONS_TRANSFER_ADDEDSUCCESSFULLY.applyPrefix())
+										.inst(Messages.MESSAGE_PROTECTIONS_TRANSFER_TRANSFEREDSUCCESSFULLY.applyPrefix())
 										.process().sendMessage(sender);
 							} else {
 								throw Exceptions.Generic.PLAYERNOTONLINE.generateException();

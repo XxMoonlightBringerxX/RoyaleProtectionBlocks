@@ -84,7 +84,7 @@ public class ProtectionsPurgeService {
 						.stringToSeconds(SETTINGS_PROTECTION_AUTOPURGE_PURGEOLDERTHAN.getContent());
 
 				if (olderThan > 0) {
-					plugin.sendDebug(getClass(),
+					plugin.sendInfo(getClass(),
 							String.format("Set auto purge to remove regions older than %d seconds", olderThan));
 					configuredPurgeConfiguration = new PurgeConfiguration().setMillis(olderThan * 1000);
 

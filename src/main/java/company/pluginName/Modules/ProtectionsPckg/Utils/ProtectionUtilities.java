@@ -183,7 +183,8 @@ public class ProtectionUtilities {
 	}
 
 	public static boolean canMerge(IProtection protection, Player pl) {
-		return protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MERGE_OTHERS.hasPermission(pl);
+		return Settings.SETTINGS_PROTECTION_MERGE_ENABLED.isTrue()
+				&& (protection.isMainOwner(pl.getUniqueId()) || PermissionsService.MERGE_OTHERS.hasPermission(pl));
 	}
 
 	public static boolean canSplit(IProtection protection, Player pl) {

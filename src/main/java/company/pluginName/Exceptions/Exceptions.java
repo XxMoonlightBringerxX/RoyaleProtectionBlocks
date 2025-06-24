@@ -81,33 +81,6 @@ public class Exceptions {
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_PRIORITYBELOWZERO,
 				"Error.Exception.protection.PriorityBelowZero", "&cYou must provide a number higher or equal to zero!");
 
-		public static final ThrowableField MERGEDIFFERENTOWNERS = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGEDIFFERENTOWNERS,
-				"Error.Exception.protection.MergeDifferentOwners",
-				"&cYou aren't allowed to merge two protections from different owners!");
-
-		public static final ThrowableField MERGETOOFAR = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGETOOFAR, "Error.Exception.protection.MergeTooFar",
-				"&cThe specified parent protection is far from the child protection!");
-
-		public static final ThrowableField MERGESAMEPROTECTION = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGESAMEPROTECTION,
-				"Error.Exception.protection.MergeSameProtection", "&cYou can't merge the protection with itself!");
-
-		public static final ThrowableField MERGECHILDPROTECTION = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGECHILDPROTECTION,
-				"Error.Exception.protection.MergeChildProtection",
-				"&cYou can't merge this protection into its own child!");
-
-		public static final ThrowableField ALREADYMERGED = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_ALREADYMERGED,
-				"Error.Exception.protection.AlreadyMerged",
-				"&cThe protection is already merged with the specified protection!");
-
-		public static final ThrowableField NOTMERGED = new ThrowableField(
-				RoyaleProtectionBlocksException.Type.PROTECTIONS_NOTMERGED, "Error.Exception.protection.NotMerged",
-				"&cThe protection is not merged to any other protection!");
-
 		public static final ThrowableField BLOCKALREADYSHOWN = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_BLOCKALREADYSHOWN,
 				"Error.Exception.protection.BlockAlreadyShown", "&cThe protection block is already shown!");
@@ -155,6 +128,90 @@ public class Exceptions {
 		public static final ThrowableField ALREADYPRIVATE = new ThrowableField(
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_ALREADYPRIVATE,
 				"Error.Exception.protection.AlreadyPrivate", "&cThe protections is already private!");
+
+		public static class Invitations {
+
+			public static final ThrowableField INVITATIONBLOCKED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_INVITATIONS_INVITATIONBLOCKED,
+					"Error.Exception.protection.invitations.InvitationBlocked",
+					"&cThis player has blocked any incoming invitation!");
+
+			public static final ThrowableField INVITATIONREQUIRED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_INVITATIONS_INVITATIONREQUIRED,
+					"Error.Exception.protection.invitations.InvitationRequired",
+					"&cThis player requires an invitation to join your protection!");
+
+			public static final ThrowableField NOTINVITED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_INVITATIONS_NOTINVITED,
+					"Error.Exception.protection.invitations.NotInvited",
+					"&cThis player is not invited to this protection!");
+
+			public static final ThrowableField NOTINVITEDYOURSELF = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_INVITATIONS_NOTINVITEDYOURSELF,
+					"Error.Exception.protection.invitations.NotInvitedYourself",
+					"&cYou aren't invited this protection!");
+
+			public static final ThrowableField ALREADYINVITED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_INVITATIONS_ALREADYINVITED,
+					"Error.Exception.protection.invitations.AlreadyInvited",
+					"&cThis player is already invited to this protection!");
+
+			public static final ThrowableField DELETESQL = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_INVITATIONS_DELETESQL,
+					"Error.Exception.protection.invitations.SaveSQL",
+					"&cAn unknown error happened while trying to remove the protection invitation from the database. Please contact with an administrator!");
+
+			public static final ThrowableField SAVESQL = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_INVITATIONS_SAVESQL,
+					"Error.Exception.protection.invitations.SaveSQL",
+					"&cAn unknown error happened while trying to save the protection invitation to the database. Please contact with an administrator!");
+
+			public static final ThrowableField UNKNOWN = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_INVITATIONS_UNKNOWN,
+					"Error.Exception.protection.invitations.Unknown",
+					"&cAn unknown error happend while trying to invite the player to the protection. Please contact with an administrator!");
+
+		}
+
+		public static class Merge {
+
+			public static final ThrowableField DIFFERENTOWNERS = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_DIFFERENTOWNERS,
+					"Error.Exception.protection.merge.DifferentOwners",
+					"Error.Exception.protection.MergeDifferentOwners",
+					"&cYou aren't allowed to merge two protections from different owners!");
+
+			public static final ThrowableField TOOFAR = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_TOOFAR,
+					"Error.Exception.protection.merge.TooFar", "Error.Exception.protection.MergeTooFar",
+					"&cThe specified parent protection is far from the child protection!");
+
+			public static final ThrowableField SAMEPROTECTION = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_SAMEPROTECTION,
+					"Error.Exception.protection.merge.SameProtection", "Error.Exception.protection.MergeSameProtection",
+					"&cYou can't merge the protection with itself!");
+
+			public static final ThrowableField CHILDPROTECTION = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_CHILDPROTECTION,
+					"Error.Exception.protection.merge.ChildProtection",
+					"Error.Exception.protection.MergeChildProtection",
+					"&cYou can't merge this protection into its own child!");
+
+			public static final ThrowableField ALREADYMERGED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_ALREADYMERGED,
+					"Error.Exception.protection.merge.AlreadyMerged", "Error.Exception.protection.AlreadyMerged",
+					"&cThe protection is already merged with the specified protection!");
+
+			public static final ThrowableField NOTMERGED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_NOTMERGED,
+					"Error.Exception.protection.merge.NotMerged", "Error.Exception.protection.NotMerged",
+					"&cThe protection is not merged to any other protection!");
+
+			public static final ThrowableField DISABLED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_DISABLED,
+					"Error.Exception.protection.merge.Disabled", "&cThe merge system is currently disabled!");
+
+		}
 
 		public static class Delete {
 

@@ -50,7 +50,7 @@ public class ProtectionFlagsService {
 
 							flags.put(namedObject.getName().toLowerCase(), protectionFlag);
 
-							plugin.sendDebug(getClass(), String.format(
+							plugin.sendInfo(getClass(), String.format(
 									"&aLoaded flag with ID '%s' successfully: &8[&eEditable: &7%s&e, Value: &7%s&e, Group: &7%s&8]",
 									namedObject.getName().toLowerCase(),
 									(protectionFlag.isEditable() ? "True" : "False"), protectionFlag.getDefaultValue(),

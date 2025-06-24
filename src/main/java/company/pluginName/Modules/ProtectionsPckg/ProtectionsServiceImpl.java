@@ -58,6 +58,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLoc
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.ProtectionsService;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.CachedQuery;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionCreationData;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionInvitation;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionRemovalData;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionTransferData;
 
@@ -166,7 +167,7 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 		});
 
 		PandaPluginClass.getSimpleLogger()
-				.sendDebug("Checking for missing members on the database (This process may take a while).");
+				.sendInfo("Checking for missing members on the database (This process may take a while).");
 
 		this.protectionByRegion.forEach((key, protection) -> {
 			protection.getPlayers().getWorldGuardMembers().list().stream()
@@ -187,10 +188,10 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			}
 		});
 
-		PandaPluginClass.getSimpleLogger().sendDebug("Checking completed!");
+		PandaPluginClass.getSimpleLogger().sendInfo("Checking completed!");
 
 		PandaPluginClass.getSimpleLogger()
-				.sendDebug("Checking for missing owners on the database (This process may take a while).");
+				.sendInfo("Checking for missing owners on the database (This process may take a while).");
 
 		this.protectionByRegion.forEach((key, protection) -> {
 			protection.getPlayers().getWorldGuardOwners().list().stream()
@@ -215,7 +216,7 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 					});
 		});
 
-		PandaPluginClass.getSimpleLogger().sendDebug("Checking completed!");
+		PandaPluginClass.getSimpleLogger().sendInfo("Checking completed!");
 
 		sqlService.getProtectionBanneds().forEach((id, banneds) -> {
 			Protection protection = findProtectionById(id);
@@ -242,7 +243,17 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			}
 		});
 
-		plugin.sendDebug(getClass(),
+		sqlService.getProtectionInvitations().forEach((id, invitations) -> {
+			Protection protection = findProtectionById(id);
+			if (protection != null) {
+				Map<UUID, ProtectionInvitation> invitationsMap = new HashMap<>();
+				invitations.forEach(invitation -> invitationsMap.put(invitation.getPlayerUuid(),
+						new ProtectionInvitation(protection, invitation.getPlayerUuid(), invitation.getCreatedDate())));
+				protection.setInvitedPlayers(invitationsMap);
+			}
+		});
+
+		plugin.sendInfo(getClass(),
 				String.format("Loaded a total amount of '%d' protection(s)", this.protectionByRegion.size()));
 		if (regeneratedRegions.get() > 0) {
 			plugin.sendWarning(getClass(), String.format(
@@ -637,6 +648,10 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 		}
 	}
 
+	public Stream<Protection> findInvitedProtectionsByPlayerUuid(UUID uuid) {
+		return this.protectionByRegion.values().stream().filter(Protection::isForSale);
+	}
+
 	public Stream<Protection> findProtectionsOnSale() {
 		return this.protectionByRegion.values().stream().filter(Protection::isForSale);
 	}
@@ -647,6 +662,11 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 
 	public Stream<Protection> findAllProtections() {
 		return this.protectionByRegion.values().stream();
+	}
+
+	public Stream<ProtectionInvitation> findAllProtectionInvitationsByPlayerUuid(UUID uuid) {
+		return this.protectionByRegion.values().stream().filter(prot -> prot.isInvitedPlayer(uuid))
+				.map(invitation -> invitation.getInvitedPlayer(uuid));
 	}
 
 	public CachedQueryImpl query(SimpleLocation location, boolean includeBorder) {

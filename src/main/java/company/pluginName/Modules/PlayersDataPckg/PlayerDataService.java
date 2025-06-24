@@ -4,11 +4,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 
 import company.pluginName.API.RoyaleProtectionBlocksAPIImpl;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
-import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.SQLPckg.SQLService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -23,11 +21,6 @@ public class PlayerDataService extends PandaPlayerDataService<PlayerData> {
 	protected PlayerData generatePlayerData(UUID uuid) {
 		try {
 			PlayerData playerData = sqlService.getPlayerData(uuid);
-
-			Player pl = Bukkit.getPlayer(uuid);
-			if (pl != null) {
-				playerData.setStaffMode(PermissionsService.STAFFMODE.hasPermission(pl));
-			}
 
 			playerData.setProtectionInvitations(RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()
 					.findAllProtectionInvitationsByPlayerUuid(uuid).collect(Collectors.toList()));

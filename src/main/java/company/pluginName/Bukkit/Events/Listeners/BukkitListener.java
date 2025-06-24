@@ -25,6 +25,7 @@ import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.FilePckg.Settings;
+import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
@@ -86,6 +87,11 @@ public class BukkitListener implements Listener {
 
 		RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
 				.findProtectionsByOwner(e.getPlayer().getUniqueId()).forEach(IProtection::updateOwnerData);
+
+		PlayerData playerData = playerDataService.getPlayerData(e.getPlayer());
+		if (playerData != null) {
+			playerData.setStaffMode(PermissionsService.STAFFMODE.hasPermission(e.getPlayer()));
+		}
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)

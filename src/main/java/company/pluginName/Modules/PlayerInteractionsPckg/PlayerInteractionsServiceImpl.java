@@ -319,6 +319,14 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			}
 		}
 
+		if (playerData.isStaffMode()) {
+			PlayerData originPlayerData = playerDataService.getPlayerData(input.getPlayer());
+
+			if (!originPlayerData.isStaffMode()) {
+				throw Exceptions.Protections.Members.Save.UNAUTHORIZED.generateException();
+			}
+		}
+
 		try {
 			input.getProtection().performAllProtections(prot -> {
 				if (!prot.isMember(input.getMember())) {
@@ -348,6 +356,14 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		PlayerData playerData = playerDataService.getPlayerData(input.getMember());
 		if (playerData != null && playerData.getInvitationRequirement() == InvitationRequirement.ALL_DENIED) {
 			throw Exceptions.Protections.Invitations.INVITATIONBLOCKED.generateException();
+		}
+
+		if (playerData.isStaffMode()) {
+			PlayerData originPlayerData = playerDataService.getPlayerData(input.getPlayer());
+
+			if (!originPlayerData.isStaffMode()) {
+				throw Exceptions.Protections.Members.Save.UNAUTHORIZED.generateException();
+			}
 		}
 
 		try {

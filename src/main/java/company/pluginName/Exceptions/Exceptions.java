@@ -417,6 +417,10 @@ public class Exceptions {
 
 			public static class Save {
 
+				public static final ThrowableField UNAUTHORIZED = new ThrowableField(
+						RoyaleProtectionBlocksException.Type.PROTECTIONS_MEMBERS_SAVE_UNAUTHORIZED,
+						"Error.Exception.protection.members.save.Unauthorized",
+						"&cYou aren't allowed to add this player!");
 				public static final ThrowableField CANNOTADDPROTECTIONOWNER = new ThrowableField(
 						RoyaleProtectionBlocksException.Type.PROTECTIONS_MEMBERS_SAVE_CANNOTADDPROTECTIONOWNER,
 						"Error.Exception.protection.members.save.CannotAddProtectionOwner",

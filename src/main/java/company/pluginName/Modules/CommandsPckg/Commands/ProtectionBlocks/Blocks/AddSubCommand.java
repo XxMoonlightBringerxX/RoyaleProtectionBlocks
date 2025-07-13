@@ -11,6 +11,8 @@ import org.bukkit.inventory.ItemStack;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
 import company.pluginName.Hooks.ItemsAdderAPI.Hook.ItemsAdderHook;
+import company.pluginName.Hooks.NexoAPI.NexoAPI;
+import company.pluginName.Hooks.NexoAPI.Hook.NexoHook;
 import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.OraxenAPI.Hook.OraxenHook;
 import company.pluginName.Modules.FilePckg.Messages;
@@ -51,6 +53,9 @@ public class AddSubCommand extends PandaSubCommand {
 	@PandaInject
 	private static OraxenAPI oraxenApi;
 
+	@PandaInject
+	private static NexoAPI nexoApi;
+
 	public AddSubCommand() throws InstantiationException {
 		super();
 	}
@@ -82,7 +87,8 @@ public class AddSubCommand extends PandaSubCommand {
 				if (i != null && i.getType() != Material.AIR) {
 					if (i.getType().isBlock()
 							|| itemsAdderApi.getHook().isCustomBlock(i) == ItemsAdderHook.CheckingResult.IS_CUSTOM_ITEM
-							|| oraxenApi.getHook().isCustomBlock(i) == OraxenHook.CheckingResult.IS_CUSTOM_ITEM) {
+							|| oraxenApi.getHook().isCustomBlock(i) == OraxenHook.CheckingResult.IS_CUSTOM_ITEM
+							|| nexoApi.getHook().isCustomBlock(i) == NexoHook.CheckingResult.IS_CUSTOM_ITEM) {
 						ItemStack protectionBlockItemstack = i.clone();
 						protectionBlockItemstack.setAmount(1);
 						try {

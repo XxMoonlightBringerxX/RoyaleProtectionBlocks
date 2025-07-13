@@ -15,6 +15,8 @@ import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
 import company.pluginName.Hooks.ItemsAdderAPI.Hook.ItemsAdderHook;
+import company.pluginName.Hooks.NexoAPI.NexoAPI;
+import company.pluginName.Hooks.NexoAPI.Hook.NexoHook;
 import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.OraxenAPI.Hook.OraxenHook;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
@@ -52,6 +54,9 @@ public class ProtectionUtilities {
 	private static OraxenAPI oraxenApi;
 
 	@PandaInject
+	private static NexoAPI nexoApi;
+
+	@PandaInject
 	private static ProtectionsServiceImpl protectionsServiceImpl;
 
 	public static String generateDefaultName(Location location) {
@@ -76,6 +81,14 @@ public class ProtectionUtilities {
 			}
 		}
 
+		NexoHook.PlaceResult nexoResult = nexoApi.getHook().setBlock(item, block.getLocation());
+
+		if (nexoResult != NexoHook.PlaceResult.NOT_HOOKED) {
+			if (nexoResult == NexoHook.PlaceResult.PLACED) {
+				return;
+			}
+		}
+
 		block.setType(item.getType());
 		if (item.getType() == Material.PLAYER_HEAD.getMaterial()) {
 			BlockUtilities.setSkin(block, SkinUtilities.NMS.getSkinAsBase64(item));
@@ -95,6 +108,14 @@ public class ProtectionUtilities {
 
 		if (oraxenResult != OraxenHook.PlaceResult.NOT_HOOKED) {
 			if (oraxenResult == OraxenHook.PlaceResult.PLACED) {
+				return;
+			}
+		}
+
+		NexoHook.PlaceResult nexoResult = nexoApi.getHook().setBlock(null, block.getLocation());
+
+		if (nexoResult != NexoHook.PlaceResult.NOT_HOOKED) {
+			if (nexoResult == NexoHook.PlaceResult.PLACED) {
 				return;
 			}
 		}

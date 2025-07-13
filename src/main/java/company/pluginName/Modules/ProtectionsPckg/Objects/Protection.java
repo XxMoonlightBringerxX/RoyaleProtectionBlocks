@@ -25,8 +25,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.Exceptions.Protections;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
-import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
-import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
 import company.pluginName.Hooks.WorldGuard.WorldGuardAPI;
 import company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks.InvitationsSubCommand;
@@ -126,12 +124,6 @@ public class Protection implements IProtection {
 
 	@PandaInject
 	private static PlaceholderAPI placeholderApi;
-
-	@PandaInject
-	private static ItemsAdderAPI itemsAdderApi;
-
-	@PandaInject
-	private static OraxenAPI oraxenApi;
 
 	@PandaInject
 	private static WorldGuardAPI worldGuardApi;

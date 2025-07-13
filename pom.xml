@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>1.13.0 Alpha</version>
+	<version>1.14.0 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -47,6 +47,11 @@
 			<id>oraxen-releases</id>
 			<name>Oraxen Repository</name>
 			<url>https://repo.oraxen.com/releases</url>
+		</repository>
+		<repository>
+			<id>nexomc-releases</id>
+			<name>Reposilite Repository</name>
+			<url>https://repo.nexomc.com/releases</url>
 		</repository>
 	</repositories>
 	<dependencies>
@@ -244,27 +249,103 @@
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
-					<groupId>io.papermc</groupId>
-					<artifactId>paperlib</artifactId>
+					<groupId>me.gabytm.util</groupId>
+					<artifactId>actions-spigot</artifactId>
 				</exclusion>
 				<exclusion>
-					<groupId>gs.mclo</groupId>
-					<artifactId>mclogs</artifactId>
+					<groupId>org.jetbrains</groupId>
+					<artifactId>annotations</artifactId>
 				</exclusion>
 				<exclusion>
 					<groupId>com.ticxo</groupId>
 					<artifactId>PlayerAnimator</artifactId>
 				</exclusion>
 				<exclusion>
+					<groupId>com.github.stefvanschie.inventoryframework</groupId>
+					<artifactId>IF</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>io.th0rgal</groupId>
+					<artifactId>protectionlib</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>dev.triumphteam</groupId>
+					<artifactId>triumph-gui</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.bstats</groupId>
+					<artifactId>bstats-bukkit</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.jeff-media</groupId>
+					<artifactId>custom-block-data</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.jeff-media</groupId>
+					<artifactId>persistent-data-serializer</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.jeff_media</groupId>
+					<artifactId>MorePersistentDataTypes</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>gs.mclo</groupId>
+					<artifactId>java</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.nexomc</groupId>
+			<artifactId>nexo</artifactId>
+			<version>1.8.0</version>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
 					<groupId>me.gabytm.util</groupId>
 					<artifactId>actions-spigot</artifactId>
 				</exclusion>
 				<exclusion>
-					<groupId>net.kyori</groupId>
-					<artifactId>*</artifactId>
+					<groupId>org.jetbrains</groupId>
+					<artifactId>annotations</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ticxo</groupId>
+					<artifactId>PlayerAnimator</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.github.stefvanschie.inventoryframework</groupId>
+					<artifactId>IF</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>io.th0rgal</groupId>
+					<artifactId>protectionlib</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>dev.triumphteam</groupId>
+					<artifactId>triumph-gui</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.bstats</groupId>
+					<artifactId>bstats-bukkit</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.jeff-media</groupId>
+					<artifactId>custom-block-data</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.jeff-media</groupId>
+					<artifactId>persistent-data-serializer</artifactId>
 				</exclusion>
 				<exclusion>
 					<groupId>com.jeff_media</groupId>
+					<artifactId>MorePersistentDataTypes</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>gs.mclo</groupId>
+					<artifactId>java</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>net.byteflux</groupId>
 					<artifactId>*</artifactId>
 				</exclusion>
 			</exclusions>

@@ -10,6 +10,8 @@ import org.bukkit.inventory.ItemStack;
 
 import company.pluginName.Hooks.ItemsAdderAPI.ItemsAdderAPI;
 import company.pluginName.Hooks.ItemsAdderAPI.Hook.ItemsAdderHook;
+import company.pluginName.Hooks.NexoAPI.NexoAPI;
+import company.pluginName.Hooks.NexoAPI.Hook.NexoHook;
 import company.pluginName.Hooks.OraxenAPI.OraxenAPI;
 import company.pluginName.Hooks.OraxenAPI.Hook.OraxenHook;
 import company.pluginName.Modules.ProtectionBlocksPckg.ProtectionBlocksService;
@@ -36,6 +38,9 @@ public class ProtectionBlocksUtils {
 	@PandaInject
 	private static OraxenAPI oraxenApi;
 
+	@PandaInject
+	private static NexoAPI nexoApi;
+
 	private static final String BLOCKSX_SECTION = "Blocks-x";
 	private static final String BLOCKSY_SECTION = "Blocks-y";
 	private static final String BLOCKSZ_SECTION = "Blocks-z";
@@ -49,6 +54,8 @@ public class ProtectionBlocksUtils {
 			return ItemType.ITEMS_ADDER;
 		} else if (oraxenApi.getHook().isCustomBlock(item) == OraxenHook.CheckingResult.IS_CUSTOM_ITEM) {
 			return ItemType.ORAXEN;
+		} else if (nexoApi.getHook().isCustomBlock(item) == NexoHook.CheckingResult.IS_CUSTOM_ITEM) {
+			return ItemType.NEXO;
 		} else {
 			return ItemType.VANILLA;
 		}
@@ -60,6 +67,8 @@ public class ProtectionBlocksUtils {
 			return itemsAdderApi.getHook().isSame(item, protectionBlock) == ItemsAdderHook.ComparativeResult.SAME;
 		case ORAXEN:
 			return oraxenApi.getHook().isSame(item, protectionBlock) == OraxenHook.ComparativeResult.SAME;
+		case NEXO:
+			return nexoApi.getHook().isSame(item, protectionBlock) == NexoHook.ComparativeResult.SAME;
 		case VANILLA:
 			if (item.getType() == protectionBlock.getType()) {
 				return true;
@@ -74,6 +83,8 @@ public class ProtectionBlocksUtils {
 			return itemsAdderApi.getHook().isSame(block, protectionBlock) == ItemsAdderHook.ComparativeResult.SAME;
 		case ORAXEN:
 			return oraxenApi.getHook().isSame(block, protectionBlock) == OraxenHook.ComparativeResult.SAME;
+		case NEXO:
+			return nexoApi.getHook().isSame(block, protectionBlock) == NexoHook.ComparativeResult.SAME;
 		case VANILLA:
 			if (block.getType() == protectionBlock.getType()) {
 				return true;

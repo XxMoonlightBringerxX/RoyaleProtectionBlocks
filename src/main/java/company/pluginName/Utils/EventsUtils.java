@@ -59,6 +59,11 @@ public class EventsUtils {
 		return onBlockPlaceEvent(EventOrigin.ORAXEN, player, block, hand, defaultItem);
 	}
 
+	public static BlockPlaceResult onNexoBlockPlaceEvent(Player player, Block block, EquipmentSlot hand,
+			ItemStack defaultItem) {
+		return onBlockPlaceEvent(EventOrigin.NEXO, player, block, hand, defaultItem);
+	}
+
 	public static BlockPlaceResult onItemsAdderBlockPlaceEvent(Player player, Block block, EquipmentSlot hand,
 			ItemStack defaultItem) {
 		return onBlockPlaceEvent(EventOrigin.ITEMS_ADDER, player, block, hand, defaultItem);
@@ -164,6 +169,10 @@ public class EventsUtils {
 		return onBlockBreakEvent(EventOrigin.ORAXEN, player, block);
 	}
 
+	public static BlockBreakResult onNexoBlockBreakEvent(Player player, Block block) {
+		return onBlockBreakEvent(EventOrigin.NEXO, player, block);
+	}
+
 	public static BlockBreakResult onItemsAdderBlockBreakEvent(Player player, Block block) {
 		return onBlockBreakEvent(EventOrigin.ITEMS_ADDER, player, block);
 	}
@@ -200,7 +209,8 @@ public class EventsUtils {
 
 	@AllArgsConstructor
 	public static enum EventOrigin {
-		VANILLA(ItemType.VANILLA), ORAXEN(ItemType.ORAXEN), ITEMS_ADDER(ItemType.ITEMS_ADDER);
+		VANILLA(ItemType.VANILLA), ORAXEN(ItemType.ORAXEN), ITEMS_ADDER(ItemType.ITEMS_ADDER),
+		NEXO(ItemType.ITEMS_ADDER);
 
 		private ItemType itemType;
 	}

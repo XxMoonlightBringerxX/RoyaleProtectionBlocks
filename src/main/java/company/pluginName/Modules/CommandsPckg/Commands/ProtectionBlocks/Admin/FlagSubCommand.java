@@ -37,7 +37,7 @@ import lombok.Getter;
 		defaultDescription = "Replace the flag value of a protection or all the protections. Specify no value to clear the flag from the protections.",
 		defaultAliases = "f",
 		defaultPermission = "protectionblocks.admin.flag",
-		defaultUsage = "<flag name> [flag value] [--all] [--group <all|members|owners|non_members|non_owners>]")
+		defaultUsage = "<flag name> [flag value] [--all] [--group <all|members|owners|non_members|non_owners>] [--group-only]")
 @PandaCommandAnnotation.Customizable(
 		cooldown = true,
 		aliases = true,
@@ -49,6 +49,10 @@ public class FlagSubCommand extends PandaSubCommand {
 	@RegisteredPandaField("lang")
 	private static final PandaPrefixedStringField MESSAGE_FLAGS_FLAGSETSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Flags.Flag-set-successfully", "&aThe flag value has been replaced successfully.");
+
+	@RegisteredPandaField("lang")
+	private static final PandaPrefixedStringField MESSAGE_FLAGS_FLAGGROUPSETSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Flags.Flag-group-set-successfully", "&aThe flag group has been replaced successfully.");
 
 	@RegisteredPandaField("lang")
 	private static final PandaPrefixedStringField MESSAGE_FLAGS_FLAGCLEAREDSUCCESSFULLY = new PandaPrefixedStringField(
@@ -83,8 +87,9 @@ public class FlagSubCommand extends PandaSubCommand {
 
 	private static final String ALL_KEY = "--all";
 	private static final String GROUP_KEY = "--group";
+	private static final String GROUPONLY_KEY = "--group-only";
 
-	private @Getter List<String> registeredKeyOnlyParameters = Arrays.asList(ALL_KEY);
+	private @Getter List<String> registeredKeyOnlyParameters = Arrays.asList(ALL_KEY, GROUPONLY_KEY);
 	private @Getter List<String> registeredKeyValueParameters = Arrays.asList(GROUP_KEY);
 
 	public FlagSubCommand() throws InstantiationException {
@@ -135,6 +140,18 @@ public class FlagSubCommand extends PandaSubCommand {
 							group = groupValue != null ? RegionGroup.valueOf(groupValue.toUpperCase()) : null;
 						} catch (IllegalArgumentException e) {
 							MessageTemplate.inst(ERROR_FLAGS_INVALIDGROUP.applyPrefix()).process().sendMessage(sender);
+							return;
+						}
+
+						if (parameters.getKeyValueParameters().stream()
+								.anyMatch(pair -> pair.getFirst().equalsIgnoreCase(GROUP_KEY))) {
+							(currentProtection != null ? Arrays.asList(currentProtection)
+									: protectionsService.getProtectionByRegion().values())
+									.forEach(protection -> ProtectionFlagUtilities
+											.setGroup(protection.getProtectedRegion(), flag, group));
+
+							MessageTemplate.inst(MESSAGE_FLAGS_FLAGGROUPSETSUCCESSFULLY.applyPrefix()).process()
+									.sendMessage(sender);
 							return;
 						}
 

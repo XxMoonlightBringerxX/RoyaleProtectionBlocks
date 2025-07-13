@@ -111,6 +111,12 @@ public class ProtectionFlagUtilities {
 		}
 	}
 
+	public static void setGroup(ProtectedRegion protectedRegion, Flag<?> flag, RegionGroup regionGroup) {
+		if (flag.getRegionGroupFlag() != null && regionGroup != null) {
+			protectedRegion.setFlag(flag.getRegionGroupFlag(), regionGroup);
+		}
+	}
+
 	public static Object getValue(ProtectedRegion protectedRegion, Flag<?> flag) throws ClassCastException {
 		Object value = protectedRegion.getFlag(flag);
 		return value != null ? value : flag.getDefault();

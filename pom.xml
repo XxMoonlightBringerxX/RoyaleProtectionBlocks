@@ -16,7 +16,7 @@
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
 		<project.author>DarkPanda73</project.author>
 		<project.package>royale</project.package>
-		<project.spigotVersion>${project.version} ${timestamp}</project.spigotVersion>
+		<project.spigotVersion>${project.version} Fix</project.spigotVersion>
 	</properties>
 	<repositories>
 		<repository>

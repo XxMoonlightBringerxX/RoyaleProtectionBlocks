@@ -11,6 +11,7 @@ import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.AbstractPermissionImpl;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.BreakPermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.ChestAccessPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.FlyPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.InteractPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.PlacePermission;
@@ -40,6 +41,7 @@ public class ProtectionPermissionsService {
 	public static final BreakPermission BREAK_PERMISSION = new BreakPermission();
 	public static final PlacePermission PLACE_PERMISSION = new PlacePermission();
 	public static final InteractPermission INTERACT_PERMISSION = new InteractPermission();
+	public static final ChestAccessPermission CHESTACCESS_PERMISSION = new ChestAccessPermission();
 
 	@PandaInject
 	private MainPluginClass plugin;
@@ -62,6 +64,7 @@ public class ProtectionPermissionsService {
 		registerPermission(BREAK_PERMISSION);
 		registerPermission(PLACE_PERMISSION);
 		registerPermission(INTERACT_PERMISSION);
+		registerPermission(CHESTACCESS_PERMISSION);
 	}
 
 	@PostInjectMethod

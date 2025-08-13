@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,8 +25,12 @@ public class ProtectionWorldGuardOwners {
 		this.protection.getProtectedRegion().getOwners().addPlayer(owner);
 	}
 
-	public void remove(UUID owner) throws RoyaleProtectionBlocksExceptionImpl {
+	public void remove(UUID owner) {
 		this.protection.getProtectedRegion().getOwners().removePlayer(owner);
+	}
+
+	public boolean contains(UUID owner) {
+		return this.protection.getProtectedRegion().getOwners().contains(owner);
 	}
 
 	public void clear() {

@@ -253,6 +253,16 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			}
 		});
 
+		this.protectionByRegion.values().forEach(prot -> {
+			try {
+				prot.synchronizeWorldGuardRegion();
+			} catch (RoyaleProtectionBlocksExceptionImpl e) {
+				if (e.getType() != Exceptions.Protections.REGENONLYONPARENT.getExceptionType()) {
+					e.sendError(Bukkit.getConsoleSender());
+				}
+			}
+		});
+
 		plugin.sendInfo(getClass(),
 				String.format("Loaded a total amount of '%d' protection(s)", this.protectionByRegion.size()));
 		if (regeneratedRegions.get() > 0) {
@@ -260,6 +270,8 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 					"A total of %d protections didn't have a proper WorldGuard region. This regions have been regenerated.",
 					regeneratedRegions.get()));
 		}
+
+		this.protectionByRegion.values().forEach(Protection::clearCachedProtectedRegion);
 
 		cachedQueriesTask = TasksUtils.executeOnAsyncWithTimer(() -> {
 			try {

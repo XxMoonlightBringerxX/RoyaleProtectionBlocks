@@ -1,6 +1,7 @@
 package company.pluginName.Bukkit.Events.ProtectionCreationRemoval;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -8,6 +9,8 @@ import org.bukkit.event.Listener;
 import company.pluginName.Debugger;
 import company.pluginName.Debugger.MessageType;
 import company.pluginName.Hooks.PlaceholderAPI.PlaceholderAPI;
+import company.pluginName.Modules.DebugPckg.DebugService;
+import company.pluginName.Modules.DebugPckg.Objects.Protection.ProtectionCreationDebugMessage;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.ProtectionsPurgePckg.ProtectionsPurgeService;
@@ -38,18 +41,22 @@ public class ProtectionCreationRemovalListener implements Listener {
 	@PandaInject
 	private ProtectionsPurgeService protectionsPurgeService;
 
+	@PandaInject
+	private DebugService debugService;
+
 	@EventHandler
 	public void onProtectionCreation(ProtectionCreationEvent e) {
 		e.getProtection().showBlock();
 
 		if (e.getCause() == CreationCause.PLAYER) {
-			Debugger.log(MessageType.PROTECTION_CREATION,
-					() -> new Object[] { e.getExecutor().getName(),
-							e.getProtection().getDisplayName() != null ? e.getProtection().getDisplayName()
-									: e.getProtection().getProtectionId(),
-							String.valueOf(e.getProtection().getBukkitLocation().getX()),
-							String.valueOf(e.getProtection().getBukkitLocation().getY()),
-							String.valueOf(e.getProtection().getBukkitLocation().getZ()) });
+			Location location = e.getProtection().getBukkitLocation();
+
+			debugService.sendDebugMessage(debugService.getDebugMessage(ProtectionCreationDebugMessage.class),
+					ProtectionCreationDebugMessage.Data.inst(
+							e.getExecutor() instanceof Player ? ((Player) e.getExecutor()).getName() : null,
+							e.getProtection().getOwnerName(), e.getProtection().getProtectionId(),
+							e.getProtection().getProtectionBlockId(), location.getWorld().getName(), location.getX(),
+							location.getY(), location.getZ()));
 
 			TasksUtils.execute(() -> {
 				Settings.SETTINGS_COMMANDSONCREATION

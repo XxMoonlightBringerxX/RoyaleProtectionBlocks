@@ -141,7 +141,7 @@ public class BukkitListener implements Listener {
 
 	@EventHandler
 	public void onPlayerMount(EntityMountEvent e) {
-		if (e.getEntity() instanceof Player) {
+		if (ProtectionPermissionsService.RIDEVEHICLES_PERMISSION.isEnabled() && e.getEntity() instanceof Player) {
 			Player player = (Player) e.getEntity();
 
 			Protection protection = RoyaleProtectionBlocksAPIImpl.getInstance().getProtectionsService()

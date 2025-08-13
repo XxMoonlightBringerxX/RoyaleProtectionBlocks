@@ -38,17 +38,17 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.Pro
 @Inventory("protections_invitations")
 public class ProtectionInvitationsInventory extends PagedChestInventoryObject<ProtectionInvitation> {
 
-	@RegisteredPandaField("config")
+	@RegisteredPandaField("lang")
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_INVITATIONS_ACCEPTEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Invitations.Accepted-successfully",
 			"&aThe invitation has been accepted successfully.");
 
-	@RegisteredPandaField("config")
+	@RegisteredPandaField("lang")
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_INVITATIONS_REJECTEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Invitations.Rejected-successfully",
 			"&aThe invitation has been rejected successfully.");
 
-	@RegisteredPandaField("config")
+	@RegisteredPandaField("lang")
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_INVITATIONS_ALLREJECTEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protections.Invitations.All-rejected-successfully",
 			"&aAll invitations has been rejected successfully.");

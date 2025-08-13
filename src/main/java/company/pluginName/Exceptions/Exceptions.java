@@ -129,6 +129,11 @@ public class Exceptions {
 				RoyaleProtectionBlocksException.Type.PROTECTIONS_ALREADYPRIVATE,
 				"Error.Exception.protection.AlreadyPrivate", "&cThe protections is already private!");
 
+		public static final ThrowableField REGENONLYONPARENT = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.PROTECTIONS_REGENONLYONPARENT,
+				"Error.Exception.protection.RegenOnlyOnParent",
+				"&cYou can only regenerate the WorldGuard region on the parent protection!");
+
 		public static class Invitations {
 
 			public static final ThrowableField INVITATIONBLOCKED = new ThrowableField(
@@ -176,10 +181,15 @@ public class Exceptions {
 		public static class Merge {
 
 			public static final ThrowableField DIFFERENTOWNERS = new ThrowableField(
-					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_DIFFERENTOWNERS,
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_DIFFERENTWORLDS,
 					"Error.Exception.protection.merge.DifferentOwners",
 					"Error.Exception.protection.MergeDifferentOwners",
 					"&cYou aren't allowed to merge two protections from different owners!");
+
+			public static final ThrowableField DIFFERENTWORLDS = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_DIFFERENTWORLDS,
+					"Error.Exception.protection.merge.DifferentWorlds",
+					"&cYou aren't allowed to merge two protections from different worlds!");
 
 			public static final ThrowableField TOOFAR = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_MERGE_TOOFAR,

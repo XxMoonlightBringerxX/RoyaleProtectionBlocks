@@ -319,10 +319,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			}
 		}
 
-		if (playerData.isStaffMode()) {
+		if (playerData != null && playerData.isStaffMode()) {
 			PlayerData originPlayerData = playerDataService.getPlayerData(input.getPlayer());
 
-			if (!originPlayerData.isStaffMode()) {
+			if (originPlayerData != null && !originPlayerData.isStaffMode()) {
 				throw Exceptions.Protections.Members.Save.UNAUTHORIZED.generateException();
 			}
 		}
@@ -358,10 +358,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.Invitations.INVITATIONBLOCKED.generateException();
 		}
 
-		if (playerData.isStaffMode()) {
+		if (playerData != null && playerData.isStaffMode()) {
 			PlayerData originPlayerData = playerDataService.getPlayerData(input.getPlayer());
 
-			if (!originPlayerData.isStaffMode()) {
+			if (originPlayerData != null && !originPlayerData.isStaffMode()) {
 				throw Exceptions.Protections.Members.Save.UNAUTHORIZED.generateException();
 			}
 		}
@@ -995,7 +995,8 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
 		}
 
-		if (protectionPermissionsService.getPermission(input.getPermission().getId()) == null) {
+		if (protectionPermissionsService.getPermission(input.getPermission().getId()) == null
+				|| !input.getPermission().isEnabled()) {
 			throw Exceptions.Protections.Permissions.NOTFOUND.generateException();
 		}
 

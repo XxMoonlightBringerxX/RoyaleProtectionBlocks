@@ -59,8 +59,9 @@ public class PermissionsSubCommand extends PandaSubCommand {
 	@Override
 	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
 		if (argIndex == 0) {
-			return protectionPermissionsService.getPermissions().stream().filter(AbstractPermission::isEditable)
-					.map(AbstractPermission::getId).collect(Collectors.toList());
+			return protectionPermissionsService.getPermissions().stream()
+					.filter(perm -> perm.isEnabled() && perm.isEditable()).map(AbstractPermission::getId)
+					.collect(Collectors.toList());
 		} else if (argIndex == 1) {
 			return PERMISSION_GROUP_VALUES;
 		} else if (argIndex == 2) {
@@ -80,7 +81,7 @@ public class PermissionsSubCommand extends PandaSubCommand {
 					try {
 						AbstractPermission permission = protectionPermissionsService
 								.getPermission(parameters.getParameters().get(0));
-						if (permission != null) {
+						if (permission != null && permission.isEnabled()) {
 							try {
 								PermissionGroup group = PermissionGroup
 										.valueOf(parameters.getParameters().get(1).toUpperCase());

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>1.14.0 Alpha</version>
+	<version>1.14.1 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -245,7 +245,7 @@
 		<dependency>
 			<groupId>io.th0rgal</groupId>
 			<artifactId>oraxen</artifactId>
-			<version>1.189.0</version>
+			<version>1.191.0</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>

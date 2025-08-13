@@ -10,7 +10,10 @@ import java.util.Map;
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.AbstractPermissionImpl;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.BreakPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.FlyPermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.InteractPermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.PlacePermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.RideVehiclesPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.TeleportPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.ToggleBlockVisibilityPermission;
@@ -34,6 +37,9 @@ public class ProtectionPermissionsService {
 	public static final TeleportPermission TELEPORT_PERMISSION = new TeleportPermission();
 	public static final ToggleBlockVisibilityPermission TOGGLEBLOCKVISIBILITY_PERMISSION = new ToggleBlockVisibilityPermission();
 	public static final RideVehiclesPermission RIDEVEHICLES_PERMISSION = new RideVehiclesPermission();
+	public static final BreakPermission BREAK_PERMISSION = new BreakPermission();
+	public static final PlacePermission PLACE_PERMISSION = new PlacePermission();
+	public static final InteractPermission INTERACT_PERMISSION = new InteractPermission();
 
 	@PandaInject
 	private MainPluginClass plugin;
@@ -53,6 +59,9 @@ public class ProtectionPermissionsService {
 		registerPermission(TELEPORT_PERMISSION);
 		registerPermission(TOGGLEBLOCKVISIBILITY_PERMISSION);
 		registerPermission(RIDEVEHICLES_PERMISSION);
+		registerPermission(BREAK_PERMISSION);
+		registerPermission(PLACE_PERMISSION);
+		registerPermission(INTERACT_PERMISSION);
 	}
 
 	@PostInjectMethod

@@ -99,27 +99,10 @@ public class FlagSubCommand extends PandaSubCommand {
 	@Override
 	public CommandResponse executeCommandProcess(CommandSender sender, PandaParameters parameters) {
 		return CommandResponse.queuedAsync(() -> {
-			if (!parameters.getUnprocessedParameters().isEmpty()) {
-				boolean allRegions = parameters.getKeyOnlyParameters().stream()
-						.filter(key -> key.equalsIgnoreCase(ALL_KEY)).findFirst().isPresent();
-				Protection currentProtection = null;
+			boolean groupOnly = parameters.getKeyValueParameters().stream()
+					.anyMatch(pair -> pair.getFirst().equalsIgnoreCase(GROUPONLY_KEY));
 
-				if (!allRegions) {
-					if (sender instanceof Player) {
-						currentProtection = protectionsService
-								.findProtectionParentByLocation(((Player) sender).getLocation());
-
-						if (currentProtection == null) {
-							MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
-									.sendMessage(sender);
-							return;
-						}
-					} else {
-						MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process().sendMessage(sender);
-						return;
-					}
-				}
-
+			if (groupOnly || !parameters.getUnprocessedParameters().isEmpty()) {
 				try {
 					Flag<?> flag = worldGuardApi.getHook().getInternalWorldGuard().getAllFlags().stream()
 							.filter(wgFlag -> wgFlag.getName().equals(parameters.getUnprocessedParameters().get(0)))
@@ -130,7 +113,28 @@ public class FlagSubCommand extends PandaSubCommand {
 						return;
 					}
 
-					if (parameters.getUnprocessedParameters().size() > 1) {
+					boolean allRegions = parameters.getKeyOnlyParameters().stream()
+							.filter(key -> key.equalsIgnoreCase(ALL_KEY)).findFirst().isPresent();
+					Protection currentProtection = null;
+
+					if (!allRegions) {
+						if (sender instanceof Player) {
+							currentProtection = protectionsService
+									.findProtectionParentByLocation(((Player) sender).getLocation());
+
+							if (currentProtection == null) {
+								MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix())
+										.process().sendMessage(sender);
+								return;
+							}
+						} else {
+							MessageTemplate.inst(Messages.ERROR_CONSOLEDENIED.applyPrefix()).process()
+									.sendMessage(sender);
+							return;
+						}
+					}
+
+					if (groupOnly || parameters.getUnprocessedParameters().size() > 1) {
 						String groupValue = parameters.getKeyValueParameters().stream()
 								.filter(pair -> pair.getFirst().equalsIgnoreCase(GROUP_KEY))
 								.map(pair -> pair.getSecond()).findFirst().orElse(null);
@@ -143,8 +147,7 @@ public class FlagSubCommand extends PandaSubCommand {
 							return;
 						}
 
-						if (parameters.getKeyValueParameters().stream()
-								.anyMatch(pair -> pair.getFirst().equalsIgnoreCase(GROUP_KEY))) {
+						if (groupOnly) {
 							(currentProtection != null ? Arrays.asList(currentProtection)
 									: protectionsService.getProtectionByRegion().values())
 									.forEach(protection -> ProtectionFlagUtilities
@@ -153,32 +156,32 @@ public class FlagSubCommand extends PandaSubCommand {
 							MessageTemplate.inst(MESSAGE_FLAGS_FLAGGROUPSETSUCCESSFULLY.applyPrefix()).process()
 									.sendMessage(sender);
 							return;
+						} else {
+							Object value;
+
+							try {
+								value = ProtectionFlagUtilities
+										.stringToValue(flag, Arrays
+												.stream(Arrays.copyOfRange(
+														parameters.getUnprocessedParameters()
+																.toArray(new String[parameters
+																		.getUnprocessedParameters().size()]),
+														1, parameters.getUnprocessedParameters().size()))
+												.collect(Collectors.joining(" ")));
+							} catch (Exception e) {
+								MessageTemplate.inst(ERROR_FLAGS_INVALIDVALUE.applyPrefix()).process()
+										.sendMessage(sender);
+								return;
+							}
+
+							(currentProtection != null ? Arrays.asList(currentProtection)
+									: protectionsService.getProtectionByRegion().values())
+									.forEach(protection -> ProtectionFlagUtilities
+											.setValue(protection.getProtectedRegion(), flag, value, group));
+
+							MessageTemplate.inst(MESSAGE_FLAGS_FLAGSETSUCCESSFULLY.applyPrefix()).process()
+									.sendMessage(sender);
 						}
-
-						Object value;
-
-						try {
-							value = ProtectionFlagUtilities
-									.stringToValue(
-											flag, Arrays
-													.stream(Arrays.copyOfRange(
-															parameters.getUnprocessedParameters()
-																	.toArray(new String[parameters
-																			.getUnprocessedParameters().size()]),
-															1, parameters.getUnprocessedParameters().size()))
-													.collect(Collectors.joining(" ")));
-						} catch (Exception e) {
-							MessageTemplate.inst(ERROR_FLAGS_INVALIDVALUE.applyPrefix()).process().sendMessage(sender);
-							return;
-						}
-
-						(currentProtection != null ? Arrays.asList(currentProtection)
-								: protectionsService.getProtectionByRegion().values())
-								.forEach(protection -> ProtectionFlagUtilities.setValue(protection.getProtectedRegion(),
-										flag, value, group));
-
-						MessageTemplate.inst(MESSAGE_FLAGS_FLAGSETSUCCESSFULLY.applyPrefix()).process()
-								.sendMessage(sender);
 					} else {
 						(currentProtection != null ? Arrays.asList(currentProtection)
 								: protectionsService.getProtectionByRegion().values())

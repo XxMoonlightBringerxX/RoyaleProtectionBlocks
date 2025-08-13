@@ -89,8 +89,6 @@ public class Debugger {
 		PROTECTION_CREATION_ATTEMPT_CANCELLED("Protection-creation-attempt-cancelled",
 				"The creation attempt for protection in x(%s) y(%s) z(%s) has been cancelled by another plugin"),
 
-		PROTECTION_CREATION("Protection-creation", "Player %s created protection '%s' from location x(%s) y(%s) z(%s)"),
-
 		PROTECTION_REMOVAL_ATTEMPT("Protection-removal-attempt",
 				"Player %s is attempting to remove '%s' from location x(%s) y(%s) z(%s)"),
 

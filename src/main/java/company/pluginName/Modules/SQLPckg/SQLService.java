@@ -41,6 +41,7 @@ import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0010AddPlayerDataT
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0011AddPendingPaymentsTable;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0012AddInvitationsTable;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0013AddInvitationRequirementColumn;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0014IncreasePriceMaximumSize;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Annotations.PandaSQLConfigV2;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Changelogs.SQLChangelog;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.DeleteStatement;
@@ -153,7 +154,7 @@ public class SQLService extends PandaSQLService {
 				new Changelog0008RegenerateMembersAndOwnersConstraint(),
 				new Changelog0009AddOwnersAsMembersConstraint(), new Changelog0010AddPlayerDataTable(),
 				new Changelog0011AddPendingPaymentsTable(), new Changelog0012AddInvitationsTable(),
-				new Changelog0013AddInvitationRequirementColumn());
+				new Changelog0013AddInvitationRequirementColumn(), new Changelog0014IncreasePriceMaximumSize());
 	}
 
 	/*

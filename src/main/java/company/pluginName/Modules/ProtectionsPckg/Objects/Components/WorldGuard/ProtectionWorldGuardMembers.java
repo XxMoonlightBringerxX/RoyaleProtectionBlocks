@@ -29,6 +29,10 @@ public class ProtectionWorldGuardMembers {
 		this.protection.getProtectedRegion().getMembers().removePlayer(member);
 	}
 
+	public boolean contains(UUID member) {
+		return this.protection.getProtectedRegion().getMembers().contains(member);
+	}
+
 	public void clear() {
 		this.protection.getProtectedRegion().getMembers().clear();
 	}

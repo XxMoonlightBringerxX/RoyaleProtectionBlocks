@@ -52,8 +52,8 @@ public class ProtectionsPermissionsListInventory extends PagedChestInventoryObje
 
 	@Override
 	protected List<AbstractPermission> getEntityList() {
-		return protectionPermissionsService.getPermissions().stream().filter(AbstractPermission::isEditable)
-				.collect(Collectors.toList());
+		return protectionPermissionsService.getPermissions().stream()
+				.filter(perm -> perm.isEnabled() && perm.isEditable()).collect(Collectors.toList());
 
 	}
 

@@ -26,10 +26,6 @@ public class DiscordUtilities {
 	private static PandaDiscordWebhookService pandaDiscordWebhookService;
 
 	@RegisteredPandaField("config")
-	public static final PandaBooleanField DISCORD_LOGS_PROTECTIONREGISTER = new PandaBooleanField(
-			"Discord.Logs.Protection-register", true);
-
-	@RegisteredPandaField("config")
 	public static final PandaBooleanField DISCORD_LOGS_PROTECTIONUNREGISTER = new PandaBooleanField(
 			"Discord.Logs.Protection-unregister", true);
 
@@ -40,35 +36,6 @@ public class DiscordUtilities {
 	@RegisteredPandaField("config")
 	public static final PandaStringListField DISCORD_LOGS_FLAGSMODIFICATION = new PandaStringListField(
 			"Discord.Logs.Flags-modification", Arrays.asList("pvp", "tnt", "chest-access"));
-
-	public static void sendProtectionRegisteredMessage(CommandSender commandSender, Protection protection) {
-		if (Boolean.TRUE.equals(DISCORD_LOGS_PROTECTIONREGISTER.getContent()) && pandaDiscordWebhookService != null
-				&& pandaDiscordWebhookService.isWebhookDefined()) {
-			Location location = protection.getBukkitLocation();
-
-			DiscordMessage message = new DiscordMessage()
-					.addEmbed(
-							new EmbedObject()
-									.setTitle(String.format("[%s] New registered protection",
-											intoCodeString(
-													(commandSender != null ? commandSender.getName() : "Console"))))
-									.setDescription("A new protection has been registered")
-									.addField("World", intoCodeString(protection.getWorldName()))
-									.addField("Coordinates",
-											intoCodeString(String.format("x: %d, y: %d, z: %d", location.getBlockX(),
-													location.getBlockY(), location.getBlockZ())))
-									.addField("Protection ID", intoCodeString(protection.getProtectionId()))
-									.addField("Owner", intoCodeString(protection.getOwnerName())).addField(
-											"Protection block ID", intoCodeString(protection.getProtectionBlockId())));
-
-			if (commandSender != null && commandSender instanceof Player) {
-				message.getEmbeds().get(0).setThumbnail(
-						new Thumbnail(String.format("https://mineskin.eu/helm/%s", commandSender.getName())));
-			}
-
-			pandaDiscordWebhookService.sendMessage(message);
-		}
-	}
 
 	public static void sendProtectionUnregisteredMessage(CommandSender commandSender, Protection protection,
 			RemovalCause removalCause) {

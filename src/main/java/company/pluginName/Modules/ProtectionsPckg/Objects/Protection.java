@@ -22,6 +22,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import company.pluginName.MainPluginClass;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.Exceptions.Protections;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
@@ -365,7 +366,7 @@ public class Protection implements IProtection {
 			this.players.getWorldGuardOwners().remove(oldOwnerUuid);
 			this.players.getWorldGuardOwners().add(ownerUuid);
 			this.updateOwnerData();
-		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+		} catch (Exception e) {
 			this.ownerUuid = oldOwnerUuid;
 			this.players.getWorldGuardOwners().remove(ownerUuid);
 			this.players.getWorldGuardOwners().add(oldOwnerUuid);
@@ -442,6 +443,10 @@ public class Protection implements IProtection {
 	 */
 
 	private ProtectedRegion protectedRegion;
+
+	public void clearCachedProtectedRegion() {
+		this.protectedRegion = null;
+	}
 
 	public ProtectedRegion getProtectedRegion() {
 		if (this.protectedRegion == null) {
@@ -619,6 +624,10 @@ public class Protection implements IProtection {
 	}
 
 	public void setParentProtection(Player player, IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		if (!this.getWorldName().equals(protection.getWorldName())) {
+			throw Exceptions.Protections.Merge.DIFFERENTWORLDS.generateException();
+		}
+
 		if (SETTINGS_PROTECTION_MERGE_MUSTBECLOSEFORMERGE.isTrue()) {
 			if (!protection.isInsideAny(this.getUtils().getProtectionArea(), true)) {
 				throw Exceptions.Protections.Merge.TOOFAR.generateException();
@@ -1212,27 +1221,130 @@ public class Protection implements IProtection {
 	@Override
 	public boolean canTeleport(Player player) {
 		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-				|| Boolean.TRUE
-						.equals(this.permissions.getValue(ProtectionPermissionsService.TELEPORT_PERMISSION, player))
+				|| (ProtectionPermissionsService.TELEPORT_PERMISSION.isEnabled() && Boolean.TRUE
+						.equals(this.permissions.getValue(ProtectionPermissionsService.TELEPORT_PERMISSION, player)))
 				|| PermissionsService.TELEPORT_OTHERS.hasPermission(player);
 	}
 
 	@Override
 	public boolean canFly(Player player) {
 		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-				|| Boolean.TRUE.equals(this.permissions.getValue(ProtectionPermissionsService.FLY_PERMISSION, player));
+				|| (ProtectionPermissionsService.FLY_PERMISSION.isEnabled() && Boolean.TRUE
+						.equals(this.permissions.getValue(ProtectionPermissionsService.FLY_PERMISSION, player)));
 	}
 
 	@Override
 	public boolean canToggleBlockVisibility(Player player) {
 		return this.isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-				|| this.permissions.getValue(ProtectionPermissionsService.TOGGLEBLOCKVISIBILITY_PERMISSION, player)
+				|| (ProtectionPermissionsService.TOGGLEBLOCKVISIBILITY_PERMISSION.isEnabled() && this.permissions
+						.getValue(ProtectionPermissionsService.TOGGLEBLOCKVISIBILITY_PERMISSION, player))
 				|| PermissionsService.HIDE_OTHERS.hasPermission(player);
+	}
+
+	@Override
+	public boolean canBreak(Player player) {
+		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
+				|| !ProtectionPermissionsService.BREAK_PERMISSION.isEnabled() || Boolean.TRUE
+						.equals(this.permissions.getValue(ProtectionPermissionsService.BREAK_PERMISSION, player));
+	}
+
+	@Override
+	public boolean canPlace(Player player) {
+		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
+				|| !ProtectionPermissionsService.PLACE_PERMISSION.isEditable() || Boolean.TRUE
+						.equals(this.permissions.getValue(ProtectionPermissionsService.PLACE_PERMISSION, player));
+	}
+
+	@Override
+	public boolean canInteract(Player player) {
+		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
+				|| !ProtectionPermissionsService.INTERACT_PERMISSION.isEnabled() || Boolean.TRUE
+						.equals(this.permissions.getValue(ProtectionPermissionsService.INTERACT_PERMISSION, player));
 	}
 
 	private boolean hasStaffMode(Player pl) {
 		PlayerData playerData = playerDataService.getPlayerData(pl);
 		return playerData != null && playerData.isStaffMode();
+	}
+
+	public void synchronizeWorldGuardRegion() throws RoyaleProtectionBlocksExceptionImpl {
+		if (this.getParentProtection() != this) {
+			throw Exceptions.Protections.REGENONLYONPARENT.generateException();
+		}
+
+		this.getMembers().forEach(uuid -> {
+			try {
+				performAllProtections((prot) -> {
+					if (!((Protection) prot).getPlayers().getWorldGuardMembers().contains(uuid)) {
+						MainPluginClass.getSimpleLogger().sendDebug(String.format(
+								"Adding member with UUID '%s' to protected region on WorldGuard for protection '%s'",
+								uuid.toString(), prot.getProtectionId()));
+						((Protection) prot).getPlayers().getWorldGuardMembers().add(uuid);
+					}
+				});
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		});
+
+		this.getPlayers().getWorldGuardMembers().list().forEach(uuid -> {
+			try {
+				performAllProtections((prot) -> {
+					if (!((Protection) prot).isMember(uuid)) {
+						MainPluginClass.getSimpleLogger().sendDebug(String.format(
+								"Removing member with UUID '%s' to protected region on WorldGuard for protection '%s'",
+								uuid.toString(), prot.getProtectionId()));
+						((Protection) prot).getPlayers().getWorldGuardMembers().remove(uuid);
+					}
+				});
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		});
+
+		this.getOwners().forEach(uuid -> {
+			try {
+				performAllProtections((prot) -> {
+					if (!((Protection) prot).getPlayers().getWorldGuardOwners().contains(uuid)) {
+						MainPluginClass.getSimpleLogger().sendDebug(String.format(
+								"Adding owner with UUID '%s' to protected region on WorldGuard for protection '%s'",
+								uuid.toString(), prot.getProtectionId()));
+						((Protection) prot).getPlayers().getWorldGuardOwners().add(uuid);
+					}
+				});
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		});
+
+		this.getPlayers().getWorldGuardOwners().list().forEach(uuid -> {
+			try {
+				performAllProtections((prot) -> {
+					if (!((Protection) prot).isOwner(uuid) && !((Protection) prot).isMainOwner(uuid)) {
+						MainPluginClass.getSimpleLogger().sendDebug(String.format(
+								"Removing owner with UUID '%s' to protected region on WorldGuard for protection '%s'",
+								uuid.toString(), prot.getProtectionId()));
+						((Protection) prot).getPlayers().getWorldGuardOwners().remove(uuid);
+					}
+				});
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		});
+
+		try {
+			performAllProtections((prot) -> {
+				if (!((Protection) prot).getPlayers().getWorldGuardOwners()
+						.contains(((Protection) prot).getOwnerUuid())) {
+					MainPluginClass.getSimpleLogger().sendDebug(String.format(
+							"Adding main owner with UUID '%s' to protected region on WorldGuard for protection '%s'",
+							prot.getOwnerUuid().toString(), prot.getProtectionId()));
+					((Protection) prot).getPlayers().getWorldGuardOwners().add(prot.getOwnerUuid());
+				}
+			});
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 	}
 
 }

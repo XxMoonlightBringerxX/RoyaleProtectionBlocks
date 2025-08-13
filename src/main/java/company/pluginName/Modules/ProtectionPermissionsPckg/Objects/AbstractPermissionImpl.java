@@ -21,6 +21,7 @@ public abstract class AbstractPermissionImpl extends AbstractPermission {
 	private @Getter ItemStack defaultDisplayItem;
 
 	// Data retrieved from the configuration
+	private PandaBooleanField enabledField;
 	private PandaBooleanField editableField;
 	private PandaStringField permissionField;
 	private PandaDoubleField costField;
@@ -48,6 +49,7 @@ public abstract class AbstractPermissionImpl extends AbstractPermission {
 		this.defaultOwnersValue = ownersValue;
 		this.defaultDisplayItem = displayItem;
 
+		this.enabledField = new PandaBooleanField("Permissions." + id + ".Enabled", true);
 		this.editableField = new PandaBooleanField("Permissions." + id + ".Editable", editable);
 		this.permissionField = new PandaStringField("Permissions." + id + ".Permission", permission);
 		this.costField = new PandaDoubleField("Permissions." + id + ".Cost", cost);
@@ -72,6 +74,10 @@ public abstract class AbstractPermissionImpl extends AbstractPermission {
 				: null;
 
 		this.defaultDisplayItem = displayItem;
+	}
+
+	public boolean isEnabled() {
+		return enabledField.isTrue();
 	}
 
 	@Override

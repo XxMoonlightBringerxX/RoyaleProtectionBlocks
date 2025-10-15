@@ -11,7 +11,7 @@ import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Table.UniqueC
 
 public class Changelog0012AddInvitationsTable extends SQLChangelog {
 
-	private static final Table PROTECTION_INVITATIONS_TABLE = new Table("ProtectionInvitations").addColumns(
+	public static final Table PROTECTION_INVITATIONS_TABLE = new Table("ProtectionInvitations").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
 			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setNotNull(true),
 			new Column("CreatedDate", Types.BIGINT).setNotNull(true));

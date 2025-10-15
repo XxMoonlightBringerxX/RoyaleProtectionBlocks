@@ -173,7 +173,7 @@ public class ProtectionBlocksUtils {
 					String.format("The value '%s' is currently not a string list.", map.get(ALLOWEDWORLDS_SECTION)));
 		}
 
-		ItemBuilder builder = ItemBuilder.inst().fromMap(map, "Item");
+		ItemBuilder builder = ItemBuilder.inst().fromMap(map, "Item").setForceType(true).setApplyNullValues(true);
 
 		ProtectionBlock protectionBlock = protectionBlocksService.getProtectionBlockById(id);
 

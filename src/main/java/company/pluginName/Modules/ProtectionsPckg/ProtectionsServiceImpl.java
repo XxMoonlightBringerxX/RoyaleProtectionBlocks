@@ -38,6 +38,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.UnloadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoubleField;
@@ -148,9 +149,11 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 						e.sendError(Bukkit.getConsoleSender());
 					}
 				}
+
+				return true;
 			}
 
-			return true;
+			return false;
 		}).forEach(t -> {
 			try {
 				load(t);
@@ -228,9 +231,7 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 		sqlService.getProtectionSettings().forEach((id, settings) -> {
 			Protection protection = findProtectionById(id);
 			if (protection != null) {
-				protection.getSettings().setNonMembersSettings(settings.getNonMembersSettings());
-				protection.getSettings().setMembersSettings(settings.getMembersSettings());
-				protection.getSettings().setOwnersSettings(settings.getOwnersSettings());
+				protection.getSettings().setSettings(settings.getSettings());
 			}
 		});
 
@@ -248,7 +249,8 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 			if (protection != null) {
 				Map<UUID, ProtectionInvitation> invitationsMap = new HashMap<>();
 				invitations.forEach(invitation -> invitationsMap.put(invitation.getPlayerUuid(),
-						new ProtectionInvitation(protection, invitation.getPlayerUuid(), invitation.getCreatedDate())));
+						new ProtectionInvitation(protection, invitation.getPlayerUuid(), invitation.isAddAsOwner(),
+								invitation.getCreatedDate())));
 				protection.setInvitedPlayers(invitationsMap);
 			}
 		});
@@ -567,10 +569,10 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 	public Protection findProtectionBySourceBlock(Block sourceBlock) {
 		SimpleLocation loc = SimpleLocation.of(sourceBlock.getLocation());
 		try {
-			return executeSynchronizedWithReturn(() -> queryAndFilter(loc, true)
-					.filter(prot -> !prot.isDeleted() && loc.equals(((Protection) prot).getLocation())
-							&& ((Protection) prot).getUtils().isProtectionBlock(loc))
-					.findFirst().orElse(null));
+			return executeSynchronizedWithReturn(
+					() -> queryAndFilter(loc, true).map(prot -> (Protection) prot.getParentProtection()).distinct()
+							.filter(prot -> !prot.isDeleted() && ((Protection) prot).isProtectionBlock(sourceBlock))
+							.findFirst().orElse(null));
 		} catch (Throwable e) {
 			return null;
 		}
@@ -629,6 +631,10 @@ public class ProtectionsServiceImpl implements ProtectionsService<Protection> {
 
 	public Stream<Protection> findAllowedParentProtectionsByPlayer(OfflinePlayer pl) {
 		return findAllowedParentProtectionsByPlayerUuid(pl.getUniqueId());
+	}
+
+	public Stream<Protection> findAllowedParentProtectionsByCachedPlayer(PandaCachedPlayer pl) {
+		return findAllowedParentProtectionsByPlayerUuid(pl.getUuid());
 	}
 
 	@Override

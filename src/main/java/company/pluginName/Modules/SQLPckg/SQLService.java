@@ -42,6 +42,7 @@ import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0011AddPendingPaym
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0012AddInvitationsTable;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0013AddInvitationRequirementColumn;
 import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0014IncreasePriceMaximumSize;
+import company.pluginName.Modules.SQLPckg.Changelogs.Changelog0015AddAsOwnerInvitationColumn;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.Annotations.PandaSQLConfigV2;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Changelogs.SQLChangelog;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.DeleteStatement;
@@ -59,7 +60,7 @@ import darkpanda73.PandaUtils.Utilities.Java.Objects.ObjectUtilities;
 import lombok.Data;
 import relampagorojo93.LibsCollection.Utils.Bukkit.ItemStacks.ItemStacksUtils;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
-import royale.RoyaleProtectionBlocks.Plugin.API.Enums.SettingGroup;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionInvitation;
@@ -67,7 +68,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.Pro
 @PandaSQLConfigV2(allowMySQL = true)
 public class SQLService extends PandaSQLService {
 
-	private static final Table PROTECTIONS_TABLE = new Table("Protections").addColumns(
+	public static final Table PROTECTIONS_TABLE = new Table("Protections").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setPrimary(true).setNotNull(true),
 			new Column("ParentRegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(false),
 			new Column("OwnerUuid", Types.CHAR, "CHAR(36)").setNotNull(true),
@@ -85,31 +86,31 @@ public class SQLService extends PandaSQLService {
 			new Column("Price", Types.DECIMAL, "DECIMAL(12, 2)").setNotNull(false),
 			new Column("PublicAccess", Types.BOOLEAN, "BOOLEAN", "0").setNotNull(true));
 
-	private static final Table PROTECTION_MEMBERS_TABLE = new Table("ProtectionMembers").addColumns(
+	public static final Table PROTECTION_MEMBERS_TABLE = new Table("ProtectionMembers").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
 			new Column("MemberUuid", Types.CHAR, "CHAR(36)").setNotNull(true));
 
-	private static final Table PROTECTION_OWNERS_TABLE = new Table("ProtectionOwners").addColumns(
+	public static final Table PROTECTION_OWNERS_TABLE = new Table("ProtectionOwners").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
 			new Column("OwnerUuid", Types.CHAR, "CHAR(36)").setNotNull(true));
 
-	private static final Table PROTECTION_BANNEDS_TABLE = new Table("ProtectionBanneds").addColumns(
+	public static final Table PROTECTION_BANNEDS_TABLE = new Table("ProtectionBanneds").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
 			new Column("BannedUuid", Types.CHAR, "CHAR(36)").setNotNull(true));
 
-	private static final Table PROTECTION_SETTINGS_TABLE = new Table("ProtectionSettings").addColumns(
+	public static final Table PROTECTION_SETTINGS_TABLE = new Table("ProtectionSettings").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
 			new Column("SettingId", Types.VARCHAR, "VARCHAR(32)").setNotNull(true),
 			new Column("SettingGroup", Types.VARCHAR, "VARCHAR(32)").setNotNull(true),
 			new Column("SettingValue", Types.BLOB).setNotNull(true));
 
-	private static final Table PROTECTION_PERMISSIONS_TABLE = new Table("ProtectionPermissions").addColumns(
+	public static final Table PROTECTION_PERMISSIONS_TABLE = new Table("ProtectionPermissions").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
 			new Column("PermissionId", Types.VARCHAR, "VARCHAR(32)").setNotNull(true),
 			new Column("NonMembersValue", Types.BOOLEAN), new Column("MembersValue", Types.BOOLEAN),
 			new Column("OwnersValue", Types.BOOLEAN));
 
-	private static final Table PROTECTION_BLOCKS_TABLE = new Table("ProtectionBlocks").addColumns(
+	public static final Table PROTECTION_BLOCKS_TABLE = new Table("ProtectionBlocks").addColumns(
 			new Column("Id", Types.VARCHAR, "VARCHAR(32)").setPrimary(true).setUnique(true).setNotNull(true),
 			new Column("Item", Types.BLOB).setNotNull(true), new Column("BlocksX", Types.INTEGER).setNotNull(true),
 			new Column("BlocksY", Types.INTEGER).setNotNull(true),
@@ -117,30 +118,31 @@ public class SQLService extends PandaSQLService {
 			new Column("Permission", Types.VARCHAR, "VARCHAR(64)"), new Column("Price", Types.DECIMAL, "DECIMAL(11,2)"),
 			new Column("Recipe", Types.BLOB), new Column("RecipePermission", Types.VARCHAR, "VARCHAR(64)"));
 
-	private static final Table PROTECTION_INVITATIONS_TABLE = new Table("ProtectionInvitations").addColumns(
+	public static final Table PROTECTION_INVITATIONS_TABLE = new Table("ProtectionInvitations").addColumns(
 			new Column("RegionId", Types.VARCHAR, "VARCHAR(256)").setNotNull(true),
 			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setNotNull(true),
-			new Column("CreatedDate", Types.BIGINT).setNotNull(true));
+			new Column("CreatedDate", Types.BIGINT).setNotNull(true),
+			new Column("AddAsOwner", Types.BOOLEAN).setNotNull(true));
 
-	private static final Table RECIPES_TABLE = new Table("Recipes").addColumns(
+	public static final Table RECIPES_TABLE = new Table("Recipes").addColumns(
 			new Column("ProtectionBlockId", Types.VARCHAR, "VARCHAR(32)").setPrimary(true).setUnique(true)
 					.setNotNull(true),
 			new Column("Recipe", Types.BLOB).setNotNull(true), new Column("Permission", Types.VARCHAR, "VARCHAR(64)"));
 
-	private static final Table PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE = new Table("ProtectionBlockAllowedWorlds")
+	public static final Table PROTECTION_BLOCK_ALLOWED_WORLDS_TABLE = new Table("ProtectionBlockAllowedWorlds")
 			.addColumns(new Column("ProtectionBlockId", Types.VARCHAR, "VARCHAR(32)").setNotNull(true),
 					new Column("WorldName", Types.VARCHAR, "VARCHAR(256)"));
 
-	private static final Table PLAYER_GUARDS_TABLE = new Table("PlayerGuards").addColumns(
+	public static final Table PLAYER_GUARDS_TABLE = new Table("PlayerGuards").addColumns(
 			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setPrimary(true).setNotNull(true),
 			new Column("GuardExpirationDate", Types.BIGINT, "VARCHAR(256)").setNotNull(true));
 
-	private static final Table PLAYER_DATA_TABLE = new Table("PlayerData").addColumns(
+	public static final Table PLAYER_DATA_TABLE = new Table("PlayerData").addColumns(
 			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setPrimary(true).setNotNull(true),
 			new Column("AutoFlight", Types.BOOLEAN, "BOOLEAN", "0").setNotNull(true),
 			new Column("InvitationRequirement", Types.VARCHAR, "VARCHAR(64)"));
 
-	private static final Table PENDING_PAYMENTS_TABLE = new Table("PendingPayments").addColumns(
+	public static final Table PENDING_PAYMENTS_TABLE = new Table("PendingPayments").addColumns(
 			new Column("PlayerUuid", Types.CHAR, "CHAR(36)").setNotNull(true),
 			new Column("EconomyService", Types.VARCHAR, "VARCHAR(36)").setNotNull(true),
 			new Column("Amount", Types.DECIMAL, "DECIMAL(12, 2)").setUnsigned(true).setNotNull(true));
@@ -154,7 +156,8 @@ public class SQLService extends PandaSQLService {
 				new Changelog0008RegenerateMembersAndOwnersConstraint(),
 				new Changelog0009AddOwnersAsMembersConstraint(), new Changelog0010AddPlayerDataTable(),
 				new Changelog0011AddPendingPaymentsTable(), new Changelog0012AddInvitationsTable(),
-				new Changelog0013AddInvitationRequirementColumn(), new Changelog0014IncreasePriceMaximumSize());
+				new Changelog0013AddInvitationRequirementColumn(), new Changelog0014IncreasePriceMaximumSize(),
+				new Changelog0015AddAsOwnerInvitationColumn());
 	}
 
 	/*
@@ -329,6 +332,7 @@ public class SQLService extends PandaSQLService {
 			this.deleteProtectionMembers(protection);
 			this.deleteProtectionOwners(protection);
 			this.deleteProtectionPermissions(protection);
+			this.deleteProtectionSettings(protection);
 			this.deleteProtectionInvitations(protection);
 			this.getSqlConnection().executeDelete(DeleteStatement.inst(PROTECTIONS_TABLE).setCondition(
 					EqualsCondition.inst(PROTECTIONS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
@@ -545,7 +549,7 @@ public class SQLService extends PandaSQLService {
 			while (set.next()) {
 				protectionInvitations.computeIfAbsent(set.getString("RegionId"), (key) -> new ArrayList<>())
 						.add(new ProtectionInvitation(null, UUID.fromString(set.getString("PlayerUuid")),
-								set.getLong("CreatedDate")));
+								set.getBoolean("AddAsOwner"), set.getLong("CreatedDate")));
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -558,7 +562,7 @@ public class SQLService extends PandaSQLService {
 			throws RoyaleProtectionBlocksExceptionImpl {
 		InsertStatement insert = InsertStatement.inst(PROTECTION_INVITATIONS_TABLE);
 		insert.addEntry(protection.getProtectionId(), invitation.getPlayerUuid().toString(),
-				invitation.getCreatedDate());
+				invitation.getCreatedDate(), invitation.isAddAsOwner());
 
 		try {
 			this.getSqlConnection().executeInsert(insert);
@@ -797,20 +801,9 @@ public class SQLService extends PandaSQLService {
 				settings = protectionSettings.computeIfAbsent(set.getString("RegionId"),
 						(key) -> new DatabaseProtectionSettings());
 
-				switch (SettingGroup.valueOf(set.getString("SettingGroup"))) {
-				case NON_MEMBERS:
-					settings.getNonMembersSettings().put(set.getString("SettingId"),
-							ObjectUtilities.deserialize(set.getBytes("SettingValue")));
-					break;
-				case MEMBERS:
-					settings.getMembersSettings().put(set.getString("SettingId"),
-							ObjectUtilities.deserialize(set.getBytes("SettingValue")));
-					break;
-				case OWNERS:
-					settings.getOwnersSettings().put(set.getString("SettingId"),
-							ObjectUtilities.deserialize(set.getBytes("SettingValue")));
-					break;
-				}
+				settings.getSettings()
+						.computeIfAbsent(PermissionGroup.valueOf(set.getString("SettingGroup")), (g) -> new HashMap<>())
+						.put(set.getString("SettingId"), ObjectUtilities.deserialize(set.getBytes("SettingValue")));
 			}
 		} catch (Throwable e) {
 			// TODO switch with a custom exception
@@ -820,12 +813,16 @@ public class SQLService extends PandaSQLService {
 		return protectionSettings;
 	}
 
-	public void saveProtectionSetting(String protectionId, String settingId, SettingGroup settingGroup,
-			Serializable value) throws RoyaleProtectionBlocksExceptionImpl {
+	public void saveProtectionSetting(String protectionId, String settingId, PermissionGroup group, Serializable value)
+			throws RoyaleProtectionBlocksExceptionImpl {
 		InsertStatement insertStatement = InsertStatement.inst(PROTECTION_SETTINGS_TABLE)
-				.addEntry(protectionId, settingId, settingGroup.name(), ObjectUtilities.serialize(value))
-				.setConditionIfExists(
-						EqualsCondition.inst(PROTECTION_SETTINGS_TABLE.getColumn("RegionId"), protectionId));
+				.addEntry(protectionId, settingId, group.name(), ObjectUtilities.serialize(value))
+				.setConditionIfExists(AndCondition.inst(
+						EqualsCondition.inst(PROTECTION_SETTINGS_TABLE.getColumn("RegionId"), protectionId),
+						AndCondition.inst(
+								EqualsCondition.inst(PROTECTION_SETTINGS_TABLE.getColumn("SettingId"), settingId),
+								EqualsCondition.inst(PROTECTION_SETTINGS_TABLE.getColumn("SettingGroup"),
+										group.name()))));
 
 		try {
 			this.getSqlConnection().executeInsert(insertStatement);
@@ -834,12 +831,20 @@ public class SQLService extends PandaSQLService {
 		}
 	}
 
+	public void deleteProtectionSettings(Protection protection) throws RoyaleProtectionBlocksExceptionImpl {
+		try {
+			this.getSqlConnection()
+					.executeDelete(DeleteStatement.inst(PROTECTION_SETTINGS_TABLE).setCondition(EqualsCondition
+							.inst(PROTECTION_SETTINGS_TABLE.getColumn("RegionId"), protection.getProtectionId())));
+		} catch (Throwable e) {
+			throw Exceptions.Protections.Permissions.SQL.generateException(e);
+		}
+	}
+
 	@Data
 	public static class DatabaseProtectionSettings {
 
-		private HashMap<String, Serializable> nonMembersSettings = new HashMap<>();
-		private HashMap<String, Serializable> membersSettings = new HashMap<>();
-		private HashMap<String, Serializable> ownersSettings = new HashMap<>();
+		private Map<PermissionGroup, Map<String, Serializable>> settings = new HashMap<>();
 
 	}
 

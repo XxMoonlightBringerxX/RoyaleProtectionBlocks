@@ -6,10 +6,14 @@ import java.util.HashMap;
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.DebugPckg.Objects.DebugMessage;
 import company.pluginName.Modules.DebugPckg.Objects.Protection.ProtectionCreationDebugMessage;
+import company.pluginName.Modules.DebugPckg.Objects.Protection.ProtectionFlagModificationDebugMessage;
+import company.pluginName.Modules.DebugPckg.Objects.Protection.ProtectionPurgeSummaryDebugMessage;
+import company.pluginName.Modules.DebugPckg.Objects.Protection.ProtectionRemovalDebugMessage;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject.PostInjectMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
-import darkpanda73.PandaUtils.Services.PandaDiscordWebhook.PandaDiscordWebhookService;
+import darkpanda73.PandaUtils.Services.PandaDiscordWebhook.PandaDiscordService;
+import darkpanda73.PandaUtils.Services.PandaDiscordWebhook.Objects.DiscordMessageInstance;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.PandaFilesService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.PandaYamlFile;
@@ -25,12 +29,15 @@ public class DebugService {
 	private PandaFilesService filesService;
 
 	@PandaInject
-	private PandaDiscordWebhookService pandaDiscordWebhookService;
+	private PandaDiscordService discordService;
 
 	private HashMap<Class<? extends DebugMessage<?>>, DebugMessage<?>> debugMessages = new HashMap<>();
 
 	public DebugService() {
 		registerDebugMessage(ProtectionCreationDebugMessage.class);
+		registerDebugMessage(ProtectionRemovalDebugMessage.class);
+		registerDebugMessage(ProtectionPurgeSummaryDebugMessage.class);
+		registerDebugMessage(ProtectionFlagModificationDebugMessage.class);
 	}
 
 	@PostInjectMethod
@@ -55,13 +62,25 @@ public class DebugService {
 	}
 
 	public <T> void sendDebugMessage(DebugMessage<T> debugMessage, T data) {
-		if (ENABLED.isTrue() && debugMessage.getLogEnabledField().isTrue()) {
-			MainPluginClass.getSimpleLogger().sendDebug(debugMessage.generateLogMessage(data));
+		sendDebugMessage(debugMessage, data, true, true);
+	}
+
+	public <T> void sendDebugMessage(DebugMessage<T> debugMessage, T data, boolean sendLog,
+			boolean sendDiscordMessage) {
+		if (sendLog && ENABLED.isTrue() && debugMessage.isLogEnabled()) {
+			String message = debugMessage.generateLogMessage(data);
+
+			if (message != null && !message.isEmpty()) {
+				MainPluginClass.getSimpleLogger().sendDebug(debugMessage.generateLogMessage(data));
+			}
 		}
 
-		if (debugMessage.getDiscordEnabledField().isTrue() && pandaDiscordWebhookService != null
-				&& pandaDiscordWebhookService.isWebhookDefined()) {
-			pandaDiscordWebhookService.sendMessage(debugMessage.generateDiscordMessage(data));
+		if (sendDiscordMessage && debugMessage.isDiscordEnabled()) {
+			DiscordMessageInstance message = debugMessage.generateDiscordMessageInstance(data);
+
+			if (message != null) {
+				discordService.sendMessage(message);
+			}
 		}
 	}
 

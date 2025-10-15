@@ -18,11 +18,12 @@ import company.pluginName.Bukkit.Inventories.Shared.WarningInventory;
 import company.pluginName.Bukkit.Inventories.v2.Protections.ProtectionsManageInventory;
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
-import company.pluginName.Features.PvPPckg.Utils.CombatLogHookUtilities;
+import company.pluginName.Features.PvPPckg.Utils.PvPUtilities;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.FilePckg.Settings;
 import company.pluginName.Modules.PendingPaymentsPckg.PendingPaymentsService;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
+import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData.InvitationRequirement;
@@ -46,6 +47,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBool
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
+import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
 import lombok.Getter;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
@@ -86,7 +88,6 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberInviteRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberRemoveInvitationRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberRemoveRequestInput;
-import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerAddRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerRemoveRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionCreationData;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionRemovalData;
@@ -105,12 +106,22 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 					"&7contains dangerous elements, which makes it", "&7unsafe. Do you wish to teleport anyway?"));
 
 	@RegisteredPandaField("lang")
+	private static final PandaPrefixedStringField MESSAGE_PROTECTION_PERMISSIONS_CHARGEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Protection.Permissions.Charged-successfully",
+			"&aYou've been charged a total amount of &e{amount}$");
+
+	@RegisteredPandaField("lang")
 	private static final PandaPrefixedStringField MESSAGE_PROTECTION_SETTINGS_CHARGEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Protection.Settings.Charged-successfully", "&aYou've been charged a total amount of &e{amount}$");
 
 	@RegisteredPandaField("config")
 	private static final PandaBooleanField SETTINGS_PROTECTION_SHOWUNSAFETELEPORTWARNINGMENU = new PandaBooleanField(
 			"Settings.Protection.Show-unsafe-teleport-warning-menu", true);
+
+	@RegisteredPandaField("lang")
+	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_INVITATIONS_MEMBERACCEPTED = new PandaPrefixedStringField(
+			"Message.Protections.Invitations.Member-accepted",
+			"&aThe player &e{player_name} &ahas accepted your invitation to your protection &e{protection_name}&a.");
 
 	@PandaInject
 	private ProtectionsServiceImpl protectionsService;
@@ -123,6 +134,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 	@PandaInject
 	private ProtectionPermissionsService protectionPermissionsService;
+
+	@PandaInject
+	private PlaceholdersService placeholdersService;
 
 	@PandaInject
 	private PendingPaymentsService pendingPaymentsService;
@@ -191,8 +205,8 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	public void protectionCreationRequest(ProtectionCreationRequestInput input) throws RoyaleProtectionBlocksException {
 		Location playerLocation = input.getPlayer().getLocation().clone();
 
-		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
-				&& CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+		if (PvPUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
+				&& PvPUtilities.isInCombat(input.getPlayer())) {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
@@ -241,8 +255,8 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	@Override
 	public void openProtectionRemovalInventoryRequest(OpenProtectionRemovalInventoryRequestInput input)
 			throws RoyaleProtectionBlocksExceptionImpl {
-		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
-				&& CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+		if (PvPUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
+				&& PvPUtilities.isInCombat(input.getPlayer())) {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
@@ -259,8 +273,8 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 	@Override
 	public void protectionRemovalRequest(ProtectionRemovalRequestInput input) throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
-				&& CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+		if (PvPUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONREMOVALINCOMBAT.isTrue()
+				&& PvPUtilities.isInCombat(input.getPlayer())) {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
@@ -302,12 +316,22 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throws RoyaleProtectionBlocksException {
 		checkIfModifiable(input.getPlayer(), input.getProtection());
 
-		if (!ProtectionUtilities.canAddMember(input.getProtection(), input.getPlayer())) {
-			throw Exceptions.Protections.Members.Save.PERMISSIONDENIED.generateException();
-		}
+		if (input.isAddAsOwner()) {
+			if (!ProtectionUtilities.canAddOwner(input.getProtection(), input.getPlayer())) {
+				throw Exceptions.Protections.Owners.Save.PERMISSIONDENIED.generateException();
+			}
 
-		if (input.getMember().equals(input.getPlayer().getUniqueId())) {
-			throw Exceptions.Protections.Members.Save.CANNOTADDYOURSELF.generateException();
+			if (input.getMember().equals(input.getPlayer().getUniqueId())) {
+				throw Exceptions.Protections.Owners.Save.CANNOTADDYOURSELF.generateException();
+			}
+		} else {
+			if (!ProtectionUtilities.canAddMember(input.getProtection(), input.getPlayer())) {
+				throw Exceptions.Protections.Members.Save.PERMISSIONDENIED.generateException();
+			}
+
+			if (input.getMember().equals(input.getPlayer().getUniqueId())) {
+				throw Exceptions.Protections.Members.Save.CANNOTADDYOURSELF.generateException();
+			}
 		}
 
 		PlayerData playerData = playerDataService.getPlayerData(input.getMember());
@@ -329,8 +353,10 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 		try {
 			input.getProtection().performAllProtections(prot -> {
-				if (!prot.isMember(input.getMember())) {
+				if (!input.isAddAsOwner() && !prot.isMember(input.getMember())) {
 					prot.addMemberAndSave(input.getMember());
+				} else if (input.isAddAsOwner() && !prot.isOwner(input.getMember())) {
+					prot.addOwnerAndSave(input.getMember());
 				}
 			});
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
@@ -345,8 +371,12 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throws RoyaleProtectionBlocksException {
 		checkIfModifiable(input.getPlayer(), input.getProtection());
 
-		if (!ProtectionUtilities.canAddMember(input.getProtection(), input.getPlayer())) {
+		if (!input.isAddAsOwner() && !ProtectionUtilities.canAddMember(input.getProtection(), input.getPlayer())) {
 			throw Exceptions.Protections.Members.Save.PERMISSIONDENIED.generateException();
+		}
+
+		if (input.isAddAsOwner() && !ProtectionUtilities.canAddOwner(input.getProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.Owners.Save.PERMISSIONDENIED.generateException();
 		}
 
 		if (input.getMember().equals(input.getPlayer().getUniqueId())) {
@@ -367,7 +397,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		}
 
 		try {
-			input.getProtection().addInvitedPlayerAndSave(input.getMember());
+			input.getProtection().addInvitedPlayerAndSave(input.getMember(), input.isAddAsOwner());
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -386,6 +416,20 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 
 		try {
 			input.getProtection().acceptInvitationAndSave(input.getPlayer().getUniqueId());
+
+			Player owner = Bukkit.getPlayer(input.getProtection().getOwnerUuid());
+			if (owner != null && owner.isOnline()) {
+				Replacement[] playerReplacements = placeholdersService.getPlayerReplacements(input.getPlayer());
+				Replacement[] protectionReplacements = placeholdersService
+						.getProtectionReplacements(input.getProtection());
+
+				MessageTemplate.inst(MESSAGE_PROTECTIONS_INVITATIONS_MEMBERACCEPTED.applyPrefix())
+						.setReplacements(ArrayUtilities.join(
+								new Replacement[playerReplacements.length + protectionReplacements.length],
+								playerReplacements, protectionReplacements))
+						.process().sendMessage(owner);
+				;
+			}
 		} catch (RoyaleProtectionBlocksExceptionImpl e) {
 			throw e;
 		} catch (Throwable e) {
@@ -421,7 +465,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	@Override
 	public void protectionMemberRemoveRequest(ProtectionMemberRemoveRequestInput input)
 			throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+		if (PvPUtilities.isInCombat(input.getPlayer())) {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
@@ -449,34 +493,9 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	}
 
 	@Override
-	public void protectionOwnerAddRequest(ProtectionOwnerAddRequestInput input) throws RoyaleProtectionBlocksException {
-		checkIfModifiable(input.getPlayer(), input.getProtection());
-
-		if (!ProtectionUtilities.canAddOwner(input.getProtection(), input.getPlayer())) {
-			throw Exceptions.Protections.Owners.Save.PERMISSIONDENIED.generateException();
-		}
-
-		if (input.getOwner().equals(input.getPlayer().getUniqueId())) {
-			throw Exceptions.Protections.Owners.Save.CANNOTADDYOURSELF.generateException();
-		}
-
-		try {
-			input.getProtection().performAllProtections(prot -> {
-				if (!prot.isOwner(input.getOwner())) {
-					prot.addOwnerAndSave(input.getOwner());
-				}
-			});
-		} catch (RoyaleProtectionBlocksExceptionImpl e) {
-			throw e;
-		} catch (Throwable e) {
-			throw Exceptions.Protections.Save.UNKNOWN.generateException(e);
-		}
-	}
-
-	@Override
 	public void protectionOwnerRemoveRequest(ProtectionOwnerRemoveRequestInput input)
 			throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+		if (PvPUtilities.isInCombat(input.getPlayer())) {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
@@ -580,8 +599,8 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	@Override
 	public void protectionTeleportHomeRequest(ProtectionTeleportHomeRequestInput input)
 			throws RoyaleProtectionBlocksException {
-		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONTELEPORTINCOMBAT.isTrue()
-				&& CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+		if (PvPUtilities.SETTINGS_COMBATLOGHOOK_CANCELPROTECTIONTELEPORTINCOMBAT.isTrue()
+				&& PvPUtilities.isInCombat(input.getPlayer())) {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 
@@ -721,7 +740,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		// Preconditions
 
 		try {
-			if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+			if (PvPUtilities.isInCombat(input.getPlayer())) {
 				throw Exceptions.Protections.INCOMBAT.generateException();
 			}
 
@@ -869,7 +888,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 				throw Exceptions.Protections.Purchase.NOTFORSALE.generateException();
 			}
 
-			if (CombatLogHookUtilities.isInCombat(input.getPlayer())) {
+			if (PvPUtilities.isInCombat(input.getPlayer())) {
 				throw Exceptions.Protections.INCOMBAT.generateException();
 			}
 
@@ -937,51 +956,56 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	@Override
 	public <T extends Serializable> void protectionSwitchSettingRequest(ProtectionSwitchSettingRequestInput<T> input)
 			throws RoyaleProtectionBlocksException {
-		throw new UnsupportedOperationException();
+		// Preconditions
 
-//		// Preconditions
-//
-//		checkIfModifiable(input.getPlayer(), input.getProtection());
-//
-//		if (!ProtectionUtilities.canSwitchSettings(input.getProtection(), input.getPlayer())) {
-//			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
-//		}
-//
-//		if (protectionSettingsService.getSetting(input.getSetting().getId()) == null) {
-//			throw Exceptions.Protections.Settings.NOTFOUND.generateException();
-//		}
-//
-//		if (input.getSetting().getPermission() != null
-//				&& !input.getPlayer().hasPermission(input.getSetting().getPermission())) {
-//			throw Exceptions.Protections.Settings.PERMISSIONDENIED.generateException();
-//		}
-//
-//		if (input.getSetting().getCost() > 0D && EconomyUtilities.isEconomyEnabled(EconomyService.VAULT)) {
-//			if (!PermissionsService.ECONOMY_BYPASS.hasPermission(input.getPlayer())) {
-//				if (!EconomyUtilities.withdraw(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost())) {
-//					throw Exceptions.Protections.Settings.NOTENOUGHBALANCE.generateException();
-//				} else {
-//					MessageTemplate.inst(MESSAGE_PROTECTION_SETTINGS_CHARGEDSUCCESSFULLY.applyPrefix())
-//							.setReplacements(
-//									new Replacement("{amount}", () -> String.valueOf(input.getSetting().getCost())))
-//							.process().sendMessage(input.getPlayer());
-//				}
-//			}
-//		}
-//
-//		try {
-//			// T previousValue = input.getProtection().getSettingValue(input.getSetting(),
-//			// input.getGroup());
-//
-//			input.getProtection().setSettingValue(input.getSetting(), input.getGroup(), input.getValue());
-//
-//			// TODO Make changes to include setting modification event for discord
-//		} catch (Exception e) {
-//			if (input.getPlayer() != null && input.getSetting().getCost() > 0D) {
-//				EconomyUtilities.deposit(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost());
-//			}
-//			throw Exceptions.Protections.Settings.UNKNOWN.generateException(e);
-//		}
+		checkIfModifiable(input.getPlayer(), input.getProtection());
+
+		if (!ProtectionUtilities.canSwitchSettings(input.getProtection(), input.getPlayer())) {
+			throw Exceptions.Protections.PERMISSIONDENIED.generateException();
+		}
+
+		if (protectionSettingsService.getSetting(input.getSetting().getId()) == null
+				|| !input.getSetting().isEnabled()) {
+			throw Exceptions.Protections.Settings.NOTFOUND.generateException();
+		}
+
+		if (!input.getSetting().isEditable()) {
+			throw Exceptions.Protections.Settings.NOTEDITABLE.generateException();
+		}
+
+		if (input.getSetting().getPermission() != null
+				&& !input.getPlayer().hasPermission(input.getSetting().getPermission())) {
+			throw Exceptions.Protections.Settings.PERMISSIONDENIED.generateException();
+		}
+
+		boolean moneyWithdrawn = false;
+
+		if (input.getSetting().getCost() != null && input.getSetting().getCost() > 0D
+				&& EconomyUtilities.isEconomyEnabled(EconomyService.VAULT)) {
+			if (!PermissionsService.ECONOMY_BYPASS.hasPermission(input.getPlayer())) {
+				if (!EconomyUtilities.withdraw(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost())) {
+					throw Exceptions.Protections.Settings.NOTENOUGHBALANCE.generateException();
+				} else {
+					moneyWithdrawn = true;
+
+					if (MESSAGE_PROTECTION_SETTINGS_CHARGEDSUCCESSFULLY.hasContent()) {
+						MessageTemplate.inst(MESSAGE_PROTECTION_SETTINGS_CHARGEDSUCCESSFULLY.applyPrefix())
+								.setReplacements(
+										new Replacement("{amount}", () -> String.valueOf(input.getSetting().getCost())))
+								.process().sendMessage(input.getPlayer());
+					}
+				}
+			}
+		}
+
+		try {
+			input.getProtection().setSettingValue(input.getSetting(), input.getGroup(), input.getValue());
+		} catch (Exception e) {
+			if (moneyWithdrawn) {
+				EconomyUtilities.deposit(EconomyService.VAULT, input.getPlayer(), input.getSetting().getCost());
+			}
+			throw Exceptions.Protections.Settings.UNKNOWN.generateException(e);
+		}
 	}
 
 	@Override
@@ -1013,6 +1037,8 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 			throw Exceptions.Protections.Permissions.PERMISSIONDENIED.generateException();
 		}
 
+		boolean moneyWithdrawn = false;
+
 		if (input.getPermission().getCost() != null && input.getPermission().getCost() > 0D
 				&& EconomyUtilities.isEconomyEnabled(EconomyService.VAULT)) {
 			if (!PermissionsService.ECONOMY_BYPASS.hasPermission(input.getPlayer())) {
@@ -1020,10 +1046,14 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 						input.getPermission().getCost())) {
 					throw Exceptions.Protections.Settings.NOTENOUGHBALANCE.generateException();
 				} else {
-					MessageTemplate.inst(MESSAGE_PROTECTION_SETTINGS_CHARGEDSUCCESSFULLY.applyPrefix())
-							.setReplacements(
-									new Replacement("{amount}", () -> String.valueOf(input.getPermission().getCost())))
-							.process().sendMessage(input.getPlayer());
+					moneyWithdrawn = true;
+
+					if (MESSAGE_PROTECTION_PERMISSIONS_CHARGEDSUCCESSFULLY.hasContent()) {
+						MessageTemplate.inst(MESSAGE_PROTECTION_PERMISSIONS_CHARGEDSUCCESSFULLY.applyPrefix())
+								.setReplacements(new Replacement("{amount}",
+										() -> String.valueOf(input.getPermission().getCost())))
+								.process().sendMessage(input.getPlayer());
+					}
 				}
 			}
 		}
@@ -1031,13 +1061,11 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 		try {
 			input.getProtection().setPermissionValue(input.getPermission(), input.getGroup(), input.getValue());
 		} catch (Exception e) {
-			if (input.getPlayer() != null && input.getPermission().getCost() != null
-					&& input.getPermission().getCost() > 0D) {
+			if (moneyWithdrawn) {
 				EconomyUtilities.deposit(EconomyService.VAULT, input.getPlayer(), input.getPermission().getCost());
 			}
 			throw Exceptions.Protections.Permissions.UNKNOWN.generateException(e);
 		}
-
 	}
 
 	private Protection protectionToInternalProtection(IProtection protection)
@@ -1055,7 +1083,7 @@ public class PlayerInteractionsServiceImpl extends PlayerInteractionsService {
 	}
 
 	private void checkIfModifiable(Player player, IProtection protection) throws RoyaleProtectionBlocksExceptionImpl {
-		if (CombatLogHookUtilities.isInCombat(player)) {
+		if (PvPUtilities.isInCombat(player)) {
 			throw Exceptions.Protections.INCOMBAT.generateException();
 		}
 

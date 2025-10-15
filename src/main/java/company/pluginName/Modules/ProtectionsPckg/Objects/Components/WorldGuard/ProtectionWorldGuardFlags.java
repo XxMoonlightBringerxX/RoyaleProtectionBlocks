@@ -6,15 +6,15 @@ import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Modules.DebugPckg.DebugService;
+import company.pluginName.Modules.DebugPckg.Objects.Protection.ProtectionFlagModificationDebugMessage;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.ProtectionFlagsPckg.ProtectionFlagsService;
 import company.pluginName.Modules.ProtectionFlagsPckg.Objects.ProtectionFlag;
 import company.pluginName.Modules.ProtectionFlagsPckg.Utils.ProtectionFlagUtilities;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPckg.Utils.FlagsUtilities;
-import company.pluginName.Utils.DiscordUtilities;
 import company.pluginName.Utils.EconomyUtilities;
-import company.pluginName.Utils.LogUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -33,6 +33,9 @@ public class ProtectionWorldGuardFlags implements IProtectionFlags {
 
 	@PandaInject
 	private static ProtectionFlagsService protectionFlagsService;
+
+	@PandaInject
+	private static DebugService debugService;
 
 	private Protection protection;
 
@@ -86,10 +89,10 @@ public class ProtectionWorldGuardFlags implements IProtectionFlags {
 			protectionFlag.modifyValue(protection.getProtectedRegion(), input.getValue());
 
 			if (this.protection.getParentProtection() == this.protection) {
-				DiscordUtilities.sendFlagModificationMessage(input.getExecutor(), protection,
-						protectionFlag.getWorldGuardFlag().getName(), previousValue, input.getValue());
-				LogUtilities.sendFlagModificationDebugLog(input.getExecutor(), protection,
-						protectionFlag.getWorldGuardFlag().getName(), previousValue, input.getValue());
+				debugService.sendDebugMessage(
+						debugService.getDebugMessage(ProtectionFlagModificationDebugMessage.class),
+						ProtectionFlagModificationDebugMessage.Data.inst(input.getExecutor(), protection,
+								protectionFlag.getWorldGuardFlag().getName(), previousValue, input.getValue()));
 			}
 		} catch (Exception e) {
 			if (input.getExecutor() != null && protectionFlag.getCostPerChange() != null) {

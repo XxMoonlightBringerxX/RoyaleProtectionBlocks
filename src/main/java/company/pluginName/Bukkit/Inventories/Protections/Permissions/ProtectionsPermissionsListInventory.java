@@ -14,14 +14,14 @@ import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Paged.PagedChestInventoryObject;
 import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.PermissionInterface;
 
 @Inventory("protections_permissions_list")
-public class ProtectionsPermissionsListInventory extends PagedChestInventoryObject<AbstractPermission> {
+public class ProtectionsPermissionsListInventory extends PagedChestInventoryObject<PermissionInterface> {
 
 	@PandaInject
 	private static ProtectionsServiceImpl protectionsService;
@@ -51,19 +51,19 @@ public class ProtectionsPermissionsListInventory extends PagedChestInventoryObje
 	}
 
 	@Override
-	protected List<AbstractPermission> getEntityList() {
+	protected List<PermissionInterface> getEntityList() {
 		return protectionPermissionsService.getPermissions().stream()
 				.filter(perm -> perm.isEnabled() && perm.isEditable()).collect(Collectors.toList());
 
 	}
 
 	@Override
-	protected ItemStack generateEntityItem(AbstractPermission permission) {
+	protected ItemStack generateEntityItem(PermissionInterface permission) {
 		return permission.getDisplayItem();
 	}
 
 	@Override
-	protected void onEntityClick(InventoryClickEvent e, AbstractPermission entity) {
+	protected void onEntityClick(InventoryClickEvent e, PermissionInterface entity) {
 		new ProtectionsPermissionsManageInventory(getPlayer(), protection, entity).openInventory();
 	}
 

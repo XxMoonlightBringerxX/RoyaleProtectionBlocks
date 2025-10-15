@@ -9,7 +9,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 
-public class CombatLogHookUtilities {
+public class PvPUtilities {
 
 	@RegisteredPandaField("config")
 	public static final PandaBooleanField SETTINGS_COMBATLOGHOOK_DELUXECOMBATENABLED = new PandaBooleanField(
@@ -47,17 +47,17 @@ public class CombatLogHookUtilities {
 	private static PvPManagerAPI pvpManagerApi;
 
 	public static boolean isInCombat(Player player) {
-		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_DELUXECOMBATENABLED.isTrue() && deluxeCombatApi.isHooked()
+		if (PvPUtilities.SETTINGS_COMBATLOGHOOK_DELUXECOMBATENABLED.isTrue() && deluxeCombatApi.isHooked()
 				&& deluxeCombatApi.getHook().isInCombat(player)) {
 			return true;
 		}
 
-		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_COMBATLOGXENABLED.isTrue() && combatLogXApi.isHooked()
+		if (PvPUtilities.SETTINGS_COMBATLOGHOOK_COMBATLOGXENABLED.isTrue() && combatLogXApi.isHooked()
 				&& combatLogXApi.getHook().isInCombat(player)) {
 			return true;
 		}
 
-		if (CombatLogHookUtilities.SETTINGS_COMBATLOGHOOK_PVPMANAGERENABLED.isTrue() && pvpManagerApi.isHooked()
+		if (PvPUtilities.SETTINGS_COMBATLOGHOOK_PVPMANAGERENABLED.isTrue() && pvpManagerApi.isHooked()
 				&& pvpManagerApi.getHook().isInCombat(player)) {
 			return true;
 		}

@@ -31,6 +31,7 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaInte
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringListField;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerEnterExitProtectionEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @PandaListener
 public class PlayerFlightListener implements Listener {
@@ -60,41 +61,7 @@ public class PlayerFlightListener implements Listener {
 
 	@EventHandler
 	public void onPlayerEnterExitProtection(PlayerEnterExitProtectionEvent e) {
-		if (!Boolean.TRUE.equals(SETTINGS_PROTECTION_FLIGHT_ENABLEFLIGHTCONTROL.getContent())) {
-			return;
-		}
-
-		if (PermissionsService.FLY_BYPASS.hasPermission(e.getPlayer())) {
-			return;
-		}
-
-		if (!e.getPlayer().getAllowFlight()) {
-			return;
-		}
-
-		if (e.getPlayer().getGameMode() == GameMode.CREATIVE || e.getPlayer().getGameMode() == GameMode.SPECTATOR) {
-			return;
-		}
-
-		if (SETTINGS_PROTECTION_FLIGHT_EXCLUDEWORLDS.getContent()
-				.contains(e.getPlayer().getLocation().getWorld().getName())) {
-			return;
-		}
-
-		if (!flightRemovalTasks.containsKey(e.getPlayer().getUniqueId())) {
-			if (e.getCurrentProtections().isEmpty()
-					&& e.getCurrentProtections().stream().noneMatch(protection -> protection.canFly(e.getPlayer()))) {
-				if (e.getPlayer().isFlying()) {
-					flightRemovalTasks.put(e.getPlayer().getUniqueId(),
-							TasksUtils.executeWithTimer(getFlightRemovalRunnable(e.getPlayer().getUniqueId()), 0, 20));
-				} else {
-					e.getPlayer().setAllowFlight(false);
-				}
-			}
-		} else if (!e.getCurrentProtections().isEmpty()
-				&& e.getCurrentProtections().stream().anyMatch(protection -> protection.canFly(e.getPlayer()))) {
-			cancelTask(e.getPlayer().getUniqueId());
-		}
+		checkFlightAvailability(e.getPlayer(), e.getCurrentProtections());
 	}
 
 	@EventHandler
@@ -155,6 +122,41 @@ public class PlayerFlightListener implements Listener {
 		if (e.getEntity() instanceof Player && e.getCause() == DamageCause.FALL
 				&& fallDamagePrevention.remove(e.getEntity().getUniqueId())) {
 			e.setCancelled(true);
+		}
+	}
+
+	public void checkFlightAvailability(Player player, List<? extends IProtection> currentProtections) {
+		if (!Boolean.TRUE.equals(SETTINGS_PROTECTION_FLIGHT_ENABLEFLIGHTCONTROL.getContent())) {
+			return;
+		}
+
+		if (PermissionsService.FLY_BYPASS.hasPermission(player)) {
+			return;
+		}
+
+		if (!player.getAllowFlight()) {
+			return;
+		}
+
+		if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+			return;
+		}
+
+		if (SETTINGS_PROTECTION_FLIGHT_EXCLUDEWORLDS.getContent().contains(player.getLocation().getWorld().getName())) {
+			return;
+		}
+
+		if (!flightRemovalTasks.containsKey(player.getUniqueId())) {
+			if (currentProtections.stream().noneMatch(protection -> protection.canFly(player))) {
+				if (player.isFlying()) {
+					flightRemovalTasks.put(player.getUniqueId(),
+							TasksUtils.executeWithTimer(getFlightRemovalRunnable(player.getUniqueId()), 0, 20));
+				} else {
+					player.setAllowFlight(false);
+				}
+			}
+		} else if (currentProtections.stream().anyMatch(protection -> protection.canFly(player))) {
+			cancelTask(player.getUniqueId());
 		}
 	}
 

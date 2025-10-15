@@ -44,8 +44,9 @@ public class PurgeConfiguration {
 	}
 
 	public String toString() {
-		return TimeUtilities
+		String value = TimeUtilities
 				.secondsToString((long) (millis / 1000) + (minutes * 60L) + (hours * 3600L) + (days * 86400L));
+		return value != null && !value.isEmpty() ? value : "0s";
 	}
 
 	public long getRemainingTime(IProtection protection) {

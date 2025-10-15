@@ -60,7 +60,7 @@ public class ListSubCommand extends PandaSubCommand {
 				if (parameters.getParameters().size() > 0) {
 					PandaCachedPlayer owner = cachedPlayersService.getCachedPlayer(parameters.getParameters().get(0));
 					if (owner != null) {
-						new AdminProtectionsListInventory(pl, owner.toBukkit()).openInventory();
+						new AdminProtectionsListInventory(pl, owner).openInventory();
 					} else {
 						MessageTemplate.inst(Messages.ERROR_PLAYERNOTFOUND.applyPrefix()).process().sendMessage(sender);
 					}

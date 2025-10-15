@@ -1,4 +1,4 @@
-package company.pluginName.Modules.ProtectionPermissionsPckg.Objects;
+package company.pluginName.Modules.ProtectionPermissionsPckg.Objects.Templates;
 
 import org.bukkit.inventory.ItemStack;
 
@@ -7,17 +7,15 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoub
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
 import lombok.Getter;
 import lombok.Setter;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.PermissionInterface;
 
-public abstract class AbstractPermissionImpl extends AbstractPermission {
+public abstract class PermissionImpl implements PermissionInterface {
 
-	private boolean defaultEditable;
-	private String defaultPermission;
-	private Double defaultCost;
-	private String defaultDisplayName;
-	private Boolean defaultNonMembersValue;
-	private Boolean defaultMembersValue;
-	private Boolean defaultOwnersValue;
+	private String id;
+
+	private @Getter Boolean defaultNonMembersValue;
+	private @Getter Boolean defaultMembersValue;
+	private @Getter Boolean defaultOwnersValue;
 	private @Getter ItemStack defaultDisplayItem;
 
 	// Data retrieved from the configuration
@@ -35,15 +33,11 @@ public abstract class AbstractPermissionImpl extends AbstractPermission {
 
 	private @Getter @Setter ItemStack displayItem;
 
-	public AbstractPermissionImpl(String id, boolean editable, String permission, Double cost, String displayName,
+	public PermissionImpl(String id, boolean editable, String permission, Double cost, String displayName,
 			boolean nonMembersValue, boolean nonMembersValueEditable, boolean membersValue,
 			boolean membersValueEditable, boolean ownersValue, boolean ownersValueEditable, ItemStack displayItem) {
-		super(id);
+		this.id = id;
 
-		this.defaultEditable = editable;
-		this.defaultPermission = permission;
-		this.defaultCost = cost;
-		this.defaultDisplayName = displayName;
 		this.defaultNonMembersValue = nonMembersValue;
 		this.defaultMembersValue = membersValue;
 		this.defaultOwnersValue = ownersValue;
@@ -74,6 +68,11 @@ public abstract class AbstractPermissionImpl extends AbstractPermission {
 				: null;
 
 		this.defaultDisplayItem = displayItem;
+	}
+
+	@Override
+	public String getId() {
+		return this.id;
 	}
 
 	public boolean isEnabled() {

@@ -11,9 +11,9 @@ import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Paged.PagedChestInventoryObject;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @Inventory("searchprotection")

@@ -1,29 +1,43 @@
 package company.pluginName.Modules.DebugPckg.Objects;
 
-import darkpanda73.PandaUtils.Services.PandaDiscordWebhook.Objects.DiscordMessage;
+import company.pluginName.Modules.PlaceholdersPckg.PlaceholdersService;
+import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
+import darkpanda73.PandaUtils.Services.PandaDiscordWebhook.Objects.DiscordMessageInstance;
+import darkpanda73.PandaUtils.Services.PandaDiscordWebhook.Objects.DiscordMessageTemplate;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import lombok.Getter;
 
 public abstract class DebugMessage<T> {
 
+	@PandaInject
+	protected static PlaceholdersService placeholdersService;
+
 	protected @Getter PandaBooleanField logEnabledField;
-	protected @Getter PandaBooleanField discordEnabledField;
+	protected @Getter DiscordMessageTemplate discordMessageTemplate;
 
 	public DebugMessage(String path) {
-		logEnabledField = new PandaBooleanField("Settings.Debug.Messages." + path, false);
-		discordEnabledField = new PandaBooleanField("Discord.Logs." + path, true);
+		this.logEnabledField = new PandaBooleanField("Settings.Debug.Messages." + path, false);
+	}
+
+	public DebugMessage(DiscordMessageTemplate discordMessageTemplate) {
+		this.discordMessageTemplate = discordMessageTemplate;
+	}
+
+	public DebugMessage(String path, DiscordMessageTemplate discordMessageTemplate) {
+		this.logEnabledField = new PandaBooleanField("Settings.Debug.Messages." + path, false);
+		this.discordMessageTemplate = discordMessageTemplate;
 	}
 
 	public abstract String generateLogMessage(T data);
 
 	public boolean isLogEnabled() {
-		return this.logEnabledField.isTrue();
+		return this.logEnabledField != null && this.logEnabledField.isTrue();
 	}
 
-	public abstract DiscordMessage generateDiscordMessage(T data);
+	public abstract DiscordMessageInstance generateDiscordMessageInstance(T data);
 
 	public boolean isDiscordEnabled() {
-		return this.discordEnabledField.isTrue();
+		return this.discordMessageTemplate != null && this.discordMessageTemplate.isEnabled();
 	}
 
 }

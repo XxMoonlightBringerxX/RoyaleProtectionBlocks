@@ -2,11 +2,14 @@ package company.pluginName.Modules.ProtectionsPckg.Objects.Components.Permission
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
 import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.SQLPckg.SQLService;
@@ -15,7 +18,7 @@ import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.PermissionInterface;
 
 @Data
 @AllArgsConstructor
@@ -26,6 +29,9 @@ public class ProtectionPermissionManager {
 
 	@PandaInject
 	private static SQLService sqlService;
+
+	@PandaInject
+	private static PlayerDataService playerDataService;
 
 	private Protection protection;
 
@@ -39,7 +45,7 @@ public class ProtectionPermissionManager {
 		this.permissions.clear();
 	}
 
-	public void setValue(AbstractPermission permission, PermissionGroup group, Boolean value) {
+	public void setValue(PermissionInterface permission, PermissionGroup group, Boolean value) {
 		ProtectionPermission protectionPermission = permissions.computeIfAbsent(permission.getId(),
 				(id) -> new ProtectionPermission(id));
 
@@ -53,6 +59,8 @@ public class ProtectionPermissionManager {
 		case OWNERS:
 			protectionPermission.setOwnersValue(value);
 			break;
+		default:
+			return;
 		}
 
 		TasksUtils.executeOnAsync(() -> {
@@ -64,17 +72,41 @@ public class ProtectionPermissionManager {
 		});
 	}
 
-	public Boolean getValue(AbstractPermission setting, OfflinePlayer player) {
-		if (protection.isMainOwner(player.getUniqueId()) || protection.isOwner(player.getUniqueId())) {
-			return getValue(setting, PermissionGroup.OWNERS);
-		} else if (protection.isMember(player.getUniqueId())) {
-			return getValue(setting, PermissionGroup.MEMBERS);
-		} else {
-			return getValue(setting, PermissionGroup.NON_MEMBERS);
+	public Boolean getValue(PermissionInterface permission, Player player) {
+		PermissionGroup permissionGroup = PermissionGroup.NON_MEMBERS;
+
+		if (player != null) {
+			if (protection.isMainOwner(player.getUniqueId())) {
+				permissionGroup = PermissionGroup.MAIN_OWNER;
+			} else if (hasStaffMode(player)) {
+				permissionGroup = PermissionGroup.STAFF;
+			} else if (protection.isOwner(player.getUniqueId())) {
+				permissionGroup = PermissionGroup.OWNERS;
+			} else if (protection.isMember(player.getUniqueId())) {
+				permissionGroup = PermissionGroup.MEMBERS;
+			}
 		}
+
+		return getValue(permission, permissionGroup);
 	}
 
-	public Boolean getValue(AbstractPermission permission, PermissionGroup group) {
+	public Boolean getValue(PermissionInterface permission, UUID playerUuid) {
+		PermissionGroup permissionGroup = PermissionGroup.NON_MEMBERS;
+
+		if (playerUuid != null) {
+			if (protection.isMainOwner(playerUuid)) {
+				permissionGroup = PermissionGroup.MAIN_OWNER;
+			} else if (protection.isOwner(playerUuid)) {
+				permissionGroup = PermissionGroup.OWNERS;
+			} else if (protection.isMember(playerUuid)) {
+				permissionGroup = PermissionGroup.MEMBERS;
+			}
+		}
+
+		return getValue(permission, permissionGroup);
+	}
+
+	public Boolean getValue(PermissionInterface permission, PermissionGroup group) {
 		ProtectionPermission protectionPermission = permissions.get(permission.getId());
 
 		switch (group) {
@@ -90,9 +122,18 @@ public class ProtectionPermissionManager {
 			return protectionPermission != null && protectionPermission.getOwnersValue() != null
 					? protectionPermission.getOwnersValue()
 					: permission.getOwnersValue();
+		case MAIN_OWNER:
+			return permission.getMainOwnerValue();
+		case STAFF:
+			return permission.getStaffValue();
+		default:
+			return permission.getNonMembersValue();
 		}
+	}
 
-		return permission.getNonMembersValue();
+	private boolean hasStaffMode(Player pl) {
+		PlayerData playerData = playerDataService.getPlayerData(pl);
+		return playerData != null && playerData.isStaffMode();
 	}
 
 }

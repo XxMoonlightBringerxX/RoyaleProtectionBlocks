@@ -20,12 +20,12 @@ import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryData;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.GeneratedItem;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Paged.PagedChestInventoryData;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Paged.PagedChestInventoryObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -131,6 +131,11 @@ public class ProtectionInvitationsInventory extends PagedChestInventoryObject<Pr
 		super(player);
 
 		this.playerData = playerData;
+	}
+
+	@Override
+	protected String getTitle() {
+		return MessageTemplate.inst(super.getTitle()).toString();
 	}
 
 	@Override

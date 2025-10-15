@@ -15,6 +15,7 @@ import company.pluginName.Bukkit.Inventories.Protections.Flags.ProtectionFlagsIn
 import company.pluginName.Bukkit.Inventories.Protections.Members.ProtectionMembersInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Merge.ProtectionMergeInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Permissions.ProtectionsPermissionsListInventory;
+import company.pluginName.Bukkit.Inventories.Protections.Settings.ProtectionsSettingsListInventory;
 import company.pluginName.Bukkit.Inventories.Protections.Split.ProtectionSplitInventory;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
 import company.pluginName.Modules.FilePckg.Messages;
@@ -30,13 +31,13 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemPregenerator;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemGenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemPregenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.ChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.GeneratedItem;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Item;
 import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Listeners.PandaMessageListener.Callback;
 import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.PandaMessageListenerService;
 import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
@@ -341,6 +342,11 @@ public class ProtectionsManageInventory extends ChestInventoryObject {
 	@ItemExecutor("Permissions-button")
 	private void executePermissionsButton() {
 		new ProtectionsPermissionsListInventory(getPlayer(), protection).openInventory();
+	}
+
+	@ItemExecutor("Settings-button")
+	private void executeSettingsButton() {
+		new ProtectionsSettingsListInventory(getPlayer(), protection).openInventory();
 	}
 
 }

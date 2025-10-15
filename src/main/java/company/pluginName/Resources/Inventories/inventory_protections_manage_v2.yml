@@ -67,6 +67,13 @@ Items:
       Amount: 1
       Name: "&ePermissions"
     Slots: "21"
+  Settings-button:
+    Display-item:
+      Type: "STONE_AXE"
+      Amount: 1
+      Name: "&eSettings"
+    Slots: "23"
+    Version: 2
   # Temporary button, upgrade on next updates
   Toggle-boundary-button:
     Display-item:

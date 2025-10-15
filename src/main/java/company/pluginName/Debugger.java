@@ -95,8 +95,6 @@ public class Debugger {
 		PROTECTION_REMOVAL_ATTEMPT_CANCELLED("Protection-removal-attempt-cancelled",
 				"The removal attempt for protection '%s' has been cancelled by another plugin"),
 
-		PROTECTION_REMOVAL("Protection-removal", "Player %s removed protection '%s' from location x(%s) y(%s) z(%s)"),
-
 		PLAYER_TELEPORT_TO_PROTECTION_ATTEMPT("Player-teleport-to-protection-attempt",
 				"Player '%s' is attempting to teleport to protection '%s'"),
 

@@ -3,9 +3,9 @@ package company.pluginName.Bukkit.Inventories.Store;
 import org.bukkit.entity.Player;
 
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.ChestInventoryObject;
 
 @Inventory("store")
 public class StoreInventory extends ChestInventoryObject {

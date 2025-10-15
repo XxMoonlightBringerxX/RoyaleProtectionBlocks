@@ -27,12 +27,12 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemGenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.ChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.GeneratedItem;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Item;
 import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Listeners.PandaMessageListener.Callback;
 import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Services.PandaMessageListenerService;
 import relampagorojo93.LibsCollection.Utils.Bukkit.Enums.Material;
@@ -229,8 +229,14 @@ public class ProtectionBlockManageInventory extends ChestInventoryObject {
 			}
 			goToPreviousInventory();
 		} catch (RoyaleProtectionBlocksExceptionImpl ex) {
+			relatedProtections.clear();
 			if (originalProtectionBlock != null) {
 				originalProtectionBlock.copy(copyOriginalProtectionBlock);
+				try {
+					originalProtectionBlock.save();
+				} catch (RoyaleProtectionBlocksExceptionImpl e) {
+					e.sendError(Bukkit.getConsoleSender());
+				}
 			}
 			ex.sendError(getPlayer());
 		} finally {
@@ -240,12 +246,12 @@ public class ProtectionBlockManageInventory extends ChestInventoryObject {
 
 					try {
 						prot.getUtils().regenerateProtectionArea();
-						if (!prot.getProtectedRegion().getMinimumPoint()
+						if (prot.getProtectedRegion() == null || (!prot.getProtectedRegion().getMinimumPoint()
 								.equals(worldGuardApi.getHook().getInternalWorldGuard().asBlockVector(
 										prot.getUtils().getProtectionArea().getMinLocation().toLocation()))
 								|| !prot.getProtectedRegion().getMaximumPoint()
 										.equals(worldGuardApi.getHook().getInternalWorldGuard().asBlockVector(
-												prot.getUtils().getProtectionArea().getMaxLocation().toLocation()))) {
+												prot.getUtils().getProtectionArea().getMaxLocation().toLocation())))) {
 							prot.regenerateProtectedRegion();
 						}
 					} catch (Exception e) {

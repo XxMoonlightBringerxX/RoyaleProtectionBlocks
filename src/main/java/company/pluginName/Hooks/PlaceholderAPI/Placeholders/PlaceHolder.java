@@ -23,7 +23,7 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlock
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.ProtectionBlocks.IProtectionBlock;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtectionFlags.FlagRetrieveRequestInput;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.PermissionInterface;
 
 public class PlaceHolder extends PlaceholderExpansion {
 
@@ -109,7 +109,7 @@ public class PlaceHolder extends PlaceholderExpansion {
 				if (!permissionId.isEmpty()) {
 					IProtection protection = getProtectionIn(player);
 					if (protection != null) {
-						AbstractPermission permission = protectionPermissionsService.getPermission(permissionId);
+						PermissionInterface permission = protectionPermissionsService.getPermission(permissionId);
 
 						if (permission != null) {
 							return Boolean.TRUE.equals(protection.getPermissionValue(permission, player))

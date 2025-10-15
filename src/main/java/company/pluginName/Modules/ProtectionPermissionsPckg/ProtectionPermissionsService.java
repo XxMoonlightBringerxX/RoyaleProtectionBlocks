@@ -9,15 +9,16 @@ import java.util.Map;
 
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.FilePckg.FilesService;
-import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.AbstractPermissionImpl;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.BreakPermission;
-import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.ChestAccessPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.FlyPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.InteractPermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.InventoryAccessPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.PlacePermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.PvPPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.RideVehiclesPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.TeleportPermission;
 import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.ToggleBlockVisibilityPermission;
+import company.pluginName.Modules.ProtectionPermissionsPckg.Objects.Templates.PermissionImpl;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject.PostInjectMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
@@ -29,7 +30,7 @@ import darkpanda73.PandaUtils.PandaYaml.PandaYaml;
 import darkpanda73.PandaUtils.PandaYaml.Exceptions.YamlException;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.PandaCommandsService;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.PandaYamlFile;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.PermissionInterface;
 
 @PandaService(loadOn = LoadStep.ENABLE)
 public class ProtectionPermissionsService {
@@ -41,7 +42,8 @@ public class ProtectionPermissionsService {
 	public static final BreakPermission BREAK_PERMISSION = new BreakPermission();
 	public static final PlacePermission PLACE_PERMISSION = new PlacePermission();
 	public static final InteractPermission INTERACT_PERMISSION = new InteractPermission();
-	public static final ChestAccessPermission CHESTACCESS_PERMISSION = new ChestAccessPermission();
+	public static final InventoryAccessPermission INVENTORYACCESS_PERMISSION = new InventoryAccessPermission();
+	public static final PvPPermission PVP_PERMISSION = new PvPPermission();
 
 	@PandaInject
 	private MainPluginClass plugin;
@@ -53,7 +55,7 @@ public class ProtectionPermissionsService {
 	private PandaCommandsService commandsService;
 
 	private PandaYamlFile protectionSettingsFile;
-	private Map<String, AbstractPermission> registeredPermissions = new HashMap<>();
+	private Map<String, PermissionInterface> registeredPermissions = new HashMap<>();
 	private boolean loaded = false;
 
 	public ProtectionPermissionsService() {
@@ -64,7 +66,8 @@ public class ProtectionPermissionsService {
 		registerPermission(BREAK_PERMISSION);
 		registerPermission(PLACE_PERMISSION);
 		registerPermission(INTERACT_PERMISSION);
-		registerPermission(CHESTACCESS_PERMISSION);
+		registerPermission(INVENTORYACCESS_PERMISSION);
+		registerPermission(PVP_PERMISSION);
 	}
 
 	@PostInjectMethod
@@ -98,16 +101,16 @@ public class ProtectionPermissionsService {
 			PandaYaml yaml = new PandaYaml(protectionSettingsFile.getFile());
 
 			registeredPermissions.values().forEach(permission -> {
-				if (permission instanceof AbstractPermissionImpl) {
+				if (permission instanceof PermissionImpl) {
 					if (!yaml.getRoot().has("Permissions." + permission.getId() + ".Display-item")) {
-						ItemBuilder.inst().fromItem(((AbstractPermissionImpl) permission).getDefaultDisplayItem())
+						ItemBuilder.inst().fromItem(((PermissionImpl) permission).getDefaultDisplayItem())
 								.toMap().forEach((key, value) -> {
 									yaml.getRoot().set("Permissions." + permission.getId() + ".Display-item." + key,
 											value);
 								});
 					}
 
-					((AbstractPermissionImpl) permission).setDisplayItem(ItemBuilder
+					((PermissionImpl) permission).setDisplayItem(ItemBuilder
 							.inst().fromMap(yaml.getRoot()
 									.getSection("Permissions." + permission.getId() + ".Display-item").toMap())
 							.build());
@@ -120,7 +123,7 @@ public class ProtectionPermissionsService {
 		}
 	}
 
-	public void registerPermission(AbstractPermission permission) {
+	public void registerPermission(PermissionInterface permission) {
 		if (!loaded) {
 			this.registeredPermissions.put(permission.getId(), permission);
 		} else {
@@ -132,11 +135,11 @@ public class ProtectionPermissionsService {
 		return new ArrayList<>(this.registeredPermissions.keySet());
 	}
 
-	public List<AbstractPermission> getPermissions() {
+	public List<PermissionInterface> getPermissions() {
 		return new ArrayList<>(this.registeredPermissions.values());
 	}
 
-	public AbstractPermission getPermission(String id) {
+	public PermissionInterface getPermission(String id) {
 		return this.registeredPermissions.get(id);
 	}
 

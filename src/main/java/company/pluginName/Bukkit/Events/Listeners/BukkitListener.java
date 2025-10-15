@@ -2,7 +2,6 @@ package company.pluginName.Bukkit.Events.Listeners;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.block.Furnace;
@@ -115,25 +114,22 @@ public class BukkitListener implements Listener {
 	@EventHandler
 	public void onWorldLoad(WorldLoadEvent e) {
 		protectionsService.getProtectionsByWorld().getOrDefault(e.getWorld().getName(), Collections.emptyList())
-				.stream().filter(protection -> protection.getProtectedRegion() == null).collect(Collectors.toList())
-				.forEach(protection -> {
-					if (protection.getProtectedRegion() == null) {
-						try {
-							protection.regenerateProtectedRegion();
-						} catch (RoyaleProtectionBlocksExceptionImpl e1) {
-							MessageTemplate
-									.inst(PandaPrefixedStringField
-											.applyPrefix("&7Removing protection '" + protection.getProtectionId()
-													+ "' as it couldn't be found on '" + protection.getWorldName()
-													+ "' and were problems trying to regenerate the region."))
-									.process().sendMessage(Bukkit.getConsoleSender());
+				.stream().forEach(protection -> {
+					try {
+						protection.getOrRegenerateProtectedRegion();
+					} catch (RoyaleProtectionBlocksExceptionImpl e1) {
+						MessageTemplate
+								.inst(PandaPrefixedStringField
+										.applyPrefix("&7Removing protection '" + protection.getProtectionId()
+												+ "' as it couldn't be found on '" + protection.getWorldName()
+												+ "' and were problems trying to regenerate the region."))
+								.process().sendMessage(Bukkit.getConsoleSender());
 
-							try {
-								RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
-										.delete(ProtectionRemovalData.inst(null, protection.getProtectionId()));
-							} catch (RoyaleProtectionBlocksException e2) {
-								e2.sendError(Bukkit.getConsoleSender());
-							}
+						try {
+							RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+									.delete(ProtectionRemovalData.inst(null, protection.getProtectionId()));
+						} catch (RoyaleProtectionBlocksException e2) {
+							e2.sendError(Bukkit.getConsoleSender());
 						}
 					}
 				});

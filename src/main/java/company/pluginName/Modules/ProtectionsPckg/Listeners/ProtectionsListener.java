@@ -1,6 +1,7 @@
 package company.pluginName.Modules.ProtectionsPckg.Listeners;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -19,6 +20,7 @@ import company.pluginName.Debugger;
 import company.pluginName.Debugger.MessageType;
 import company.pluginName.MainPluginClass;
 import company.pluginName.Modules.ProtectionBlocksPckg.Objects.ProtectionBlock;
+import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Utils.EventUtilitiesV2;
 import company.pluginName.Utils.EventsUtils;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -28,6 +30,7 @@ import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemStackData.ItemStackDa
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.ItemType;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 
 @PandaListener
@@ -138,8 +141,32 @@ public class ProtectionsListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onExplodeEntity(EntityExplodeEvent e) {
-		e.blockList().removeIf(block -> RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
-				.findProtectionBySourceBlock(block) != null);
+		if (ProtectionSettingsService.TNT_EXPLOSIONS_SETTING.isEnabled() && e.getEntityType() == EntityType.PRIMED_TNT
+				|| e.getEntityType() == EntityType.MINECART_TNT) {
+			IProtection tntProtection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+					.findProtectionByLocation(e.getEntity().getLocation());
+
+			if (tntProtection != null && Boolean.FALSE.equals(tntProtection
+					.getSettingValue(ProtectionSettingsService.TNT_EXPLOSIONS_SETTING, PermissionGroup.GENERIC))) {
+				e.setCancelled(true);
+			} else {
+				e.blockList().removeIf(block -> {
+					IProtection protection = RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+							.findProtectionByLocation(block.getLocation().add(0.5D, 0.5D, 0.5D));
+
+					if (protection != null) {
+						protection = protection.getParentProtection();
+
+						return protection.isProtectionBlock(block) || Boolean.FALSE.equals(protection.getSettingValue(
+								ProtectionSettingsService.TNT_EXPLOSIONS_SETTING, PermissionGroup.GENERIC));
+					}
+					return false;
+				});
+			}
+		} else {
+			e.blockList().removeIf(block -> RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
+					.findProtectionBySourceBlock(block) != null);
+		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

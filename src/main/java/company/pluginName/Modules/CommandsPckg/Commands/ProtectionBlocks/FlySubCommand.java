@@ -1,8 +1,10 @@
 package company.pluginName.Modules.CommandsPckg.Commands.ProtectionBlocks;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
@@ -15,6 +17,9 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaParamete
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubCommand;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerToggleFlightAttemptEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Player.PlayerToggleFlightEvent;
+import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -45,17 +50,23 @@ public class FlySubCommand extends PandaSubCommand {
 		if (pl != null) {
 			PlayerData playerData = playerDataService.getPlayerData(pl);
 			if (!playerData.getCurrentProtections().isEmpty()) {
-				if (pl.getAllowFlight() || PermissionsService.FLY_BYPASS.hasPermission(pl)
-						|| (PermissionsService.FLY.hasPermission(pl) && playerData.getCurrentProtections().stream()
-								.anyMatch(protection -> protection.canFly(pl)))) {
-					pl.setAllowFlight(!pl.getAllowFlight());
-					MessageTemplate
-							.inst((pl.getAllowFlight() ? Messages.MESSAGE_PROTECTIONS_FLIGHT_ENABLED
-									: Messages.MESSAGE_PROTECTIONS_FLIGHT_DISABLED).applyPrefix())
-							.process().sendMessage(sender);
-				} else {
-					MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTOWNERANYPROTECTION.applyPrefix()).process()
-							.sendMessage(sender);
+				try {
+					if (PermissionsService.FLY_BYPASS.hasPermission(pl)) {
+						toggleFlight(pl);
+					} else {
+						if (PermissionsService.FLY.hasPermission(pl)) {
+							if (playerData.getCurrentProtections().stream()
+									.anyMatch(protection -> protection.canFly(pl))) {
+								toggleFlight(pl);
+							} else {
+								throw Exceptions.Protections.Flight.PERMISSIONDENIEDPROTECTION.generateException();
+							}
+						} else {
+							throw Exceptions.Protections.Flight.PERMISSIONDENIED.generateException();
+						}
+					}
+				} catch (RoyaleProtectionBlocksException e) {
+					e.sendError(sender);
 				}
 			} else {
 				MessageTemplate.inst(Messages.ERROR_PROTECTIONS_NOTINSIDEPROTECTION.applyPrefix()).process()
@@ -66,4 +77,21 @@ public class FlySubCommand extends PandaSubCommand {
 		}
 		return new TrueResponse();
 	}
+
+	private void toggleFlight(Player pl) {
+		PlayerToggleFlightAttemptEvent attemptEvent = new PlayerToggleFlightAttemptEvent(pl, !pl.getAllowFlight());
+
+		Bukkit.getPluginManager().callEvent(attemptEvent);
+
+		if (!attemptEvent.isCancelled()) {
+			pl.setAllowFlight(!pl.getAllowFlight());
+			MessageTemplate.inst((pl.getAllowFlight() ? Messages.MESSAGE_PROTECTIONS_FLIGHT_ENABLED
+					: Messages.MESSAGE_PROTECTIONS_FLIGHT_DISABLED).applyPrefix()).process().sendMessage(pl);
+
+			PlayerToggleFlightEvent event = new PlayerToggleFlightEvent(pl, pl.getAllowFlight());
+
+			Bukkit.getPluginManager().callEvent(event);
+		}
+	}
+
 }

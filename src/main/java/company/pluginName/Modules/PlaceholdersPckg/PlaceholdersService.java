@@ -12,7 +12,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Modules.FilePckg.Messages;
@@ -26,7 +25,8 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService.LoadMethod;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
-import darkpanda73.PandaUtils.PandaUtilities.OfflinePlayerUtilities;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
+import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
 import darkpanda73.PandaUtils.Utilities.Java.Objects.Pair;
 import darkpanda73.PandaUtils.Utilities.Java.Time.TimeUtilities;
 import lombok.AllArgsConstructor;
@@ -45,6 +45,9 @@ public class PlaceholdersService {
 	private static final Replacement[] EMPTY = new Replacement[0];
 
 	@PandaInject
+	private static PandaCachedPlayersService cachedPlayersService;
+
+	@PandaInject
 	private static ProtectionsPurgeService protectionsPurgeService;
 
 	@PandaInject
@@ -57,7 +60,7 @@ public class PlaceholdersService {
 	 * Player placeholders
 	 */
 
-	private static final List<Pair<String, Function<Player, String>>> PLAYER_PLACEHOLDERS = Arrays.asList(
+	public static final List<Pair<String, Function<Player, String>>> PLAYER_PLACEHOLDERS = Arrays.asList(
 			Pair.of("{player_name}", (player) -> player.getName()),
 			Pair.of("{player_current}",
 					(player) -> String.valueOf(RoyaleProtectionBlocksAPI.getInstance().getProtectionsService()
@@ -69,7 +72,7 @@ public class PlaceholdersService {
 	 * Protection placeholders
 	 */
 
-	private static final List<Pair<String, Function<IProtection, String>>> PROTECTION_PLACEHOLDERS = Arrays.asList(
+	public static final List<Pair<String, Function<IProtection, String>>> PROTECTION_PLACEHOLDERS = Arrays.asList(
 			Pair.of("{protection_id}", (protection) -> protection.getProtectionId()),
 			Pair.of("{protection_name}",
 					(protection) -> protection.getDisplayName() != null ? protection.getDisplayName()
@@ -102,13 +105,13 @@ public class PlaceholdersService {
 					(protection) -> settingsService.getDateFormat().format(new Date(protection.getCreatedDate()))),
 			Pair.of("{protection_owners}", (protection) -> ((Protection) protection).getOwners().size() != 0
 					? ((Protection) protection).getOwners().stream().filter(Objects::nonNull).map(owner -> {
-						OfflinePlayer ownerPlayer = OfflinePlayerUtilities.getOfflinePlayer(owner);
+						PandaCachedPlayer ownerPlayer = cachedPlayersService.getCachedPlayer(owner);
 						return ownerPlayer != null && ownerPlayer.getName() != null ? ownerPlayer.getName() : "???";
 					}).collect(Collectors.joining(", "))
 					: Messages.MESSAGE_GENERAL_EMPTY.getContent()),
 			Pair.of("{protection_members}", (protection) -> ((Protection) protection).getMembers().size() != 0
 					? ((Protection) protection).getMembers().stream().filter(Objects::nonNull).map(member -> {
-						OfflinePlayer memberPlayer = OfflinePlayerUtilities.getOfflinePlayer(member);
+						PandaCachedPlayer memberPlayer = cachedPlayersService.getCachedPlayer(member);
 						return memberPlayer != null && memberPlayer.getName() != null ? memberPlayer.getName() : "???";
 					}).collect(Collectors.joining(", "))
 					: Messages.MESSAGE_GENERAL_EMPTY.getContent()),
@@ -116,18 +119,19 @@ public class PlaceholdersService {
 					(protection) -> String.valueOf(((Protection) protection).getMembers().size())),
 			Pair.of("{protection_banneds}", (protection) -> ((Protection) protection).getBanneds().size() != 0
 					? ((Protection) protection).getBanneds().stream().map(banned -> {
-						OfflinePlayer bannedPlayer = OfflinePlayerUtilities.getOfflinePlayer(banned);
+						PandaCachedPlayer bannedPlayer = cachedPlayersService.getCachedPlayer(banned);
 						return bannedPlayer != null && bannedPlayer.getName() != null ? bannedPlayer.getName() : "???";
 					}).collect(Collectors.joining(", "))
 					: Messages.MESSAGE_GENERAL_EMPTY.getContent()),
 			Pair.of("{protection_owners_size}",
-					(protection) -> String.valueOf(((Protection) protection).getOwners().size())));
+					(protection) -> String.valueOf(((Protection) protection).getOwners().size())),
+			Pair.of("{protection_block_id}", (protection) -> protection.getProtectionBlockId()));
 
 	/*
 	 * Protection blocks placeholders
 	 */
 
-	private static final List<Pair<String, Function<IProtectionBlock, String>>> PROTECTIONBLOCK_PLACEHOLDERS = Arrays
+	public static final List<Pair<String, Function<IProtectionBlock, String>>> PROTECTIONBLOCK_PLACEHOLDERS = Arrays
 			.asList(Pair.of("{protectionblock_id}", (block) -> block.getId()),
 					Pair.of("{protectionblock_blocks_x}",
 							(block) -> String.valueOf(String.valueOf((block.getBlocksX() * 2) + 1))),

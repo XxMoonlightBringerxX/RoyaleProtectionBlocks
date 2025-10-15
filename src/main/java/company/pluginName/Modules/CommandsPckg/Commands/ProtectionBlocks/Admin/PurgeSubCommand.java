@@ -8,11 +8,12 @@ import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.Modules.DebugPckg.DebugService;
+import company.pluginName.Modules.DebugPckg.Objects.Protection.ProtectionPurgeSummaryDebugMessage;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.ProtectionsPurgeService;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration;
-import company.pluginName.Utils.DiscordUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
@@ -48,6 +49,9 @@ public class PurgeSubCommand extends PandaSubCommand {
 
 	@PandaInject
 	private static ProtectionsPurgeService protectionsPurgeService;
+
+	@PandaInject
+	private static DebugService debugService;
 
 	public PurgeSubCommand() throws InstantiationException {
 		super();
@@ -95,8 +99,11 @@ public class PurgeSubCommand extends PandaSubCommand {
 						List<Protection> removedProtections = protectionsPurgeService
 								.purgeProtections(protectionsToPurge, RemovalCause.MANUAL_PURGE);
 
-						DiscordUtilities.sendPurgeSummaryMessage(sender instanceof Player ? (Player) sender : null,
-								purgeConfiguration, removedProtections);
+						debugService.sendDebugMessage(
+								debugService.getDebugMessage(ProtectionPurgeSummaryDebugMessage.class),
+								ProtectionPurgeSummaryDebugMessage.Data.inst(
+										sender instanceof Player ? (Player) sender : null, purgeConfiguration,
+										removedProtections));
 
 						MessageTemplate.inst(Messages.MESSAGE_PURGE_END.applyPrefix())
 								.setReplacements(

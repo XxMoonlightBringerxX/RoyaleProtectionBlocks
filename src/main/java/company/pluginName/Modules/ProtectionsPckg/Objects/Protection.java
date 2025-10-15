@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -37,9 +38,9 @@ import company.pluginName.Modules.ProtectionBlocksPckg.Objects.Reference.Referen
 import company.pluginName.Modules.ProtectionPermissionsPckg.ProtectionPermissionsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionActions;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionPlayers;
-import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionSettings;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.ProtectionUtils;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Permissions.ProtectionPermissionManager;
+import company.pluginName.Modules.ProtectionsPckg.Objects.Components.Settings.ProtectionSettingManager;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Components.WorldGuard.ProtectionWorldGuardFlags;
 import company.pluginName.Modules.ProtectionsPckg.Utils.ProtectionUtilities;
 import company.pluginName.Modules.SQLPckg.SQLService;
@@ -68,7 +69,7 @@ import lombok.ToString;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.BlockReason;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
-import royale.RoyaleProtectionBlocks.Plugin.API.Enums.SettingGroup;
+import royale.RoyaleProtectionBlocks.Plugin.API.Events.Permissions.PermissionCheckingEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionMergeEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Events.Protection.ProtectionSplitEvent;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
@@ -77,8 +78,8 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtecti
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtectionFlags;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation;
 import royale.RoyaleProtectionBlocks.Plugin.API.Objects.SimpleLocation.SimpleLocationArea;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.AbstractSetting;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.PermissionInterface;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.SettingInterface;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.Protections.Objects.ProtectionInvitation;
 
 @Data
@@ -141,7 +142,7 @@ public class Protection implements IProtection {
 	private ReferencedProtectionBlock referencedProtectionBlock;
 
 	private @Setter(AccessLevel.NONE) ProtectionPlayers players = new ProtectionPlayers(this);
-	private @Setter(AccessLevel.NONE) ProtectionSettings settings = new ProtectionSettings(this);
+	private @Setter(AccessLevel.NONE) ProtectionSettingManager settings = new ProtectionSettingManager(this);
 	private @Setter(AccessLevel.NONE) ProtectionPermissionManager permissions = new ProtectionPermissionManager(this);
 	private @Setter(AccessLevel.NONE) ProtectionWorldGuardFlags worldGuardFlags = new ProtectionWorldGuardFlags(this);
 	private @Setter(AccessLevel.NONE) ProtectionActions actions = new ProtectionActions(this);
@@ -175,6 +176,10 @@ public class Protection implements IProtection {
 	 */
 
 	private @ToString.Include SimpleLocation location;
+
+	public SimpleLocation getSimpleLocation() {
+		return this.location;
+	}
 
 	public Location getBukkitLocation() {
 		return this.location.toLocation();
@@ -402,7 +407,7 @@ public class Protection implements IProtection {
 
 	@Override
 	public String getProtectionBlockId() {
-		return this.getReferencedProtectionBlock().getIdentifier();
+		return this.getReferencedProtectionBlock() != null ? this.getReferencedProtectionBlock().getIdentifier() : null;
 	}
 
 	/*
@@ -446,6 +451,13 @@ public class Protection implements IProtection {
 
 	public void clearCachedProtectedRegion() {
 		this.protectedRegion = null;
+	}
+
+	public ProtectedRegion getOrRegenerateProtectedRegion() throws RoyaleProtectionBlocksExceptionImpl {
+		if (this.getProtectedRegion() == null) {
+			regenerateProtectedRegion();
+		}
+		return this.protectedRegion;
 	}
 
 	public ProtectedRegion getProtectedRegion() {
@@ -719,12 +731,13 @@ public class Protection implements IProtection {
 		return invitedPlayers.get(playerUuid);
 	}
 
-	public ProtectionInvitation addInvitedPlayer(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+	public ProtectionInvitation addInvitedPlayer(UUID playerUuid, boolean addAsOwner)
+			throws RoyaleProtectionBlocksExceptionImpl {
 		if (isInvitedPlayer(playerUuid)) {
 			throw Protections.Invitations.ALREADYINVITED.generateException();
 		}
 
-		ProtectionInvitation invitation = new ProtectionInvitation(this, playerUuid);
+		ProtectionInvitation invitation = new ProtectionInvitation(this, playerUuid, addAsOwner);
 
 		this.invitedPlayers.put(playerUuid, invitation);
 
@@ -744,8 +757,9 @@ public class Protection implements IProtection {
 		return invitation;
 	}
 
-	public ProtectionInvitation addInvitedPlayerAndSave(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
-		ProtectionInvitation invitation = this.addInvitedPlayer(playerUuid);
+	public ProtectionInvitation addInvitedPlayerAndSave(UUID playerUuid, boolean addAsOwner)
+			throws RoyaleProtectionBlocksExceptionImpl {
+		ProtectionInvitation invitation = this.addInvitedPlayer(playerUuid, addAsOwner);
 
 		TasksUtils.executeOnAsync(() -> {
 			try {
@@ -759,17 +773,27 @@ public class Protection implements IProtection {
 	}
 
 	public void acceptInvitation(UUID playerUuid) throws RoyaleProtectionBlocksException {
-		removeInvitedPlayer(playerUuid);
-		this.players.addMember(playerUuid);
+		ProtectionInvitation invitation = removeInvitedPlayer(playerUuid);
+
+		if (invitation.isAddAsOwner()) {
+			this.players.addOwner(playerUuid);
+		} else {
+			this.players.addMember(playerUuid);
+		}
 	}
 
 	@Override
 	public void acceptInvitationAndSave(UUID playerUuid) throws RoyaleProtectionBlocksException {
-		removeInvitedPlayerAndSave(playerUuid);
-		addMemberAndSave(playerUuid, true);
+		ProtectionInvitation invitation = removeInvitedPlayerAndSave(playerUuid);
+
+		if (invitation.isAddAsOwner()) {
+			addOwnerAndSave(playerUuid, true);
+		} else {
+			addMemberAndSave(playerUuid, true);
+		}
 	}
 
-	public void removeInvitedPlayer(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+	public ProtectionInvitation removeInvitedPlayer(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
 		if (!isInvitedPlayer(playerUuid)) {
 			throw Protections.Invitations.NOTINVITED.generateException();
 		}
@@ -781,10 +805,12 @@ public class Protection implements IProtection {
 		if (pl != null) {
 			playerDataService.getPlayerData(pl).getProtectionInvitations().remove(invitation);
 		}
+
+		return invitation;
 	}
 
-	public void removeInvitedPlayerAndSave(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
-		this.removeInvitedPlayer(playerUuid);
+	public ProtectionInvitation removeInvitedPlayerAndSave(UUID playerUuid) throws RoyaleProtectionBlocksExceptionImpl {
+		ProtectionInvitation invitation = this.removeInvitedPlayer(playerUuid);
 
 		TasksUtils.executeOnAsync(() -> {
 			try {
@@ -793,6 +819,8 @@ public class Protection implements IProtection {
 				e.sendError(Bukkit.getConsoleSender());
 			}
 		});
+
+		return invitation;
 	}
 
 	public boolean isInvitedPlayer(UUID playerUuid) {
@@ -1168,98 +1196,162 @@ public class Protection implements IProtection {
 	}
 
 	@Override
-	public <T extends Serializable> T getSettingValue(AbstractSetting<T> setting, Player player)
-			throws RoyaleProtectionBlocksException {
+	public boolean isProtectionBlock(Block block) {
+		SimpleLocation simpleLocation = SimpleLocation.of(block.getLocation());
+		try {
+			return checkAnyMatchAllProtections(
+					(protection) -> ((Protection) protection).getUtils().isProtectionBlock(simpleLocation));
+		} catch (Throwable e) {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isProtectionBlock(Location location) {
+		SimpleLocation simpleLocation = SimpleLocation.of(location.getBlock().getLocation());
+		try {
+			return checkAnyMatchAllProtections(
+					(protection) -> ((Protection) protection).getUtils().isProtectionBlock(simpleLocation));
+		} catch (Throwable e) {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isProtectionBlock(SimpleLocation simpleLocation) {
+		try {
+			return checkAnyMatchAllProtections(
+					(protection) -> ((Protection) protection).getUtils().isProtectionBlock(simpleLocation));
+		} catch (Throwable e) {
+			return false;
+		}
+	}
+
+	@Override
+	public <T extends Serializable> T getSettingValue(SettingInterface<T> setting, Player player) {
 		return settings.getValue(setting, player);
 	}
 
 	@Override
-	public <T extends Serializable> T getSettingValue(AbstractSetting<T> setting, SettingGroup group)
-			throws RoyaleProtectionBlocksException {
+	public <T extends Serializable> T getSettingValue(SettingInterface<T> setting, PermissionGroup group) {
 		return settings.getValue(setting, group);
 	}
 
 	@Override
-	public String getSettingValueAsString(AbstractSetting<?> setting, Player player)
-			throws RoyaleProtectionBlocksException {
+	public String getSettingValueAsString(SettingInterface<?> setting, Player player)
+			throws RoyaleProtectionBlocksExceptionImpl {
 		return settings.getValueAsString(setting, player);
 	}
 
 	@Override
-	public String getSettingValueAsString(AbstractSetting<?> setting, SettingGroup group)
-			throws RoyaleProtectionBlocksException {
+	public String getSettingValueAsString(SettingInterface<?> setting, PermissionGroup group)
+			throws RoyaleProtectionBlocksExceptionImpl {
 		return settings.getValueAsString(setting, group);
 	}
 
 	@Override
-	public <T extends Serializable> void setSettingValue(AbstractSetting<T> setting, SettingGroup group, T value)
+	public String getSettingValueAsStringSafely(SettingInterface<?> setting, Player player) {
+		return settings.getValueAsStringSafely(setting, player);
+	}
+
+	@Override
+	public String getSettingValueAsStringSafely(SettingInterface<?> setting, PermissionGroup group) {
+		return settings.getValueAsStringSafely(setting, group);
+	}
+
+	@Override
+	public <T extends Serializable> void setSettingValue(SettingInterface<T> setting, PermissionGroup group, T value)
 			throws RoyaleProtectionBlocksException {
 		settings.setValue(setting, group, value);
 	}
 
 	@Override
-	public void setUnparsedSettingValue(AbstractSetting<?> setting, SettingGroup group, String value)
+	public void setUnparsedSettingValue(SettingInterface<?> setting, PermissionGroup group, String value)
 			throws RoyaleProtectionBlocksException {
 		settings.setUnparsedValue(setting, group, value);
 	}
 
 	@Override
-	public Boolean getPermissionValue(AbstractPermission setting, OfflinePlayer player) {
+	public Boolean getPermissionValue(PermissionInterface setting, Player player) {
 		return this.permissions.getValue(setting, player);
 	}
 
 	@Override
-	public Boolean getPermissionValue(AbstractPermission setting, PermissionGroup group) {
+	public Boolean getPermissionValue(PermissionInterface setting, UUID playerUuid) {
+		return this.permissions.getValue(setting, playerUuid);
+	}
+
+	@Override
+	public Boolean getPermissionValue(PermissionInterface setting, PermissionGroup group) {
 		return this.permissions.getValue(setting, group);
 	}
 
 	@Override
-	public void setPermissionValue(AbstractPermission permission, PermissionGroup group, Boolean value) {
+	public void setPermissionValue(PermissionInterface permission, PermissionGroup group, Boolean value) {
 		this.permissions.setValue(permission, group, value);
 	}
 
 	@Override
 	public boolean canTeleport(Player player) {
-		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-				|| (ProtectionPermissionsService.TELEPORT_PERMISSION.isEnabled() && Boolean.TRUE
-						.equals(this.permissions.getValue(ProtectionPermissionsService.TELEPORT_PERMISSION, player)))
-				|| PermissionsService.TELEPORT_OTHERS.hasPermission(player);
+		if (PermissionsService.TELEPORT_OTHERS.hasPermission(player)) {
+			return ProtectionPermissionsService.TELEPORT_PERMISSION.getStaffValue();
+		}
+
+		return Boolean.TRUE.equals(checkPermission(ProtectionPermissionsService.TELEPORT_PERMISSION, player));
 	}
 
 	@Override
 	public boolean canFly(Player player) {
-		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-				|| (ProtectionPermissionsService.FLY_PERMISSION.isEnabled() && Boolean.TRUE
-						.equals(this.permissions.getValue(ProtectionPermissionsService.FLY_PERMISSION, player)));
+		if (PermissionsService.FLY_BYPASS.hasPermission(player)) {
+			return ProtectionPermissionsService.FLY_PERMISSION.getStaffValue();
+		}
+
+		return Boolean.TRUE.equals(checkPermission(ProtectionPermissionsService.FLY_PERMISSION, player));
 	}
 
 	@Override
 	public boolean canToggleBlockVisibility(Player player) {
-		return this.isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-				|| (ProtectionPermissionsService.TOGGLEBLOCKVISIBILITY_PERMISSION.isEnabled() && this.permissions
-						.getValue(ProtectionPermissionsService.TOGGLEBLOCKVISIBILITY_PERMISSION, player))
-				|| PermissionsService.HIDE_OTHERS.hasPermission(player);
+		return Boolean.TRUE
+				.equals(checkPermission(ProtectionPermissionsService.TOGGLEBLOCKVISIBILITY_PERMISSION, player));
 	}
 
 	@Override
 	public boolean canBreak(Player player) {
-		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-				|| !ProtectionPermissionsService.BREAK_PERMISSION.isEnabled() || Boolean.TRUE
-						.equals(this.permissions.getValue(ProtectionPermissionsService.BREAK_PERMISSION, player));
+		return Boolean.TRUE.equals(checkPermission(ProtectionPermissionsService.BREAK_PERMISSION, player));
 	}
 
 	@Override
 	public boolean canPlace(Player player) {
-		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-				|| !ProtectionPermissionsService.PLACE_PERMISSION.isEditable() || Boolean.TRUE
-						.equals(this.permissions.getValue(ProtectionPermissionsService.PLACE_PERMISSION, player));
+		return Boolean.TRUE.equals(checkPermission(ProtectionPermissionsService.PLACE_PERMISSION, player));
 	}
 
 	@Override
 	public boolean canInteract(Player player) {
-		return isMainOwner(player.getUniqueId()) || hasStaffMode(player)
-				|| !ProtectionPermissionsService.INTERACT_PERMISSION.isEnabled() || Boolean.TRUE
-						.equals(this.permissions.getValue(ProtectionPermissionsService.INTERACT_PERMISSION, player));
+		return Boolean.TRUE.equals(checkPermission(ProtectionPermissionsService.INTERACT_PERMISSION, player));
+	}
+
+	@Override
+	public boolean canOpenInventories(Player player) {
+		return Boolean.TRUE.equals(checkPermission(ProtectionPermissionsService.INVENTORYACCESS_PERMISSION, player));
+	}
+
+	@Override
+	public boolean canPvP(Player player) {
+		return Boolean.TRUE.equals(checkPermission(ProtectionPermissionsService.PVP_PERMISSION, player));
+	}
+
+	@Override
+	public PermissionGroup getGroup(Player player) {
+		if (player != null) {
+			PermissionGroup group = getGroup(player != null ? player.getUniqueId() : null);
+
+			if (group != PermissionGroup.MAIN_OWNER && group != PermissionGroup.GENERIC) {
+				return hasStaffMode(player) ? PermissionGroup.STAFF : group;
+			}
+
+			return group;
+		}
+		return PermissionGroup.GENERIC;
 	}
 
 	private boolean hasStaffMode(Player pl) {
@@ -1345,6 +1437,22 @@ public class Protection implements IProtection {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
+	}
+
+	private Boolean checkPermission(PermissionInterface permission, Player player) {
+		PermissionGroup permissionGroup = getGroup(player);
+
+		Boolean value = checkPermission(permission, permissionGroup);
+
+		PermissionCheckingEvent event = new PermissionCheckingEvent(player, permission, permissionGroup, value);
+
+		Bukkit.getPluginManager().callEvent(event);
+
+		return event.isAllowed();
+	}
+
+	private Boolean checkPermission(PermissionInterface permission, PermissionGroup permissionGroup) {
+		return permission.getValue(this, permissionGroup);
 	}
 
 }

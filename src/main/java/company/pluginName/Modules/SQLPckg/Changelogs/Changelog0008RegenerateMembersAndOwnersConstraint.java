@@ -9,7 +9,6 @@ import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.DropTable
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Statements.ManualStatement;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Column;
 import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Objects.Tables.Table;
-import darkpanda73.PandaUtils.PandaSQLModule.v2.SQL.Utils.SQLServiceUtilities;
 
 public class Changelog0008RegenerateMembersAndOwnersConstraint extends SQLChangelog {
 
@@ -67,12 +66,12 @@ public class Changelog0008RegenerateMembersAndOwnersConstraint extends SQLChange
 			sqlConnection.executeCreateTable(CreateTableStatement.inst(PROTECTION_MEMBERS_COPY_TABLE));
 			sqlConnection.executeCreateTable(CreateTableStatement.inst(PROTECTION_OWNERS_COPY_TABLE));
 
-			sqlConnection.executeManual(ManualStatement.inst("INSERT INTO " + SQLServiceUtilities.getPrefix()
-					+ PROTECTION_MEMBERS_COPY_TABLE.getName() + " SELECT * FROM " + SQLServiceUtilities.getPrefix()
-					+ PROTECTION_MEMBERS_TABLE.getName()));
 			sqlConnection.executeManual(ManualStatement
-					.inst("INSERT INTO " + SQLServiceUtilities.getPrefix() + PROTECTION_OWNERS_COPY_TABLE.getName()
-							+ " SELECT * FROM " + SQLServiceUtilities.getPrefix() + PROTECTION_OWNERS_TABLE.getName()));
+					.inst("INSERT INTO " + sqlConnection.getPrefix() + PROTECTION_MEMBERS_COPY_TABLE.getName()
+							+ " SELECT * FROM " + sqlConnection.getPrefix() + PROTECTION_MEMBERS_TABLE.getName()));
+			sqlConnection.executeManual(ManualStatement
+					.inst("INSERT INTO " + sqlConnection.getPrefix() + PROTECTION_OWNERS_COPY_TABLE.getName()
+							+ " SELECT * FROM " + sqlConnection.getPrefix() + PROTECTION_OWNERS_TABLE.getName()));
 
 			sqlConnection.executeDropTable(DropTableStatement.inst(PROTECTION_MEMBERS_TABLE));
 			sqlConnection.executeDropTable(DropTableStatement.inst(PROTECTION_OWNERS_TABLE));

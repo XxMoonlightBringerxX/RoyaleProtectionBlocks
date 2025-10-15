@@ -4,7 +4,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.util.Vector;
 
-import company.pluginName.Features.PvPPckg.Utils.CombatLogHookUtilities;
+import company.pluginName.Features.PvPPckg.Utils.PvPUtilities;
 import company.pluginName.Modules.PermissionsPckg.PermissionsService;
 import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
@@ -29,7 +29,7 @@ public class PlayerAutoFlightListener implements Listener {
 	public void onPlayerEnterExitProtection(PlayerEnterExitProtectionEvent e) {
 		if (!e.getPlayer().isFlying() && PlayerFlightListener.SETTINGS_PROTECTION_FLIGHT_ENABLEFLIGHTCONTROL.isTrue()
 				&& SETTINGS_PROTECTION_FLIGHT_ALLOWAUTOFLIGHT.isTrue() && !e.getEnteredProtections().isEmpty()
-				&& !CombatLogHookUtilities.isInCombat(e.getPlayer())) {
+				&& !PvPUtilities.isInCombat(e.getPlayer())) {
 			PlayerData playerData = playerDataService.getPlayerData(e.getPlayer());
 
 			boolean hasPermissions = PermissionsService.FLY_BYPASS.hasPermission(e.getPlayer())

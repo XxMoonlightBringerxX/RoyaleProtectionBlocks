@@ -10,15 +10,15 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemPregenerator;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.ChestInventoryObject;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemGenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemPregenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.ChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Item;
 import darkpanda73.PandaUtils.Utilities.Java.Arrays.ArrayUtilities;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.PermissionInterface;
 
 @Inventory("protections_permissions_manage")
 public class ProtectionsPermissionsManageInventory extends ChestInventoryObject {
@@ -31,9 +31,9 @@ public class ProtectionsPermissionsManageInventory extends ChestInventoryObject 
 	private static PlaceholdersService placeholdersService;
 
 	private Protection protection;
-	private AbstractPermission permission;
+	private PermissionInterface permission;
 
-	public ProtectionsPermissionsManageInventory(Player player, Protection protection, AbstractPermission permission) {
+	public ProtectionsPermissionsManageInventory(Player player, Protection protection, PermissionInterface permission) {
 		super(player);
 
 		this.protection = protection;

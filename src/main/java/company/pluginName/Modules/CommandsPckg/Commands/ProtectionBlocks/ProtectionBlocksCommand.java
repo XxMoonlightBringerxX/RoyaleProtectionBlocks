@@ -29,7 +29,13 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBool
 import royale.RoyaleProtectionBlocks.Plugin.API.Interfaces.Protections.IProtection;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Inventories.OpenProtectionManagementInventoryRequestInput;
 
-@PandaCommandAnnotation(id = "protectionblocks", pathName = "Protection-blocks", defaultName = "protectionblocks", defaultDescription = "Open the GUI or execute commands", defaultUsage = "[help|subcommand]", defaultAliases = "pb")
+@PandaCommandAnnotation(
+		id = "protectionblocks",
+		pathName = "Protection-blocks",
+		defaultName = "protectionblocks",
+		defaultDescription = "Open the GUI or execute commands",
+		defaultUsage = "[help|subcommand]",
+		defaultAliases = "pb")
 @PandaCommandAnnotation.Customizable(aliases = true, description = true, name = true, permission = true, usage = true)
 public class ProtectionBlocksCommand extends PandaCommand {
 

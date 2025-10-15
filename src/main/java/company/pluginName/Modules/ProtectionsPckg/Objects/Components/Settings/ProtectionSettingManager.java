@@ -1,14 +1,17 @@
-package company.pluginName.Modules.ProtectionsPckg.Objects.Components;
+package company.pluginName.Modules.ProtectionsPckg.Objects.Components.Settings;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Exceptions.RoyaleProtectionBlocksExceptionImpl;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
 import company.pluginName.Modules.ProtectionSettingsPckg.ProtectionSettingsService;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.SQLPckg.SQLService;
@@ -20,12 +23,12 @@ import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPan
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import royale.RoyaleProtectionBlocks.Plugin.API.Enums.SettingGroup;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.AbstractSetting;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.SettingInterface;
 
 @Data
 @AllArgsConstructor
-public class ProtectionSettings {
+public class ProtectionSettingManager {
 
 	@RegisteredPandaField("lang")
 	public static final PandaPrefixedStringField MESSAGE_PROTECTIONS_SETTINGS_TRUEVALUENAME = new PandaPrefixedStringField(
@@ -57,25 +60,24 @@ public class ProtectionSettings {
 	@PandaInject
 	private static SQLService sqlService;
 
+	@PandaInject
+	private static PlayerDataService playerDataService;
+
 	private Protection protection;
 
-	private Map<String, Serializable> nonMembersSettings = new HashMap<>();
-	private Map<String, Serializable> membersSettings = new HashMap<>();
-	private Map<String, Serializable> ownersSettings = new HashMap<>();
+	private Map<PermissionGroup, Map<String, Serializable>> settings = new HashMap<>();
 
-	public ProtectionSettings(Protection protection) {
+	public ProtectionSettingManager(Protection protection) {
 		this.protection = protection;
 	}
 
 	public void resetSettings() {
-		this.nonMembersSettings.clear();
-		this.membersSettings.clear();
-		this.ownersSettings.clear();
+		this.settings.clear();
 	}
 
-	public void setUnparsedValue(AbstractSetting<?> setting, SettingGroup group, String value)
-			throws RoyaleProtectionBlocksExceptionImpl {
-		Serializable object;
+	public <T extends Serializable> void setUnparsedValue(SettingInterface<T> setting, PermissionGroup group,
+			String value) throws RoyaleProtectionBlocksExceptionImpl {
+		T object;
 
 		try {
 			object = setting.parseStringToValue(value);
@@ -83,40 +85,12 @@ public class ProtectionSettings {
 			throw Exceptions.Protections.Settings.INVALIDVALUE.generateException();
 		}
 
-		switch (group) {
-		case OWNERS:
-			ownersSettings.put(setting.getId(), object);
-			break;
-		case MEMBERS:
-			membersSettings.put(setting.getId(), object);
-			break;
-		case NON_MEMBERS:
-			nonMembersSettings.put(setting.getId(), object);
-			break;
-		}
-
-		TasksUtils.executeOnAsync(() -> {
-			try {
-				sqlService.saveProtectionSetting(protection.getProtectionId(), setting.getId(), group, object);
-			} catch (RoyaleProtectionBlocksExceptionImpl e) {
-				e.sendError(Bukkit.getConsoleSender());
-			}
-		});
+		setValue(setting, group, object);
 	}
 
-	public <T extends Serializable> void setValue(AbstractSetting<T> setting, SettingGroup group, T value)
+	public <T extends Serializable> void setValue(SettingInterface<T> setting, PermissionGroup group, T value)
 			throws RoyaleProtectionBlocksExceptionImpl {
-		switch (group) {
-		case OWNERS:
-			ownersSettings.put(setting.getId(), value);
-			break;
-		case MEMBERS:
-			membersSettings.put(setting.getId(), value);
-			break;
-		case NON_MEMBERS:
-			nonMembersSettings.put(setting.getId(), value);
-			break;
-		}
+		this.settings.computeIfAbsent(group, (g) -> new HashMap<>()).put(setting.getId(), value);
 
 		TasksUtils.executeOnAsync(() -> {
 			try {
@@ -127,57 +101,33 @@ public class ProtectionSettings {
 		});
 	}
 
-	public <T extends Serializable> T getValue(AbstractSetting<T> setting, Player player)
-			throws RoyaleProtectionBlocksExceptionImpl {
-		if (protection.isMainOwner(player.getUniqueId()) || protection.isOwner(player.getUniqueId())) {
-			return getValue(setting, SettingGroup.OWNERS);
-		} else if (protection.isMember(player.getUniqueId())) {
-			return getValue(setting, SettingGroup.MEMBERS);
-		} else {
-			return getValue(setting, SettingGroup.NON_MEMBERS);
-		}
+	public <T extends Serializable> T getValue(SettingInterface<T> setting, Player player) {
+		return getValue(setting, protection.getGroup(player));
+	}
+
+	public <T extends Serializable> T getValue(SettingInterface<T> setting, UUID playerUuid) {
+		return getValue(setting, protection.getGroup(playerUuid));
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends Serializable> T getValue(AbstractSetting<T> setting, SettingGroup group)
-			throws RoyaleProtectionBlocksExceptionImpl {
+	public <T extends Serializable> T getValue(SettingInterface<T> setting, PermissionGroup group) {
 		try {
-			switch (group) {
-			case OWNERS:
-				return (T) ownersSettings.getOrDefault(setting.getId(), setting.getOwnersValue());
-			case MEMBERS:
-				return (T) membersSettings.getOrDefault(setting.getId(), setting.getMembersValue());
-			case NON_MEMBERS:
-				return (T) nonMembersSettings.getOrDefault(setting.getId(), setting.getNonMembersValue());
-			}
+			return (T) this.settings.getOrDefault(group, Collections.emptyMap()).getOrDefault(setting.getId(),
+					setting.getValue(group));
 		} catch (ClassCastException e) {
-			switch (group) {
-			case OWNERS:
-				ownersSettings.remove(setting.getId());
-				return setting.getOwnersValue();
-			case MEMBERS:
-				membersSettings.remove(setting.getId());
-				return setting.getMembersValue();
-			case NON_MEMBERS:
-				nonMembersSettings.remove(setting.getId());
-				return setting.getNonMembersValue();
+			if (this.settings.containsKey(group)) {
+				this.settings.get(group).remove(setting.getId());
 			}
+			return setting.getValue(group);
 		}
-		return setting.getNonMembersValue();
 	}
 
-	public String getValueAsString(AbstractSetting<?> setting, Player player)
+	public String getValueAsString(SettingInterface<?> setting, Player player)
 			throws RoyaleProtectionBlocksExceptionImpl {
-		if (protection.isMainOwner(player.getUniqueId()) || protection.isOwner(player.getUniqueId())) {
-			return getValueAsString(setting, SettingGroup.OWNERS);
-		} else if (protection.isMember(player.getUniqueId())) {
-			return getValueAsString(setting, SettingGroup.MEMBERS);
-		} else {
-			return getValueAsString(setting, SettingGroup.NON_MEMBERS);
-		}
+		return getValueAsString(setting, protection.getGroup(player));
 	}
 
-	public String getValueAsString(AbstractSetting<?> setting, SettingGroup group)
+	public String getValueAsString(SettingInterface<?> setting, PermissionGroup group)
 			throws RoyaleProtectionBlocksExceptionImpl {
 		Serializable value = getValue(setting, group);
 
@@ -200,6 +150,22 @@ public class ProtectionSettings {
 		}
 
 		return MESSAGE_PROTECTIONS_SETTINGS_UNKNOWNVALUENAME.toString();
+	}
+
+	public String getValueAsStringSafely(SettingInterface<?> setting, Player player) {
+		try {
+			return getValueAsString(setting, player);
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			return MESSAGE_PROTECTIONS_SETTINGS_UNKNOWNVALUENAME.toString();
+		}
+	}
+
+	public String getValueAsStringSafely(SettingInterface<?> setting, PermissionGroup group) {
+		try {
+			return getValueAsString(setting, group);
+		} catch (RoyaleProtectionBlocksExceptionImpl e) {
+			return MESSAGE_PROTECTIONS_SETTINGS_UNKNOWNVALUENAME.toString();
+		}
 	}
 
 }

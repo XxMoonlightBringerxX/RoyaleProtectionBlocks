@@ -24,7 +24,7 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.AbstractPermission;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Permissions.PermissionInterface;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSwitchPermissionRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
@@ -60,7 +60,7 @@ public class PermissionsSubCommand extends PandaSubCommand {
 	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
 		if (argIndex == 0) {
 			return protectionPermissionsService.getPermissions().stream()
-					.filter(perm -> perm.isEnabled() && perm.isEditable()).map(AbstractPermission::getId)
+					.filter(perm -> perm.isEnabled() && perm.isEditable()).map(PermissionInterface::getId)
 					.collect(Collectors.toList());
 		} else if (argIndex == 1) {
 			return PERMISSION_GROUP_VALUES;
@@ -79,7 +79,7 @@ public class PermissionsSubCommand extends PandaSubCommand {
 						.findProtectionParentByLocation(pl.getLocation());
 				if (protection != null) {
 					try {
-						AbstractPermission permission = protectionPermissionsService
+						PermissionInterface permission = protectionPermissionsService
 								.getPermission(parameters.getParameters().get(0));
 						if (permission != null && permission.isEnabled()) {
 							try {

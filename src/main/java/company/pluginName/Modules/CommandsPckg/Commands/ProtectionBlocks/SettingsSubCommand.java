@@ -23,10 +23,10 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.PandaSubComma
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.CommandResponse.TrueResponse;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
-import royale.RoyaleProtectionBlocks.Plugin.API.Enums.SettingGroup;
+import royale.RoyaleProtectionBlocks.Plugin.API.Enums.PermissionGroup;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.AbstractSetting;
-import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.BooleanSetting;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.BooleanSettingInterface;
+import royale.RoyaleProtectionBlocks.Plugin.API.Objects.Settings.SettingInterface;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.ProtectionSwitchSettingRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
@@ -46,8 +46,10 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Obje
 		usage = true)
 public class SettingsSubCommand extends PandaSubCommand {
 
-	private static final List<String> SETTING_GROUP_VALUES = Arrays.stream(SettingGroup.values())
-			.map(group -> group.name().toLowerCase()).collect(Collectors.toList());
+	private static final List<String> SETTING_GROUP_VALUES = Arrays
+			.asList(PermissionGroup.GENERIC, PermissionGroup.NON_MEMBERS, PermissionGroup.MEMBERS,
+					PermissionGroup.OWNERS)
+			.stream().map(group -> group.name().toLowerCase()).collect(Collectors.toList());
 
 	@PandaInject
 	private static ProtectionSettingsService protectionSettingsService;
@@ -57,14 +59,12 @@ public class SettingsSubCommand extends PandaSubCommand {
 	}
 
 	@Override
-	public boolean precondition() {
-		return false;
-	}
-
-	@Override
 	protected List<String> generateAutocompleteList(Player sender, int argIndex) {
 		if (argIndex == 0) {
-			return protectionSettingsService.getSettingIds();
+			return protectionSettingsService.getSettings().stream()
+					.filter(setting -> setting.isEnabled() && setting.isEditable()
+							&& (setting.getPermission() == null || sender.hasPermission(setting.getPermission())))
+					.map(setting -> setting.getId()).collect(Collectors.toList());
 		} else if (argIndex == 1) {
 			return SETTING_GROUP_VALUES;
 		}
@@ -80,11 +80,11 @@ public class SettingsSubCommand extends PandaSubCommand {
 						.findProtectionParentByLocation(pl.getLocation());
 				if (protection != null) {
 					try {
-						AbstractSetting<?> setting = protectionSettingsService
+						SettingInterface<?> setting = protectionSettingsService
 								.getSetting(parameters.getParameters().get(0));
 						if (setting != null) {
 							try {
-								SettingGroup group = SettingGroup
+								PermissionGroup group = PermissionGroup
 										.valueOf(parameters.getParameters().get(1).toUpperCase());
 
 								requestSwitch(pl, protection, setting, group,
@@ -93,7 +93,8 @@ public class SettingsSubCommand extends PandaSubCommand {
 
 								MessageTemplate
 										.inst(Messages.MESSAGE_PROTECTIONS_SETTINGS_SWITCHEDSUCCESSFULLY.applyPrefix())
-										.setReplacements(new Replacement("{setting_name}", () -> setting.getName()),
+										.setReplacements(
+												new Replacement("{setting_name}", () -> setting.getDisplayName()),
 												new Replacement("{group_name}", () -> group.name().toLowerCase()),
 												new Replacement("{value}", () -> {
 													try {
@@ -127,9 +128,9 @@ public class SettingsSubCommand extends PandaSubCommand {
 		return new TrueResponse();
 	}
 
-	private <T extends Serializable> void requestSwitch(Player pl, Protection protection, AbstractSetting<T> setting,
-			SettingGroup group, String value) throws RoyaleProtectionBlocksException {
-		if (setting instanceof BooleanSetting) {
+	private <T extends Serializable> void requestSwitch(Player pl, Protection protection, SettingInterface<T> setting,
+			PermissionGroup group, String value) throws RoyaleProtectionBlocksException {
+		if (setting instanceof BooleanSettingInterface) {
 			RoyaleProtectionBlocksAPIImpl.getInstance().getPlayerInteractionsService()
 					.protectionSwitchSettingRequest(ProtectionSwitchSettingRequestInput.inst(pl, protection, setting,
 							group, setting.parseStringToValue(value)));

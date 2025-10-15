@@ -16,6 +16,7 @@ import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.Replacement;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Utils.TasksUtils;
+import darkpanda73.PandaUtils.Services.PandaBossBarModule.Objects.TimedPandaBossBar;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaBooleanField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaDoubleField;
@@ -78,6 +79,7 @@ public class PlayerData extends darkpanda73.PandaUtils.Services.PandaPlayerDataM
 	private CachedQuery<?> lastCachedQuery;
 	private long lastBlockedProtectionMessage = 0L;
 	private boolean staffMode = false;
+	private TimedPandaBossBar bossBar;
 
 	private List<ProtectionInvitation> protectionInvitations = new ArrayList<>();
 

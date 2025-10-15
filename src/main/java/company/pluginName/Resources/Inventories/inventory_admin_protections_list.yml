@@ -33,34 +33,43 @@ Items:
       Name: "&eNext"
       Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTliZjMyOTJlMTI2YTEwNWI1NGViYTcxM2FhMWIxNTJkNTQxYTFkODkzODgyOWM1NjM2NGQxNzhlZDIyYmYifX19"
     Slots: "26"
-  Player-button:
-    Display-item:
-      Type: "BOOK"
-      Amount: 1
-      Name: "&aAmount of protections: &e{total_amount}"
-      Lore:
-      - "&0"
-      - "&7&o(Click to select a player)"
-    Slots: "22"
   Creation-date-sort-button:
     Display-item:
       Type: "CLOCK"
       Amount: 1
       Name: "&aCurrent sort: &eCreation date"
-    Slots: "24"
-    Version: 2
+    Slots: "99"
+    Version: 3
   Name-sort-button:
     Display-item:
       Type: "NAME_TAG"
       Amount: 1
       Name: "&aCurrent sort: &eName"
-    Slots: "24"
-    Version: 2
+    Slots: "99"
+    Version: 3
   World-sort-button:
     Display-item:
       Type: "PLAYER_HEAD"
       Amount: 1
       Name: "&aCurrent sort: &eWorld"
       Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTI4OWQ1YjE3ODYyNmVhMjNkMGIwYzNkMmRmNWMwODVlODM3NTA1NmJmNjg1YjVlZDViYjQ3N2ZlODQ3MmQ5NCJ9fX0="
+    Slots: "99"
+    Version: 3
+  Filters-button:
+    Display-item:
+      Type: "HOPPER"
+      Amount: 1
+      Name: "&aAmount of protections: &e{total_amount}"
+      Lore:
+      - "&0"
+      - "&7&o(Click to modify filters)"
+    Slots: "22"
+    Version: 3
+  Refresh-button:
+    Display-item:
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&aRefresh list"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTg4N2NjMzg4YzhkY2ZjZjFiYThhYTVjM2MxMDJkY2U5Y2Y3YjFiNjNlNzg2YjM0ZDRmMWMzNzk2ZDNlOWQ2MSJ9fX0="
     Slots: "24"
-    Version: 2
+    Version: 3

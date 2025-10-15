@@ -17,12 +17,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import company.pluginName.MainPluginClass;
+import company.pluginName.Modules.DebugPckg.DebugService;
+import company.pluginName.Modules.DebugPckg.Objects.Protection.ProtectionPurgeSummaryDebugMessage;
 import company.pluginName.Modules.FilePckg.FilesService;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import company.pluginName.Modules.ProtectionsPurgePckg.Objects.PurgeConfiguration;
 import company.pluginName.Modules.SQLPckg.SQLService;
-import company.pluginName.Utils.DiscordUtilities;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
@@ -69,6 +70,9 @@ public class ProtectionsPurgeService {
 
 	@PandaInject
 	private SQLService sqlService;
+
+	@PandaInject
+	private DebugService debugService;
 
 	private static final DateFormat FILE_DATE_FORMAT = new SimpleDateFormat("'/purge.'yyyyMMddHHmmss'.json'");
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -117,8 +121,10 @@ public class ProtectionsPurgeService {
 				if (protectionsToPurge.size() > 0) {
 					List<Protection> purgedProtections = purgeProtections(protectionsToPurge, RemovalCause.AUTO_PURGE);
 
-					DiscordUtilities.sendPurgeSummaryMessage(null, this.configuredPurgeConfiguration,
-							purgedProtections);
+					debugService.sendDebugMessage(
+							debugService.getDebugMessage(ProtectionPurgeSummaryDebugMessage.class),
+							ProtectionPurgeSummaryDebugMessage.Data.inst(null, this.configuredPurgeConfiguration,
+									purgedProtections));
 				}
 			}, () -> {
 				Pair<Protection, Long> protectionFound = this.protectionsService

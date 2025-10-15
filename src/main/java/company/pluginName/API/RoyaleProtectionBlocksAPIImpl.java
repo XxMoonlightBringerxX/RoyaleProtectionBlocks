@@ -6,9 +6,13 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaService;
 import lombok.Getter;
 import royale.RoyaleProtectionBlocks.Plugin.API.RoyaleProtectionBlocksAPI;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.FlightControl.FlightControlService;
 
 @PandaService
 public class RoyaleProtectionBlocksAPIImpl extends RoyaleProtectionBlocksAPI {
+
+	@PandaInject
+	private @Getter FlightControlService flightControlService;
 
 	@PandaInject
 	private @Getter PlayerInteractionsServiceImpl playerInteractionsService;

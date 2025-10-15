@@ -209,8 +209,7 @@ public class EventsUtils {
 
 	@AllArgsConstructor
 	public static enum EventOrigin {
-		VANILLA(ItemType.VANILLA), ORAXEN(ItemType.ORAXEN), ITEMS_ADDER(ItemType.ITEMS_ADDER),
-		NEXO(ItemType.ITEMS_ADDER);
+		VANILLA(ItemType.VANILLA), ORAXEN(ItemType.ORAXEN), ITEMS_ADDER(ItemType.ITEMS_ADDER), NEXO(ItemType.NEXO);
 
 		private ItemType itemType;
 	}

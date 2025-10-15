@@ -28,13 +28,13 @@ import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaUtilities.ItemStack.ItemBuilder;
 import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.PandaCachedPlayersService;
 import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Objects.PandaCachedPlayer;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.Inventory;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemExecutor;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.ItemGenerator;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.GeneratedItem;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Item;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryData;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Objects.ChestInventory.Paged.PagedChestInventoryObject;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.Inventory;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemExecutor;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.ItemGenerator;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.GeneratedItem;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Item;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Paged.PagedChestInventoryData;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Objects.ChestInventory.Paged.PagedChestInventoryObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -43,7 +43,6 @@ import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Play
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberAddRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberInviteRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberRemoveRequestInput;
-import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerAddRequestInput;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerRemoveRequestInput;
 
 @Inventory("protections_members")
@@ -81,9 +80,9 @@ public class ProtectionMembersInventory extends PagedChestInventoryObject<UUID> 
 						.canAddOwner(event.getInventory().protection, event.getInventory().getPlayer())) {
 					new ConfirmationInventory(event.getInventory().getPlayer(), () -> {
 						try {
-							playerInteractionsService.protectionOwnerAddRequest(
-									ProtectionOwnerAddRequestInput.inst(event.getInventory().getPlayer(),
-											event.getInventory().protection, event.getEntity()));
+							playerInteractionsService.protectionMemberAddRequest(
+									ProtectionMemberAddRequestInput.inst(event.getInventory().getPlayer(),
+											event.getInventory().protection, event.getEntity(), true));
 						} catch (RoyaleProtectionBlocksException ex) {
 							ex.sendError(event.getInventory().getPlayer());
 						}

@@ -1,0 +1,171 @@
+#--------------------------------------------------------------------------#
+#                                                                          #
+#              _____ _____         _   _____ _         _                   #
+#             | __  |  _  |___ ___| |_| __  | |___ ___| |_ ___             #
+#             |    -|   __|  _| . |  _| __ -| | . |  _| '_|_ -|            #
+#             |__|__|__|  |_| |___|_| |_____|_|___|___|_,_|___|            #
+#                                                                          #
+#        _          ____          _   _____           _     ___ ___        #
+#       | |_ _ _   |    \ ___ ___| |_|  _  |___ ___ _| |___|_  |_  |       #
+#       | . | | |  |  |  | .'|  _| '_|   __| .'|   | . | .'| | |_  |       #
+#       |___|_  |  |____/|__,|_| |_,_|__|  |__,|_|_|___|__,| |_|___|       #
+#           |___|                                                          #
+#                                                                          #
+#--------------------------------------------------------------------------#
+
+#---{File version}
+#
+# DON'T TOUCH THIS SECTION! You can move it, but you can't remove this sections
+# or change its values. This values are used to manage the different versions of
+# this file. New files with newer versions uses this part to check if the file is
+# new or old, and change the format to the new one.
+#
+#---
+
+Version: 1
+
+#---
+# Use the following link to get some information about this configuration:
+#
+#   https://royaleteam.gitbook.io/royale-utils/home/discord-webhook/configurator
+#
+#
+#---
+
+#---
+# Specify if the Discord configuration should be enabled.
+#---
+
+Enable: false
+
+#---
+# Specify a webhook url which will be used on all messages if no webhook
+# url is defined. No message will be send if there's no general webhook url
+# or if their webhook url field is not filled with a valid url.
+#---
+
+General-webhook-url: ""
+
+Templates: 
+
+  Protection-creation: 
+    Enabled: true
+    Webhook-url: ""
+
+    Template: 
+      Embeds: 
+        1: 
+          Title: "[{executor_name}] New registered protection"
+          Description: "A new protection has been registered"
+          Thumbnail-url: "{executor_icon_url}"
+          Fields: 
+            1: 
+              Name: "World"
+              Value: "`{protection_world}`"
+            2: 
+              Name: "Coordinates"
+              Value: "`x: {protection_location_x}, y: {protection_location_y}, z: {protection_location_z}`"
+            3: 
+              Name: "Protection ID"
+              Value: "`{protection_id}`"
+            4: 
+              Name: "Owner"
+              Value: "`{protection_owner}`"
+            5: 
+              Name: "Protection block ID"
+              Value: "`{protection_block_id}`"
+
+  Protection-removal: 
+    Enabled: true
+    Webhook-url: ""
+
+    Template: 
+      Embeds: 
+        1: 
+          Title: "[{executor_name}] Unregistered protection"
+          Description: "A protection has been unregistered"
+          Thumbnail-url: "{executor_icon_url}"
+          Fields: 
+            1: 
+              Name: "World"
+              Value: "`{protection_world}`"
+            2: 
+              Name: "Coordinates"
+              Value: "`x: {protection_location_x}, y: {protection_location_y}, z: {protection_location_z}`"
+            3: 
+              Name: "Protection ID"
+              Value: "`{protection_id}`"
+            4: 
+              Name: "Owner"
+              Value: "`{protection_owner}`"
+            5: 
+              Name: "Protection block ID"
+              Value: "`{protection_block_id}`"
+            6: 
+              Name: "Removal cause"
+              Value: "`{removal_cause}`"
+
+  Protection-purge-summary: 
+    Enabled: true
+    Webhook-url: ""
+
+    #---
+    # Specify the format that every line related to a protection will achieve.
+    # On the variable {purged_protections}, every line will be concatenated with a
+    # \n (new line) between. The result will be `* prot1\n* prot2\n* prot3...`.
+    # New lines are properly treated by Discord, and will 
+    #---
+
+    Purged-protection-line-format: "* {protection_name}"
+    
+    Template: 
+      Embeds: 
+        1: 
+          Title: "[{executor_name}] Purged protections"
+          Description: "Some protections have been removed due a purge"
+          Thumbnail-url: "{executor_icon_url}"
+          Fields: 
+            1: 
+              Name: "Older than"
+              Value: "`{older_than}`"
+            2: 
+              Name: "Amount of protections"
+              Value: "`{purged_protections_size}`"
+            3: 
+              Name: "Protections"
+              Value: "`{purged_protections}`"
+
+  Protection-flag-modification: 
+    Enabled: true
+    Webhook-url: ""
+
+    #---
+    # Specify the flags to be tracked, so when a player modifies a flag, it'll
+    # send a new message on Discord with the information of the modification.
+    # Make sure to set the exact name as the WorldGuard flag name.
+    #---
+
+    Flags-to-listen: 
+    - "pvp"
+    - "tnt"
+    - "chest-access"
+
+    Template: 
+      Embeds: 
+        1: 
+          Title: "[{executor_name}] Flag modified"
+          Description: "A flag on a protection has been modified"
+          Thumbnail-url: "{executor_icon_url}"
+          Fields: 
+            1: 
+              Name: "Protection ID"
+              Value: "{protection_id}"
+            2: 
+              Name: "Flag ID"
+              Value: "{flag_id}"
+            3: 
+              Name: "Previous value"
+              Value: "{previous_value}"
+            4: 
+              Name: "New value"
+              Value: "{new_value}"

@@ -11,6 +11,7 @@ import darkpanda73.PandaUtils.PandaPlugin.PandaPluginClass;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaInject;
 import darkpanda73.PandaUtils.PandaPlugin.Annotations.PandaListeners;
 import darkpanda73.PandaUtils.PandaUpdateChecker.Annotations.EnableUpdateChecker;
+import darkpanda73.PandaUtils.Services.PandaBossBarModule.Annotations.EnableBossBarService;
 import darkpanda73.PandaUtils.Services.PandaCachedPlayersModule.Annotations.EnableCachedPlayersService;
 import darkpanda73.PandaUtils.Services.PandaCommandsModule.Annotations.EnableCommandsService;
 import darkpanda73.PandaUtils.Services.PandaDiscordWebhook.Annotations.EnableDiscordWebhookService;
@@ -18,8 +19,8 @@ import darkpanda73.PandaUtils.Services.PandaEconomiesModule.Annotations.EnableEc
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Annotation.RegisteredPandaField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaStringField;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.EnableInventoriesService;
-import darkpanda73.PandaUtils.Services.PandaInventoriesModule.Annotations.EnablePlayerHeadCacheService;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.EnableInventoriesService;
+import darkpanda73.PandaUtils.Services.PandaInventoriesModule.v1.Annotations.EnablePlayerHeadCacheService;
 import darkpanda73.PandaUtils.Services.PandaLoggingModule.Annotations.EnableLoggingService;
 import darkpanda73.PandaUtils.Services.PandaMessageListenerModule.Annotations.EnableMessageListenerService;
 import darkpanda73.PandaUtils.Services.PandaPlayerDataModule.Listeners.PandaPlayerDataEvents;
@@ -35,6 +36,7 @@ import darkpanda73.PandaUtils.Services.PandaPlayerDataModule.Listeners.PandaPlay
 @EnableLoggingService
 @EnableEconomiesService
 @EnableCachedPlayersService
+@EnableBossBarService
 public class MainPluginClass extends PandaPluginClass {
 
 	@RegisteredPandaField("lang")

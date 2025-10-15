@@ -192,6 +192,10 @@ public class Messages {
 	public static final PandaPrefixedStringField MESSAGE_PLAYERDATA_AUTOFLIGHT_DISABLEDSUCCESSFULLY = new PandaPrefixedStringField(
 			"Message.Player-data.Auto-flight.Disabled-successfully", "&aAuto-flight has been disabled successfully.");
 
+	public static final PandaPrefixedStringField MESSAGE_DATABASEMIGRATION_MIGRATEDSUCCESSFULLY = new PandaPrefixedStringField(
+			"Message.Database-migration.Migrated-successfully",
+			"&aThe information on the current database has been migrated successfully to the new one. Now, you can enable the new database source to use on the plugin on your next server restart.");
+
 	// Errors
 	public static final PandaPrefixedStringField ERROR_ERROR = new PandaPrefixedStringField("Error.Error", "&cError!");
 	public static final PandaPrefixedStringField ERROR_CONSOLEDENIED = new PandaPrefixedStringField(

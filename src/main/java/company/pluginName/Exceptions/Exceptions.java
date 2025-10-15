@@ -644,6 +644,9 @@ public class Exceptions {
 			public static final ThrowableField NOTFOUND = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_NOTFOUND,
 					"Error.Exception.protection.settings.NotFound", "&cThe specified setting could not be found!");
+			public static final ThrowableField NOTEDITABLE = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_NOTEDITABLE,
+					"Error.Exception.protection.settings.NotEditable", "&cThe specified setting cannot be edited!");
 			public static final ThrowableField INVALIDVALUE = new ThrowableField(
 					RoyaleProtectionBlocksException.Type.PROTECTIONS_SETTINGS_INVALIDVALUE,
 					"Error.Exception.protection.settings.InvalidValue",
@@ -700,6 +703,20 @@ public class Exceptions {
 
 		}
 
+		public static class Flight {
+
+			public static final ThrowableField PERMISSIONDENIEDPROTECTION = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_FLIGHT_PERMISSIONDENIEDPROTECTION,
+					"Error.Exception.protection.flight.PermissionDeniedProtection",
+					"&cYou aren't allowed to fly on any of the current protections!");
+
+			public static final ThrowableField PERMISSIONDENIED = new ThrowableField(
+					RoyaleProtectionBlocksException.Type.PROTECTIONS_FLIGHT_PERMISSIONDENIED,
+					"Error.Exception.protection.flight.PermissionDenied",
+					"&cYou don't have permissions to use the fly command!");
+
+		}
+
 	}
 
 	public static class PlayerGuards {
@@ -738,6 +755,45 @@ public class Exceptions {
 					"&cAn unknown error happened while trying to delete the pending payment from the database. Please contact with an administrator!");
 
 		}
+
+	}
+
+	public static class DatabaseMigration {
+
+		public static final ThrowableField INPROGRESS = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.DATABASEMIGRATION_INPROGRESS,
+				"Error.Exception.protection.databaseMigration.InProgress",
+				"&cYou can't migrate the database to another one when there's a migration in progress!");
+
+		public static final ThrowableField INVALIDOPTION = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.DATABASEMIGRATION_INVALIDOPTION,
+				"Error.Exception.protection.databaseMigration.InvalidOption",
+				"&cYou must use one of the available options: &e{options}");
+
+		public static final ThrowableField SQLITEINUSE = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.DATABASEMIGRATION_SQLITEINUSE,
+				"Error.Exception.protection.databaseMigration.SQLiteInUse",
+				"&cYou can't migrate to SQLite while it's in use!");
+
+		public static final ThrowableField MYSQLINUSE = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.DATABASEMIGRATION_MYSQLINUSE,
+				"Error.Exception.protection.databaseMigration.MySQLInUse",
+				"&cYou can't migrate to MySQL while it's in use!");
+
+		public static final ThrowableField UNABLETOCREATECONNECTION = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.DATABASEMIGRATION_UNABLETOCREATECONNECTION,
+				"Error.Exception.protection.databaseMigration.UnableToCreateConnection",
+				"&cThere was an issue trying to create a connection! Please, check if there's no missing information, otherwise, check the console in case there are any errors due an attempt.");
+
+		public static final ThrowableField UNABLETOCONNECT = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.DATABASEMIGRATION_UNABLETOCONNECT,
+				"Error.Exception.protection.databaseMigration.UnableToConnect",
+				"&cThere was an issue trying to connect! Please, check the console in case there are any errors due the attempt.");
+
+		public static final ThrowableField MIGRATIONUNKNOWNEXCEPTION = new ThrowableField(
+				RoyaleProtectionBlocksException.Type.DATABASEMIGRATION_MIGRATIONUNKNOWNEXCEPTION,
+				"Error.Exception.protection.databaseMigration.MigrationUnknownException",
+				"&cThere was an issue trying to migrate the information to the new database! Please, check the console in case there are any errors due the attempt.");
 
 	}
 

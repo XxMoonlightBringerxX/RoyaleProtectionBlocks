@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RoyaleProtectionBlocks</groupId>
 	<artifactId>RoyaleProtectionBlocks</artifactId>
-	<version>1.14.1 Alpha</version>
+	<version>1.17.0 Alpha</version>
 	<name>RoyaleProtectionBlocks</name>
 	<description>Create and use protection blocks to secure your buildings</description>
 	<properties>
@@ -16,7 +16,7 @@
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
 		<project.author>DarkPanda73</project.author>
 		<project.package>royale</project.package>
-		<project.spigotVersion>${project.version} Fix</project.spigotVersion>
+		<project.spigotVersion>${project.version} ${timestamp}</project.spigotVersion>
 	</properties>
 	<repositories>
 		<repository>
@@ -196,6 +196,11 @@
 			<version>0.0.1 Alpha</version>
 		</dependency>
 		<dependency>
+			<groupId>PandaUtils</groupId>
+			<artifactId>PandaBossBarModule</artifactId>
+			<version>0.0.1 Alpha</version>
+		</dependency>
+		<dependency>
 			<groupId>YAMLLib</groupId>
 			<artifactId>YAMLLib</artifactId>
 			<version>1.0</version>
@@ -297,7 +302,7 @@
 		<dependency>
 			<groupId>com.nexomc</groupId>
 			<artifactId>nexo</artifactId>
-			<version>1.8.0</version>
+			<version>1.10.0</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
@@ -350,12 +355,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
-			<groupId>me.NoChance.PvPManager</groupId>
-			<artifactId>pvpmanager</artifactId>
-			<version>3.18.5</version>
-			<scope>provided</scope>
-		</dependency>
+<!--		<dependency>
+		    <groupId>me.chancesd.pvpmanager</groupId>
+		    <artifactId>pvpmanager</artifactId>
+		    <version>4.0.2</version>
+		    <scope>provided</scope>
+		</dependency>-->
 		<dependency>
 			<groupId>net.essentialsx</groupId>
 			<artifactId>EssentialsX</artifactId>

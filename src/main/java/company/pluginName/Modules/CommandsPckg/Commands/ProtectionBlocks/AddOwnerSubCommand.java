@@ -7,8 +7,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import company.pluginName.Exceptions.Exceptions;
 import company.pluginName.Modules.FilePckg.Messages;
 import company.pluginName.Modules.FilePckg.Settings;
+import company.pluginName.Modules.PlayersDataPckg.PlayerDataService;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData;
+import company.pluginName.Modules.PlayersDataPckg.Objects.PlayerData.InvitationRequirement;
 import company.pluginName.Modules.ProtectionsPckg.ProtectionsServiceImpl;
 import company.pluginName.Modules.ProtectionsPckg.Objects.Protection;
 import darkpanda73.PandaUtils.PandaColors.Messages.Objects.MessageTemplate;
@@ -23,7 +27,8 @@ import darkpanda73.PandaUtils.Services.PandaCommandsModule.Objects.Response.Comm
 import darkpanda73.PandaUtils.Services.PandaFilesModule.Objects.Fields.PandaPrefixedStringField;
 import royale.RoyaleProtectionBlocks.Plugin.API.Exceptions.RoyaleProtectionBlocksException;
 import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.PlayerInteractionsService;
-import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Owners.ProtectionOwnerAddRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberAddRequestInput;
+import royale.RoyaleProtectionBlocks.Plugin.API.Services.PlayerInteractions.Objects.Protections.Members.ProtectionMemberInviteRequestInput;
 
 @PandaSubCommandAnnotation(parentCommand = ProtectionBlocksCommand.class)
 @PandaCommandAnnotation(
@@ -50,6 +55,9 @@ public class AddOwnerSubCommand extends PandaSubCommand {
 
 	@PandaInject
 	private static PandaCachedPlayersService cachedPlayersService;
+
+	@PandaInject
+	private static PlayerDataService playerDataService;
 
 	public AddOwnerSubCommand() throws InstantiationException {
 		super();
@@ -80,12 +88,33 @@ public class AddOwnerSubCommand extends PandaSubCommand {
 								.getCachedPlayer(parameters.getParameters().get(0));
 						if (owner != null) {
 							try {
-								playerInteractionsService.protectionOwnerAddRequest(
-										ProtectionOwnerAddRequestInput.inst(pl, protection, owner.getUuid()));
+								PlayerData playerData = playerDataService.getPlayerData(owner.getUuid(), true);
 
-								MessageTemplate
-										.inst(Messages.MESSAGE_PROTECTIONS_OWNERS_ADDEDSUCCESSFULLY.applyPrefix())
-										.process().sendMessage(sender);
+								if (playerData != null) {
+									if (playerData.getInvitationRequirement() == InvitationRequirement.ALL_DENIED) {
+										throw Exceptions.Protections.Invitations.INVITATIONBLOCKED.generateException();
+									} else if (playerData
+											.getInvitationRequirement() == InvitationRequirement.ALL_ACCEPTED) {
+										playerInteractionsService
+												.protectionMemberAddRequest(ProtectionMemberAddRequestInput.inst(pl,
+														protection, owner.getUuid(), true));
+
+										MessageTemplate.inst(
+												Messages.MESSAGE_PROTECTIONS_MEMBERS_ADDEDSUCCESSFULLY.applyPrefix())
+												.process().sendMessage(sender);
+									} else {
+										playerInteractionsService
+												.protectionMemberInviteRequest(ProtectionMemberInviteRequestInput
+														.inst(pl, protection, owner.getUuid(), true));
+
+										MessageTemplate
+												.inst(Messages.MESSAGE_PROTECTIONS_INVITATIONS_INVITEDSUCCESSFULLY
+														.applyPrefix())
+												.process().sendMessage(pl);
+									}
+								} else {
+									throw Exceptions.Protections.Invitations.UNKNOWN.generateException();
+								}
 							} catch (RoyaleProtectionBlocksException e) {
 								e.sendError(pl);
 							}

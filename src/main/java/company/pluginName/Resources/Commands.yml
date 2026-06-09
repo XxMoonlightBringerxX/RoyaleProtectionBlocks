@@ -1,0 +1,444 @@
+#--------------------------------------------------------------------------#
+#                                                                          #
+#              _____ _____         _   _____ _         _                   #
+#             | __  |  _  |___ ___| |_| __  | |___ ___| |_ ___             #
+#             |    -|   __|  _| . |  _| __ -| | . |  _| '_|_ -|            #
+#             |__|__|__|  |_| |___|_| |_____|_|___|___|_,_|___|            #
+#                                                                          #
+#        _          ____          _   _____           _     ___ ___        #
+#       | |_ _ _   |    \ ___ ___| |_|  _  |___ ___ _| |___|_  |_  |       #
+#       | . | | |  |  |  | .'|  _| '_|   __| .'|   | . | .'| | |_  |       #
+#       |___|_  |  |____/|__,|_| |_,_|__|  |__,|_|_|___|__,| |_|___|       #
+#           |___|                                                          #
+#                                                                          #
+#--------------------------------------------------------------------------#
+
+#---{File version}
+#
+# DON'T TOUCH THIS SECTION! You can move it, but you can't remove this sections
+# or change its values. This values are used to manage the different versions of
+# this file. New files with newer versions uses this part to check if the file is
+# new or old, and change the format to the new one.
+#
+#---
+
+Version: 2
+
+Commands: 
+  Protection-blocks: 
+    Name: "protectionblocks"
+    Description: "Open the GUI or execute commands"
+    Permission: ""
+    Usage: "[help|subcommand]"
+    Aliases: 
+    - "pb"
+    Subcommands: 
+      Help: 
+        Name: "help"
+        Description: "Get all the commands"
+        Permission: ""
+        Usage: "[page]"
+        Aliases: 
+        - "h"
+      Info: 
+        Name: "info"
+        Description: "Show the information of a protection"
+        Permission: ""
+        Usage: "[members|owners|banneds]"
+        Aliases: 
+        - "i"
+        Cooldown: 0
+        Subcommands: 
+          Help: 
+            Name: "help"
+            Description: "Get all the commands"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "h"
+          Members: 
+            Name: "members"
+            Description: "Get the members from the current protection"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "m"
+          Owners: 
+            Name: "owners"
+            Description: "Get the owners from the current protection"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "o"
+          Banneds: 
+            Name: "banneds"
+            Description: "Get the banneds from the current protection"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "b"
+      Blocks: 
+        Name: "blocks"
+        Description: "Open a list with all the blocks"
+        Permission: "protectionblocks.blocks"
+        Usage: "[help|subcommand]"
+        Aliases: 
+        - "b"
+        Subcommands: 
+          Help: 
+            Name: "help"
+            Description: "Get all the commands"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "h"
+          Remove: 
+            Name: "remove"
+            Description: "Remove an existing block"
+            Permission: "protectionblocks.blocks.remove"
+            Usage: "<id>"
+            Aliases: 
+            - "r"
+            Cooldown: 0
+          Add: 
+            Name: "add"
+            Description: "Create a new block"
+            Permission: "protectionblocks.blocks.create"
+            Usage: "<id> <x> <y> <z> [permission]"
+            Aliases: 
+            - "a"
+            Cooldown: 0
+          Give: 
+            Name: "give"
+            Description: "Give an existing block to yourself or a player"
+            Permission: "protectionblocks.blocks.give"
+            Usage: "<id> [player]"
+            Aliases: 
+            - "g"
+            Cooldown: 0
+      Files: 
+        Name: "files"
+        Description: "Manage the importation and exportation of data through files"
+        Permission: "protectionblocks.files"
+        Usage: "[help|subcommand]"
+        Aliases: 
+        - "f"
+        Subcommands: 
+          Help: 
+            Name: "help"
+            Description: "Get all the commands"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "h"
+          Import: 
+            Name: "import"
+            Description: "Import all the information of an specific type of data from its respective
+              file"
+            Permission: "protectionblocks.files.import"
+            Usage: "<blocks>"
+            Aliases: 
+            - "i"
+            Cooldown: 0
+          Export: 
+            Name: "export"
+            Description: "Export all the information of an specific type of data to its respective
+              file"
+            Permission: "protectionblocks.files.export"
+            Usage: "<blocks>"
+            Aliases: 
+            - "e"
+            Cooldown: 0
+      Admin: 
+        Name: "admin"
+        Description: "Commands used to manage staff commands"
+        Permission: "protectionblocks.admin"
+        Usage: "[help|subcommand]"
+        Aliases: 
+        - "a"
+        Subcommands: 
+          Help: 
+            Name: "help"
+            Description: "Get all the commands"
+            Permission: ""
+            Usage: "[page]"
+            Aliases: 
+            - "h"
+          Reload: 
+            Name: "reload"
+            Description: "Reload the plugin"
+            Permission: "protectionblocks.admin.reload"
+            Aliases: 
+            - "r"
+            Cooldown: 0
+          Spawn: 
+            Name: "spawn"
+            Description: "Use this command to check whether the spawn has been set properly
+              or not"
+            Permission: "protectionblocks.admin.spawn"
+            Aliases: 
+            - "s"
+            Cooldown: 0
+          Set-spawn: 
+            Name: "setspawn"
+            Description: "Specify the spawn configured for the plugin. This one is mostly used
+              to send players after being kicked or banned from a protection"
+            Permission: "protectionblocks.admin.setspawn"
+            Aliases: 
+            - "ss"
+            Cooldown: 0
+          Purge: 
+            Name: "purge"
+            Description: "Delete protections older than the specified time, based on the last
+              connection of the owner or their creation date"
+            Permission: "protectionblocks.admin.purge"
+            Usage: "[--days <amount of days>] [--hours <amount of hours>] [--minutes
+              <amount of minutes>] [--config] [--show-ignored-players] [--export-only]
+              [confirm]"
+            Aliases: 
+            - "p"
+            Cooldown: 0
+          Reset-flags: 
+            Name: "resetflags"
+            Description: "Reset the flags values to the default ones"
+            Permission: "protectionblocks.admin.resetflags"
+            Aliases: 
+            - "rf"
+            Cooldown: 0
+          Transfer: 
+            Name: "transfer"
+            Description: "Transfer data from a plugin to RoyaleProtectionBlocks"
+            Permission: "protectionblocks.admin.transfer"
+            Usage: "[plugin to transfer] <confirm>"
+            Aliases: 
+            - "t"
+            Cooldown: 0
+          View: 
+            Name: "view"
+            Description: "Show the boundaries of all the protections for a certain amount of
+              time"
+            Permission: ""
+            Aliases: 
+            - "v"
+            Cooldown: 0
+          Unblock: 
+            Name: "unblock"
+            Description: "Allows to unblock a protection"
+            Permission: "protectionblocks.admin.unblock"
+            Aliases: 
+            - "ub"
+            Cooldown: 0
+          Flag: 
+            Name: "flag"
+            Description: "Replace the flag value of a protection or all the protections. Specify
+              no value to clear the flag from the protections."
+            Permission: "protectionblocks.admin.flag"
+            Aliases: 
+            - "f"
+            Cooldown: 0
+          Block: 
+            Name: "block"
+            Description: "Allows to block a protection"
+            Permission: "protectionblocks.admin.block"
+            Aliases: 
+            - "b"
+            Cooldown: 0
+          Last-login: 
+            Name: "lastlogin"
+            Description: "Shows the last time a player was connected"
+            Permission: "protectionblocks.admin.lastlogin"
+            Aliases: 
+            - "ll"
+            Cooldown: 0
+          Staff-mode: 
+            Name: "staffmode"
+            Description: "Sets yourself or a player into the staff mode, which allows to bypass
+              certain parts of the system like the ban and blocked protections"
+            Permission: "protectionblocks.admin.staffmode"
+            Aliases: 
+            - "sm"
+            Cooldown: 0
+          Guard: 
+            Name: "guard"
+            Description: "Protect players from the auto-purge or manual purges to prevent their
+              protections from being removed."
+            Permission: "protectionblocks.admin.guard"
+            Aliases: 
+            - "g"
+            Cooldown: 0
+            Subcommands: 
+              Protection: 
+                Name: "protection"
+                Description: "Manage the guard status of the current protection, setting a new
+                  guard time."
+                Permission: "protectionblocks.admin.guard.protection"
+                Aliases: 
+                - "pl"
+                Cooldown: 0
+              Player: 
+                Name: "player"
+                Description: "Manage the guard status of a player, setting a new guard time."
+                Permission: "protectionblocks.admin.guard.player"
+                Aliases: 
+                - "pl"
+                Cooldown: 0
+      Leave: 
+        Name: "leave"
+        Description: "Leave a protection, stop being an owner or a member"
+        Permission: ""
+        Aliases: 
+        - "l"
+        Cooldown: 0
+      View: 
+        Name: "view"
+        Description: "Show the boundaries of your current protection for a certain time"
+        Permission: ""
+        Aliases: 
+        - "v"
+        Cooldown: 0
+      Hide: 
+        Name: "hide"
+        Description: "Hide the protection block on your current protection"
+        Permission: ""
+        Aliases: 
+        - "h"
+        Cooldown: 0
+      Remove-owner: 
+        Name: "removeowner"
+        Description: "Remove an owner on your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "ro"
+        Cooldown: 0
+      Ban: 
+        Name: "ban"
+        Description: "Ban a player from your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "bn"
+        Cooldown: 0
+      Kick: 
+        Name: "kick"
+        Description: "Kick a player from your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "k"
+        Cooldown: 0
+      List: 
+        Name: "list"
+        Description: "Open a list with all your protections"
+        Permission: ""
+        Usage: "[username]"
+        Aliases: 
+        - "l"
+        Cooldown: 0
+      Remove-member: 
+        Name: "removemember"
+        Description: "Remove a member on your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "rm"
+        Cooldown: 0
+      Unban: 
+        Name: "unban"
+        Description: "Unban a player from your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "ubn"
+        Cooldown: 0
+      Add-owner: 
+        Name: "addowner"
+        Description: "Add an owner on your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "ao"
+        Cooldown: 0
+      Unclaim: 
+        Name: "unclaim"
+        Description: "Remove the protection you're currently in"
+        Permission: ""
+        Aliases: 
+        - "uc"
+        Cooldown: 0
+      Buy: 
+        Name: "buy"
+        Description: "Purchase protection blocks which are on sale"
+        Permission: ""
+        Usage: "[protection block]"
+        Aliases: []
+        Cooldown: 0
+      Set-home: 
+        Name: "sethome"
+        Description: "Set the home on your current protection"
+        Permission: ""
+        Aliases: 
+        - "sh"
+        Cooldown: 0
+      Rename: 
+        Name: "rename"
+        Description: "Rename your current protection name"
+        Permission: ""
+        Usage: "<new name>"
+        Aliases: 
+        - "rn"
+        Cooldown: 0
+      Add-member: 
+        Name: "addmember"
+        Description: "Add a member on your current protection"
+        Permission: ""
+        Usage: "<username>"
+        Aliases: 
+        - "am"
+        Cooldown: 0
+      Show: 
+        Name: "show"
+        Description: "Show the protection block on your current protection"
+        Permission: ""
+        Aliases: 
+        - "sw"
+        Cooldown: 0
+      Home: 
+        Name: "home"
+        Description: "Teleport to the home of the specified protection."
+        Permission: ""
+        Usage: "[region id]"
+        Aliases: 
+        - "l"
+        Cooldown: 0
+      Merge: 
+        Name: "merge"
+        Description: "Merge protections on other protections"
+        Permission: "protectionblocks.merge"
+        Usage: "[parent protection] [child protection]"
+        Aliases: 
+        - "m"
+        Cooldown: 0
+      Priority: 
+        Name: "priority"
+        Description: "Set the priority of the current protection"
+        Permission: "protectionblocks.priority"
+        Usage: "<priority> [protection id]"
+        Aliases: 
+        - "p"
+        Cooldown: 0
+      Fly: 
+        Name: "fly"
+        Description: "Allows to fly around your protections"
+        Permission: "protectionblocks.fly"
+        Aliases: 
+        - "f"
+        Cooldown: 0
+      Split: 
+        Name: "split"
+        Description: "Split merged protections"
+        Permission: "protectionblocks.split"
+        Usage: "[protection]"
+        Aliases: 
+        - "sp"
+        Cooldown: 0

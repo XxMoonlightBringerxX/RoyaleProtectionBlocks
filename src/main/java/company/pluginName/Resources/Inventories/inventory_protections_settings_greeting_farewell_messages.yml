@@ -1,0 +1,125 @@
+Title: "Settings > Messages"
+Size: 27
+Messages:
+  Message-specify-info: "&7Type each line you want to set on your message. You can use the following placeholders &f{placeholders_tooltip} &7to add automatic information on your messages. Type '.' once you have specified every line. Type 'cancel' to cancel this action."
+  Action-bar-specify-info: "&7Type the text you want to be shown on your action bar. You can use the following placeholders &f{placeholders_tooltip} &7to add automatic information on your messages. Type 'cancel' to cancel this action."
+  Title-specify-info: "&7Type the title you want to be shown on the screen. You can use the following placeholders &f{placeholders_tooltip} &7to add automatic information on your messages. Type 'cancel' to cancel this action."
+  Subtitle-specify-info: "&7Type the subtitle you want to be shown on the screen. You can use the following placeholders &f{placeholders_tooltip} &7to add automatic information on your messages. Type 'cancel' to cancel this action."
+  Boss-bar-specify-info: "&7Type the text you want to be shown on the boss bar. You can use the following placeholders &f{placeholders_tooltip} &7to add automatic information on your messages. Type 'cancel' to cancel this action."
+  Placeholders-tooltip: "🛈"
+  Exceeded-maximum-characters: "&cThe specified message will actually exceed the maximum amount of characters! &8(&e{current_characters}&7/&a{maximum_characters}&8)"
+Items: 
+  Background: 
+    Display-item: 
+      Type: "GRAY_STAINED_GLASS_PANE"
+      Amount: 1
+      Name: "&0"
+    Slots: "0-26"
+  Non-members-group-button: 
+    Display-item: 
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&eNon-members"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmMyNzEwNTI3MTllZjY0MDc5ZWU4YzE0OTg5NTEyMzhhNzRkYWM0YzI3Yjk1NjQwZGI2ZmJkZGMyZDZiNWI2ZSJ9fX0="
+      Lore:
+      - "&0"
+      - "&7&o(Click to switch edited group)"
+    Slots: "22"
+  Members-group-button: 
+    Display-item: 
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&eMembers"
+      Lore:
+      - "&0"
+      - "&7&o(Click to switch edited group)"
+    Slots: "22"
+  Owners-group-button: 
+    Display-item: 
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&eOwners"
+      Lore:
+      - "&0"
+      - "&7&o(Click to switch edited group)"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjBlM2ZlNTVhOGQyYTVkMjk5NTdlODI0MWM1M2RmZDI4OTM2NmQ4NWI2MzkzZTNiM2NiNzAwM2E4YTc3NDI4YiJ9fX0="
+    Slots: "22"
+  Main-owner-group-button: 
+    Display-item: 
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&eMain owner"
+      Lore:
+      - "&0"
+      - "&7&o(Click to switch edited group)"
+    Slots: "22"
+  Message-type-button: 
+    Display-item: 
+      Type: "WRITABLE_BOOK"
+      Amount: 1
+      Name: "&eMessage"
+      Lore:
+      - "&0"
+      - "&7&o(Click to switch message type)"
+    Slots: "4"
+  Action-bar-type-button: 
+    Display-item: 
+      Type: "EXPERIENCE_BOTTLE"
+      Amount: 1
+      Name: "&eAction bar"
+      Lore:
+      - "&0"
+      - "&7&o(Click to switch message type)"
+    Slots: "4"
+  Title-type-button: 
+    Display-item: 
+      Type: "ENDER_EYE"
+      Amount: 1
+      Name: "&eTitle/subtitle"
+      Lore:
+      - "&0"
+      - "&7&o(Click to switch message type)"
+    Slots: "4"
+  Boss-bar-type-button: 
+    Display-item: 
+      Type: "DRAGON_HEAD"
+      Amount: 1
+      Name: "&eBoss bar"
+      Lore:
+      - "&0"
+      - "&7&o(Click to switch message type)"
+    Slots: "4"
+  Greeting-message-button: 
+    Display-item: 
+      Type: "OAK_SIGN"
+      Amount: 1
+      Name: "&eGreeting message"
+      Lore:
+      - "&0"
+      - "&7&oMessage sent when a player"
+      - "&7&oenters your protection."
+      - "&0"
+      - "&aValue:"
+      - "&0"
+    Slots: "11"
+  Farewell-message-button: 
+    Display-item: 
+      Type: "OAK_SIGN"
+      Amount: 1
+      Name: "&eFarewell message"
+      Lore:
+      - "&0"
+      - "&7&oMessage sent when a player"
+      - "&7&oexits your protection."
+      - "&0"
+      - "&aValue:"
+      - "&0"
+      Skin: ""
+    Slots: "15"
+  Back-button:
+    Display-item:
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&cBack"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTljZGI5YWYzOGNmNDFkYWE1M2JjOGNkYTc2NjVjNTA5NjMyZDE0ZTY3OGYwZjE5ZjI2M2Y0NmU1NDFkOGEzMCJ9fX0="
+    Slots: "18"

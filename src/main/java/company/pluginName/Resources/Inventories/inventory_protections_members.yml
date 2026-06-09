@@ -1,0 +1,76 @@
+Title: "{protection} > Members"
+Size: 27
+Entity:
+  Name: "&e{player}"
+  Left-click-lore-line: " &8- &aLeft click: &e{left_click_action}"
+  Right-click-lore-line: " &8- &aRight click: &e{right_click_action}"
+  Promote-action-lore-line: "Promote member"
+  Demote-action-lore-line: "Demote member"
+  Remove-action-lore-line: "Remove member"
+  Slots: "0-17"
+Items: 
+  Background: 
+    Display-item: 
+      Type: "GRAY_STAINED_GLASS_PANE"
+      Amount: 1
+      Name: "&0"
+    Slots: "18-26"
+  Close-button:
+    Display-item:
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&cClose"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTljZGI5YWYzOGNmNDFkYWE1M2JjOGNkYTc2NjVjNTA5NjMyZDE0ZTY3OGYwZjE5ZjI2M2Y0NmU1NDFkOGEzMCJ9fX0="
+    Slots: "18"
+  Previous-page-button: 
+    Display-item: 
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&ePrevious"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmQ2OWUwNmU1ZGFkZmQ4NGU1ZjNkMWMyMTA2M2YyNTUzYjJmYTk0NWVlMWQ0ZDcxNTJmZGM1NDI1YmMxMmE5In19fQ=="
+    Slots: "21"
+  Next-page-button: 
+    Display-item: 
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&eNext"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTliZjMyOTJlMTI2YTEwNWI1NGViYTcxM2FhMWIxNTJkNTQxYTFkODkzODgyOWM1NjM2NGQxNzhlZDIyYmYifX19"
+    Slots: "23"
+  All-filter-button:
+    Display-item:
+      Type: "BARRIER"
+      Amount: 1
+      Name: "&aCurrent filter: &eAll"
+    Slots: "26"
+    Version: 2
+  Members-filter-button:
+    Display-item:
+      Type: "CHEST"
+      Amount: 1
+      Name: "&aCurrent filter: &eMembers"
+    Slots: "26"
+    Version: 2
+  Owners-filter-button:
+    Display-item:
+      Type: "ENDER_CHEST"
+      Amount: 1
+      Name: "&aCurrent filter: &eOwners"
+    Slots: "26"
+    Version: 2
+  Search-button:
+    Display-item:
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&eSearch for a new member"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmMzNWU4Njg0YzdmNzc2YmVmZWRjNDMxOWQwODE0OGM1NGJlYTM5MzIxZTFiZDVkZWY3YTU1Yjg5ZmRhYTA5OSJ9fX0="
+    Slots: "22"
+  Alternate-options-button:
+    Display-item:
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&eAlternate options"
+      Lore: 
+      - "&7&oUse this option if you can't"
+      - "&7&ouse certain options."
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjA1MWRlNjdiM2RhZDYyMzc0NmNlZDU3MzNlOGJmY2UyYmZjMTRmNTU2OGE1MDc0MjY2YjJkZDQyNzQ1ZmI3YSJ9fX0="
+    Slots: "20"

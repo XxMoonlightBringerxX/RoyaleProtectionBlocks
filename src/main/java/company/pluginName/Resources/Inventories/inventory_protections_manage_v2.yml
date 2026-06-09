@@ -1,0 +1,117 @@
+Title: "{protection_name}"
+Size: 36
+Messages:
+  Type-new-name-info: "&7Type the new name for the protection. Type 'cancel' to cancel this action."
+  Price-specify-info: "&7Type the price you wish to set on your protection block. Type 'cancel' to cancel this action."
+Items: 
+  Background: 
+    Display-item: 
+      Type: "GRAY_STAINED_GLASS_PANE"
+      Amount: 1
+      Name: "&0"
+    Slots: "0-35"
+  Flags-button:
+    Display-item:
+      Type: "OAK_SIGN"
+      Amount: 1
+      Name: "&eFlags"
+    Slots: "10"
+  Members-button:
+    Display-item:
+      Type: "CHEST"
+      Amount: 1
+      Name: "&eMembers"
+    Slots: "11"
+  Banneds-button:
+    Display-item:
+      Type: "TNT_MINECART"
+      Amount: 1
+      Name: "&eBanneds"
+    Slots: "12"
+  Rename-button:
+    Display-item:
+      Type: "NAME_TAG"
+      Amount: 1
+      Name: "&eRename protection"
+    Slots: "14"
+  Price-button:
+    Display-item:
+      Type: "EMERALD"
+      Name: "&aCurrent price: &e{protection_price}"
+    Not-set-item:
+      Type: "EMERALD"
+      Name: "&aCurrent price: &7&oNot for sale"
+    Slots: "15"
+  Merge-button:
+    Display-item:
+      Type: "SLIME_BLOCK"
+      Amount: 1
+      Name: "&eMerge protection"
+      Lore:
+      - "&8&o- &aLeft-click: &eSet parent protection"
+      - "&8&o- &aRight-click: &eRemove child protections"
+    Slots: "16"
+  Toggle-block-button:
+    Display-item:
+      Type: "GRASS_BLOCK"
+      Amount: 1
+      Name: "&eHide protection"
+    Show-block-item:
+      Type: "GLASS"
+      Amount: 1
+      Name: "&eShow protection"
+    Slots: "20"
+  Permissions-button:
+    Display-item:
+      Type: "OAK_FENCE_GATE"
+      Amount: 1
+      Name: "&ePermissions"
+    Slots: "21"
+  Settings-button:
+    Display-item:
+      Type: "STONE_AXE"
+      Amount: 1
+      Name: "&eSettings"
+    Slots: "23"
+    Version: 2
+  # Temporary button, upgrade on next updates
+  Toggle-boundary-button:
+    Display-item:
+      Type: "ENDER_PEARL"
+      Amount: 1
+      Name: "&eShow the protection boundaries"
+    Hide-boundary-item:
+      Type: "ENDER_EYE"
+      Amount: 1
+      Name: "&eHide the protection boundaries"
+    Commands:
+    - "pb view"
+    Slots: "24"
+  Close-button:
+    Display-item:
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&cClose"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTljZGI5YWYzOGNmNDFkYWE1M2JjOGNkYTc2NjVjNTA5NjMyZDE0ZTY3OGYwZjE5ZjI2M2Y0NmU1NDFkOGEzMCJ9fX0="
+    Slots: "27"
+  Protection-info:
+    Display-item:
+      Name: "&a{protection_name}"
+      Lore:
+      - "&0"
+      - "&fWorld: &a{protection_world}"
+      - "&fCoords: &eX={protection_location_x} Y={protection_location_y} Z={protection_location_z}"
+      - "&fSize: &c{protectionblock_blocks_x}x{protectionblock_blocks_y}x{protectionblock_blocks_z}"
+      - "&fCreation: &b{protection_createddate}"
+      - "&fMembers: &d{protection_members_size}"
+      - "&fOwner: &3{protection_owner}"
+    Change-display-item-lore-line: " &8&o- &aLeft click (Item in hand): &eChange display item"
+    Reset-display-item-lore-line: " &8&o- &aLeft click (Empty hand): &eReset display item"
+    Slots: "31"
+  Delete-button:
+    Display-item:
+      Type: "PLAYER_HEAD"
+      Amount: 1
+      Name: "&cDelete protection"
+      Skin: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDQxZjRlZGJjNjhjOTA2MTM1NTI0MmJkNzNlZmZjOTI5OWEzMjUyYjlmMTFlODJiNWYxZWM3YjNiNmFjMCJ9fX0="
+    Slots: "35"

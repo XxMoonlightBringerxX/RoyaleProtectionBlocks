@@ -1,0 +1,68 @@
+#--------------------------------------------------------------------------#
+#                                                                          #
+#              _____ _____         _   _____ _         _                   #
+#             | __  |  _  |___ ___| |_| __  | |___ ___| |_ ___             #
+#             |    -|   __|  _| . |  _| __ -| | . |  _| '_|_ -|            #
+#             |__|__|__|  |_| |___|_| |_____|_|___|___|_,_|___|            #
+#                                                                          #
+#        _          ____          _   _____           _     ___ ___        #
+#       | |_ _ _   |    \ ___ ___| |_|  _  |___ ___ _| |___|_  |_  |       #
+#       | . | | |  |  |  | .'|  _| '_|   __| .'|   | . | .'| | |_  |       #
+#       |___|_  |  |____/|__,|_| |_,_|__|  |__,|_|_|___|__,| |_|___|       #
+#           |___|                                                          #
+#                                                                          #
+#--------------------------------------------------------------------------#
+
+#--- How it works
+#
+# Currently this file is used to create or update protection blocks in the plugin through the file. Created blocks
+# get configured with the properties defined, meanwhile existent blocks are reconfigured by replacing the information
+# with the new one defined. Existent blocks can't switch of type, the same as configuring them through GUI.
+#
+# For existent blocks, you can replace existent data with the value 'null' to remove it, or you can remove the section you
+# don't want to modify from the item configuration.
+#
+#---
+
+#--- Options
+#
+# Blocks-x (Mandatory) -> Amount of blocks through the X axis. The amount must be the radius of the block.
+#
+# Blocks-y (Mandatory) -> Amount of blocks through the X axis. The amount must be the radius of the block. You can use -1 to make it unlimited.
+#
+# Blocks-z (Mandatory) -> Amount of blocks through the X axis. The amount must be the radius of the block.
+#
+# Permission -> Permission required to use the protection block.
+#
+# Item.Type (Mandatory) -> Type of the item. This option uses a library which tries to give compatibility with old and new items. May not have all the new items. Request the items in this case.
+#
+# Item.Name -> Name of the item. It allows the usage of the custom colors formats, like hex or gradient.
+#
+# Item.Lore ->  Lore of the item. It allows the usage of the custom colors formats, like hex or gradient.
+#
+# Allowed-Worlds -> List of world where the protection block can be used.
+#
+#---
+
+5: 
+  Blocks-x: 5
+  Blocks-y: -1
+  Blocks-z: 5
+  Permission: null
+  Item: 
+    Type: "COAL_ORE"
+    Name: "&eCoal Protection Block"
+    Lore: 
+    - "&75x5"
+  Allowed-worlds: []
+25: 
+  Blocks-x: 25
+  Blocks-y: -1
+  Blocks-z: 25
+  Permission: null
+  Item: 
+    Type: "IRON_ORE"
+    Name: "&eIron Protection Block"
+    Lore: 
+    - "&725x25"
+  Allowed-worlds: []

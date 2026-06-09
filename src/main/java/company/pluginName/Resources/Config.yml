@@ -1,0 +1,402 @@
+#--------------------------------------------------------------------------#
+#                                                                          #
+#              _____ _____         _   _____ _         _                   #
+#             | __  |  _  |___ ___| |_| __  | |___ ___| |_ ___             #
+#             |    -|   __|  _| . |  _| __ -| | . |  _| '_|_ -|            #
+#             |__|__|__|  |_| |___|_| |_____|_|___|___|_,_|___|            #
+#                                                                          #
+#        _          ____          _   _____           _     ___ ___        #
+#       | |_ _ _   |    \ ___ ___| |_|  _  |___ ___ _| |___|_  |_  |       #
+#       | . | | |  |  |  | .'|  _| '_|   __| .'|   | . | .'| | |_  |       #
+#       |___|_  |  |____/|__,|_| |_,_|__|  |__,|_|_|___|__,| |_|___|       #
+#           |___|                                                          #
+#                                                                          #
+#--------------------------------------------------------------------------#
+
+#---{File version}
+#
+# DON'T TOUCH THIS SECTION! You can move it, but you can't remove this sections
+# or change its values. This values are used to manage the different versions of
+# this file. New files with newer versions uses this part to check if the file is
+# new or old, and change the format to the new one.
+#
+#---
+
+Version: 8
+
+#---
+# MySQL database
+# If MySQL is active, SQLite is automatically disabled.
+# WARNING
+# Currently the information is NOT automatically transferred from SQLite to MySQL
+#---
+
+MySQL: 
+  Enable: false
+  Protocol: "jdbc:mysql:"
+  Hostname: "localhost"
+  Port: 3306
+  Database: "database"
+  Username: "username"
+  Password: "password"
+  Parameters: "sslMode=DISABLED&connectionTimeout=3000&socketTimeout=3000"
+  Table-prefix: ""
+
+SQL: 
+  
+  #---
+  # Defines if SQL queries should be shown in console.
+  #---
+
+  Print-queries-in-console: false
+  
+#---
+# Enable the Discord logging system. In order to be able to send the information
+# to your Discord server, you'll have to generate a valid webhook in order
+# to use this feature. Check on Discord documentation for more information.
+#---
+
+Discord: 
+  Enable: false
+  Webhook-url: ""
+  Logs: 
+    Protection-register: true
+    Protection-unregister: true
+    Purge-summary: true
+    Flags-modification: 
+    - "pvp"
+    - "tnt"
+    - "chest-access"
+    
+Settings: 
+  
+  #---
+  # Enable if you wish to get a notification on the console if there's a new update
+  # available. Also you can enable if you wish to get the notification in-game.
+  # Only you'll receive the notification if you have OP.
+  #---
+  
+  Update-checker: 
+    Enabled: true
+    Join-message: true
+    
+  #---
+  # If enabled, the plugin will start showing the enabled debug messages. On the
+  # section below, you can allow the log of some specific messages in console.
+  #
+  # Deprecated: Soon this section will be deprecated and removed, as this will
+  # be replaced with the Logger setting.
+  #---
+  
+  Debug: 
+    Enabled: false
+    Messages: 
+      Block-place: true
+      Oraxen-block-place: true
+      Itemsadder-block-place: true
+      Block-place-not-protection-block: true
+      Block-place-is-protection-block: true
+      Block-place-cancelled-build: true
+      Block-place-cancelled: true
+      Block-break: true
+      Oraxen-block-break: true
+      Itemsadder-block-break: true
+      Block-break-cancelled: true
+      Protection-creation-attempt: true
+      Protection-creation: true
+      Protection-removal-attempt: true
+      Protection-removal: true
+      Protection-creation-attempt-cancelled: true
+      Protection-removal-attempt-cancelled: true
+      Player-teleport-to-protection-attempt: true
+      Player-teleport-to-protection-attempt-cancelled: true
+    
+  #---
+  # Specify if the right click should open the management inventory.
+  #---
+  
+  Protection: 
+    
+    #---
+    # Define a minimum distance between protections. If set to '-1', it'll be disabled.
+    #---
+    
+    Minimum-distance-between-protections: -1
+    
+    #---
+    # Define a default message to show up in chat after entering or exiting a protection.
+    #---
+    
+    Message-on-enter-region: "&eWelcome &7{player_name} &eto &a{protection_name}&e!"
+    Message-on-exit-region: "&eSee you later! :D"
+    
+    #---
+    # Define a default message to show up on the action bar after entering or exiting a protection.
+    #---
+    
+    Actionbar-message-on-enter-region: ""
+    Actionbar-message-on-exit-region: ""
+    
+    #---
+    # Define a default message to show up on screen after entering or exiting a protection.
+    #---
+    
+    Title-on-enter-region: ""
+    Subtitle-on-enter-region: ""
+    Title-on-exit-region: ""
+    Subtitle-on-exit-region: ""
+    
+    #---
+    # Add here all the worlds you don't wish people to be able to use protection blocks
+    #---
+    
+    Banned-worlds: 
+    - "World1"
+    - "World2"
+    - "World3"
+    
+    #---
+    # Define which commands should be executed when a protection is created
+    # or removed.
+    #---
+    
+    Commands-on-creation: []
+    Commands-on-removal: []
+    
+    #---
+    # Specify the ID of the block you wish to give people the first time they join the server.
+    #---
+    
+    Starter-block: ""
+    
+    #---
+    # Specify amount of time in seconds which will last the /pb view command. This command can be
+    # cancelled by executing /pb view again, the timer is only made to remove the boundaries
+    # after a while.
+    #---
+    
+    Boundaries-view-duration-in-seconds: 30
+    
+    #---
+    # Specifies the price that will be charged to the user when using the teleportation of their protection.
+    #---
+    
+    Teleport-cost: 0.0
+    
+    #---
+    # Specifies the time to wait between executions of this command.
+    #---
+    
+    Teleport-cooldown: 30
+    
+    #---
+    # Define the amount of seconds a player must stay still before getting teleported.
+    #---
+    
+    Teleport-stay-still-for-seconds: 0.0
+    
+    #---
+    # Specify if the home os a protection should be the position of the player after placing it.
+    #---
+    
+    Set-player-position-as-home-on-creation: true
+    
+    #---
+    # Specify if the right click should open the management inventory.
+    #---
+    
+    Open-inventory-on-interact: true
+    
+    #---
+    # Specify if an owner can place another proection inside of its own protections.
+    #---
+    
+    Allow-regions-inside-another-from-same-owner: true
+    
+    #---
+    # Allows the usage of multi-threading to speed up queries to find protections
+    # due certain actions.
+    #
+    # Warning: This option is experimental, may cause issues on your server with
+    # specific actions, you can report this issues but backups are suggested.
+    #---
+  
+    Allow-multi-thread-searching: false
+  
+    #---
+    # Defines the size of the radius for the query caches. This caches are intended
+    # to speed of queries for current protections, caching a certain amount of protections
+    # from a radius based on a requested location or area. The bigger the size, the slower
+    # the query will be. The smaller the size, the higher ram consumption it'll cause.
+    #--- 
+
+    Radius-for-search-cache: 50.0
+  
+    #---
+    # Defines the amount of time in milliseconds the query caches will remain in memory.
+    #--- 
+
+    Search-cache-ttl-in-millis: 30000
+  
+    #---
+    # Defines the maximum length of the display names on the plugin. This includes color
+    # and formatting. Due SQL definitions, the maximum is 255.
+    #--- 
+
+    Maximum-display-name-length: 255
+  
+    #---
+    # Defines if protections can be merged only if protections are next to the parent protection.
+    # Disabling this option allows to merge this protections to other protections far away.
+    #--- 
+
+    Must-be-close-for-merge: true
+
+    #---
+    # Defines the default name for the protections which is set on creation.
+    #---
+    Default-display-name: "{protection_world}_{protection_location_x}_{protection_location_y}_{protection_location_z}"
+
+    #---
+    # Defines the default priority for the protections which is set on creation.
+    #---
+
+    Default-priority: 0
+    
+    #---
+    # Drops the item on the ground (close to the player or on the previous protection
+    # location if it's a protection removal) if the player has no space on the inventory.
+    #---
+    
+    Drop-item-on-full-inventory: false
+
+    #---
+    # Enables a system which controls the player's permissions. If the player doesn't have
+    # permissions to manage the current amount of protections, they are blocked until the player
+    # removes some of this protections to unblock them.
+    #---
+
+    Block-protections-if-exceeding-limits: false
+    Check-if-exceeding-limits-every: "30m"
+
+    #---
+    # Defines the configuration for the view system, to manage the available radius
+    # of blocks to show on the player, the speed of the particles and the duration.
+    #---
+
+    View: 
+      Radius: 16
+      Speed: 1.5
+      Duration-in-seconds: 60
+
+    #---
+    # Set the purge settings to it will start removing the protections older than
+    # a specified amount of time.
+    #---
+
+    Auto-purge: 
+      
+      #---
+      # Set a certain amount of time which will be used to define a protection as expired.
+      #
+      # - 's': seconds
+      # - 'm': minutes
+      # - 'h': hours
+      # - 'd': days
+      # - 'w': weeks
+      # - 'M': months (30 days)
+      # - 'y': years
+      #---
+      
+      Purge-older-than: ""
+    
+    Flight:
+    
+      #---
+      # Enables the flight control system, which allows the plugin to control the current
+      # flight status. This system will remove the flight ability to players which are
+      # exiting protections where they are allowed to fly.
+      #---
+
+      Enable-flight-control: true
+
+      #---
+      # Defines the amount of time in seconds players has to go back to their protections
+      # before removing the flight ability.
+      #---
+
+      Unauthorized-area-remove-after-seconds: 5
+
+      #---
+      # Excludes a list of worlds to prevent flight control on them.
+      #---
+
+      Exclude-worlds: 
+      - "world1"
+      - "world2"
+      - "world3"
+
+  Protection-block: 
+    
+    #---
+    # Define if the shop should open even if there aren't protection blocks on sale.
+    #---
+    
+    Open-shop-on-empty-list: false
+    
+    #---
+    # Define if the shop inventory should through a confirmation before purchasing, to ensure
+    # the player really wants to purchase it.
+    #---
+    
+    Request-confirmation-on-purchase-through-gui: false
+    
+  #---
+  # Change the settings of the hook between RoyaleProtectionBlocks and DeluxeCombat.
+  #---
+    
+  Message-listener: 
+    Listener-priority: "LOWEST"
+
+  Combat-log-hook: 
+
+    #---
+    # Enables the hook between combat log plugins and RoyaleProtectionBlocks. If enabled, they'll
+    # be used to check the pvp status of the players.
+    #---
+
+    Deluxe-combat-enabled: true
+    Combat-log-X-enabled: true
+    PvP-manager-enabled: true
+
+    #---
+    # Cancel certain actions if a player is currently in combat.
+    #---
+
+    Cancel-protection-creation-in-combat: true
+    Cancel-protection-removal-in-combat: true
+    Cancel-protection-teleport-in-combat: true
+
+#---
+# Enables the log system, which replaces the output system on the plugin by a custom one,
+#
+# Warning: This system is experimental and does not controls most part of the messages
+# on the plugin. This system is still in progress.
+#---
+
+Logging: 
+  Enabled: false
+  Show-on-console: 
+  - "DEBUG"
+  - "INFO"
+  - "WARNING"
+  - "ERROR"
+  - "NONE"
+  Show-on-logs: 
+  - "DEBUG"
+  - "INFO"
+  - "WARNING"
+  - "ERROR"
+  - "NONE"
+  Console-format: "{prefix}{message}"
+  Logs-format: "[{level}][{class}.{method}()] {datetime} {message}"

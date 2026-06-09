@@ -1,0 +1,6 @@
+[submodule "api"]
+	path = api
+	url = https://github.com/XxMoonlightBringerxX/RoyaleProtectionBlocksAPI.git
+[submodule "utils"]
+	path = utils
+	url = https://github.com/XxMoonlightBringerxX/PandaUtils.git
